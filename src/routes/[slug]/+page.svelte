@@ -1,63 +1,46 @@
 <script>
-	import Scrolly from "$lib/components/helpers/Scrolly.svelte";
+	import ClimateChange from "$lib/components/stories/ClimateChange.svelte";
+	import SpaceExploration from "$lib/components/stories/SpaceExploration.svelte";
 	
 	let { data } = $props();
-	let value = $state();
+	
+	const components = {
+		'climate-change': ClimateChange,
+		'space-exploration': SpaceExploration,
+	};
+	
+	// Use slug as the component type
+	const StoryComponent = components[data.story.slug];
 </script>
 
-<h1>{data.story.title}</h1>
-<p>{data.story.description}</p>
+<div class="story-intro">
+	<h1>{data.story.title}</h1>
+	<p class="story-description">{data.story.description}</p>
+</div>
 
-<section id="scrolly">
-	<h2>Step <span>{value !== undefined ? value + 1 : "-"}</span></h2>
-	<div class="spacer"></div>
-	<Scrolly bind:value>
-		{#each data.story.steps as step, i}
-			{@const active = value === i}
-			<div class="step" class:active>
-				<p>{step.text}</p>
-			</div>
-		{/each}
-	</Scrolly>
-	<div class="spacer"></div>
-</section>
+{#if StoryComponent}
+	<StoryComponent story={data.story} />
+{:else}
+	<p>Story component not found for: {data.story.slug}</p>
+{/if}
 
 <style>
-	h1 {
+	.story-intro {
+		padding: 2rem 1rem;
 		text-align: center;
-		margin-bottom: 0.5rem;
-	}
-	
-	p {
-		text-align: center;
-		color: #666;
-		margin-bottom: 2rem;
+		border-bottom: 1px solid #e2e8f0;
 	}
 
-	h2 {
-		position: sticky;
-		top: 4em;
-		background: white;
-		padding: 1rem;
-		margin: 0;
+	.story-intro h1 {
+		margin: 0 0 0.5rem 0;
+		font-size: 2.5rem;
+		font-weight: bold;
 	}
 
-	.spacer {
-		height: 75vh;
-	}
-
-	.step {
-		height: 80vh;
-		background: var(--color-gray-100, #f3f4f6);
-		text-align: center;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.step p {
-		padding: 1rem;
+	.story-intro p {
+		color: #6b7280;
 		font-size: 1.1rem;
 		max-width: 600px;
+		margin: 0 auto;
 	}
 </style>
