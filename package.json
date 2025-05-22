@@ -15,6 +15,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^6.0.0",
+		"@sveltejs/enhanced-img": "^0.6.0",
 		"@sveltejs/kit": "^2.16.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
 		"prettier": "^3.4.2",
@@ -25,7 +26,9 @@
 		"vite": "^6.2.6"
 	},
 	"dependencies": {
+		"@rollup/plugin-dsv": "^3.0.5",
 		"bits-ui": "^1.5.3",
+		"path-js": "^1.0.1",
 		"svelte-exmarkdown": "^5.0.1",
 		"svelteplot": "^0.2.6-next.1"
 	}
