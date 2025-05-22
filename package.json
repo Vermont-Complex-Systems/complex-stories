@@ -27,7 +27,7 @@
 	},
 	"dependencies": {
 		"@rollup/plugin-dsv": "^3.0.5",
-		"bits-ui": "^1.5.3",
+		"bits-ui": "^1.6.0",
 		"path-js": "^1.0.1",
 		"svelte-exmarkdown": "^5.0.1",
 		"svelteplot": "^0.2.6-next.1"

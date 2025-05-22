@@ -2,3 +2,18 @@
 @import "normalize.css";
 @import "font.css";
 @import "reset.css";
+
+:global(:root) {
+  --color-fg: #333;
+  --color-bg: #fff;
+  --color-secondary-gray: #666;
+  --color-default-story-bg: #ddd;
+  --color-focus: #0066cc;
+  --mono: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --14px: 14px;
+  --16px: 16px;
+  --24px: 24px;
+  --28px: 28px;
+  --1s: 1s;
+}
