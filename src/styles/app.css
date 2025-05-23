@@ -3,17 +3,184 @@
 @import "font.css";
 @import "reset.css";
 
-:global(:root) {
-  --color-fg: #333;
-  --color-bg: #fff;
-  --color-secondary-gray: #666;
-  --color-default-story-bg: #ddd;
-  --color-focus: #0066cc;
-  --mono: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --14px: 14px;
-  --16px: 16px;
-  --24px: 24px;
-  --28px: 28px;
-  --1s: 1s;
+/* colors defined in variables.css */
+:root {
+	/* font */
+	--sans: "Atlas Grotesk", -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+	--serif: "Tiempos Text", Iowan Old Style, Times New Roman, Times, serif;
+	--mono: "Atlas Typewriter", Menlo, Consolas, Monaco, monospace;
+
+	/* z-index */
+	--z-bottom: -100;
+	--z-middle: 0;
+	--z-top: 100;
+	--z-overlay: 1000;
+
+	/* presets (used in reset.css) */
+	--border-radius: 3px;
+	--font-body: var(--serif);
+	--font-form: var(--mono);
+	--color-bg: var(--color-white);
+	--color-fg: var(--color-gray-900);
+	--color-primary: var(--color-black);
+	--color-link: var(--color-black);
+	--color-secondary-gray: var(--color-gray-600);
+	--color-link-hover: var(--color-gray-600);
+	--color-focus: var(--color-electric-green);
+	--color-mark: var(--color-yellow);
+	--color-selection: var(--color-gray-300);
+	--color-border: var(--color-gray-300);
+	--color-button-bg: var(--color-gray-900);
+	--color-button-fg: var(--color-gray-100);
+	--color-button-hover: var(--color-gray-700);
+	--color-input-bg: var(--color-gray-50);
+	--color-input-fg: var(--color-gray-900);
+	--color-placeholder: var(--color-gray-500);
+	--color-default-story-bg: var(--color-gray-100);
+
+	--font-size-giant: clamp(3rem, 4vw, 5rem);
+	--font-size-large: clamp(1.5rem, 2.5vw, 2.5rem);
+	--font-size-medium: clamp(1rem, 1.75vw, 1.5rem);
+	--font-size-small: clamp(15px, 1.25vw, 1rem);
+	--font-size-xsmall: clamp(12px, 1vw, 0.8rem);
+
+	--font-weight-bold: 900;
+	--font-weight-normal: 400;
+	--font-weight-thin: 100;
+
+	--margin: 16px;
+	--width-column-wide: 1280px;
+	--width-column-regular: 720px;
+	--width-padded: 80vw;
+	--margin-left: 10vw;
+	--width-padded-mobile: 90vw;
+	--margin-left-mobile: 5vw;
+
+	--left-tilt: -2deg;
+	--right-tilt: 2deg;
+	--left-tilt-double: -4deg;
+	--right-tilt-double: 4deg;
+
+	--transition-fast: 100ms;
+	--transition-medium: 200ms;
+	--transition-slow: 500ms;
+	--transition-ease: ease-in;
+	--fade: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.8) 30%, rgba(255, 255, 255, 1) 50%);
+
+	/* "1" second duration */
+	--1s: 1ms;
+}
+
+/* dark theme */
+/* this is a starting place for dark mode - test before deploying */
+
+@media screen and (prefers-color-scheme:dark) {
+	:root {
+		--color-bg: var(--color-gray-1000);
+		--color-fg: var(--color-gray-100);
+		--color-primary: var(--color-gray-1000);
+		--color-secondary-gray: var(--color-gray-400);
+		--color-link: var(--color-gray-100);
+		--color-link-hover: var(--color-gray-400);
+		--color-focus: var(--color-electric-green);
+		--color-mark: var(--color-yellow);
+		--color-selection: var(--color-gray-300);
+		--color-border: var(--color-gray-700);
+		--color-button-bg: var(--color-gray-100);
+		--color-button-fg: var(--color-gray-900);
+		--color-button-hover: var(--color-gray-300);
+		--color-input-bg: var(--color-gray-900);
+		--color-input-fg: var(--color-gray-50);
+		--color-placeholder: var(--color-gray-400);
+		--color-default-story-bg: var(--color-gray-800);
+		--fade: linear-gradient(180deg, rgba(25, 25, 25, 0) 0%, rgba(25, 25, 25, 0.8) 30%, rgba(25, 25, 25, 1) 50%);
+	}
+}
+
+@media screen and (prefers-reduced-motion: no-preference) {
+	:root {
+		--1s: 1s;
+	}
+}
+
+h1 {
+	font-size: var(--48px, 48px);
+}
+
+h2 {
+	font-size: var(--36px, 36px);
+}
+
+h3 {
+	font-size: var(--28px, 28px);
+}
+
+h4 {
+	font-size: var(--24px, 24px);
+}
+
+h5 {
+	font-size: var(--22px, 22px);
+}
+
+h6 {
+	font-size: var(--20px, 20px);
+}
+
+main {
+	max-width: var(--width-column-wide);
+	margin: 0 auto;
+	padding: 0;
+}
+
+svg {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.column-wide {
+	max-width: var(--width-column-wide);
+	padding: 0 16px;
+}
+
+
+.column-regular {
+	max-width: var(--width-column-regular);
+	padding: 0 16px;
+}
+
+.column-regular a:hover {
+	color: var(--color-link-hover);
+	text-decoration: underline 2px var(--color-link-hover); 
+}
+
+.column-regular h2 {
+	font-family: var(--sans);
+	font-weight: var(--font-weight-bold);
+	margin-top: 64px;
+}
+
+.upper {
+	text-transform: uppercase;
+}
+
+.inner strong, li strong {
+	font-family: var(--sans);
+	-webkit-font-smoothing: antialiased;
+}
+
+input[type="search"], 
+input[type="text"], 
+textarea {
+  font-size: 16px;
+}
+
+button, input[type="submit"] {
+	 text-transform: uppercase;
+    background: var(--color-fg);
+    color: var(--color-bg);
+    border-radius: 2px;
+    padding: 12px;
+    font-size: var(--font-size-xsmall);
 }

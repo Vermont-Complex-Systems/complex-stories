@@ -1,0 +1,27 @@
+{
+  "slug": "space-exploration",
+  "title": "Journey to the Stars",
+  "description": "The timeline of human space exploration",
+  "steps": [
+    {
+      "text": "1957: Sputnik 1 becomes the first artificial satellite",
+      "data": { "year": 1957, "event": "sputnik" }
+    },
+    {
+      "text": "1969: Neil Armstrong walks on the moon",
+      "data": { "year": 1969, "event": "moon-landing" }
+    },
+    {
+      "text": "1981: First Space Shuttle mission launches",
+      "data": { "year": 1981, "event": "shuttle" }
+    },
+    {
+      "text": "2020: SpaceX successfully sends astronauts to ISS",
+      "data": { "year": 2020, "event": "spacex" }
+    },
+    {
+      "text": "2024: Artemis missions aim to return to the moon",
+      "data": { "year": 2024, "event": "artemis" }
+    }
+  ]
+}

@@ -1,3 +1,4 @@
-slug,featured,category,publishDate
-climate-change,true,environment,2024-01-15
-space-exploration,false,science,2024-01-20
+slug,title,description,cardType,month,author,featured
+climate-change,The Rising Tide,Climate data story,theory,Jan,John Doe,true
+space-exploration,Journey to Stars,Space exploration timeline,popular,Feb,Jane Smith,false
+networks-fast-and-slow,Journey to Stars,Space exploration timeline,popular,Feb,Jane Smith,false

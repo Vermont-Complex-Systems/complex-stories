@@ -1,8 +1,11 @@
 <script>
 	let { children } = $props();
+	import "$styles/app.css";
 </script>
 
 <nav>
 	<a href="/">home</a>
 </nav>
-{@render children()}
+<main id="content">
+  {@render children?.()}
+</main>
