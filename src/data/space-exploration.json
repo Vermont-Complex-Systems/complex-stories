@@ -2,6 +2,7 @@
   "slug": "space-exploration",
   "title": "Journey to the Stars",
   "description": "The timeline of human space exploration",
+  "cardType": "theory",
   "steps": [
     {
       "text": "1957: Sputnik 1 becomes the first artificial satellite",

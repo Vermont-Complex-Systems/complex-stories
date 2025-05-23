@@ -2,6 +2,7 @@
   "slug": "climate-change",
   "title": "The Rising Tide: A Climate Story",
   "description": "Explore the impact of climate change through data visualization",
+  "cardType": "popular",
   "steps": [
     {
       "text": "Global temperatures have risen by 1.1°C since 1880",

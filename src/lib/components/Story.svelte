@@ -1,5 +1,5 @@
 <script>
-  let { id, slug, title, description, month, cardType = 'theory' } = $props();
+  let { id, slug, title, description, month, cardType } = $props();
 
   // Map card types to colors
   const cardColors = {

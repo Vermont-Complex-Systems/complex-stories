@@ -3,7 +3,7 @@
   import { getContext } from "svelte";
 
   const { stories } = getContext("Home");
-  const cardTypes = ['theory', 'popular', 'dashboard'];
+  
 </script>
 
 <section id="stories">
@@ -13,10 +13,10 @@
         <Story 
           id={index + 1}
           slug={story.slug}
-          title={story.title}
-          description={story.description}
+          tease={story.description}
           month={story.month}
           cardType={story.cardType}
+          href="/{story.slug}"
         />
       </li>
     {/each}
