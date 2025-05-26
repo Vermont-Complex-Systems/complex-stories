@@ -1,0 +1,17 @@
+.scrolly-container {
+  display: flex;
+  min-height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 2rem;
+}
+
+.viz-container {
+  flex: 1;
+  position: sticky;
+  top: 2rem;
+  height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
