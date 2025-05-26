@@ -1,13 +1,14 @@
-// Debug version to see what's being imported
 const storyModules = import.meta.glob('../stories/*/components/Index.svelte', { eager: true });
-
-console.log('Available story modules:', Object.keys(storyModules));
 
 export const getStoryComponent = (slug) => {
   const path = `../stories/${slug}/components/Index.svelte`;
-  console.log('Looking for component at path:', path);
-  console.log('Available paths:', Object.keys(storyModules));
-  const component = storyModules[path]?.default;
-  console.log('Found component:', component);
-  return component;
+  return storyModules[path]?.default;
+};
+
+// Optional: For development, get available stories (plain JS)
+export const getAvailableStorySlugs = () => {
+  return Object.keys(storyModules).map(path => {
+    const match = path.match(/\.\.\/stories\/(.+)\/components\/Index\.svelte/);
+    return match ? match[1] : null;
+  }).filter(Boolean);
 };
