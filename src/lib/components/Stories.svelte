@@ -1,28 +1,20 @@
 <script>
-  import Story from "./Story.svelte";
-  import { getContext } from "svelte";
-
-  const { stories } = getContext("Home");
+  import Story from "$lib/components/Story.svelte";
   
+  let { stories } = $props();
 </script>
 
 <section id="stories">
   <ul>
-    {#each stories as story, index}
+    {#each stories as story (story.slug)}
       <li>
-        <Story 
-          id={index + 1}
-          slug={story.slug}
-          tease={story.description}
-          month={story.month}
-          cardType={story.cardType}
-          href="/{story.slug}"
-        />
+        <Story {...story} />
       </li>
     {/each}
   </ul>
 </section>
 
+<!-- Keep your existing styles -->
 <style>
   section {
     margin-top: 16px;

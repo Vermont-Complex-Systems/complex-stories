@@ -1,46 +1,51 @@
 <script>
-	import ClimateChange from "$lib/components/stories/ClimateChange.svelte";
-	import SpaceExploration from "$lib/components/stories/SpaceExploration.svelte";
-	
-	let { data } = $props();
-	
-	const components = {
-		'climate-change': ClimateChange,
-		'space-exploration': SpaceExploration,
-	};
-	
-	// Use slug as the component type
-	const StoryComponent = components[data.story.slug];
+  import { getStoryComponent } from '$lib/utils/storyRegistry.js';
+  import Meta from '$lib/components/Meta.svelte';
+  
+  let { data } = $props();
+  console.log('Page data:', data);
+  
+  const { story, copyData } = data;
+  console.log('Story:', story);
+  console.log('Copy data:', copyData);
+  
+  const StoryComponent = getStoryComponent(story.slug);
+  console.log('Story component:', StoryComponent);
 </script>
 
-<div class="story-intro">
-	<h1>{data.story.title}</h1>
-	<p class="story-description">{data.story.description}</p>
-</div>
+<Meta 
+  title={story.short}
+  description={story.tease}
+/>
 
 {#if StoryComponent}
-	<StoryComponent story={data.story} />
+  <svelte:component this={StoryComponent} {story} data={copyData} />
 {:else}
-	<p>Story component not found for: {data.story.slug}</p>
+  <div class="error">
+    <h2>Story Component Not Found</h2>
+    <p>The story component for "{story.slug}" could not be loaded.</p>
+    <p>Slug: <code>{story.slug}</code></p>
+    <p>Expected path: <code>$lib/stories/{story.slug}/components/Index.svelte</code></p>
+  </div>
 {/if}
 
 <style>
-	.story-intro {
-		padding: 2rem 1rem;
-		text-align: center;
-		border-bottom: 1px solid #e2e8f0;
-	}
-
-	.story-intro h1 {
-		margin: 0 0 0.5rem 0;
-		font-size: 2.5rem;
-		font-weight: bold;
-	}
-
-	.story-intro p {
-		color: #6b7280;
-		font-size: 1.1rem;
-		max-width: 600px;
-		margin: 0 auto;
-	}
+  .error {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    text-align: center;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: #991b1b;
+  }
+  
+  .error code {
+    background: #fee2e2;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9rem;
+  }
 </style>

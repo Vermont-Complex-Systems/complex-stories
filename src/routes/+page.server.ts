@@ -1,15 +1,19 @@
-import storiesIndex from '$data/stories.csv';
+import storiesData from "$data/stories.js";
 
-export function load() {
-  const stories = storiesIndex.map((row) => ({
-    slug: row.slug,
-    title: row.title,
-    description: row.description,
-    cardType: row.cardType,
-    month: row.month
+export async function load() {
+  // Pass all the story data your Stories component needs
+  const stories = storiesData.map(story => ({
+    id: story.id,
+    slug: story.slug,
+    short: story.short,
+    tease: story.tease,
+    month: story.month,
+    bgColor: story.bgColor,
+    href: `/${story.slug}`, // Local links to your story pages
+    filters: story.filters
   }));
 
   return {
-    summaries: stories
+    stories
   };
 }

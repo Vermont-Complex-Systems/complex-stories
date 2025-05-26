@@ -1,14 +1,6 @@
 <script>
-  let { id, slug, title, description, month, cardType } = $props();
-
-  // Map card types to colors
-  const cardColors = {
-    theory: '#10b981',    // Green
-    popular: '#f59e0b',   // Yellow/Orange  
-    dashboard: '#ef4444'  // Red
-  };
+  let { id, href, slug, short, tease, month, bgColor } = $props();
   
-  const bgColor = cardColors[cardType];
   const style = bgColor ? `--story-bg: ${bgColor};` : "";
 </script>
 
@@ -17,20 +9,19 @@
     <p class="id">#{id}</p>
     <p class="month">{month}</p>
   </div>
-  <a href="/{slug}" class="inner">
+  <a {href} class="inner">
     <div class="screenshot">
-      <!-- Replace image with card type indicator -->
+      <!-- Your card content -->
       <div class="card-content">
-        <span class="card-type">{cardType}</span>
         <span class="story-number">#{id}</span>
       </div>
     </div>
     <div class="text">
       <h3 class="short">
-        <strong>{title}</strong>
+        <strong>{short}</strong>
       </h3>
       <p class="tease">
-        {description}
+        {tease}
       </p>
     </div>
   </a>
@@ -69,7 +60,6 @@
     display: block;
     text-decoration: none;
     cursor: pointer;
-    color: inherit;
   }
 
   a:focus-visible {
@@ -80,6 +70,17 @@
     transform: translateY(-4px);
   }
 
+  .story:not(.youtube):hover .screenshot img,
+  .story:not(.resource):hover .screenshot img {
+    transform: translate(-50%, 0) scale(1.05);
+  }
+
+  .story.youtube:hover .screenshot img,
+  .story.resource:hover .screenshot img {
+    transform: translate(-50%, 50%) scale(1.05);
+  }
+
+  /* Your card content hover effect */
   .story:hover .card-content {
     transform: translate(-50%, -50%) scale(1.05);
   }
@@ -91,6 +92,37 @@
     overflow: hidden;
   }
 
+  span.icon--play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4em;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: var(--z-top, 10);
+  }
+
+  img {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, 0) scale(1);
+    width: calc(100% - (var(--padding, 16px) * 2));
+    aspect-ratio: 6/7;
+    transform-origin: center center;
+    transition: transform calc(var(--1s, 1s) * 0.25);
+  }
+
+  .youtube img,
+  .resource img {
+    bottom: 50%;
+    transform: translate(-50%, 50%);
+    transform-origin: center center;
+    aspect-ratio: auto;
+  }
+
+  /* Your existing card content styles */
   .card-content {
     position: absolute;
     top: 50%;
@@ -130,9 +162,24 @@
     letter-spacing: -0.8px;
   }
 
+  .resource h3.short {
+    font-size: clamp(var(--20px, 20px), 6vw, var(--24px, 24px));
+  }
+
+  .footer h3.short {
+    display: none;
+  }
+
   p.tease {
     color: var(--color-secondary-gray, var(--color-fg, #666));
     font-size: var(--16px, 16px);
+  }
+
+  .footer p.tease {
+    color: var(--color-secondary-gray, var(--color-fg, #666));
+    font-size: clamp(var(--16px, 16px), 4vw, var(--20px, 20px));
+    font-weight: bold;
+    line-height: 1.2;
   }
 
   @media (min-width: 960px) {

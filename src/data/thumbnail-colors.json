@@ -1,0 +1,32 @@
+[
+    {
+        "slug": "networks-fast-and-slow",
+        "bg": "hsl(343, 56%, 61%)",
+        "text": "#000"
+    },
+    {
+        "slug": "vermont-livability-map",
+        "bg": "hsl(170, 100%, 35%)",
+        "text": "#000"
+    },
+    {
+        "slug": "tokenization",
+        "bg": "hsl(170, 100%, 35%)",
+        "text": "#000"
+    },
+    {
+        "slug": "explore-the-cat-project",
+        "bg": "hsl(52, 100%, 45%)",
+        "text": "#000"
+    },
+    {
+        "slug": "uvm-research-groups",
+        "bg": "hsl(170, 100%, 35%)",
+        "text": "#000"
+    },
+    {
+        "slug": "allotaxonometry",
+        "bg": "hsl(52, 100%, 45%)",
+        "text": "#000"
+    }
+]
