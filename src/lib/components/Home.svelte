@@ -8,8 +8,8 @@
 <main>
   <div class="column-wide">
     <header>
-      <h1>Scrollytelling Stories</h1>
-      <p>Interactive data stories that unfold as you scroll</p>
+      <h1>Complex Stories</h1>
+      <p>Cool website of the <em>Vermont Complex Systems Institute</em></p>
     </header>
     
     <Stories {stories} />
