@@ -1,33 +1,110 @@
 <script>
-  let { id, href, slug, short, tease, month, bgColor } = $props();
-  
+  let { 
+    id, 
+    href, 
+    slug, 
+    short, 
+    tease, 
+    month, 
+    bgColor, 
+    isExternal = false,
+    resource, 
+    footer 
+  } = $props();
+
   const style = bgColor ? `--story-bg: ${bgColor};` : "";
 </script>
 
-<div class="story" {style}>
-  <div class="info">
-    <p class="id">#{id}</p>
-    <p class="month">{month}</p>
-  </div>
-  <a {href} class="inner">
-    <div class="screenshot">
-      <!-- Your card content -->
-      <div class="card-content">
-        <span class="story-number">#{id}</span>
-      </div>
+<div class="story" {style} class:external={isExternal} class:resource class:footer>
+  {#if !resource && !footer}
+    <div class="info">
+      <p class="id">#{id}</p>
+      <p class="month">{month}</p>
+      {#if isExternal}
+        <span class="external-badge">External</span>
+      {/if}
     </div>
+  {/if}
+  
+  <a 
+    {href} 
+    rel={isExternal ? "external noopener" : undefined}
+    target={isExternal ? "_blank" : undefined}
+    class="inner"
+  >
+    <div class="screenshot">
+      {#if isExternal}
+        <!-- External story indicator -->
+        <div class="external-indicator">
+          <svg class="external-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m4-3h6v6m-11 5L21 3"/>
+          </svg>
+          <span class="external-text">External Link</span>
+        </div>
+      {:else}
+        <!-- Your existing card content for internal stories -->
+        <div class="card-content">
+          <span class="story-number">#{id}</span>
+        </div>
+      {/if}
+    </div>
+    
     <div class="text">
       <h3 class="short">
-        <strong>{short}</strong>
+        <strong>{@html short}</strong>
       </h3>
       <p class="tease">
-        {tease}
+        {@html tease}
       </p>
     </div>
   </a>
 </div>
 
 <style>
+  
+  .external-badge {
+    background: #e53e3e;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    font-weight: bold;
+  }
+  
+  .external-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .external-icon {
+    width: 2rem;
+    height: 2rem;
+    opacity: 0.9;
+  }
+  
+  .external-text {
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .story.external .screenshot {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  .story.external:hover .external-indicator {
+    transform: translate(-50%, -50%) scale(1.05);
+  }
   .info {
     display: flex;
     justify-content: space-between;
@@ -70,17 +147,7 @@
     transform: translateY(-4px);
   }
 
-  .story:not(.youtube):hover .screenshot img,
-  .story:not(.resource):hover .screenshot img {
-    transform: translate(-50%, 0) scale(1.05);
-  }
 
-  .story.youtube:hover .screenshot img,
-  .story.resource:hover .screenshot img {
-    transform: translate(-50%, 50%) scale(1.05);
-  }
-
-  /* Your card content hover effect */
   .story:hover .card-content {
     transform: translate(-50%, -50%) scale(1.05);
   }
@@ -91,38 +158,6 @@
     position: relative;
     overflow: hidden;
   }
-
-  span.icon--play {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 4em;
-    aspect-ratio: 1;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    z-index: var(--z-top, 10);
-  }
-
-  img {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translate(-50%, 0) scale(1);
-    width: calc(100% - (var(--padding, 16px) * 2));
-    aspect-ratio: 6/7;
-    transform-origin: center center;
-    transition: transform calc(var(--1s, 1s) * 0.25);
-  }
-
-  .youtube img,
-  .resource img {
-    bottom: 50%;
-    transform: translate(-50%, 50%);
-    transform-origin: center center;
-    aspect-ratio: auto;
-  }
-
-  /* Your existing card content styles */
   .card-content {
     position: absolute;
     top: 50%;
@@ -132,16 +167,6 @@
     color: white;
     transition: transform calc(var(--1s, 1s) * 0.25);
   }
-
-  .card-type {
-    display: block;
-    font-size: var(--16px, 16px);
-    text-transform: uppercase;
-    font-weight: bold;
-    margin-bottom: 8px;
-    font-family: var(--mono, monospace);
-  }
-
   .story-number {
     display: block;
     font-size: var(--24px, 24px);

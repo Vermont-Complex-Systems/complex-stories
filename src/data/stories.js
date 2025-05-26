@@ -27,7 +27,11 @@ const clean = data
     author: strToArray(d.author),
     keyword: strToArray(d.keyword),
     filters: addFaves(strToArray(d.filters), d.faves),
-    href: d.url_alt || `https://vermont-complex-systems.github.io/complex-stories/${d.url}`
+    external: d.external === 'true',
+    href: d.external === 'true' 
+      ? (d.url_alt || d.url)  // Use url_alt if provided, otherwise url
+      : `/${d.url}`,      
+    isExternal: d.external === 'true'
   }))
   .filter((d) => !d.hide_all)
   .map((d, i) => ({

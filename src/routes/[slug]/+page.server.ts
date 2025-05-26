@@ -1,31 +1,31 @@
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import storiesData from '$data/stories.js';
 
 export async function load({ params }) {
   const { slug } = params;
-  console.log('Loading story for slug:', slug);
   
   // Find the story by slug
   const story = storiesData.find(d => d.slug === slug);
-  console.log('Found story:', story);
   
   if (!story) {
-    console.log('Story not found for slug:', slug);
     throw error(404, 'Story not found');
   }
+  
+  // If it's an external story, redirect to the external URL
+  if (story.isExternal) {
+    throw redirect(302, story.href);
+  }
 
-  // Try to load the story's copy data
+  // Continue with internal story loading...
   let copyData = {};
   try {
-    const copyModule = await import(`$lib/stories/${slug}/data/copy.json`);
-    copyData = copyModule.default || copyModule;
-    console.log('Loaded copy data:', copyData);
+    copyData = await import(`$lib/stories/${slug}/data/copy.json`);
   } catch (e) {
-    console.warn(`No copy.json found for ${slug}:`, e);
+    console.warn(`No copy.json found for ${slug}`);
   }
 
   return {
     story,
-    copyData
+    copyData: copyData.default || copyData
   };
 }
