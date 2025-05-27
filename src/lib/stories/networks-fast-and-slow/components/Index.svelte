@@ -71,7 +71,6 @@
                 <div class="step" class:active>
 					<p> 
                     <Md text={text.value}/>
-                    <!-- {@html text.value} -->
                     </p>
                 </div>
             {/each}

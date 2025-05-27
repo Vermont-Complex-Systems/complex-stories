@@ -20,5 +20,8 @@ export default defineConfig({
 			$data: path.resolve("./src/data"),
 			$styles: path.resolve("./src/styles"),
 		}
+	},
+	ssr: {
+		noExternal: ['d3-regression']
 	}
 });
