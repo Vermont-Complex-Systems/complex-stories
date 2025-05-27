@@ -7,6 +7,7 @@
 	import nodes from '../data/nodes.csv';
 	import Scrolly from '$lib/components/helpers/Scrolly.svelte';
 	import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
+  import Hero from './Hero.svelte';
 
 	let { story, data } = $props();
 
@@ -25,6 +26,8 @@
 	const padding = { top: 20, right: 40, bottom: 20, left: 60 };
 
 </script>
+
+<Hero />
 
 <section id="mean-field">
     <h2>Part I: Annealing</h2>
