@@ -1,6 +1,7 @@
 <script>
 	import Scrolly from "$lib/components/helpers/Scrolly.svelte";
 	import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
+	import WordTree from './WordTree.svelte';
 	
 	let { story, data } = $props();
 	
@@ -11,18 +12,26 @@
 	const steps = data.steps;
 	const postIntro = data.postIntro;
 
+	let wordArray = ['the', 'quick', 'brown', 'fox', 'jumps', 'over', 'the', 'lazy', 'dog'];
+
+	let progress = $state(0);
 
 	let width = $state(innerWidth.current > 1200 ? 500 : 350);
 	let height = 600;
 	const padding = { top: 20, right: 40, bottom: 20, left: 60 };
 </script>
 
-<section id="scrolly">
+<section id="story">
 	
-	
+	<div class="chart-container-scrolly">
+		<div>Active step is {scrollyIndex} at {progress}</div>
+		<WordTree wordArray={wordArray}  />
+	</div>
 	<div class="spacer"></div>
 	
-	<Scrolly bind:value={scrollyIndex}  offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
+
+
+<Scrolly bind:value={scrollyIndex} bind:scrollProgress={progress} offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
 		{#each steps as text, i}
 				{@const active = scrollyIndex === i}
 				<div class="step" class:active>
@@ -38,7 +47,8 @@
 </section>
 
 <style>
-	#scrolly {
+	/* override some global styles */
+	#story {
 		--color-bg: #f8ecd4; /* subtle tan */
   background-color: var(--color-bg);
   background-image:
@@ -47,67 +57,45 @@
 	/* vignette for old feel */
 	radial-gradient(ellipse at center, rgba(0,0,0,0) 20%, rgba(80,60,30,0.40) 100%);
   background-blend-mode: multiply, normal;
-  background-size: 400px 400px, 100% 100%;
+  background-size: 100% 100%, 100% 100%;
   background-repeat: repeat, no-repeat;
   color: #3b2f1e; /* dark brown for text */
   font-family: 'Tiempos Text', Iowan Old Style, Times New Roman, Times, serif;
 	}
-	.sticky-viz {
-		position: sticky;
-		top: 2rem;
-		height: 70vh;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		margin: 0 2rem;
-		padding: 2rem;
+
+	/* Only global page styles */
+	section {
+	margin: 2rem auto;
+	max-width: 1200px;
+	padding: 0 2rem;
 	}
 
-	.sticky-viz h2 {
-		margin: 0 0 2rem 0;
-		font-size: 1.8rem;
-		color: #2d3748;
+	/* Allow viz sections to overflow the max-width */
+	section:has(.chart-container-scrolly) {
+	max-width: none; /* Remove width constraint for sections with visualizations */
+	padding: 0 1rem; /* Reduce padding to give more space */
 	}
 
-	.content-card {
-		background: white;
-		border-radius: 12px;
-		padding: 2rem;
-		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-		border: 1px solid #e2e8f0;
-		text-align: center;
-		max-width: 500px;
-		width: 100%;
+	section h2 {
+	font-size: 36px;
+	margin-bottom: 1rem;
 	}
 
-	.step-number {
-		color: #667eea;
-		font-weight: 600;
-		font-size: 1rem;
-		margin-bottom: 1rem;
+	section p {
+	font-size: 22px;
+	max-width: 800px;
+	line-height: 1.6;
 	}
 
-	.story-text {
-		font-size: 1.2rem;
-		line-height: 1.6;
-		color: #2d3748;
-		margin: 0 0 1.5rem 0;
-	}
 
-	.data-preview {
-		background: #f7fafc;
-		border-radius: 8px;
-		padding: 1rem;
-		font-family: monospace;
-		font-size: 0.9rem;
-		color: #4a5568;
-	}
-
-	.start-message {
-		color: #718096;
-		font-size: 1.1rem;
-		margin: 0;
+	/* Keep only the first section's scrolly styles */
+	.chart-container-scrolly {
+	width: 40%;
+	height: 550px;
+	position: sticky;
+	top: calc(50vh - 275px);
+	right: 5%;
+	margin-left: auto;
 	}
 
 	.spacer {

@@ -12,16 +12,16 @@
 	 * <Scrolly root={null} top={0} bottom={0} increments={100}>
 	 */
 	
-
-let {
-  root = null,
-  top = 0,
-  bottom = 0,
-  increments = 100,
-  value = $bindable(undefined), // scrollIndex
-  progress = $bindable(0),     // progress through current step (0-1)
-  children
-} = $props();
+	let {
+		root = null,
+		top = 0,
+		bottom = 0,
+		increments = 100,
+		value = $bindable(undefined),
+		// add scrollProgress as prop
+		scrollProgress = $bindable(undefined),
+		children
+	} = $props();
 
 	let steps = [];
 	let threshold = [];
@@ -30,32 +30,35 @@ let {
 	let container = undefined;
 
 function mostInView () {
-  let maxRatio = 0;
-  let maxIndex = 0;
-  for (let i = 0; i < steps.length; i++) {
-	if (steps[i] > maxRatio) {
-	  maxRatio = steps[i];
-	  maxIndex = i;
+	let maxRatio = 0;
+	let maxIndex = 0;
+	for (let i = 0; i < steps.length; i++) {
+		if (steps[i] > maxRatio) {
+			maxRatio = steps[i];
+			maxIndex = i;
+		}
 	}
-  }
 
-  if (maxRatio > 0) {
-	value = maxIndex;
-	// Calculate progress for the current step
-	// Find the DOM node for the current step
-	if (nodes && nodes[maxIndex]) {
-	  const rect = nodes[maxIndex].getBoundingClientRect();
-	  const viewportHeight = window.innerHeight;
-	  // Progress: 0 at top, 1 at bottom of step (center of viewport)
-	  progress = Math.min(1, Math.max(0, (viewportHeight / 2 - rect.top) / rect.height));
+	if (maxRatio > 0) {
+		value = maxIndex;
+		
+		// Calculate scroll progress for the current step
+		if (nodes && nodes[maxIndex]) {
+			const rect = nodes[maxIndex].getBoundingClientRect();
+			const viewportHeight = window.innerHeight;
+			let prog = (viewportHeight / 2 - rect.top) / rect.height;
+			prog = Math.min(1, Math.max(0, prog));
+			scrollProgress = prog;
+		} else {
+			scrollProgress = 0;
+		}
+		console.log(scrollProgress);
 	} else {
-	  progress = 0;
+		value = undefined;
+		scrollProgress = 0;
 	}
-  } else {
-	value = undefined;
-	progress = 0;
-  }
-};
+	console.log(scrollProgress, value);
+}
 
 	function createObserver(node, index) {
 		const handleIntersect = (e) => {
@@ -95,6 +98,8 @@ function mostInView () {
 		bottom;
 		update();
 	});
+
+
 
 </script>
 
