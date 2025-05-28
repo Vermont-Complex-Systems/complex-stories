@@ -24,20 +24,34 @@
 	
 	<Scrolly bind:value={scrollyIndex}  offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
 		{#each steps as text, i}
-                {@const active = scrollyIndex === i}
-                <div class="step" class:active>
+				{@const active = scrollyIndex === i}
+				<div class="step" class:active>
 					<p> 
 						<Md text={text.value}/>
-                        <!-- {@html text.value} -->
-                    </p>
-                </div>
-            {/each}
+						<!-- {@html text.value} -->
+					</p>
+				</div>
+			{/each}
 	</Scrolly>
 	
 	<div class="spacer"></div>
 </section>
 
 <style>
+	#scrolly {
+		--color-bg: #f8ecd4; /* subtle tan */
+  background-color: var(--color-bg);
+  background-image:
+	/* more visible random crinkle/noise SVG texture */
+	url("data:image/svg+xml;utf8,<svg width='400' height='400' xmlns='http://www.w3.org/2000/svg'><filter id='noise'><feTurbulence type='fractalNoise' baseFrequency='0.055' numOctaves='2' seed='7'/><feColorMatrix type='saturate' values='0.1'/></filter><rect width='100%' height='100%' filter='url(%23noise)' opacity='0.22'/></svg>"),
+	/* vignette for old feel */
+	radial-gradient(ellipse at center, rgba(0,0,0,0) 20%, rgba(80,60,30,0.40) 100%);
+  background-blend-mode: multiply, normal;
+  background-size: 400px 400px, 100% 100%;
+  background-repeat: repeat, no-repeat;
+  color: #3b2f1e; /* dark brown for text */
+  font-family: 'Tiempos Text', Iowan Old Style, Times New Roman, Times, serif;
+	}
 	.sticky-viz {
 		position: sticky;
 		top: 2rem;
@@ -97,28 +111,28 @@
 	}
 
 	.spacer {
-    height: 75vh;
+	height: 75vh;
   }
 
   .step {
-    height: 80vh;
-    display: flex;
-    place-items: center;
-    justify-content: center;
+	height: 80vh;
+	display: flex;
+	place-items: center;
+	justify-content: center;
   }
 
   .step p {
-    padding: 0.5rem 1rem;
-    background: whitesmoke;
-    color: #333;
-    border-radius: 5px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    transition: background 500ms ease;
-    box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
-    z-index: 10;
-    width: 40%;
-    transform: translateX(-60%);
+	padding: 0.5rem 1rem;
+	background: whitesmoke;
+	color: #333;
+	border-radius: 5px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	transition: background 500ms ease;
+	box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+	z-index: 10;
+	width: 40%;
+	transform: translateX(-60%);
   }
 </style>
