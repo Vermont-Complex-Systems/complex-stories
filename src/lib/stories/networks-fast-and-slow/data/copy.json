@@ -1,41 +1,69 @@
 {
-  "title": "Networks Fast and Slow",
-  "description": "Understanding how networks transform over time through interactive visualization.",
-  "steps": [
+    "steps": [
     {
-      "data": {
-        "year": "2000",
-        "event": "Initial Network Formation"
-      },
-      "text": "The network begins with scattered nodes, each representing individual entities in their original positions."
+      "type": "markdown",
+      "value": "Annealed networks work similarly: by rapidly reshuffling, we erase specific structures while preserving general patterns, like degree. We implement this by reshuffling the network’s edges every 500 milliseconds, effectively sampling a new adjacency matrix each time. This corresponds to the assumption that network structure changes much faster than the dynamics evolving on top of it."
     },
     {
-      "data": {
-        "year": "2005", 
-        "event": "Lateral Expansion"
-      },
-      "text": "As connections form, the entire network shifts eastward, representing the geographic spread of influence."
+      "type": "markdown",
+      "value": "Lets freeze the network with an infected node to show the dynamics (it is also the star of our show, for now, so we'll make it a star). We’ll perform a simple Susceptible-Infected step among a node’s flickering neighbors — those it's currently connected to.  "
     },
     {
-      "data": {
-        "year": "2010",
-        "event": "Horizontal Scaling"
-      },
-      "text": "The network stretches horizontally as new nodes join, creating wider connectivity patterns."
+      "type": "markdown",
+      "value": "In contagion processes, these are typically interpreted as the people you could influence or be influenced by. In a way, this momentary set of neighbors is your group.  Granted, it’s a pretty rough definition of a group — in our little simulation, you might never see that exact same configuration of people again! "
     },
     {
-      "data": {
-        "year": "2015",
-        "event": "Network Inversion"
-      },
-      "text": "A major disruption causes the network to flip and compress, representing a paradigm shift in connections."
+      "type": "markdown",
+      "value": "Among neighbors we will select one random neighbor to maybe infect. Here's the lucky neighbor. Now with some probability (50%) we infect it."
     },
     {
-      "data": {
-        "year": "2020",
-        "event": "Stabilized Growth"
-      },
-      "text": "The network returns to center but grows larger, showing maturity and expanded influence."
+      "type": "markdown",
+      "value": "Success!"
+    },
+    {
+      "type": "markdown",
+      "value": "Now that the SI step is done, repeat! We shuffle, we do a SI step. We shuffle, we do a SI step."
+    },
+    {
+      "type": "markdown",
+      "value": "Ok, cool. What else."
+    },
+    {
+      "type": "markdown",
+      "value": "In the mean-field world, we can also start from the neighbors. They are the stars now. This view make more sense for complex contagion of social behaviors, but it works just fine with airborn diseases."
+    },
+    {
+      "type": "markdown",
+      "value": "In this case, we can think about the chance of your friends make you buy an iphone. In red, they are the red nodes again. In threshold models, your decision isn't just a matter of one friend’s influence — it’s nonlinear. Once enough of your friends are on board, you hit a tipping point and adopt the behavior yourself.  Here, we see that out of $N$ friends, 4 are currently active. Are they enough to sway you? "
+    },
+    {
+      "type": "markdown",
+      "value": "Huzzay, you got pressured by your friend to have a new iphone you absolutely didn't need!"
+    },
+    {
+      "type": "markdown",
+      "value": "Lets reset everything and move to quenched networks. This time around, we want our group to stick around (maybe too much)."
+    }
+  ],
+  "postIntro": [
+    {
+      "type": "markdown",
+      "value": "Ok. Now a way to make clearer the two limits of annealed vs quenched would be to take two nodes as reference, of which one is infected. "
+    },
+    {
+      "type": "markdown",
+      "value": "We let the dynamics run, taking note every time the two nodes are in contact — that is, measuring their contact duration. At an infection rate $r = 0.2$ (per second), it will take on average  $t = \\frac{1}{r} = 5$  seconds of contact for an infection to occur — at which point the susceptible node turns red. This is because we’re assuming a small probability of infection per unit of contact time. If each contact lasts s  seconds, then the probability of infection during that contact is approximately: $$\\newline P(\\text{infection in contact}) = 1 - \\exp(-r⋅s) ≈ r⋅s \\newline$$ (for small s, the exponential approximates linearly) So, if contacts are short — say  $s = 1$  second — it takes $\\frac{t}{s} = 5$ contact events on average before the infection happens. Longer contacts mean infection is more likely to happen in a single encounter. Shorter contacts require repeated interactions. "
+    },
+    {
+      "type": "markdown",
+      "value": "Now, we generalize this process to get the average s for many trials (let it time to run). Showing some measure of correlation and *s*. "
+    },
+    {
+      "type": "markdown",
+      "value": "One more plot to show showing structural similarity and mutual information."
+    },{
+      "type": "markdown",
+      "value": "We're done with Scrolling!"
     }
   ]
 }
