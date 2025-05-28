@@ -127,7 +127,7 @@ h6 {
 	font-size: var(--20px, 20px);
 }
 
-main {
+.centered-max-width {
 	max-width: var(--width-column-wide);
 	margin: 0 auto;
 	padding: 0;
