@@ -111,12 +111,11 @@
 	.hero-content h1 {
 		font-size: 3rem;
 		font-weight: bold;
-		color: #1a1a1a;
 	}
 
 	.text-block {
 		margin-top: 3rem;
-		color: #1a1a1a;
+		
 		font-size: 1.3rem;
 		line-height: 1.3;
 	}
@@ -126,7 +125,7 @@
 	}
 
 	.text-block a {
-		color: #1a1a1a;
+		
 		text-decoration: underline;
 	}
 
