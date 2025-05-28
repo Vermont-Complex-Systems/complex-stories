@@ -1,5 +1,5 @@
 {
-    "steps": [
+    "firstSection": [
     {
       "type": "markdown",
       "value": "Language is a human skill. Computers were historically very bad at language...until LLMs came along."
@@ -15,7 +15,9 @@
     {
       "type": "markdown",
       "value": "Choosing which dictionary to use is an important step in the process: adjust the slider to see how it affects the model below."
-    },
+    }
+  ],
+  "secondSection": [
     {
       "type": "markdown",
       "value": "Many people think of LLMs as a sort of “black box”: you ask a question, and an answer magically appears! "
@@ -39,27 +41,6 @@
     {
       "type": "markdown",
       "value": "And finally, at the final layer, we can see how the model will likely behave when interpreting text."
-    }
-  ],
-  "postIntro": [
-    {
-      "type": "markdown",
-      "value": "Ok. Now a way to make clearer the two limits of annealed vs quenched would be to take two nodes as reference, of which one is infected. "
-    },
-    {
-      "type": "markdown",
-      "value": "We let the dynamics run, taking note every time the two nodes are in contact — that is, measuring their contact duration. At an infection rate $r = 0.2$ (per second), it will take on average  $t = \\frac{1}{r} = 5$  seconds of contact for an infection to occur — at which point the susceptible node turns red. This is because we’re assuming a small probability of infection per unit of contact time. If each contact lasts s  seconds, then the probability of infection during that contact is approximately: $$\\newline P(\\text{infection in contact}) = 1 - \\exp(-r⋅s) ≈ r⋅s \\newline$$ (for small s, the exponential approximates linearly) So, if contacts are short — say  $s = 1$  second — it takes $\\frac{t}{s} = 5$ contact events on average before the infection happens. Longer contacts mean infection is more likely to happen in a single encounter. Shorter contacts require repeated interactions. "
-    },
-    {
-      "type": "markdown",
-      "value": "Now, we generalize this process to get the average s for many trials (let it time to run). Showing some measure of correlation and *s*. "
-    },
-    {
-      "type": "markdown",
-      "value": "One more plot to show showing structural similarity and mutual information."
-    },{
-      "type": "markdown",
-      "value": "We're done with Scrolling!"
     }
   ]
 }

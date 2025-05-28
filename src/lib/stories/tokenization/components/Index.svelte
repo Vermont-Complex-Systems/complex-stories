@@ -1,18 +1,23 @@
 <script>
 	import Scrolly from "$lib/components/helpers/Scrolly.svelte";
 	import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
-	import WordTree from './WordTree.svelte';
+	// import WordTree from './WordTree.svelte';
+	import TextInterpolator from "./TextInterpolator.svelte";
+	import Hero from './Hero.svelte';
+	import StackedSlider from "./StackedSlider.svelte";
 	
 	let { story, data } = $props();
-	
 	
 	// const components = { Hero };
 	let scrollyIndex = $state();
 	
-	const steps = data.steps;
-	const postIntro = data.postIntro;
+	const steps = data.firstSection;
+	const secondSectionSteps = data.secondSection;
 
-	let wordArray = ['the', 'quick', 'brown', 'fox', 'jumps', 'over', 'the', 'lazy', 'dog'];
+	let currentSection = $state(undefined);
+
+	// count how many objects in data 
+	const sectionNums = Object.keys(data).length;
 
 	let progress = $state(0);
 
@@ -21,16 +26,17 @@
 	const padding = { top: 20, right: 40, bottom: 20, left: 60 };
 </script>
 
-<section id="story">
+<div id="story">
+
+	<Hero />
+	
 	
 	<div class="chart-container-scrolly">
 		<div>Active step is {scrollyIndex} at {progress}</div>
-		<WordTree wordArray={wordArray}  />
+		<!-- <WordTree wordArray={wordDictionary} progress={progress}  /> -->
+		<TextInterpolator progress={progress} currentStep={scrollyIndex} />
 	</div>
 	<div class="spacer"></div>
-	
-
-
 <Scrolly bind:value={scrollyIndex} bind:scrollProgress={progress} offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
 		{#each steps as text, i}
 				{@const active = scrollyIndex === i}
@@ -42,9 +48,28 @@
 				</div>
 			{/each}
 	</Scrolly>
+
+
+	<div class="chart-container-scrolly">
+		<div>Active step is {scrollyIndex} at {progress}</div>
+		<!-- <WordTree wordArray={wordDictionary} progress={progress}  /> -->
+		<StackedSlider></StackedSlider>
+	</div>
+	<div class="spacer"></div>
+<Scrolly bind:value={scrollyIndex} bind:scrollProgress={progress} offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
+		{#each secondSectionSteps as text, i}
+				{@const active = scrollyIndex === i}
+				<div class="step" class:active>
+					<p> 
+						<Md text={text.value}/>
+						<!-- {@html text.value} -->
+					</p>
+				</div>
+			{/each}
+	</Scrolly>
 	
 	<div class="spacer"></div>
-</section>
+</div>
 
 <style>
 	/* override some global styles */
@@ -90,8 +115,8 @@
 
 	/* Keep only the first section's scrolly styles */
 	.chart-container-scrolly {
-	width: 40%;
-	height: 550px;
+	width: 70%;
+	height: 750px;
 	position: sticky;
 	top: calc(50vh - 275px);
 	right: 5%;
