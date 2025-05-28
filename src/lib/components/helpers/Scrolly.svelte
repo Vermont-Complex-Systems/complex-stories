@@ -12,14 +12,16 @@
 	 * <Scrolly root={null} top={0} bottom={0} increments={100}>
 	 */
 	
-	let {
-		root = null,
-		top = 0,
-		bottom = 0,
-		increments = 100,
-		value = $bindable(undefined),
-		children
-	} = $props();
+
+let {
+  root = null,
+  top = 0,
+  bottom = 0,
+  increments = 100,
+  value = $bindable(undefined), // scrollIndex
+  progress = $bindable(0),     // progress through current step (0-1)
+  children
+} = $props();
 
 	let steps = [];
 	let threshold = [];
@@ -27,19 +29,33 @@
 	let intersectionObservers = [];
 	let container = undefined;
 
-	function mostInView () {
-		let maxRatio = 0;
-		let maxIndex = 0;
-		for (let i = 0; i < steps.length; i++) {
-			if (steps[i] > maxRatio) {
-				maxRatio = steps[i];
-				maxIndex = i;
-			}
-		}
+function mostInView () {
+  let maxRatio = 0;
+  let maxIndex = 0;
+  for (let i = 0; i < steps.length; i++) {
+	if (steps[i] > maxRatio) {
+	  maxRatio = steps[i];
+	  maxIndex = i;
+	}
+  }
 
-		if (maxRatio > 0) value = maxIndex;
-		else value = undefined;
-	};
+  if (maxRatio > 0) {
+	value = maxIndex;
+	// Calculate progress for the current step
+	// Find the DOM node for the current step
+	if (nodes && nodes[maxIndex]) {
+	  const rect = nodes[maxIndex].getBoundingClientRect();
+	  const viewportHeight = window.innerHeight;
+	  // Progress: 0 at top, 1 at bottom of step (center of viewport)
+	  progress = Math.min(1, Math.max(0, (viewportHeight / 2 - rect.top) / rect.height));
+	} else {
+	  progress = 0;
+	}
+  } else {
+	value = undefined;
+	progress = 0;
+  }
+};
 
 	function createObserver(node, index) {
 		const handleIntersect = (e) => {
