@@ -1,28 +1,65 @@
 {
-  "slug": "climate-change",
-  "title": "The Rising Tide: A Climate Story",
-  "description": "Explore the impact of climate change through data visualization",
-  "cardType": "popular",
-  "steps": [
+    "steps": [
     {
-      "text": "Global temperatures have risen by 1.1°C since 1880",
-      "data": { "temperature": 1.1, "year": 2023 }
+      "type": "markdown",
+      "value": "Language is a human skill. Computers were historically very bad at language...until LLMs came along."
     },
     {
-      "text": "Arctic sea ice is declining at 13% per decade",
-      "data": { "iceDecline": 13, "region": "Arctic" }
+      "type": "markdown",
+      "value": "For humans, language is made up of words. But an LLM has it’s own kind of word, called a “token”.<br />Tokens are the building blocks of the language of an LLM.<br>Unlike human language, tokens do not have to be words. They can be shorter than human-readable words, or they can be multiple words together."
     },
     {
-      "text": "Sea levels have risen 8-9 inches since 1880",
-      "data": { "seaLevel": 8.5, "timespan": "1880-2023" }
+      "type": "markdown",
+      "value": "Each model has its own “dictionary” of sorts based on its tokenization. The tokens are the vocabulary that allow a model to interpret text and to write new text."
     },
     {
-      "text": "CO2 levels are now over 420 parts per million",
-      "data": { "co2": 421, "threshold": 350 }
+      "type": "markdown",
+      "value": "Choosing which dictionary to use is an important step in the process: adjust the slider to see how it affects the model below."
     },
     {
-      "text": "We still have time to act, but the window is closing",
-      "data": { "action": "urgent", "timeLeft": "limited" }
+      "type": "markdown",
+      "value": "Many people think of LLMs as a sort of “black box”: you ask a question, and an answer magically appears! "
+    },
+    {
+      "type": "markdown",
+      "value": "Tokens act as the bridge into and out of an LLM. But there are ways to understand these models—and starting with tokens can help!"
+    },
+    {
+      "type": "markdown",
+      "value": "How does a model make connections between words? How does it understand something?"
+    },
+    {
+      "type": "markdown",
+      "value": "The Distributional Hypothesis states that words that occur in the same contexts tend to have similar meanings. So how does an LLM group different words?"
+    },
+    {
+      "type": "markdown",
+      "value": "By passing some text into a model, we can watch how it is grouped and re-grouped into different clusters (see footnote) at each layer."
+    },
+    {
+      "type": "markdown",
+      "value": "And finally, at the final layer, we can see how the model will likely behave when interpreting text."
+    }
+  ],
+  "postIntro": [
+    {
+      "type": "markdown",
+      "value": "Ok. Now a way to make clearer the two limits of annealed vs quenched would be to take two nodes as reference, of which one is infected. "
+    },
+    {
+      "type": "markdown",
+      "value": "We let the dynamics run, taking note every time the two nodes are in contact — that is, measuring their contact duration. At an infection rate $r = 0.2$ (per second), it will take on average  $t = \\frac{1}{r} = 5$  seconds of contact for an infection to occur — at which point the susceptible node turns red. This is because we’re assuming a small probability of infection per unit of contact time. If each contact lasts s  seconds, then the probability of infection during that contact is approximately: $$\\newline P(\\text{infection in contact}) = 1 - \\exp(-r⋅s) ≈ r⋅s \\newline$$ (for small s, the exponential approximates linearly) So, if contacts are short — say  $s = 1$  second — it takes $\\frac{t}{s} = 5$ contact events on average before the infection happens. Longer contacts mean infection is more likely to happen in a single encounter. Shorter contacts require repeated interactions. "
+    },
+    {
+      "type": "markdown",
+      "value": "Now, we generalize this process to get the average s for many trials (let it time to run). Showing some measure of correlation and *s*. "
+    },
+    {
+      "type": "markdown",
+      "value": "One more plot to show showing structural similarity and mutual information."
+    },{
+      "type": "markdown",
+      "value": "We're done with Scrolling!"
     }
   ]
 }

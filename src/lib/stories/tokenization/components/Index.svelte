@@ -1,36 +1,37 @@
 <script>
 	import Scrolly from "$lib/components/helpers/Scrolly.svelte";
+	import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 	
-	let { story } = $props();
-	let value = $state();
-	let currentStep = $derived(story.steps[value]);
+	let { story, data } = $props();
+	
+	
+	// const components = { Hero };
+	let scrollyIndex = $state();
+	
+	const steps = data.steps;
+	const postIntro = data.postIntro;
+
+
+	let width = $state(innerWidth.current > 1200 ? 500 : 350);
+	let height = 600;
+	const padding = { top: 20, right: 40, bottom: 20, left: 60 };
 </script>
 
 <section id="scrolly">
-	<div class="sticky-viz">
-		<h2>Climate Story</h2>
-		
-		{#if currentStep}
-			<div class="content-card">
-				<div class="step-number">Step {value + 1}</div>
-				<p class="story-text">{currentStep.text}</p>
-				<div class="data-preview">
-					{JSON.stringify(currentStep.data, null, 2)}
-				</div>
-			</div>
-		{:else}
-			<div class="content-card">
-				<p class="start-message">Scroll down to begin the story</p>
-			</div>
-		{/if}
-	</div>
+	
 	
 	<div class="spacer"></div>
 	
-	<Scrolly bind:value>
-		{#each story.steps as step, i}
-			<div class="step"></div>
-		{/each}
+	<Scrolly bind:value={scrollyIndex}  offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
+		{#each steps as text, i}
+                {@const active = scrollyIndex === i}
+                <div class="step" class:active>
+					<p> 
+						<Md text={text.value}/>
+                        <!-- {@html text.value} -->
+                    </p>
+                </div>
+            {/each}
 	</Scrolly>
 	
 	<div class="spacer"></div>
@@ -95,11 +96,29 @@
 		margin: 0;
 	}
 
-	.step {
-		height: 80vh;
-	}
-
 	.spacer {
-		height: 75vh;
-	}
+    height: 75vh;
+  }
+
+  .step {
+    height: 80vh;
+    display: flex;
+    place-items: center;
+    justify-content: center;
+  }
+
+  .step p {
+    padding: 0.5rem 1rem;
+    background: whitesmoke;
+    color: #333;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: background 500ms ease;
+    box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    width: 40%;
+    transform: translateX(-60%);
+  }
 </style>
