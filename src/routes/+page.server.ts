@@ -8,10 +8,12 @@ export async function load() {
     tease: story.tease,
     month: story.month,
     bgColor: story.bgColor,
-    href: story.external ? story.href : `/${story.slug}`, // External URL for external stories
+    href: story.external ? story.href : `/${story.slug}`,
     isExternal: story.external,
-    filters: story.filters
+    filters: Array.isArray(story.filters) ? story.filters : [story.filters] // Ensure it's an array
   }));
+
+  console.log("Processed stories:", stories.slice(0, 3)); // Debug log
 
   return {
     stories

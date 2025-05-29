@@ -14,7 +14,6 @@
   </ul>
 </section>
 
-<!-- Keep your existing styles -->
 <style>
   section {
     margin-top: 16px;
@@ -22,29 +21,36 @@
 
   ul {
     padding: 0;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px 16px; /* 32px vertical, 16px horizontal gap */
     margin: 0 auto;
+    max-width: 1200px; /* Optional: constrain max width */
   }
 
   li {
     margin: 0;
     list-style-type: none;
-    padding: 32px 16px;
-    width: 100%;
+    padding: 0 16px; /* Only horizontal padding now */
     --padding: clamp(16px, 12vw, 48px);
   }
 
   @media only screen and (min-width: 600px) {
+    ul {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
     li {
-      width: 50%;
       --padding: clamp(16px, 6vw, 48px);
     }
   }
 
   @media only screen and (min-width: 960px) {
+    ul {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    
     li {
-      width: 33.3%;
       --padding: clamp(24px, 4vw, 56px);
     }
   }
