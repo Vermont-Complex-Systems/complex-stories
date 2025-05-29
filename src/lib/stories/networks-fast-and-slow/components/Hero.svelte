@@ -74,6 +74,7 @@
 		padding: 2rem 0;
 		position: relative;
 		box-sizing: border-box;
+		background-color: var(--color-bg);
 	}
 
 	.top-nav {
@@ -119,12 +120,13 @@
 	.hero-content h1 {
 		font-size: 3rem;
 		font-weight: bold;
-		color: #1a1a1a;
+		color: var(--color-fg);
+		font-family: var(--sans);
 	}
 
 	.text-block {
 		margin-top: 3rem;
-		color: #1a1a1a;
+		color: var(--color-fg);
 		font-size: 1.3rem;
 		line-height: 1.3;
 	}
@@ -134,8 +136,13 @@
 	}
 
 	.text-block a {
-		color: #1a1a1a;
+		color: var(--color-link);
 		text-decoration: underline;
+		transition: color var(--transition-medium);
+	}
+
+	.text-block a:hover {
+		color: var(--color-link-hover);
 	}
 
 	.plot-side {
@@ -147,16 +154,30 @@
 		justify-content: center;
 		margin-bottom: 1rem;
 		font-size: 1.1rem;
+		color: var(--color-fg);
+		font-family: var(--font-form);
+		gap: 0.5rem;
+		align-items: center;
+	}
+
+	.ball-count input[type="range"] {
+		margin: 0 0.5rem;
 	}
 
 	.chart-container {
 		position: relative;
 		margin: 1rem auto;
-		border: 2px solid #000;
+		border: 2px solid var(--color-border);
 		border-radius: 6px;
 		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 		max-height: 450px;
 		max-width: 350px;
+		background-color: var(--color-bg);
+	}
+
+	/* Dark mode shadow adjustment */
+	:global(.dark) .chart-container {
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 	}
 
 	@media (max-width: 1200px) {
@@ -196,5 +217,5 @@
 			width: clamp(75px, 12vw, 110px);
 			height: clamp(48px, 7.8vw, 71px);
 		}
-		}
+	}
 </style>
