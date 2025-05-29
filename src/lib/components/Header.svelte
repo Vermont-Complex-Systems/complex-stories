@@ -157,11 +157,6 @@
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 	}
 	
-	.icon {
-		width: 1.125rem;
-		height: 1.125rem;
-	}
-	
 	@media (max-width: 768px) {
 		.header {
 			padding: 1.5rem 0;
