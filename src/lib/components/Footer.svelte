@@ -8,7 +8,6 @@
 			<h3>About</h3>
 			<ul>
 				<li><a href="{base}/about">Our Team</a></li>
-				<li><a href="{base}/mission">Our Mission</a></li>
 			</ul>
 		</div>
 		
