@@ -42,31 +42,21 @@
     class="inner"
   >
     <div class="screenshot">
-      {#if hasImage && !isExternal}
-        <!-- Internal story with thumbnail -->
-        <img 
-          src="{imagePath}/{slug}.jpg" 
-          loading="lazy" 
-          alt="Thumbnail for {short}"
-        />
-        <!-- Fallback card content if image fails to load -->
+      <div class="screenshot">
+      {#if hasImage}
+        <!-- Show thumbnail for both internal and external -->
+        <img src="{imagePath}/{slug}.jpg" loading="lazy" alt="Thumbnail for {short}" />
+        <!-- Fallback if image fails -->
         <div class="card-content fallback" style="display: none;">
           <span class="story-number">#{id}</span>
         </div>
-      {:else if isExternal}
-        <!-- External story indicator -->
-        <div class="external-indicator">
-          <svg class="external-icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m4-3h6v6m-11 5L21 3"/>
-          </svg>
-          <span class="external-text">External Link</span>
-        </div>
       {:else}
-        <!-- Fallback for stories without images -->
+        <!-- Only show icon if no image -->
         <div class="card-content">
           <span class="story-number">#{id}</span>
         </div>
       {/if}
+    </div>
     </div>
     
     <div class="text">
@@ -180,40 +170,6 @@
     font-weight: bold;
   }
 
-  /* External story styles */
-  .external-indicator {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .external-icon {
-    width: 2rem;
-    height: 2rem;
-    opacity: 0.9;
-  }
-  
-  .external-text {
-    font-size: 0.9rem;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  
-  .story.external .screenshot {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  }
-  
-  .story.external:hover .external-indicator {
-    transform: translate(-50%, -50%) scale(1.05);
-  }
 
   /* Text content */
   .text {

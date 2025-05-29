@@ -1,19 +1,17 @@
 import storiesData from "$data/stories.js";
 
 export async function load() {
-  // Filter out external stories from getting internal routes
-  const stories = storiesData
-    .filter(story => !story.external && !story.isExternal) // Only internal stories
-    .map(story => ({
-      id: story.id,
-      slug: story.slug,
-      short: story.short,
-      tease: story.tease,
-      month: story.month,
-      bgColor: story.bgColor,
-      href: `/${story.slug}`,
-      filters: story.filters
-    }));
+  const stories = storiesData.map(story => ({
+    id: story.id,
+    slug: story.slug,
+    short: story.short,
+    tease: story.tease,
+    month: story.month,
+    bgColor: story.bgColor,
+    href: story.external ? story.href : `/${story.slug}`, // External URL for external stories
+    isExternal: story.external,
+    filters: story.filters
+  }));
 
   return {
     stories
