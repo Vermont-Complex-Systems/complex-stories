@@ -1,10 +1,16 @@
 <script>
+    // import type { Plugin } from 'svelte-exmarkdown';
+
     import Markdown from 'svelte-exmarkdown';
-    import { gfmPlugin } from 'svelte-exmarkdown/gfm';
-    
+    import 'katex/dist/katex.min.css';
+	import rehypeKatex from 'rehype-katex';
+	import remarkMath from 'remark-math';
+
     let { text } = $props();
 
-    const plugins = [gfmPlugin()];
+    const plugins = [
+		{ remarkPlugin: [remarkMath], rehypePlugin: [rehypeKatex] }
+	];
 
     function processContent(content) {
         if (!content) {

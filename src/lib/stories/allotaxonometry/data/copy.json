@@ -1,0 +1,41 @@
+{
+  "title": "Networks Fast and Slow",
+  "description": "Understanding how networks transform over time through interactive visualization.",
+  "steps": [
+    {
+      "data": {
+        "year": "2000",
+        "event": "Initial Network Formation"
+      },
+      "text": "The network begins with scattered nodes, each representing individual entities in their original positions."
+    },
+    {
+      "data": {
+        "year": "2005", 
+        "event": "Lateral Expansion"
+      },
+      "text": "As connections form, the entire network shifts eastward, representing the geographic spread of influence."
+    },
+    {
+      "data": {
+        "year": "2010",
+        "event": "Horizontal Scaling"
+      },
+      "text": "The network stretches horizontally as new nodes join, creating wider connectivity patterns."
+    },
+    {
+      "data": {
+        "year": "2015",
+        "event": "Network Inversion"
+      },
+      "text": "A major disruption causes the network to flip and compress, representing a paradigm shift in connections."
+    },
+    {
+      "data": {
+        "year": "2020",
+        "event": "Stabilized Growth"
+      },
+      "text": "The network returns to center but grows larger, showing maturity and expanded influence."
+    }
+  ]
+}
