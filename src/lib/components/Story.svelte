@@ -144,7 +144,6 @@
     opacity: 1;
   }
 
-  /* Rest of your existing styles... */
   a {
     display: block;
     text-decoration: none;
@@ -165,7 +164,7 @@
     aspect-ratio: 1;
     position: relative;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: 2px;
   }
 
   img {
