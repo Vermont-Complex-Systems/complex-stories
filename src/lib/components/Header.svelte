@@ -18,6 +18,13 @@
 <ModeWatcher />
 
 <header class="header">
+	<div class="header-left">
+		<a href="{base}/" class="title-link">
+			<h1 class="site-title">Complex Stories</h1>
+			<p class="site-subtitle"> Describe, Explain, Create, Share.</p>
+		</a>
+	</div>
+
 	<div class="logo-container">
 		<a href="{base}/" class="logo-link">
 			<img src="{base}/octopus-swim-right.png" alt="Home" class="logo" />
@@ -47,6 +54,42 @@
 		align-items: center;
 		justify-content: center;
 		position: relative;
+	}
+	
+	.header-left {
+		position: absolute;
+		left: 1.5rem;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+	
+	.title-link {
+		display: block;
+		text-decoration: none;
+		color: inherit;
+		transition: transform var(--transition-medium) ease;
+	}
+	
+	.title-link:hover {
+		transform: translateY(-2px);
+	}
+	
+	.site-title {
+		font-family: var(--sans);
+		font-weight: var(--font-weight-bold);
+		font-size: clamp(1.5rem, 3vw, 2rem);
+		margin: 0;
+		line-height: 1.1;
+		color: var(--color-fg);
+	}
+	
+	.site-subtitle {
+		font-family: var(--mono);
+		font-size: var(--font-size-small);
+		margin: 0.25rem 0 0 0;
+		color: var(--color-secondary-gray);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
 	}
 	
 	.logo-container {
@@ -123,6 +166,18 @@
 		.header {
 			padding: 1.5rem 0;
 			min-height: 6rem;
+		}
+		
+		.header-left {
+			left: 1rem;
+		}
+		
+		.site-title {
+			font-size: clamp(1.25rem, 4vw, 1.5rem);
+		}
+		
+		.site-subtitle {
+			font-size: var(--font-size-xsmall);
 		}
 		
 		.logo-container {

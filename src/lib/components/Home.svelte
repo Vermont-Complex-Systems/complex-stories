@@ -2,6 +2,7 @@
   import { descending } from "d3";
   import { getContext } from "svelte";
   import Stories from "$lib/components/Stories.svelte";
+  import FilterBar from "$lib/components/FilterBar.svelte";
   import { ChevronDown } from "lucide-svelte";
 
   const initMax = 5;
@@ -9,6 +10,17 @@
 
   let maxStories = $state(initMax);
   let activeFilter = $state(undefined);
+
+  // Extract unique filters from all stories
+  let allFilters = $derived.by(() => {
+    const filterSet = new Set();
+    stories.forEach(story => {
+      if (story.filters && Array.isArray(story.filters)) {
+        story.filters.forEach(filter => filterSet.add(filter));
+      }
+    });
+    return Array.from(filterSet).sort();
+  });
 
   let filtered = $derived.by(() => {
     const f = stories.filter((d) => {
@@ -27,12 +39,7 @@
     maxStories = filtered.length;
   }
 
-  function handleFilterClick(filter) {
-    // Toggle filter - if same filter clicked, clear it
-    activeFilter = activeFilter === filter ? undefined : filter;
-    maxStories = initMax; // Reset pagination when filter changes
-  }
-
+  // Reset pagination when filter changes
   $effect(() => {
     activeFilter;
     maxStories = initMax;
@@ -40,8 +47,11 @@
 </script>
 
 <div class="content">
+  <!-- Add FilterBar here -->
+  <FilterBar bind:activeFilter filters={allFilters} />
+  
   <div class="stories">
-    <Stories stories={displayedStories} {activeFilter} onFilterClick={handleFilterClick} />
+    <Stories stories={displayedStories} />
   </div>
 
   {#if filtered.length > maxStories}
@@ -54,10 +64,13 @@
   {/if}
 </div>
 
-<!-- Keep your existing styles for .content, .more, .load-more-btn -->
 <style>
   .content {
     position: relative;
+  }
+
+  .stories {
+    margin-top: 0;
   }
 
   .more {
@@ -106,12 +119,6 @@
     background: var(--color-button-hover);
   }
 
-  .chevron {
-    width: 1.125rem;
-    height: 1.125rem;
-    stroke-width: 2;
-    flex-shrink: 0;
-  }
 
   .text {
     flex-shrink: 0;
@@ -124,9 +131,5 @@
       font-size: var(--font-size-xsmall);
     }
     
-    .chevron {
-      width: 1rem;
-      height: 1rem;
-    }
   }
 </style>
