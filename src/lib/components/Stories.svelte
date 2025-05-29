@@ -1,19 +1,20 @@
 <script>
   import Story from "$lib/components/Story.svelte";
   
-  let { stories } = $props();
+  let { stories, activeFilter, onFilterClick } = $props();
 </script>
 
 <section id="stories">
   <ul>
     {#each stories as story (story.slug)}
       <li>
-        <Story {...story} />
+        <Story {...story} {activeFilter} {onFilterClick} />
       </li>
     {/each}
   </ul>
 </section>
 
+<!-- Keep your existing grid styles -->
 <style>
   section {
     margin-top: 16px;
@@ -23,15 +24,15 @@
     padding: 0;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 32px 16px; /* 32px vertical, 16px horizontal gap */
+    gap: 32px 16px;
     margin: 0 auto;
-    max-width: 1200px; /* Optional: constrain max width */
+    max-width: 1200px;
   }
 
   li {
     margin: 0;
     list-style-type: none;
-    padding: 0 16px; /* Only horizontal padding now */
+    padding: 0 16px;
     --padding: clamp(16px, 12vw, 48px);
   }
 

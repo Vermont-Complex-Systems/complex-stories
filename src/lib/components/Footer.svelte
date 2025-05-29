@@ -29,14 +29,15 @@
 <style>
 	.footer {
 		margin-top: auto;
-		background-color: #f7fafc; /* Softer light background */
-		border-top: 1px solid #e2e8f0; /* Softer border */
+		background-color: var(--color-uvm-green); /* UVM green in light mode */
+		border-top: 1px solid var(--color-border);
 		padding: 3rem 2rem 2rem;
 	}
 	
+	/* Keep dark background in dark mode */
 	:global(.dark) .footer {
-		background-color: #2d3748; /* Warmer dark background */
-		border-top-color: #4a5568; /* Softer border in dark mode */
+		background-color: var(--color-gray-800);
+		border-top-color: var(--color-gray-700);
 	}
 	
 	.footer-content {
@@ -53,16 +54,17 @@
 	}
 	
 	.footer-section h3 {
-		font-family: monospace;
-		font-weight: 400;
+		font-family: var(--mono);
+		font-weight: var(--font-weight-bold);
 		text-transform: uppercase;
-		font-size: 0.875rem;
+		font-size: var(--font-size-xsmall);
 		margin-bottom: 1rem;
-		color: #718096; /* Softer gray */
+		color: var(--color-uvm-gold); /* UVM gold in light mode */
 	}
 	
+	/* Keep light text in dark mode */
 	:global(.dark) .footer-section h3 {
-		color: #a0aec0; /* Softer light gray */
+		color: var(--color-gray-100);
 	}
 	
 	.footer-section ul {
@@ -76,22 +78,22 @@
 	}
 	
 	.footer-section a {
-		color: #4a5568; /* Softer text color */
+		color: var(--color-white); /* White text on green background */
 		text-decoration: underline;
 		font-weight: 500;
-		transition: color 0.2s;
+		transition: color var(--transition-medium);
 	}
 	
 	:global(.dark) .footer-section a {
-		color: #e2e8f0; /* Softer white */
+		color: var(--color-gray-300);
 	}
 	
 	.footer-section a:hover {
-		color: #3182ce; /* Nice blue instead of harsh blue */
+		color: var(--color-uvm-gold); /* Gold on hover in light mode */
 	}
 	
 	:global(.dark) .footer-section a:hover {
-		color: #63b3ed; /* Softer blue in dark mode */
+		color: var(--color-gray-100);
 	}
 	
 	.footer-logo {
@@ -105,9 +107,9 @@
 		width: 100%;
 		height: auto;
 		max-height: 120px;
-		border-radius: 0.375rem;
-		transform: rotate(-2deg);
-		transition: transform 0.25s;
+		border-radius: var(--border-radius);
+		transform: rotate(var(--left-tilt));
+		transition: transform var(--transition-medium);
 	}
 	
 	.footer-logo-img:hover {

@@ -11,17 +11,23 @@
     bgColor, 
     isExternal = false,
     resource = false, 
-    footer = false 
+    footer = false,
+    filters = [],
+    activeFilter = undefined, // New prop to know which filter is active
+    onFilterClick = () => {} // Callback for when a tag is clicked
   } = $props();
 
   const style = bgColor ? `--story-bg: ${bgColor};` : "";
   
-  // Thumbnail handling
   const imagePath = `${base}/common/thumbnails/screenshots`;
-  const hasImage = true; // You can make this dynamic based on file existence
-  
-  // Fix href to include base path for internal links
+  const hasImage = true;
   const finalHref = isExternal ? href : `${base}${href}`;
+
+  function handleTagClick(e, filter) {
+    e.preventDefault();
+    e.stopPropagation();
+    onFilterClick(filter);
+  }
 </script>
 
 <div class="story" {style} class:external={isExternal} class:resource class:footer>
@@ -29,8 +35,19 @@
     <div class="info">
       <p class="id">#{id}</p>
       <p class="month">{month}</p>
-      {#if isExternal}
-        <span class="external-badge">External</span>
+      
+      {#if filters && filters.length > 0}
+        <div class="tags">
+          {#each filters as filter}
+            <button 
+              class="tag" 
+              class:active={activeFilter === filter}
+              onclick={(e) => handleTagClick(e, filter)}
+            >
+              {filter.replace(/_/g, ' ')}
+            </button>
+          {/each}
+        </div>
       {/if}
     </div>
   {/if}
@@ -42,21 +59,16 @@
     class="inner"
   >
     <div class="screenshot">
-      <div class="screenshot">
       {#if hasImage}
-        <!-- Show thumbnail for both internal and external -->
         <img src="{imagePath}/{slug}.jpg" loading="lazy" alt="Thumbnail for {short}" />
-        <!-- Fallback if image fails -->
         <div class="card-content fallback" style="display: none;">
           <span class="story-number">#{id}</span>
         </div>
       {:else}
-        <!-- Only show icon if no image -->
         <div class="card-content">
           <span class="story-number">#{id}</span>
         </div>
       {/if}
-    </div>
     </div>
     
     <div class="text">
@@ -99,16 +111,40 @@
     margin: 0;
   }
 
-  .external-badge {
-    background: #e53e3e;
-    color: white;
-    font-size: 0.7rem;
+  .tags {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    background: var(--color-secondary-gray);
+    color: var(--color-bg);
+    font-size: 0.6rem;
     padding: 2px 6px;
+    border: none;
     border-radius: 3px;
     text-transform: uppercase;
     font-weight: bold;
+    font-family: var(--mono);
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    opacity: 0.7;
   }
 
+  .tag:hover {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+
+  .tag.active {
+    background: var(--color-fg);
+    color: var(--color-bg);
+    opacity: 1;
+  }
+
+  /* Rest of your existing styles... */
   a {
     display: block;
     text-decoration: none;
@@ -132,7 +168,6 @@
     border-radius: 8px;
   }
 
-  /* Image styles */
   img {
     position: absolute;
     bottom: 0;
@@ -149,7 +184,6 @@
     transform: translate(-50%, 0) scale(1.05);
   }
 
-  /* Card content fallback */
   .card-content {
     position: absolute;
     top: 50%;
@@ -170,8 +204,6 @@
     font-weight: bold;
   }
 
-
-  /* Text content */
   .text {
     font-family: var(--sans, sans-serif);
     margin-top: 12px;

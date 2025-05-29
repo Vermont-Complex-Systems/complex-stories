@@ -1,20 +1,23 @@
 <script>
+	import { base } from '$app/paths';
 	import BouncingBalls from "./Bouncing.svelte";
 	let numBalls = $state(50);
 </script>
 
 <div class="hero-banner">
-	<a
-		class="github-link"
-		href="https://github.com/Vermont-Complex-Systems/complex-stories"
-		target="_blank"
-		rel="noopener noreferrer"
-	>
-		<img
-			src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-			alt="GitHub Logo"
-		/>
-	</a>
+	<!-- Top navigation -->
+	<div class="top-nav">
+		<a 
+			class="home-link"
+			href="{base}/"
+			title="Back to Home"
+		>
+			<img
+				src="{base}/octopus-swim-right.png"
+				alt="Home"
+			/>
+		</a>
+	</div>
 
 	<div class="hero-content">
 		<div class="centered-layout">
@@ -73,21 +76,26 @@
 		box-sizing: border-box;
 	}
 
-	.github-link {
+	.top-nav {
 		position: absolute;
 		top: 1rem;
 		right: 1rem;
 		z-index: 3;
+		display: flex;
+		align-items: center;
 	}
 
-	.github-link img {
-		width: 40px;
-		height: 40px;
+	.home-link img {
+		width: clamp(55px, 8vw, 90px);
+		height: clamp(35px, 5.2vw, 58px);
+		border-radius: 4px;
+		object-fit: contain;
 		transition: transform 0.2s ease;
+		transform: translateY(8px);
 	}
 
-	.github-link img:hover {
-		transform: scale(1.1);
+	.home-link img:hover {
+		transform: rotate(-2deg) scale(1.1);
 	}
 
 	.hero-content {
@@ -175,4 +183,18 @@
 			text-align: left;
 		}
 	}
+
+	@media (max-width: 768px) {
+		.top-nav {
+			top: 0.75rem;
+			left: 50%;
+			right: auto;
+			transform: translateX(-50%);
+		}
+
+		.home-link img {
+			width: clamp(75px, 12vw, 110px);
+			height: clamp(48px, 7.8vw, 71px);
+		}
+		}
 </style>

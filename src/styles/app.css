@@ -71,10 +71,9 @@
 	--1s: 1ms;
 }
 
-/* dark theme */
-/* this is a starting place for dark mode - test before deploying */
-
-@media screen and (prefers-color-scheme:dark) {
+/* Dark theme - both for system preference AND .dark class */
+@media screen and (prefers-color-scheme:dark),
+.dark {
 	:root {
 		--color-bg: var(--color-gray-1000);
 		--color-fg: var(--color-gray-100);
@@ -97,12 +96,35 @@
 	}
 }
 
+/* Additional dark class support for when .dark is on html element */
+.dark {
+	--color-bg: var(--color-gray-1000);
+	--color-fg: var(--color-gray-100);
+	--color-primary: var(--color-gray-1000);
+	--color-secondary-gray: var(--color-gray-400);
+	--color-link: var(--color-gray-100);
+	--color-link-hover: var(--color-gray-400);
+	--color-focus: var(--color-electric-green);
+	--color-mark: var(--color-yellow);
+	--color-selection: var(--color-gray-300);
+	--color-border: var(--color-gray-700);
+	--color-button-bg: var(--color-gray-100);
+	--color-button-fg: var(--color-gray-900);
+	--color-button-hover: var(--color-gray-300);
+	--color-input-bg: var(--color-gray-900);
+	--color-input-fg: var(--color-gray-50);
+	--color-placeholder: var(--color-gray-400);
+	--color-default-story-bg: var(--color-gray-800);
+	--fade: linear-gradient(180deg, rgba(25, 25, 25, 0) 0%, rgba(25, 25, 25, 0.8) 30%, rgba(25, 25, 25, 1) 50%);
+}
+
 @media screen and (prefers-reduced-motion: no-preference) {
 	:root {
 		--1s: 1s;
 	}
 }
 
+/* Rest of your existing CSS... */
 h1 {
 	font-size: var(--48px, 48px);
 }
@@ -143,7 +165,6 @@ svg {
 	max-width: var(--width-column-wide);
 	padding: 0 16px;
 }
-
 
 .column-regular {
 	max-width: var(--width-column-regular);

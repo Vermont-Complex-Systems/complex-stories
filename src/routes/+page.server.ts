@@ -10,10 +10,8 @@ export async function load() {
     bgColor: story.bgColor,
     href: story.external ? story.href : `/${story.slug}`,
     isExternal: story.external,
-    filters: Array.isArray(story.filters) ? story.filters : [story.filters] // Ensure it's an array
+    filters: Array.isArray(story.filters) ? story.filters : [story.filters].filter(Boolean) // Ensure it's an array and remove empty values
   }));
-
-  console.log("Processed stories:", stories.slice(0, 3)); // Debug log
 
   return {
     stories
