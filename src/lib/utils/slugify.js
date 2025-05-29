@@ -1,3 +1,3 @@
 export default function slug(str) {
-  return str.toLowerCase().replace(/\//g, "-");
+  return str.toLowerCase().replace(/\//g, "_");
 }
