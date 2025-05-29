@@ -23,7 +23,7 @@
 				<div class="text-block">
 					<p>
 						By <a href="https://jstonge.vercel.app/about">Jonathan St-Onge</a> and
-						<a href="">Giulio Burgio</a>.
+						<a href="https://www.uvm.edu/socks/node/38?rnd=0.8126330183365708#giulioburgio">Giulio Burgio</a>.
 					</p>
 					<p>
 						During Covid-19, the Washington Post published the
