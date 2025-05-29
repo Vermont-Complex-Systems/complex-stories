@@ -193,4 +193,10 @@
 			max-height: 4rem;
 		}
 	}
+
+	:global(.dark) .logo {
+		filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+		padding: 4px;
+		border-radius: var(--border-radius);
+	}
 </style>

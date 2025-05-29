@@ -18,12 +18,13 @@
       <div class="filters--desktop">
         {#each filters as filter, i}
           {@const slug = filter?.toLowerCase()?.replace(/[^a-z]/g, "_")}
+          {@const displayName = filter?.replace(/_/g, ' ')}
           {@const active = slug === activeFilter}
           <button
             class:active
             onclick={() => toggleFilter(filter)}
           >
-            {filter}
+            {displayName}
           </button>
         {/each}
       </div>
@@ -34,7 +35,8 @@
           <option value={undefined}>All</option>
           {#each filters as filter}
             {@const slug = filter?.toLowerCase()?.replace(/[^a-z]/g, "_")}
-            <option value={slug}>{filter}</option>
+            {@const displayName = filter?.replace(/_/g, ' ')}
+            <option value={slug}>{displayName}</option>
           {/each}
         </select>
       </div>
@@ -87,7 +89,7 @@
     border: 1px solid transparent;
     border-radius: var(--border-radius);
     text-transform: uppercase;
-    font-size: var(--font-size-small);
+    font-size: var(--font-size-xsmall);
     font-weight: var(--font-weight-bold);
     font-family: var(--mono);
     color: var(--color-secondary-gray);
