@@ -1,28 +1,41 @@
 {
-  "slug": "climate-change",
-  "title": "The Rising Tide: A Climate Story",
-  "description": "Explore the impact of climate change through data visualization",
-  "cardType": "popular",
+  "title": "Networks Fast and Slow",
+  "description": "Understanding how networks transform over time through interactive visualization.",
   "steps": [
     {
-      "text": "Global temperatures have risen by 1.1°C since 1880",
-      "data": { "temperature": 1.1, "year": 2023 }
+      "data": {
+        "year": "2000",
+        "event": "Initial Network Formation"
+      },
+      "text": "The network begins with scattered nodes, each representing individual entities in their original positions."
     },
     {
-      "text": "Arctic sea ice is declining at 13% per decade",
-      "data": { "iceDecline": 13, "region": "Arctic" }
+      "data": {
+        "year": "2005", 
+        "event": "Lateral Expansion"
+      },
+      "text": "As connections form, the entire network shifts eastward, representing the geographic spread of influence."
     },
     {
-      "text": "Sea levels have risen 8-9 inches since 1880",
-      "data": { "seaLevel": 8.5, "timespan": "1880-2023" }
+      "data": {
+        "year": "2010",
+        "event": "Horizontal Scaling"
+      },
+      "text": "The network stretches horizontally as new nodes join, creating wider connectivity patterns."
     },
     {
-      "text": "CO2 levels are now over 420 parts per million",
-      "data": { "co2": 421, "threshold": 350 }
+      "data": {
+        "year": "2015",
+        "event": "Network Inversion"
+      },
+      "text": "A major disruption causes the network to flip and compress, representing a paradigm shift in connections."
     },
     {
-      "text": "We still have time to act, but the window is closing",
-      "data": { "action": "urgent", "timeLeft": "limited" }
+      "data": {
+        "year": "2020",
+        "event": "Stabilized Growth"
+      },
+      "text": "The network returns to center but grows larger, showing maturity and expanded influence."
     }
   ]
 }
