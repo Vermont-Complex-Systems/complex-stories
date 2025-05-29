@@ -19,6 +19,9 @@
   // Thumbnail handling
   const imagePath = `${base}/common/thumbnails/screenshots`;
   const hasImage = true; // You can make this dynamic based on file existence
+  
+  // Fix href to include base path for internal links
+  const finalHref = isExternal ? href : `${base}${href}`;
 </script>
 
 <div class="story" {style} class:external={isExternal} class:resource class:footer>
@@ -33,7 +36,7 @@
   {/if}
   
   <a 
-    {href} 
+    href={finalHref}
     rel={isExternal ? "external noopener" : undefined}
     target={isExternal ? "_blank" : undefined}
     class="inner"
