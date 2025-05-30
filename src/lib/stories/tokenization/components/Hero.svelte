@@ -17,6 +17,7 @@
 		<div class="centered-layout">
 			<div class="text-side">
 				<h1>Tokenization: The Oft Overlooked Appetizer</h1>
+                <h3 style="color: red">Note: this story is still under construction!</h3>
 				<div class="text-block">
 					<p>
 						By <a href="https://jstonge.vercel.app/about">Julia Zimmerman</a> and

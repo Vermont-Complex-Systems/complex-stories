@@ -49,7 +49,7 @@
 	<Hero />
 	<section>
 			<div class="chart-container-scrolly">
-				<div>Active step is {scrollyIndex} at {progress}</div>
+				<!-- <div>Active step is {scrollyIndex} at {progress}</div> -->
 				<!-- <WordTree wordArray={wordDictionary} progress={progress}  /> -->
 				<TextInterpolator progress={progress} currentStep={scrollyIndex} />
 			</div>
