@@ -52,12 +52,12 @@ function mostInView () {
 		} else {
 			scrollProgress = 0;
 		}
-		console.log(scrollProgress);
+		
 	} else {
 		value = undefined;
 		scrollProgress = 0;
 	}
-	console.log(scrollProgress, value);
+	
 }
 
 	function createObserver(node, index) {

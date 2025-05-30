@@ -11,6 +11,7 @@
 	// const components = { Hero };
 	let scrollyIndex = $state();
 	
+	const intro = data.intro;
 	const steps = data.firstSection;
 	const secondSectionSteps = data.secondSection;
 
@@ -24,51 +25,73 @@
 	let width = $state(innerWidth.current > 1200 ? 500 : 350);
 	let height = 600;
 	const padding = { top: 20, right: 40, bottom: 20, left: 60 };
+
+	let valueForSlider = $derived.by(() => {
+		console.log("scrollyIndex", scrollyIndex);
+    if (scrollyIndex < 2) {
+      return 1
+    } else if (scrollyIndex == 2 ) {
+		return 5
+	}else if (scrollyIndex ==3 ) {
+      return 1
+    } else {
+		return 7
+	}
+  });
+
+	// create derived state for valueForSlider which depends on scrollyIndex
+	
 </script>
 
 <div id="story">
 
 	<Hero />
-	
-	
-	<div class="chart-container-scrolly">
-		<div>Active step is {scrollyIndex} at {progress}</div>
-		<!-- <WordTree wordArray={wordDictionary} progress={progress}  /> -->
-		<TextInterpolator progress={progress} currentStep={scrollyIndex} />
+	<section>
+			<div class="chart-container-scrolly">
+				<div>Active step is {scrollyIndex} at {progress}</div>
+				<!-- <WordTree wordArray={wordDictionary} progress={progress}  /> -->
+				<TextInterpolator progress={progress} currentStep={scrollyIndex} />
+			</div>
+			<div class="spacer"></div>
+			<Scrolly bind:value={scrollyIndex} bind:scrollProgress={progress} offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
+				{#each steps as text, i}
+						{@const active = scrollyIndex === i}
+						<div class="step" class:active>
+							<p> 
+								<Md text={text.value}/>
+								<!-- {@html text.value} -->
+							</p>
+						</div>
+					{/each}
+			</Scrolly>
+			<div class="spacer"></div>
+	</section>	
+	<div class="spacer"></div>
+	<div class="centered-max-width">
+		<h2>What is a token?</h2>
 	</div>
-	<div class="spacer"></div>
-<Scrolly bind:value={scrollyIndex} bind:scrollProgress={progress} offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
-		{#each steps as text, i}
-				{@const active = scrollyIndex === i}
-				<div class="step" class:active>
-					<p> 
-						<Md text={text.value}/>
-						<!-- {@html text.value} -->
-					</p>
-				</div>
-			{/each}
-	</Scrolly>
+	<section>
+		<div class="chart-container-scrolly" style="display: {scrollyIndex > 0 ? 'block' : 'none'};">
+			<!-- <div>Active step is {scrollyIndex} at {progress}</div> -->
+			<StackedSlider bind:sliderValue={valueForSlider} renderMode{modeForSlider} scrollyIndex={scrollyIndex}></StackedSlider>
+		</div>
+		
+		<Scrolly bind:value={scrollyIndex} bind:scrollProgress={progress} offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
+				{#each secondSectionSteps as text, i}
+						{@const active = scrollyIndex === i}
+						<div class="step" class:active>
+							<p> 
+								<Md text={text.value}/>
+								<!-- {@html text.value} -->
+							</p>
+						</div>
+					{/each}
+			</Scrolly>
+		
+		
+	</section>
 
-
-	<div class="chart-container-scrolly">
-		<div>Active step is {scrollyIndex} at {progress}</div>
-		<!-- <WordTree wordArray={wordDictionary} progress={progress}  /> -->
-		<StackedSlider></StackedSlider>
-	</div>
-	<div class="spacer"></div>
-<Scrolly bind:value={scrollyIndex} bind:scrollProgress={progress} offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
-		{#each secondSectionSteps as text, i}
-				{@const active = scrollyIndex === i}
-				<div class="step" class:active>
-					<p> 
-						<Md text={text.value}/>
-						<!-- {@html text.value} -->
-					</p>
-				</div>
-			{/each}
-	</Scrolly>
 	
-	<div class="spacer"></div>
 </div>
 
 <style>
@@ -115,7 +138,7 @@
 
 	/* Keep only the first section's scrolly styles */
 	.chart-container-scrolly {
-	width: 70%;
+	width: 50%;
 	height: 750px;
 	position: sticky;
 	top: calc(50vh - 275px);
@@ -139,13 +162,14 @@
 	background: whitesmoke;
 	color: #333;
 	border-radius: 5px;
+	font-size: 1.4rem;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	transition: background 500ms ease;
 	box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
 	z-index: 10;
-	width: 40%;
-	transform: translateX(-60%);
+	width: 35%;
+	transform: translateX(-70%);
   }
 </style>

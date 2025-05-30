@@ -1,31 +1,47 @@
 {
-    "firstSection": [
+  "intro": [
     {
       "type": "markdown",
       "value": "Language is a human skill. Computers were historically very bad at language...until LLMs came along."
+    }
+  ],
+  "title": "Tokenization",
+    "firstSection": [
+    {
+      "type": "markdown",
+      "value": "For humans, language is made up of words. But an LLM has it’s own kind of word, called a “token”. Humans read words by considering what type of word it is (noun, verb, etc.) and what it means."
     },
     {
       "type": "markdown",
-      "value": "For humans, language is made up of words. But an LLM has it’s own kind of word, called a “token”.<br />Tokens are the building blocks of the language of an LLM.<br>Unlike human language, tokens do not have to be words. They can be shorter than human-readable words, or they can be multiple words together."
+      "value": "For example, we might see this sentence and group each word into a part of speech, which tells us something about the word’s meaning."
     },
     {
       "type": "markdown",
-      "value": "Each model has its own “dictionary” of sorts based on its tokenization. The tokens are the vocabulary that allow a model to interpret text and to write new text."
+      "value": "But LLMs do not understand language this way. They do not group words by their meaning, or by their part of speech."
     },
     {
       "type": "markdown",
-      "value": "Choosing which dictionary to use is an important step in the process: adjust the slider to see how it affects the model below."
+      "value": "Instead, they break words down into smaller pieces called tokens. These tokens are then grouped together in a sequence to form a sentence."
     }
   ],
   "secondSection": [
     {
       "type": "markdown",
-      "value": "Many people think of LLMs as a sort of “black box”: you ask a question, and an answer magically appears! "
+      "value": "Tokens are the basic building blocks of language for LLMs. They are like the atoms of language."
     },
     {
       "type": "markdown",
-      "value": "Tokens act as the bridge into and out of an LLM. But there are ways to understand these models—and starting with tokens can help!"
+      "value": "Tokens can be longer than a single word."
     },
+    {
+      "type": "markdown",
+      "value": "Or, tokens can be a series of words. If we increase the length of our tokens, then the number of tokens we need to represent a sentence decreases. But there's also a trade-off: the longer the token, the less flexibility we have in understanding the meaning of the sentence."
+    },
+    {
+      "type": "markdown",
+      "value": "Sometimes a token can represent a whole word, like 'cat' or 'dog'. But it doesn't have to be a whole word. To increase efficiency, we could also break down words into smaller parts, like 'cat' into 'c', 'a', and 't'. This presents another tradeoff: the smaller the token, the more tokens we need to represent a sentence, but the more flexibility we have in understanding the meaning of the sentence."
+    },
+    
     {
       "type": "markdown",
       "value": "How does a model make connections between words? How does it understand something?"

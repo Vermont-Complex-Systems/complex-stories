@@ -2,14 +2,14 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg width="100%" height="100%" viewBox="0 0 800 600" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
     <g id="top-text">
-        <text x="227.701px" y="271.862px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">the</text>
-        <text x="280.771px" y="272.475px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">quick</text>
+        <text x="188.769px" y="271.862px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">the</text>
+        <text x="262.76px" y="272.475px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">quick</text>
         <text x="356.85px" y="271.802px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">brown</text>
-        <text x="431.023px" y="271.953px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">fox</text>
-        <text x="481.46px" y="271.696px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">jumped</text>
-        <text x="231.498px" y="310.741px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">over</text>
-        <text x="285.781px" y="311.406px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">the</text>
-        <text x="329.599px" y="310.788px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">lazy</text>
-        <text x="383.313px" y="310.896px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">dog</text>
+        <text x="454.697px" y="271.953px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">fox</text>
+        <text x="555.286px" y="271.696px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">jumped</text>
+        <text x="189.174px" y="310.741px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">over</text>
+        <text x="270.401px" y="311.406px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">the</text>
+        <text x="363.796px" y="310.788px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">lazy</text>
+        <text x="452.014px" y="310.896px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">dog</text>
     </g>
 </svg>
