@@ -78,7 +78,7 @@
     {#each Array(Math.ceil(sliderValue / 10)) as _, colIdx}
         <div style="display: flex; flex-direction: column; gap: 8px;">
             {#each Array(Math.min(10, sliderValue - colIdx * 10)) as _, rowIdx}
-                <div style="width: 200px; height: 12px; border: 2px solid #888; border-radius: 6px; background: #faf9f6;"></div>
+                <div style="width: 100px; height: 12px; border: 2px solid #888; border-radius: 6px; background: #faf9f6;"></div>
             {/each}
         </div>
     {/each}

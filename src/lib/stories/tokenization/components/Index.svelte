@@ -5,6 +5,7 @@
 	import TextInterpolator from "./TextInterpolator.svelte";
 	import Hero from './Hero.svelte';
 	import StackedSlider from "./StackedSlider.svelte";
+	import Scatter from "./Scatter.svelte";
 	
 	let { story, data } = $props();
 	
@@ -89,6 +90,28 @@
 			</Scrolly>
 		
 		
+	</section>
+	<div class="centered-max-width">
+		<h2>The Distributional Hypothesis</h2>
+		<p>The Distributional Hypothesis states that words that occur in the same contexts tend to have similar meanings. So how does an LLM group different words?</p>
+	</div>
+	<section>
+		<div class="chart-container-scrolly" style="display: {scrollyIndex > 0 ? 'block' : 'none'};">
+			<!-- <div>Active step is {scrollyIndex} at {progress}</div> -->
+			<Scatter value={scrollyIndex} steps={steps} />
+		</div>
+		
+		<Scrolly bind:value={scrollyIndex} bind:scrollProgress={progress} offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
+				{#each secondSectionSteps as text, i}
+						{@const active = scrollyIndex === i}
+						<div class="step" class:active>
+							<p> 
+								<Md text={text.value}/>
+								<!-- {@html text.value} -->
+							</p>
+						</div>
+					{/each}
+			</Scrolly>
 	</section>
 
 	

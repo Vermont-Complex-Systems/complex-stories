@@ -41,22 +41,9 @@
       "type": "markdown",
       "value": "Sometimes a token can represent a whole word, like 'cat' or 'dog'. But it doesn't have to be a whole word. To increase efficiency, we could also break down words into smaller parts, like 'cat' into 'c', 'a', and 't'. This presents another tradeoff: the smaller the token, the more tokens we need to represent a sentence, but the more flexibility we have in understanding the meaning of the sentence."
     },
-    
     {
       "type": "markdown",
       "value": "How does a model make connections between words? How does it understand something?"
-    },
-    {
-      "type": "markdown",
-      "value": "The Distributional Hypothesis states that words that occur in the same contexts tend to have similar meanings. So how does an LLM group different words?"
-    },
-    {
-      "type": "markdown",
-      "value": "By passing some text into a model, we can watch how it is grouped and re-grouped into different clusters (see footnote) at each layer."
-    },
-    {
-      "type": "markdown",
-      "value": "And finally, at the final layer, we can see how the model will likely behave when interpreting text."
     }
   ]
 }
