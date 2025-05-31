@@ -1,23 +1,23 @@
+<!-- PaperBubbleChart.svelte -->
 <script>
-  import { processDataPoints, getDataDateRange } from '../utils/bubbleChartUtils.js';
+  import { processPaperDataPoints, getPaperDataDateRange } from '../utils/paperChartUtils.js';
   import { Tween } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
 
   let { scrollyIndex, data, width, height } = $props();
 
-  console.log("Bubble chart loaded with data:", data?.length);
+  console.log("Paper chart loaded with data:", data?.length);
   let basePoints = $state([]);
 
   // Animation parameters
   const animationConfig = {
     yearFilterMin: new Tween(1999, { duration: 800, easing: cubicOut }),
-    yearFilterMax: new Tween(2023, { duration: 800, easing: cubicOut }),
+    yearFilterMax: new Tween(2025, { duration: 800, easing: cubicOut }),
     opacityMultiplier: new Tween(1, { duration: 600, easing: cubicOut }),
     radiusScale: new Tween(1, { duration: 600, easing: cubicOut }),
-    highlightYounger: new Tween(1, { duration: 400, easing: cubicOut }),
-    highlightSimilar: new Tween(1, { duration: 400, easing: cubicOut }),
-    highlightOlder: new Tween(1, { duration: 400, easing: cubicOut }),
-    authorHighlightOpacity: new Tween(1, { duration: 600, easing: cubicOut }),
+    highlightHighCited: new Tween(1, { duration: 400, easing: cubicOut }),
+    highlightMediumCited: new Tween(1, { duration: 400, easing: cubicOut }),
+    highlightLowCited: new Tween(1, { duration: 400, easing: cubicOut }),
     // Transform controls
     scaleX: new Tween(1, { duration: 800, easing: cubicOut }),
     scaleY: new Tween(1, { duration: 800, easing: cubicOut }),
@@ -25,85 +25,68 @@
   };
 
   // State variables
-  let colorMode = $state('age_diff');
-  let highlightedAuthor = $state(null);
+  let colorMode = $state('coauthors');
   let hovered = $state(null);
 
-  // Step configuration - with overview mode back
+  // Step configuration for papers
   const stepConfigs = {
     0: {
-      yearRange: [1999, 2023],
-      colorMode: 'age_diff',
-      radiusScale: 1.2,
-      highlightedAuthor: null,
+      yearRange: [1999, 2025],
+      colorMode: 'coauthors',
+      radiusScale: 1,
       viewMode: 'normal'
     },
     1: {
-      yearRange: [1999, 2023],
-      colorMode: 'shared_institutions',
+      yearRange: [2010, 2025],
+      colorMode: 'citations',
       radiusScale: 1.2,
-      highlightedAuthor: null,
-      viewMode: 'focus' // Focus on this range
+      viewMode: 'focus'
     },
     2: {
-      yearRange: [2008, 2023],
-      colorMode: 'age_diff',
-      radiusScale: 1.2,
-      highlightedAuthor: null,
-      viewMode: 'focus' // Focus on this range
+      yearRange: [2020, 2025],
+      colorMode: 'coauthors',
+      radiusScale: 1.5,
+      viewMode: 'focus'
     },
     3: {
-      yearRange: [2008, 2023],
-      colorMode: 'shared_institutions',
-      radiusScale: 0.9,
-      highlightedAuthor: 'A5002034958',
-      authorHighlightOpacity: 0.2,
-      viewMode: 'overview' // Zoom out to see everything
-    },
-    4: {
-      yearRange: [2008, 2023],
-      colorMode: 'age_diff',
-      radiusScale: 1,
-      highlightedAuthor: null,
-      viewMode: 'normal' // Back to normal
+      yearRange: [1999, 2025],
+      colorMode: 'citations',
+      radiusScale: 0.8,
+      viewMode: 'overview'
     }
   };
 
   // Default configuration
   const defaultConfig = {
-    yearRange: [1999, 2023],
-    colorMode: 'age_diff',
+    yearRange: [1999, 2025],
+    colorMode: 'coauthors',
     radiusScale: 1,
-    highlightedAuthor: null,
-    authorHighlightOpacity: 1,
     viewMode: 'normal'
   };
 
   function processData() {
     if (!data || data.length === 0) {
-      console.log("No data to process");
+      console.log("No paper data to process");
       basePoints = [];
       return;
     }
 
-    console.log("Processing data...", data.length, "items");
-    const processedPoints = processDataPoints(data, width, height);
-    console.log("Created", processedPoints.length, "points");
+    console.log("Processing paper data...", data.length, "items");
+    const processedPoints = processPaperDataPoints(data, width, height);
+    console.log("Created", processedPoints.length, "paper points");
     basePoints = processedPoints;
   }
   
   function getPointColor(point) {
-    if (colorMode === 'shared_institutions') {
-      const sharedInst = point.shared_institutions || 'None';
-      if (sharedInst === 'None' || sharedInst === '') return "#D3D3D3";
-      if (sharedInst.includes('University of Vermont')) return "#2E8B57";
-      if (sharedInst.includes('Massachusetts Institute of Technology')) return "#FF6B35";
-      if (sharedInst.includes('Earth Island Institute')) return "#4682B4";
-      if (sharedInst.includes('Columbia University')) return "#4682B4";
-      if (sharedInst.includes('Santa Fe Institute')) return "#B59410";
-      return "#4682B4";
+    if (colorMode === 'citations') {
+      const citations = point.cited_by_count;
+      if (citations === 0) return "#D3D3D3";
+      if (citations >= 100) return "#440154FF"; // High citations (purple)
+      if (citations >= 20) return "#2A788EFF"; // Medium citations (teal)
+      if (citations >= 5) return "#20A387FF"; // Some citations (green)
+      return "#FDE725FF"; // Few citations (yellow)
     } else {
-      return point.color;
+      return point.color; // Coauthor-based coloring
     }
   }
 
@@ -112,42 +95,35 @@
     const { 
       yearRange, 
       radiusScale = 1, 
-      authorHighlightOpacity = 1,
-      colorMode: newColorMode = 'age_diff',
-      highlightedAuthor: newHighlightedAuthor = null,
+      colorMode: newColorMode = 'coauthors',
       viewMode = 'normal'
     } = config;
 
     // Calculate transforms based on view mode
     const margin = 80;
     const chartHeight = height - 2 * margin;
-    const dataRange = data ? getDataDateRange(data) : [new Date('1999-01-01'), new Date('2023-12-31')];
+    const dataRange = data ? getPaperDataDateRange(data) : [new Date('1999-01-01'), new Date('2027-12-31')];
     const fullYearRange = dataRange[1].getFullYear() - dataRange[0].getFullYear();
     
     if (viewMode === 'overview') {
-      // Overview mode: zoom out to see everything clearly
       animationConfig.scaleX.target = 0.8;
       animationConfig.scaleY.target = 0.8;
       animationConfig.translateY.target = 0;
     } else if (viewMode === 'focus') {
-      // Focus mode: center on the year range and zoom in slightly
       const yearRangeStart = yearRange[0];
       const yearRangeEnd = yearRange[1];
       const yearRangeCenter = (yearRangeStart + yearRangeEnd) / 2;
       
-      // Convert to progress through the full data range
       const centerProgress = (yearRangeCenter - dataRange[0].getFullYear()) / fullYearRange;
       const centerY = margin + centerProgress * chartHeight;
       
-      // Calculate translation to center this range in the view
       const viewCenterY = height / 2;
-      const translation = (viewCenterY - centerY) * 0.6; // Less aggressive centering
+      const translation = (viewCenterY - centerY) * 0.6;
       
       animationConfig.scaleX.target = 1;
-      animationConfig.scaleY.target = 1.1; // Slight zoom in
+      animationConfig.scaleY.target = 1.1;
       animationConfig.translateY.target = translation;
     } else {
-      // Normal mode: no transforms
       animationConfig.scaleX.target = 1;
       animationConfig.scaleY.target = 1;
       animationConfig.translateY.target = 0;
@@ -156,47 +132,39 @@
     animationConfig.yearFilterMin.target = yearRange[0];
     animationConfig.yearFilterMax.target = yearRange[1];
     animationConfig.radiusScale.target = radiusScale;
-    animationConfig.authorHighlightOpacity.target = authorHighlightOpacity;
     
-    // Reset age group highlights to 1
-    animationConfig.highlightYounger.target = 1;
-    animationConfig.highlightSimilar.target = 1;
-    animationConfig.highlightOlder.target = 1;
+    // Reset citation group highlights to 1
+    animationConfig.highlightHighCited.target = 1;
+    animationConfig.highlightMediumCited.target = 1;
+    animationConfig.highlightLowCited.target = 1;
     animationConfig.opacityMultiplier.target = 1;
 
     // Apply state changes
     colorMode = newColorMode;
-    highlightedAuthor = newHighlightedAuthor;
   }
 
   // Transform the data based on current animation state
   let plotData = $derived(
     basePoints.map(point => {
       const pointYear = parseInt(point.year);
-      const ageDiff = parseFloat(point.age_diff);
+      const citations = point.cited_by_count;
       
-      // Calculate age group multiplier
-      let ageGroupMultiplier = 1;
-      if (ageDiff > 7) ageGroupMultiplier = animationConfig.highlightOlder.current;
-      else if (ageDiff < -7) ageGroupMultiplier = animationConfig.highlightYounger.current;
-      else ageGroupMultiplier = animationConfig.highlightSimilar.current;
+      // Calculate citation group multiplier
+      let citationGroupMultiplier = 1;
+      if (citations >= 20) citationGroupMultiplier = animationConfig.highlightHighCited.current;
+      else if (citations >= 5) citationGroupMultiplier = animationConfig.highlightMediumCited.current;
+      else citationGroupMultiplier = animationConfig.highlightLowCited.current;
       
       // Calculate year-based opacity
       const inYearRange = pointYear >= animationConfig.yearFilterMin.current && 
                          pointYear <= animationConfig.yearFilterMax.current;
       const yearOpacity = inYearRange ? 1 : 0.2;
-
-      // Author highlighting logic
-      const isHighlightedAuthor = highlightedAuthor && point.coauth_aid === highlightedAuthor;
-      const authorOpacity = highlightedAuthor ? 
-        (isHighlightedAuthor ? 1 : animationConfig.authorHighlightOpacity.current) : 1;
       
       return {
         ...point,
-        r: point.r * animationConfig.radiusScale.current * (isHighlightedAuthor ? 1.3 : 1),
-        opacity: yearOpacity * animationConfig.opacityMultiplier.current * ageGroupMultiplier * authorOpacity,
-        displayColor: getPointColor(point),
-        isHighlighted: isHighlightedAuthor
+        r: point.r * animationConfig.radiusScale.current,
+        opacity: yearOpacity * animationConfig.opacityMultiplier.current * citationGroupMultiplier,
+        displayColor: getPointColor(point)
       };
     })
   );
@@ -216,7 +184,7 @@
   });
 </script>
 
-<h2>Peter Sheridan Dodds's Coauthors: <span>{scrollyIndex !== undefined ? `Step ${scrollyIndex}` : "Overview"}</span></h2>
+<h2>Peter Sheridan Dodds's Papers: <span>{scrollyIndex !== undefined ? `Step ${scrollyIndex}` : "Overview"}</span></h2>
 <div class="viz-container">
   <div class="viz-content">
     <div class="plot-container">
@@ -233,17 +201,17 @@
           stroke-dasharray="5,5"
         />
         
-        <!-- Grid lines for years - aligned with actual date range -->
+        <!-- Grid lines for years -->
         {#each Array.from({length: 13}, (_, i) => {
-          const dateRange = data ? getDataDateRange(data) : [new Date('1999-01-01'), new Date('2023-12-31')];
+          const dateRange = data ? getPaperDataDateRange(data) : [new Date('1999-01-01'), new Date('2027-12-31')];
           const startYear = dateRange[0].getFullYear();
           const endYear = dateRange[1].getFullYear();
           return startYear + i * 2;
         }).filter(year => {
-          const dateRange = data ? getDataDateRange(data) : [new Date('1999-01-01'), new Date('2023-12-31')];
+          const dateRange = data ? getPaperDataDateRange(data) : [new Date('1999-01-01'), new Date('2027-12-31')];
           return year <= dateRange[1].getFullYear();
         }) as year}
-          {@const dateRange = data ? getDataDateRange(data) : [new Date('1999-01-01'), new Date('2023-12-31')]}
+          {@const dateRange = data ? getPaperDataDateRange(data) : [new Date('1999-01-01'), new Date('2027-12-31')]}
           {@const yearDate = new Date(year, 0, 1)}
           {@const dateProgress = (yearDate - dateRange[0]) / (dateRange[1] - dateRange[0])}
           {@const margin = 80}
@@ -276,7 +244,7 @@
             onmouseover={() => hovered = point}
             onmouseleave={() => hovered = null}
           >
-            <title>{point.name} ({point.year}) - {point.faculty}</title>
+            <title>{point.title} ({point.year}) - {point.cited_by_count} citations</title>
           </circle>
         {/each}
       </svg>
@@ -294,7 +262,7 @@
       </div>
       <div class="stat">
         <span class="label">Color Mode:</span> 
-        <span class="value">{colorMode === 'age_diff' ? 'Age Diff' : 'Institutions'}</span>
+        <span class="value">{colorMode === 'coauthors' ? 'Coauthors' : 'Citations'}</span>
       </div>
       <div class="stat">
         <span class="label">View:</span> 
@@ -305,22 +273,23 @@
         }</span>
       </div>
       <div class="stat">
-        <span class="label">Visible Points:</span> 
+        <span class="label">Visible Papers:</span> 
         <span class="value">{plotData.filter(p => p.opacity > 0.5).length}</span>
       </div>
     </div>
 
     {#if scrollyIndex === undefined}
-      <p class="start-message">Scroll down to explore the collaboration timeline</p>
+      <p class="start-message">Scroll down to explore the publication timeline</p>
     {/if}
   </div>
 
   <!-- Tooltip -->
   {#if hovered}
     <div class="tooltip" style="left: {hovered.x - 5}px; top: {hovered.y - 20}px;">
-      <strong>{hovered.name}</strong> ({hovered.year})<br>
-      Age difference: {hovered.age_diff} years<br>
-      Total collaborations: {hovered.collabs}
+      <strong>{hovered.title.slice(0, 50)}...</strong><br>
+      <span class="year">({hovered.year})</span><br>
+      Citations: {hovered.cited_by_count}<br>
+      Coauthors: {hovered.nb_coauthors}
     </div>
   {/if}
 </div>
@@ -408,6 +377,11 @@
     font-family: system-ui, sans-serif;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     white-space: nowrap;
+    max-width: 300px;
+  }
+
+  .year {
+    color: #cbd5e0;
   }
 
   @media (max-width: 768px) {

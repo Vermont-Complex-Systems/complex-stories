@@ -1,30 +1,36 @@
-// bubbleChartUtils.js
+// paperChartUtils.js
 
-export function createPoint(d, targetY) {
-  const ageDiff = +d.age_diff;
-  let color = "#20A387FF"; // Same age (green)
+export function createPaperPoint(d, targetY) {
+  const citedBy = +d.cited_by_count || 0;
+  const nbCoauthors = +d.nb_coauthors || 1;
   
-  if (ageDiff > 7) {
-    color = "#404788FF"; // Older (blue)
-  } else if (ageDiff < -7) {
-    color = "#FDE725FF"; // Younger (yellow)
+  // Color based on number of coauthors
+  let color = "#20A387FF"; // Solo or few coauthors (green)
+  
+  if (nbCoauthors >= 8) {
+    color = "#440154FF"; // Many coauthors (purple)
+  } else if (nbCoauthors >= 5) {
+    color = "#404788FF"; // Medium coauthors (blue)
+  } else if (nbCoauthors >= 3) {
+    color = "#2A788EFF"; // Some coauthors (teal)
   }
 
-  const radius = Math.sqrt(+d.all_times_collabo || 1) * 2 + 3;
+  // Size based on citations (with minimum size)
+  const radius = Math.sqrt(citedBy + 1) * 1.5 + 4;
 
   return {
     x: 0, // Will be set during placement
     y: targetY,
     r: radius,
     color: color,
-    name: d.coauth_name,
+    title: d.title,
     year: d.pub_year,
     date: d.pub_date,
-    age_diff: d.age_diff,
-    collabs: d.all_times_collabo,
-    faculty: d.name,
-    shared_institutions: d.shared_institutions,
-    coauth_aid: d.coauth_aid
+    cited_by_count: citedBy,
+    nb_coauthors: nbCoauthors,
+    work_type: d.work_type,
+    doi: d.doi,
+    authors: d.authors
   };
 }
 
@@ -123,7 +129,7 @@ export function placePoint(point, placedPoints, centerX, allPoints) {
          tryFinalFallback(point, placedPoints, centerX);
 }
 
-export function processDataPoints(data, width, height) {
+export function processPaperDataPoints(data, width, height) {
   if (!data || data.length === 0) {
     return [];
   }
@@ -157,12 +163,12 @@ export function processDataPoints(data, width, height) {
     const targetY = margin + dateProgress * chartHeight;
     
     for (const d of dateData) {
-      allPoints.push(createPoint(d, targetY));
+      allPoints.push(createPaperPoint(d, targetY));
     }
   }
 
-  // Sort ALL points by collaboration count (largest first globally)
-  allPoints.sort((a, b) => b.collabs - a.collabs);
+  // Sort ALL points by citation count (most cited first)
+  allPoints.sort((a, b) => b.cited_by_count - a.cited_by_count);
 
   // Place each point using the modular placement system
   const placedPoints = [];
@@ -171,7 +177,7 @@ export function processDataPoints(data, width, height) {
       placedPoints.push(point);
     } else {
       // Emergency fallback - place at center with warning
-      console.warn('Could not place point:', point.name);
+      console.warn('Could not place point:', point.title);
       point.x = centerX;
       placedPoints.push(point);
     }
@@ -181,14 +187,14 @@ export function processDataPoints(data, width, height) {
 }
 
 // Helper function to get the date range for grid alignment (also extended)
-export function getDataDateRange(data) {
-  if (!data || data.length === 0) return [new Date('1999-01-01'), new Date('2025-12-31')];
+export function getPaperDataDateRange(data) {
+  if (!data || data.length === 0) return [new Date('1999-01-01'), new Date('2027-12-31')];
   
   const allDates = data.map(d => new Date(d.pub_date));
   const minDate = new Date(Math.min(...allDates));
   const actualMaxDate = new Date(Math.max(...allDates));
   
-  // Extend max year by 2 years to match the processDataPoints function
+  // Extend max year by 2 years to match the processPaperDataPoints function
   const maxDate = new Date(actualMaxDate.getFullYear() + 2, 11, 31);
   
   return [minDate, maxDate];

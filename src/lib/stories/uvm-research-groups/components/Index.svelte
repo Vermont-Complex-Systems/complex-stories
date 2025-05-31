@@ -1,39 +1,56 @@
 <!-- src/routes/+page.svelte -->
 <script>
   import Scrolly from '$lib/components/helpers/Scrolly.svelte';
-  import CoauthorBubbleChart from './BubbleChart.svelte';
+  import CombinedBubbleChart from './CombinedBubbleChart.svelte';
   import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
-  import dodds from "../data/dodds_coauthors.csv";
-  import { innerWidth } from 'svelte/reactivity/window';
+  import coauthorData from "../data/dodds_coauthors.csv";
+  import paperData from "../data/dodds_papers.csv";
   
   let { story, data } = $props();
   
   const doddsSection = data.zoomingIn;
   
-  let width = $state(700);
-  let height = 2000;
+  let width = $state(900); // Wider for combined chart
+  let height = 1800;
   let scrollyIndex = $state();
+
+  // Debug the scrolly value
+  $effect(() => {
+    console.log("Scrolly index changed to:", scrollyIndex);
+  });
 </script>
 
 <svelte:head>
-  <title>Coauthor Collaboration Timeline</title>
+  <title>Academic Career Analysis</title>
 </svelte:head>
 
 <section>
-  <h1>Coauthor Collaboration Analysis</h1>
+  <h1>Academic Career Timeline: Collaborators & Publications</h1>
+  
+  <!-- Debug info -->
+  <div style="position: fixed; top: 10px; right: 10px; background: yellow; padding: 10px; z-index: 1000;">
+    Current step: {scrollyIndex ?? 'undefined'}
+  </div>
   
   <div class="scrolly-container">
-    <!-- Fixed chart on the right -->
+    <!-- Combined chart on the left -->
     <div class="chart-container">
-      <CoauthorBubbleChart {scrollyIndex} data={dodds} {width} {height} />
+      <CombinedBubbleChart 
+        {scrollyIndex} 
+        {coauthorData}
+        {paperData} 
+        {width} 
+        {height} 
+      />
     </div>
 
-    <!-- Scrolling text on the left -->
+    <!-- Scrolling text on the right -->
     <div class="text-container">
       <Scrolly bind:value={scrollyIndex}>
         {#each doddsSection as text, i}
           {@const active = scrollyIndex === i}
           <div class="step" class:active>
+            <div class="step-debug">Step {i} - Active: {active}</div>
             {#if text.type === 'markdown'}
               <p> 
                 <Md text={text.value}/>
@@ -49,76 +66,115 @@
 </section>
 
 <style>
-  section {
-    padding: 2rem;
-    max-width: 1400px;
-    margin: 0 auto;
+  
+  .step-debug {
+    font-size: 12px;
+    color: red;
+    margin-bottom: 10px;
+    font-family: monospace;
   }
+ section {
+   padding: 2rem;
+   max-width: 1600px;
+   margin: 0 auto;
+ }
 
-  h1 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 2rem;
-  }
+ h1 {
+   text-align: center;
+   color: #333;
+   margin-bottom: 2rem;
+   font-size: 1.8rem;
+ }
 
-  .scrolly-container {
-    display: flex;
-    gap: 2rem;
-    min-height: 100vh;
-  }
+ .scrolly-container {
+   display: flex;
+   gap: 2rem;
+   min-height: 100vh;
+ }
 
-  .text-container {
-    flex: 1;
-    max-width: 400px;
-  }
+ .text-container {
+   flex: 1;
+   max-width: 500px;
+   min-width: 400px;
+ }
 
-  .chart-container {
-    flex: 1;
-    position: sticky;
-    top: 2rem;
-    height: fit-content;
-  }
+ .chart-container {
+   flex: 2;
+   position: sticky;
+   top: 2rem;
+   height: fit-content;
+ }
 
-  .step {
-    min-height: 60vh;
-    display: flex;
-    align-items: center;
-    opacity: 0.3;
-    transition: opacity 0.5s ease;
-    margin-bottom: 2rem;
-  }
+ .step {
+   min-height: 60vh;
+   display: flex;
+   align-items: center;
+   opacity: 0.3;
+   transition: opacity 0.5s ease;
+   margin-bottom: 2rem;
+ }
 
-  .step.active {
-    opacity: 1;
-  }
+ .step.active {
+   opacity: 1;
+ }
 
-  .step p {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: #333;
-    background: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  }
+ .step p {
+   font-size: 1.1rem;
+   line-height: 1.6;
+   color: #333;
+   background: white;
+   padding: 1.5rem;
+   border-radius: 8px;
+   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+   border-left: 4px solid #667eea;
+ }
 
-  /* Mobile adjustments */
-  @media (max-width: 768px) {
-    .scrolly-container {
-      flex-direction: column;
-    }
-    
-    .chart-container {
-      position: relative;
-      order: -1;
-    }
-    
-    .text-container {
-      max-width: none;
-    }
-    
-    .step {
-      min-height: 40vh;
-    }
-  }
+ /* Medium screens */
+ @media (max-width: 1200px) {
+   .scrolly-container {
+     gap: 1.5rem;
+   }
+   
+   .text-container {
+     min-width: 350px;
+     max-width: 450px;
+   }
+ }
+
+ /* Small screens - stack vertically */
+ @media (max-width: 900px) {
+   .scrolly-container {
+     flex-direction: column;
+   }
+   
+   .chart-container {
+     position: relative;
+     order: -1;
+   }
+   
+   .text-container {
+     max-width: none;
+     min-width: auto;
+   }
+   
+   .step {
+     min-height: 40vh;
+   }
+
+   h1 {
+     font-size: 1.4rem;
+   }
+ }
+
+ /* Very small screens */
+ @media (max-width: 600px) {
+   section {
+     padding: 1rem;
+   }
+   
+   .step p {
+     padding: 1rem;
+     font-size: 1rem;
+   }
+ }
 </style>
