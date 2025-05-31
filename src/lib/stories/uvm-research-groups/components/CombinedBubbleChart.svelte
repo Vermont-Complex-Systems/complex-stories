@@ -260,30 +260,25 @@
   />
   
   <!-- Vertical divider -->
-  <line 
+  <!-- <line 
     x1={width * 0.5} 
     x2={width * 0.5} 
     y1="0" 
     y2={height} 
     stroke="#d0d0d0" 
     stroke-width="2"
-  />
+  /> -->
   
-  <!-- Grid lines for years - Dynamic generation -->
-  {#each (() => {
+  <!-- Grid lines for years -->
+  {#each Array.from({length: 13}, (_, i) => {
     const dateRange = getCombinedDataDateRange(coauthorData, paperData);
     const startYear = dateRange[0].getFullYear();
     const endYear = dateRange[1].getFullYear();
-    const years = [];
-    
-    // Generate ALL years from start to end with 2-year intervals
-    for (let year = startYear; year <= endYear; year += 2) {
-      years.push(year);
-    }
-    
-    console.log("Grid years generated:", years);
-    return years;
-  })() as year}
+    return startYear + i * 2;
+  }).filter(year => {
+    const dateRange = getCombinedDataDateRange(coauthorData, paperData);
+    return year <= dateRange[1].getFullYear();
+  }) as year}
     {@const dateRange = getCombinedDataDateRange(coauthorData, paperData)}
     {@const yearDate = new Date(year, 0, 1)}
     {@const dateProgress = (yearDate - dateRange[0]) / (dateRange[1] - dateRange[0])}
