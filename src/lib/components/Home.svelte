@@ -1,47 +1,135 @@
 <script>
+  import { descending } from "d3";
   import { getContext } from "svelte";
   import Stories from "$lib/components/Stories.svelte";
+  import FilterBar from "$lib/components/FilterBar.svelte";
+  import { ChevronDown } from "lucide-svelte";
 
+  const initMax = 5;
   const { stories } = getContext("Home");
+
+  let maxStories = $state(initMax);
+  let activeFilter = $state(undefined);
+
+  // Extract unique filters from all stories
+  let allFilters = $derived.by(() => {
+    const filterSet = new Set();
+    stories.forEach(story => {
+      if (story.filters && Array.isArray(story.filters)) {
+        story.filters.forEach(filter => filterSet.add(filter));
+      }
+    });
+    return Array.from(filterSet).sort();
+  });
+
+  let filtered = $derived.by(() => {
+    const f = stories.filter((d) => {
+      const inFilter = activeFilter ? d.filters.includes(activeFilter) : true;
+      return inFilter;
+    });
+    f.sort((a, b) => descending(a.id, b.id));
+    return f;
+  });
+
+  let displayedStories = $derived(filtered.slice(0, maxStories));
+
+  function onLoadMore(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    maxStories = filtered.length;
+  }
+
+  // Reset pagination when filter changes
+  $effect(() => {
+    activeFilter;
+    maxStories = initMax;
+  });
 </script>
 
-<main>
-  <div class="column-wide">
-    <header>
-      <h1>Complex Stories</h1>
-      <p>Cool website of the <em>Vermont Complex Systems Institute</em></p>
-    </header>
-    
-    <Stories {stories} />
+<div class="content">
+  <!-- Add FilterBar here -->
+  <FilterBar bind:activeFilter filters={allFilters} />
+  
+  <div class="stories">
+    <Stories stories={displayedStories} />
   </div>
-</main>
+
+  {#if filtered.length > maxStories}
+    <div class="more" class:visible={filtered.length > maxStories}>
+      <button onclick={onLoadMore} class="load-more-btn">
+        <ChevronDown class="chevron" />
+        <span class="text">Load More Stories</span>
+      </button>
+    </div>
+  {/if}
+</div>
 
 <style>
-  main {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0;
+  .content {
+    position: relative;
   }
 
-  .column-wide {
-    max-width: 1280px;
-    padding: 0 16px;
+  .stories {
+    margin-top: 0;
   }
 
-  header {
-    text-align: center;
-    margin-bottom: 3rem;
-    padding: 2rem 0;
+  .more {
+    display: none;
+    height: 40vh;
+    max-height: 400px;
+    background: var(--fade);
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    z-index: var(--z-overlay);
+    pointer-events: none;
   }
 
-  h1 {
-    font-size: clamp(2rem, 5vw, 3rem);
-    margin: 0 0 1rem 0;
+  .more.visible {
+    display: flex;
   }
 
-  p {
-    font-size: 1.2rem;
-    color: #666;
-    margin: 0;
+  .load-more-btn {
+    transition: transform var(--transition-medium) ease;
+    margin-bottom: 15%;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    pointer-events: all;
+    background: var(--color-button-bg);
+    color: var(--color-button-fg);
+    border: 1px solid var(--color-border);
+    border-radius: 2rem;
+    cursor: pointer;
+    font-family: var(--font-form);
+    font-size: var(--font-size-small);
+    white-space: nowrap;
+    min-width: fit-content;
+    text-transform: uppercase;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.5px;
+  }
+
+  .load-more-btn:hover {
+    transform: translateY(-2px);
+    background: var(--color-button-hover);
+  }
+
+
+  .text {
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 768px) {
+    .load-more-btn {
+      padding: 0.875rem 1.75rem;
+      margin-bottom: 12%;
+      font-size: var(--font-size-xsmall);
+    }
+    
   }
 </style>
