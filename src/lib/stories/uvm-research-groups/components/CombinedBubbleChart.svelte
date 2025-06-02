@@ -44,16 +44,17 @@
       colorMode: 'shared_institutions', // Switch to institutions
       radiusScale: 1.2,
       highlightedAuthor: null,
-      viewMode: 'focus',
+      viewMode: 'normal',
       focus: 'both'
     },
     2: {
-      yearRange: [2008, 2025],
+      yearRange: [2006, 2025],
       colorMode: 'age_diff', // Back to age diff
-      radiusScale: 1.2,
+      radiusScale: 1.1,
       highlightedAuthor: null,
-      viewMode: 'focus',
-      focus: 'both'
+      viewMode: 'normal',
+      focus: 'both',
+      translateToYear: 2020
     },
     3: {
       yearRange: [2008, 2023],
@@ -62,7 +63,8 @@
       highlightedAuthor: 'A5002034958',
       authorHighlightOpacity: 0.2,
       viewMode: 'overview',
-      focus: 'papers'
+      focus: 'both',
+      translateToYear: 2030
     },
     4: {
       yearRange: [2008, 2025],
@@ -122,69 +124,64 @@
   }
 
   // Apply step configuration
-  function applyStepConfig(config) {
-    const { 
-      yearRange, 
-      radiusScale = 1, 
-      authorHighlightOpacity = 1,
-      colorMode: newColorMode = 'type',
-      highlightedAuthor: newHighlightedAuthor = null,
-      viewMode = 'normal',
-      focus = 'both'
-    } = config;
+  // Apply step configuration
+function applyStepConfig(config) {
+  const { 
+    yearRange, 
+    radiusScale = 1, 
+    authorHighlightOpacity = 1,
+    colorMode: newColorMode = 'type',
+    highlightedAuthor: newHighlightedAuthor = null,
+    viewMode = 'normal',
+    focus = 'both',
+    translateToYear = null // New parameter
+  } = config;
 
-    // Calculate transforms based on view mode
-    const margin = 80;
-    const chartHeight = height - 2 * margin;
-    const dataRange = getCombinedDataDateRange(coauthorData, paperData);
-    const fullYearRange = dataRange[1].getFullYear() - dataRange[0].getFullYear();
-    
-    if (viewMode === 'overview') {
-      animationConfig.scaleX.target = 0.8;
-      animationConfig.scaleY.target = 0.8;
-      animationConfig.translateY.target = 0;
-    } else if (viewMode === 'focus') {
-      const yearRangeStart = yearRange[0];
-      const yearRangeEnd = yearRange[1];
-      const yearRangeCenter = (yearRangeStart + yearRangeEnd) / 2;
-      
-      const centerProgress = (yearRangeCenter - dataRange[0].getFullYear()) / fullYearRange;
+  // Calculate transforms based on view mode
+  const margin = 80;
+  const chartHeight = height - 2 * margin;
+  const dataRange = getCombinedDataDateRange(coauthorData, paperData);
+  const fullYearRange = dataRange[1].getFullYear() - dataRange[0].getFullYear();
+  
+  if (viewMode === 'overview') {
+    // Overview mode: zoom out to see everything clearly
+    animationConfig.scaleX.target = 0.8;
+    animationConfig.scaleY.target = 0.8;
+    animationConfig.translateY.target = 0;
+  } else {
+    // Normal mode: translate based on translateToYear parameter
+    if (translateToYear) {
+      const centerProgress = (translateToYear - dataRange[0].getFullYear()) / fullYearRange;
       const centerY = margin + centerProgress * chartHeight;
       
       const viewCenterY = height / 2;
       const translation = (viewCenterY - centerY) * 0.6;
       
       animationConfig.scaleX.target = 1;
-      animationConfig.scaleY.target = 1.1;
+      animationConfig.scaleY.target = 1;
       animationConfig.translateY.target = translation;
     } else {
+      // No translation specified - stay at normal position
       animationConfig.scaleX.target = 1;
       animationConfig.scaleY.target = 1;
       animationConfig.translateY.target = 0;
     }
-
-    // Set focus opacity
-    if (focus === 'coauthors') {
-      animationConfig.coauthorOpacity.target = 1;
-      animationConfig.paperOpacity.target = 0.3;
-    } else if (focus === 'papers') {
-      animationConfig.coauthorOpacity.target = 1;
-      animationConfig.paperOpacity.target = 1;
-    } else {
-      animationConfig.coauthorOpacity.target = 1;
-      animationConfig.paperOpacity.target = 1;
-    }
-
-    animationConfig.yearFilterMin.target = yearRange[0];
-    animationConfig.yearFilterMax.target = yearRange[1];
-    animationConfig.radiusScale.target = radiusScale;
-    animationConfig.authorHighlightOpacity.target = authorHighlightOpacity;
-    animationConfig.opacityMultiplier.target = 1;
-
-    // Apply state changes
-    colorMode = newColorMode;
-    highlightedAuthor = newHighlightedAuthor;
   }
+
+  // Set focus opacity - always both
+  animationConfig.coauthorOpacity.target = 1;
+  animationConfig.paperOpacity.target = 1;
+
+  animationConfig.yearFilterMin.target = yearRange[0];
+  animationConfig.yearFilterMax.target = yearRange[1];
+  animationConfig.radiusScale.target = radiusScale;
+  animationConfig.authorHighlightOpacity.target = authorHighlightOpacity;
+  animationConfig.opacityMultiplier.target = 1;
+
+  // Apply state changes
+  colorMode = newColorMode;
+  highlightedAuthor = newHighlightedAuthor;
+}
 
   // Transform the data based on current animation state
   let plotData = $derived(
