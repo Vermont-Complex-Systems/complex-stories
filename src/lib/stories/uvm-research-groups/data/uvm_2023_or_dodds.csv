@@ -1,0 +1,550 @@
+pub_year,pub_date,aid,institution,name,author_age,first_pub_year,last_pub_year,yearly_collabo,all_times_collabo,acquaintance,shared_institutions,coauth_aid,coauth_name,coauth_age,coauth_min_year,age_diff,age_bucket,age_std,uvm_faculty_2023
+1960,1960-11-16,A5054686016,,Benedek Erdös,0,1960,2025,2,2,new_collab,,A5047450042,B Gimes,2.0,1958.0,2.0,same_age,1000-11-16,True
+1962,1962-03-15,A5082939157,,Karen C. Glass,0,1962,2025,1,1,new_collab,,A5109055419,W Beier,-4.0,1966.0,-4.0,same_age,1000-03-15,True
+1964,1964-06-28,A5081119848,,Janet L. Stein,0,1964,2025,1,1,new_collab,,A5051380118,Eugene J. Slowinski,0.0,1964.0,0.0,same_age,1000-06-28,True
+1964,1964-12-25,A5015290549,Cornell University,Bruce L. Parker,0,1964,2025,1,1,new_collab,Cornell University,A5039439713,J. E. Dewey,,,,,1000-12-25,True
+1968,1968-01-09,A5103217263,,Gary S. Stein,13,1955,2025,1,1,new_collab,,A5109573565,J. Greger,-31.0,1999.0,-44.0,much_younger,1013-01-09,True
+1968,1968-11-14,A5113979503,The University of Texas Southwestern Medical Center,Joseph D. Dickerman,0,1968,2025,1,1,new_collab,The University of Texas Southwestern Medical Center,A5104059741,William Bishop,,,,,1000-11-14,True
+1973,1973-11-01,A5031362021,Boston University,Jane B. Lian,1,1972,2025,1,1,new_collab,Boston University,A5110232953,Shirley M. Morris,0.0,1973.0,-1.0,same_age,1001-11-01,True
+1973,1973-07-27,A5006901996,,William S. Keeton,0,1973,2025,1,1,new_collab,,A5050526740,Gary L. Seevers,5.0,1968.0,5.0,same_age,1000-07-27,True
+1974,1974-10-11,A5023858070,,Mary Cushman,0,1974,2025,1,1,new_collab,,A5078163655,Neal Castagnoli,12.0,1962.0,12.0,older,1000-10-11,True
+1974,1974-02-15,A5101459958,,Daniel J. Weiss,9,1965,2025,1,1,new_collab,,A5031454423,D. Sulitzeanu,,,,,1009-02-15,True
+1976,1976-10-10,A5075679004,Harvard University,Christopher L. Berger,0,1976,2025,1,1,new_collab,Harvard University,A5068663051,Yutaka Kojima,16.0,1960.0,16.0,much_older,1000-10-10,True
+1976,1976-01-18,A5087721092,Boston College,Frances E. Carr,0,1976,2025,1,1,new_collab,Boston College,A5041293991,Peter B. Gray,,,,,1000-01-18,True
+1982,1982-09-29,A5085232359,,Nicholas J. Gotelli,0,1982,2025,1,1,new_collab,,A5108483525,Lawrence G. Abele,12.0,1970.0,12.0,older,1000-09-28,True
+1982,1982-10-19,A5015787795,University of Kansas,Stephen T. Higgins,0,1982,2025,2,2,new_collab,University of Kansas,A5013694361,Edward K. Morris,12.0,1970.0,12.0,older,1000-10-19,True
+1983,1983-01-29,A5051985654,University of Glasgow,Keith B. Burt,0,1983,2025,1,1,new_collab,University of Glasgow,A5030896636,Ian Bushnell,4.0,1979.0,4.0,same_age,1000-01-28,True
+1984,1984-12-22,A5108368069,University of Colorado Health,Philip A. Ades,0,1984,2025,1,1,new_collab,University of Colorado Health,A5014329120,H. L. Brammell,13.0,1971.0,13.0,older,1000-12-22,True
+1984,1984-12-01,A5080873801,,Robert J. Kelm,0,1984,2025,1,1,new_collab,,A5005240750,S Lembrych,26.0,1958.0,26.0,much_older,1000-12-01,True
+1984,1984-01-24,A5078803587,,Matthew D. Liptak,0,1984,2025,2,2,new_collab,,A5030974797,István Seri,,,,,1000-01-24,True
+1984,1984-08-14,A5069684912,University of Pennsylvania,Randall L. Headrick,0,1984,2025,1,1,new_collab,University of Pennsylvania,A5059126333,L. E. Seiberling,4.0,1980.0,4.0,same_age,1000-08-14,True
+1985,1985-11-27,A5074708105,,Alison K. Brody,0,1985,2025,1,1,new_collab,,A5108665956,Kenneth B. Armitage,,,,,1000-11-27,True
+1985,1985-01-24,A5002326354,,Deborah A. Neher,0,1985,2025,1,1,new_collab,,A5023416680,Benoît Richard,25.0,1960.0,25.0,much_older,1000-01-24,True
+1985,1985-04-04,A5062626999,"University of California, Santa Cruz",Anthony D. Morielli,0,1985,2025,1,1,new_collab,"University of California, Santa Cruz",A5015805359,Mark P. Kovac,11.0,1974.0,11.0,older,1000-04-04,True
+1986,1986-04-20,A5033621367,University of Pittsburgh,Theodore J. Angelopoulos,0,1986,2025,1,1,new_collab,University of Pittsburgh,A5085325387,Richard Robertson,,,,,1000-04-20,True
+1986,1986-01-19,A5113777237,Southwestern University,Robert Gramling,0,1986,2025,1,1,new_collab,Southwestern University,A5053073891,Craig J. Forsyth,,,,,1000-01-19,True
+1986,1986-01-02,A5040283299,,Bruce D. Beynnon,0,1986,2025,1,1,new_collab,,A5078348998,Martin H. Krag,16.0,1970.0,16.0,much_older,1000-01-02,True
+1986,1986-01-22,A5077022082,,William L. Cats‐Baril,0,1986,2025,1,1,new_collab,,A5089881172,Linda Gibson,-12.0,1998.0,-12.0,younger,1000-01-22,True
+1987,1987-01-23,A5046250286,Latitude Pharmaceuticals (United States),John G. Crock,0,1987,2025,1,1,new_collab,Latitude Pharmaceuticals (United States),A5032965517,Thomas Klein,,,,,1000-01-23,True
+1987,1987-12-25,A5033892718,"University of California, Santa Barbara",Christopher S. Francklyn,0,1987,2025,1,1,new_collab,"University of California, Santa Barbara",A5109321766,N Lee,30.0,1957.0,30.0,much_older,1000-12-25,True
+1987,1987-01-10,A5052009391,University of Toronto,Giuseppe A. Petrucci,47,1940,2025,1,1,new_collab,University of Toronto,A5030781110,J.C. Van Loon,23.0,1964.0,-24.0,much_younger,1047-01-10,True
+1987,1987-12-11,A5110344908,Columbia University,Rocki Lee Dewitt,0,1987,2025,1,1,new_collab,Columbia University,A5030496826,Joel Brockner,12.0,1975.0,12.0,older,1000-12-11,True
+1987,1987-12-31,A5042340308,University of Maine,Betsy Hoza,0,1987,2025,2,2,new_collab,University of Maine,A5064569100,William M. Bukowski,27.0,1960.0,27.0,much_older,1000-12-31,True
+1987,1987-11-08,A5088037315,Whitehead Institute for Biomedical Research,Jeanne M. Harris,0,1987,2025,1,1,new_collab,Whitehead Institute for Biomedical Research,A5076973759,Keith E. Mostov,7.0,1980.0,7.0,older,1000-11-08,True
+1987,1987-01-19,A5113506566,University of Virginia,D. G. Fletcher,0,1987,2025,1,1,new_collab,University of Virginia,A5113616179,J. C. McDaniel,26.0,1961.0,26.0,much_older,1000-01-19,True
+1988,1988-01-10,A5088601829,,Kalev Freeman,0,1988,2025,1,1,new_collab,,A5027672505,R. Edward Hendrick,15.0,1973.0,15.0,much_older,1000-01-10,True
+1988,1988-01-19,A5026988863,Massachusetts Institute of Technology,Dennis P. Clougherty,0,1988,2025,1,1,new_collab,Massachusetts Institute of Technology,A5038690584,K. H. Johnson,24.0,1964.0,24.0,much_older,1000-01-19,True
+1988,1988-01-10,A5111431318,,Mamadou Diouf,4,1984,2025,1,1,new_collab,,A5113591526,Charles Becker,,,,,1004-01-10,True
+1989,1989-09-20,A5023419188,Brigham and Women's Hospital,Elizabeth A. Bonney,0,1989,2025,1,1,new_collab,Brigham and Women's Hospital,A5068606823,Loren G. Fong,5.0,1984.0,5.0,same_age,1000-09-20,True
+1989,1989-03-15,A5081523526,University of Washington,Terrence P. Delaney,0,1989,2025,1,1,new_collab,University of Washington,A5065554996,Barbara A. Boczar,9.0,1980.0,9.0,older,1000-03-15,True
+1989,1989-07-17,A5056931515,Texas Tech University Health Sciences Center,Stephen J. Everse,0,1989,2025,2,2,new_collab,Texas Tech University Health Sciences Center,A5006519845,L. O. Lutherer,25.0,1964.0,25.0,much_older,1000-07-17,True
+1989,1989-12-03,A5014570718,McGill University,Jason H. T. Bates,0,1989,2025,1,1,new_collab,McGill University,A5048273806,Felix R. Shardonofsky,8.0,1981.0,8.0,older,1000-12-03,True
+1989,1989-09-25,A5025702790,Medical Center Hospital,Ira M. Bernstein,2,1987,2025,1,1,new_collab,Medical Center Hospital,A5073943513,Melanie Watson,36.0,1953.0,34.0,much_older,1002-09-25,True
+1989,1989-01-21,A5074235895,University of Vermont,Marilyn J. Cipolla,9,1980,2025,1,1,new_collab,University of Vermont,A5001745415,George Osol,5.0,1984.0,-4.0,same_age,1009-01-21,True
+1989,1989-11-26,A5041011145,Texas Biomedical Research Institute,Brent L. Lockwood,0,1989,2025,1,1,new_collab,Texas Biomedical Research Institute,A5027162824,Sophia V. Richter,0.0,1989.0,0.0,same_age,1000-11-26,True
+1990,1990-01-17,A5060478670,,Jeffrey S. Buzas,0,1990,2025,1,1,new_collab,,A5019109717,L. Sztanka,0.0,1990.0,0.0,same_age,1000-01-17,True
+1990,1990-10-03,A5047152658,,Kathryn J. Fox,3,1987,2025,1,1,new_collab,,A5080540068,Robert S. Broadhead,17.0,1973.0,14.0,older,1003-10-03,True
+1991,1991-06-17,A5049274599,Harvard University,Jonathan E. Boyson,0,1991,2025,1,1,new_collab,Harvard University,A5045376146,Mamoru Watanabe,,,,,1000-06-17,True
+1991,1991-10-05,A5065504214,Ford Foundation,Eva Wollenberg,0,1991,2025,1,1,new_collab,Ford Foundation,A5063284506,Thomas K. Rudel,11.0,1980.0,11.0,older,1000-10-05,True
+1991,1991-01-28,A5002845482,University of Pisa,Michael S. Cannizzaro,0,1991,2025,1,1,new_collab,University of Pisa,A5086664956,Mercedes Garcia‐Gil,5.0,1986.0,5.0,same_age,1000-01-28,True
+1991,1991-01-06,A5010744577,University of Oxford,Daniel E. Bentil,0,1991,2025,1,1,new_collab,University of Oxford,A5113983421,J. D. Murray,34.0,1957.0,34.0,much_older,1000-01-06,True
+1992,1992-10-09,A5013355577,Purdue University West Lafayette,Antonio Cepeda‐Benito,0,1992,2025,2,2,new_collab,Purdue University West Lafayette,A5038440851,Stephen T. Tiffany,11.0,1981.0,11.0,older,1000-10-09,True
+1992,1992-12-26,A5040491225,University of Vermont,Stephen J. Dempsey,7,1985,2025,1,1,new_collab,University of Vermont,A5074962772,Gene Laber,24.0,1968.0,17.0,much_older,1007-12-26,True
+1992,1992-03-15,A5037781469,Northwestern University,Alan K. Howe,0,1992,2025,1,1,new_collab,Northwestern University,A5111801001,Rajendra Goswami,1.0,1991.0,1.0,same_age,1000-03-15,True
+1993,1993-11-17,A5056414452,University of Colorado Boulder,Meghan Cope,0,1993,2025,1,1,new_collab,University of Colorado Boulder,A5078032934,Lynn A. Staeheli,11.0,1982.0,11.0,older,1000-11-17,True
+1993,1993-07-08,A5077198528,Louisiana Department of Natural Resources,Josef H. Görres,0,1993,2025,1,1,new_collab,Louisiana Department of Natural Resources,A5057004856,C. Iliadis,3.0,1990.0,3.0,same_age,1000-07-08,True
+1993,1993-04-21,A5090816940,,Sean A. Diehl,0,1993,2025,1,1,new_collab,,A5074127363,Michael Buslau,4.0,1989.0,4.0,same_age,1000-04-21,True
+1994,1994-01-03,A5001775538,Bowling Green State University,Hugh Garavan,2,1992,2025,1,1,new_collab,Bowling Green State University,A5101901763,Michael E. Doherty,26.0,1968.0,24.0,much_older,1002-01-03,True
+1994,1994-09-20,A5070720713,University of Michigan,Anne E. Dixon,0,1994,2025,1,1,new_collab,University of Michigan,A5108481453,Bruce R. Nelson,6.0,1988.0,6.0,same_age,1000-09-20,True
+1994,1994-03-22,A5085455189,University of Wisconsin–Madison,Regina Toolin,0,1994,2025,1,1,new_collab,University of Wisconsin–Madison,A5078747941,Peter W. Hewson,22.0,1972.0,22.0,much_older,1000-03-22,True
+1994,1994-05-03,A5005985454,,Christopher D. Huston,0,1994,2025,1,1,new_collab,,A5108418413,P.E. Stokes,22.0,1972.0,22.0,much_older,1000-05-03,True
+1995,1995-04-29,A5010472783,,Beth D. Kirkpatrick,0,1995,2025,1,1,new_collab,,A5084199413,Royce W. Waltrip,12.0,1983.0,12.0,older,1000-04-28,True
+1995,1995-01-25,A5008146559,,Mandar M. Dewoolkar,0,1995,2025,2,2,new_collab,,A5113437352,Alan T. Stadler,3.0,1992.0,3.0,same_age,1000-01-25,True
+1995,1995-01-11,A5050393620,,Bin Deng,0,1995,2025,1,1,new_collab,,A5113525063,Hee-Sook Mo,15.0,1980.0,15.0,much_older,1000-01-11,True
+1995,1995-01-03,A5024849718,Stony Brook University,Richard M. Single,0,1995,2025,1,1,new_collab,Stony Brook University,A5059317886,Stephen J. Finch,18.0,1977.0,18.0,much_older,1000-01-03,True
+1995,1995-02-04,A5031789321,,V. Ernesto Méndez,0,1995,2025,1,1,new_collab,,A5017068445,Stephen N. Rohr,0.0,1995.0,0.0,same_age,1000-02-04,True
+1995,1995-10-19,A5053147031,University of New Mexico,Gerald M. Herrera,0,1995,2025,1,1,new_collab,University of New Mexico,A5024312536,M. R. Eichinger,3.0,1992.0,3.0,same_age,1000-10-19,True
+1995,1995-11-13,A5101907134,University College Cork,Mingruo Guo,0,1995,2025,1,1,new_collab,University College Cork,A5112640513,Patrick F. Fox,30.0,1965.0,30.0,much_older,1000-11-13,True
+1996,1996-05-30,A5000554558,Brigham Young University,Bryan A. Ballif,0,1996,2025,1,1,new_collab,Brigham Young University,A5097086694,N V Mincek,0.0,1996.0,0.0,same_age,1000-05-30,True
+1996,1996-01-14,A5045212720,The Ohio State University,Robert J. Hondal,0,1996,2025,1,1,new_collab,The Ohio State University,A5109091041,Brian Werneburg,3.0,1993.0,3.0,same_age,1000-01-14,True
+1996,1996-10-19,A5063974887,McGill University,Donna J. Toufexis,0,1996,2025,1,1,new_collab,McGill University,A5090158374,Claire‐Dominique Walker,18.0,1978.0,18.0,much_older,1000-10-19,True
+1996,1996-07-12,A5014700972,Harvard University,Harold L. Dauerman,0,1996,2025,1,1,new_collab,Harvard University,A5057352435,Donald E. Cutlip,0.0,1996.0,0.0,same_age,1000-07-12,True
+1996,1996-01-09,A5016511835,,Cecilia Danks,13,1983,2025,1,1,new_collab,,A5006321324,Yvonne Everett,8.0,1988.0,-5.0,same_age,1013-01-09,True
+1996,1996-08-07,A5008847401,Florida State University,Sayamwong E. Hammack,0,1996,2025,1,1,new_collab,Florida State University,A5042861275,Michelle M. Minear,0.0,1996.0,0.0,same_age,1000-08-07,True
+1997,1997-01-24,A5019140171,,David Conner,0,1997,2025,1,1,new_collab,,A5031480150,Ko Jane,17.0,1980.0,17.0,much_older,1000-01-24,True
+1997,1997-01-05,A5010615491,,Deborah E. Blom,0,1997,2025,1,1,new_collab,,A5011157094,Christine A. Hastorf,17.0,1980.0,17.0,much_older,1000-01-05,True
+1997,1997-01-10,A5077572554,,John Barlow,0,1997,2025,1,1,new_collab,,A5087087358,Theresa Casey,28.0,1969.0,28.0,much_older,1000-01-10,True
+1997,1997-01-09,A5063690586,,T.L. Bradshaw,0,1997,2025,1,1,new_collab,,A5074102030,Berkett Lp,3.0,1994.0,3.0,same_age,1000-01-09,True
+1997,1997-09-19,A5027340620,,Jason Botten,0,1997,2025,1,1,new_collab,,A5026816846,Mausumi Bharadwaj,3.0,1994.0,3.0,same_age,1000-09-19,True
+1998,1998-06-06,A5029896488,Arizona State University,Sara Helms Cahan,0,1998,2025,1,1,new_collab,Arizona State University,A5066453380,Ken R. Helms,8.0,1990.0,8.0,older,1000-06-06,True
+1998,1998-01-14,A5065482485,University of Vermont,Andrew Barnaby,7,1991,2024,1,1,new_collab,University of Vermont,A5080577785,Joan Wry,0.0,1998.0,-7.0,same_age,1007-01-14,True
+1999,1999-01-10,A5064679606,Duke University,Brian Beckage,0,1999,2025,1,1,new_collab,Duke University,A5090220956,James S. Clark,,,,,1000-01-10,True
+1999,1999-08-07,A5016061803,McGill University,Amber L. Doiron,0,1999,2025,1,1,new_collab,McGill University,A5063090346,Donald T. Yapp,9.0,1990.0,9.0,older,1000-08-07,True
+1999,1999-05-11,A5040821463,Massachusetts Institute of Technology,Peter Sheridan Dodds,0,1999,2025,1,1,new_collab,Massachusetts Institute of Technology,A5109969840,Daniel H. Rothman,16.0,1983.0,16.0,much_older,1000-05-11,True
+1999,1999-12-21,A5085014912,,Arne Bomblies,0,1999,2025,1,1,new_collab,,A5014070015,Diane M. McKnight,21.0,1978.0,21.0,much_older,1000-12-21,True
+1999,1999-01-12,A5053150923,University of Chicago,Thomas Borchert,8,1991,2025,1,1,new_collab,University of Chicago,A5087030231,Bruce Kapferer,32.0,1967.0,24.0,much_older,1008-01-12,True
+1999,1999-01-21,A5089482475,University of Illinois Urbana-Champaign,Robert R. Althoff,1,1998,2025,2,2,new_collab,University of Illinois Urbana-Champaign,A5005434848,Neal J. Cohen,22.0,1977.0,21.0,much_older,1001-01-21,True
+1999,1999-05-24,A5020783528,University of Vermont Medical Center,Yvonne M. W. Janssen‐Heininger,0,1999,2025,1,1,new_collab,University of Vermont Medical Center,A5002460941,Ian G. Macara,27.0,1972.0,27.0,much_older,1000-05-24,True
+2000,2000-12-13,A5079241058,University of Vermont,Thomas P. Ahern,0,2000,2025,2,2,new_collab,University of Vermont,A5076516816,Martin M. Bednar,20.0,1980.0,20.0,much_older,1000-12-13,True
+2000,2000-08-14,A5066791342,University of Zurich,Josh Bongard,1,1999,2025,1,1,new_collab,University of Zurich,A5110094857,Chandana Paul,,,,,1001-08-14,True
+2000,2000-03-31,A5033544452,American Academy of Neurology,Bernard F. Cole,0,2000,2025,1,1,new_collab,American Academy of Neurology,A5111817411,Janet L. Cobb,24.0,1976.0,24.0,much_older,1000-03-31,True
+2000,2000-09-07,A5005388341,Orange (France),Samuel Chevalier,0,2000,2025,1,1,new_collab,Orange (France),A5024888925,A. Gautier-Levine,2.0,1998.0,2.0,same_age,1000-09-07,True
+2000,2000-01-15,A5044029164,University of Alaska Fairbanks,Kevin C.H. Chiang,1,1999,2025,1,1,new_collab,University of Alaska Fairbanks,A5026203075,Ji‐Chai Lin,12.0,1988.0,11.0,older,1001-01-15,True
+2001,2001-10-04,A5042896751,Dana-Farber Cancer Institute,Seth Frietze,0,2001,2025,1,1,new_collab,Dana-Farber Cancer Institute,A5013593777,Amy L. Hitchcock,0.0,2001.0,0.0,same_age,1000-10-04,True
+2001,2001-03-04,A5019605511,,Julie A. Dumas,0,2001,2025,1,1,new_collab,,A5112870597,Marilyn Hartman,15.0,1986.0,15.0,much_older,1000-03-04,True
+2001,2001-02-09,A5031469576,,Emily Bernard,0,2001,2024,1,1,new_collab,,A5051301500,Langston Hughes Carl Van Vechten,0.0,2001.0,0.0,same_age,1000-02-09,True
+2001,2001-02-03,A5050101738,University of Wisconsin–Madison,Matthias Brewer,0,2001,2025,2,2,new_collab,University of Wisconsin–Madison,A5069015659,Daniel H. Rich,33.0,1968.0,33.0,much_older,1000-02-03,True
+2001,2001-09-19,A5101677824,Universidad Complutense de Madrid,Eric M. Hernandez,0,2001,2025,1,1,new_collab,Universidad Complutense de Madrid,A5006930830,Julio Díaz,14.0,1987.0,14.0,older,1000-09-19,True
+2001,2001-09-09,A5063274084,Madurai Kamaraj University,Vikas Anathy,0,2001,2025,1,1,new_collab,Madurai Kamaraj University,A5080755838,T. Venugopal,-1.0,2002.0,-1.0,same_age,1000-09-09,True
+2001,2001-10-20,A5030675455,University of Ulster,Paula B. Deming,0,2001,2025,2,2,new_collab,University of Ulster,A5025770562,Cheryl A. Cistulli,7.0,1994.0,7.0,older,1000-10-20,True
+2002,2002-06-16,A5034560073,Colorado State University,E. Carol Adair,0,2002,2025,1,1,new_collab,Colorado State University,A5087616136,Dan Binkley,22.0,1980.0,22.0,much_older,1000-06-16,True
+2002,2002-01-27,A5086838547,,Pablo S. Bose,0,2002,2025,1,1,new_collab,,A5016089728,Baldev Raj Nayar,36.0,1966.0,36.0,much_older,1000-01-27,True
+2002,2002-08-20,A5029745678,"University of California, Berkeley",Yolanda H. Chen,0,2002,2025,1,1,new_collab,"University of California, Berkeley",A5008681631,Stephen C. Welter,19.0,1983.0,19.0,much_older,1000-08-20,True
+2002,2002-09-20,A5058304577,Oregon State University,Anthony W. D’Amato,0,2002,2025,1,1,new_collab,Oregon State University,A5024505600,Klaus J. Puettmann,12.0,1990.0,12.0,older,1000-09-20,True
+2002,2002-03-02,A5058128585,University of Vermont,Caroline Beer,1,2001,2025,1,1,new_collab,University of Vermont,A5066101200,Mark Peceny,9.0,1993.0,8.0,older,1001-03-02,True
+2002,2002-11-19,A5055852542,University of Vermont,Susan A. Comerford,0,2002,2025,1,1,new_collab,University of Vermont,A5080520193,Mary J. Fambrough,0.0,2002.0,0.0,same_age,1000-11-19,True
+2002,2002-07-30,A5061707651,Indiana University School of Medicine,Joseph P. Near,0,2002,2025,1,1,new_collab,Indiana University School of Medicine,A5086853056,Talmage R. Bosin,37.0,1965.0,37.0,much_older,1000-07-30,True
+2002,2002-04-30,A5087146071,,Tracy Arámbula Ballysingh,16,1986,2025,1,1,new_collab,,A5028282232,Roy C Wilson,19.0,1983.0,3.0,same_age,1016-04-30,True
+2002,2002-12-03,A5060633808,,Stephen R. Keller,0,2002,2025,1,1,new_collab,,A5017746355,James C. Zachos,,,,,1000-12-03,True
+2003,2003-05-03,A5034453011,Brown University,Eric von Wettberg,0,2003,2025,1,1,new_collab,Brown University,A5108812825,Kelly Gravuer,-19.0,2022.0,-19.0,much_younger,1000-05-03,True
+2003,2003-10-22,A5014853497,"University of California, Davis",Rebecca M. Callahan,0,2003,2025,1,1,new_collab,"University of California, Davis",A5003015690,Patricia Gàndara,25.0,1978.0,25.0,much_older,1000-10-22,True
+2003,2003-12-29,A5010739172,,Brendan Fisher,0,2003,2025,1,1,new_collab,,A5009010250,David M. Rider,27.0,1976.0,27.0,much_older,1000-12-28,True
+2004,2004-09-27,A5042866760,,Eyal Amiel,0,2004,2025,1,1,new_collab,,A5048482189,Patricia A. Pioli,10.0,1994.0,10.0,older,1000-09-27,True
+2004,2004-08-17,A5062403203,Clarkson University,James P. Bagrow,0,2004,2025,1,1,new_collab,Clarkson University,A5079226688,Hernán D. Rozenfeld,0.0,2004.0,0.0,same_age,1000-08-17,True
+2004,2004-05-26,A5090686681,,Joshua Farley,0,2004,2025,1,2,existing_collab,,A5027651591,Herman E. Daly,39.0,1965.0,39.0,much_older,1000-05-26,True
+2004,2004-12-13,A5072210910,,Anne J. Jefferson,0,2004,2025,2,2,new_collab,,A5014593722,G. Grant,24.0,1980.0,24.0,much_older,1000-12-13,True
+2004,2004-11-29,A5005500349,,Terence Cuneo,20,1984,2025,1,1,new_collab,,A5022267430,Thomas Reid,54.0,1950.0,34.0,much_older,1020-11-28,True
+2004,2004-07-08,A5063968442,Dartmouth–Hitchcock Medical Center,Abigail Crocker,0,2004,2025,1,1,new_collab,Dartmouth–Hitchcock Medical Center,A5007726590,Hyman B. Muss,31.0,1973.0,31.0,much_older,1000-07-08,True
+2004,2004-11-18,A5058854710,"University of California, San Francisco",Melissa H. Pespeni,0,2004,2025,1,1,new_collab,"University of California, San Francisco",A5037105963,Hyon Lee,-1.0,2005.0,-1.0,same_age,1000-11-18,True
+2005,2005-11-04,A5070253378,Massachusetts General Hospital,Alicia M. Ebert,0,2005,2025,1,1,new_collab,Massachusetts General Hospital,A5017248484,G. L. Hume,0.0,2005.0,0.0,same_age,1000-11-04,True
+2005,2005-01-14,A5012783921,,Lesley‐Ann Dupigny‐Giroux,7,1998,2025,2,2,new_collab,,A5090853715,Stephen Doty,43.0,1962.0,36.0,much_older,1007-01-14,True
+2005,2005-12-09,A5054296464,Florida International University,Laura J. May‐Collado,0,2005,2025,1,1,new_collab,Florida International University,A5026118906,Ingi Agnarsson,6.0,1999.0,6.0,same_age,1000-12-09,True
+2005,2005-09-12,A5067076795,,Michele E. Commercio,1,2004,2024,1,1,new_collab,,A5014562588,Rudra Sil,9.0,1996.0,8.0,older,1001-09-12,True
+2005,2005-01-26,A5082463471,National Institute of Arthritis and Musculoskeletal and Skin Diseases,Niccolo M. Fiorentino,0,2005,2025,1,1,new_collab,National Institute of Arthritis and Musculoskeletal and Skin Diseases,A5035790280,J. Pete Blair,,,,,1000-01-26,True
+2006,2006-01-02,A5014963201,,Barbara Arel,0,2006,2025,1,1,new_collab,,A5048808189,Richard G. Brody,32.0,1974.0,32.0,much_older,1000-01-02,True
+2006,2006-07-03,A5020275989,"University of Maryland, Baltimore County",Yuanyuan Feng,0,2006,2025,1,1,new_collab,"University of Maryland, Baltimore County",A5021977479,Wei–yu Kevin Chiang,4.0,2002.0,4.0,same_age,1000-07-03,True
+2006,2006-04-29,A5002034958,"University of Maryland, College Park",Christopher M. Danforth,0,2006,2025,1,1,new_collab,"University of Maryland, College Park",A5022360238,James A. Yorke,40.0,1966.0,40.0,much_older,1000-04-28,True
+2006,2006-01-16,A5036140974,Georgia State University,Matthew Price,0,2006,2025,1,1,new_collab,Georgia State University,A5063981510,Page L. Anderson,10.0,1996.0,10.0,older,1000-01-16,True
+2006,2006-01-16,A5048613602,,Nicolas Perdrial,1,2005,2025,2,2,new_collab,,A5113690239,Françoise Elsass,28.0,1978.0,27.0,much_older,1001-01-16,True
+2006,2006-04-26,A5046801350,,Louis deRosset,0,2006,2025,1,1,new_collab,,A5050944891,Guy Rohrbaugh,4.0,2002.0,4.0,same_age,1000-04-26,True
+2006,2006-10-19,A5074460980,University of Vermont,Matthew Carlson,4,2002,2025,1,1,new_collab,University of Vermont,A5021330653,Ola Listhaug,28.0,1978.0,24.0,much_older,1004-10-19,True
+2006,2006-10-09,A5029861842,University of Vermont,Carolyn M. Bonifield,2,2004,2025,1,1,new_collab,University of Vermont,A5041536026,Catherine Cole,41.0,1965.0,39.0,much_older,1002-10-09,True
+2006,2006-09-19,A5065643291,École Supérieure de Biotechnologie de Strasbourg,Delphine Quénet,0,2006,2025,1,1,new_collab,École Supérieure de Biotechnologie de Strasbourg,A5062033577,Françoise Dantzer,13.0,1993.0,13.0,older,1000-09-19,True
+2007,2007-08-28,A5037146310,University of Houston,Appala Raju Badireddy,0,2007,2025,1,1,new_collab,University of Houston,A5023109356,Ernest M. Hotze,2.0,2005.0,2.0,same_age,1000-08-28,True
+2007,2007-02-21,A5026763824,Princeton University,David C. Jangraw,29,1978,2025,1,1,new_collab,Princeton University,A5111902411,Kale J. Franz,52.0,1955.0,23.0,much_older,1029-02-21,True
+2007,2007-03-19,A5005494593,Old Dominion University,Luis A. Duffaut Espinosa,0,2007,2025,2,2,new_collab,Old Dominion University,A5110056497,W. Steven Gray,,,,,1000-03-19,True
+2007,2007-10-20,A5103029769,,Stephanie Hurley,0,2007,2025,1,1,new_collab,,A5054816479,Megan Wilson Stromberg,0.0,2007.0,0.0,same_age,1000-10-20,True
+2007,2007-10-16,A5089340511,Albany Medical Center Hospital,Jessica L. Heath,0,2007,2025,1,1,new_collab,Albany Medical Center Hospital,A5019004230,Vikramjit S. Kanwar,18.0,1989.0,18.0,much_older,1000-10-16,True
+2007,2007-06-06,A5007594505,Brigham Young University,Antonello Borra,7,2000,2024,1,1,new_collab,Brigham Young University,A5075166873,Cristina Pausini,6.0,2001.0,-1.0,same_age,1007-06-06,True
+2008,2008-01-07,A5030384293,,Jamie L. Abaied,0,2008,2025,1,1,new_collab,,A5055589168,Karen D. Rudolph,16.0,1992.0,16.0,much_older,1000-01-07,True
+2008,2008-09-11,A5049409973,University of Vermont,Joseph Acquisto,4,2004,2025,1,1,new_collab,University of Vermont,A5031961086,Adrianna M. Paliyenko,20.0,1988.0,16.0,much_older,1004-09-11,True
+2008,2008-02-05,A5074398027,,Ellen Ann Andersen,7,2001,2025,1,1,new_collab,,A5026530979,Verta Taylor,35.0,1973.0,28.0,much_older,1007-02-05,True
+2008,2008-03-23,A5066307333,University of Vermont,Emily L. Coderre,0,2008,2025,1,1,new_collab,University of Vermont,A5056778125,Christopher G. Filippi,,,,,1000-03-23,True
+2008,2008-08-25,A5041409879,,Julia Perdrial,0,2008,2025,1,1,new_collab,,A5006786258,Laurence N. Warr,18.0,1990.0,18.0,much_older,1000-08-25,True
+2009,2009-09-11,A5070545248,Universidade Federal de Santa Catarina,J.H.C. Costa,2,2007,2025,1,1,new_collab,Universidade Federal de Santa Catarina,A5009349451,Carlos Eduardo Nogueira Martins,5.0,2004.0,3.0,same_age,1002-09-11,True
+2009,2009-04-02,A5109486647,,Alec C. Ewald,6,2003,2025,1,1,new_collab,,A5089130619,Brandon Rottinghaus,7.0,2002.0,1.0,same_age,1006-04-02,True
+2009,2009-03-11,A5086274493,,Kim R. Bauerly,0,2009,2025,1,1,new_collab,,A5063000063,Sheryl R. Gottwald,24.0,1985.0,24.0,much_older,1000-03-11,True
+2009,2009-10-20,A5088271995,Alexandria University,Osama F. Harraz,0,2009,2025,1,1,new_collab,Alexandria University,A5045120949,Mahmoud M. El‐Mas,20.0,1989.0,20.0,much_older,1000-10-20,True
+2010,2010-11-15,A5090345791,Johns Hopkins University,Rebecca A. Aslakson,0,2010,2025,1,1,new_collab,Johns Hopkins University,A5027333020,Rhonda Wyskiel,7.0,2003.0,7.0,older,1000-11-15,True
+2010,2010-09-21,A5035455593,Université Laval,Laurent Hébert‐Dufresne,0,2010,2025,2,2,new_collab,Université Laval,A5066096589,Vincent Marceau,0.0,2010.0,0.0,same_age,1000-09-21,True
+2010,2010-04-25,A5046430560,University of Cambridge,Emily A. Bruce,0,2010,2025,1,2,existing_collab,University of Cambridge,A5088084394,Paul Digard,24.0,1986.0,24.0,much_older,1000-04-25,True
+2010,2010-01-05,A5066993330,Twin Cities Orthopedics,David Punihaole,0,2010,2025,1,1,new_collab,Twin Cities Orthopedics,A5033842447,Sanford A. Asher,34.0,1976.0,34.0,much_older,1000-01-05,True
+2011,2011-01-07,A5053327116,University of Michigan,Mads Almassalkhi,0,2011,2025,2,2,new_collab,University of Michigan,A5013169538,Ian A. Hiskens,26.0,1985.0,26.0,much_older,1000-01-07,True
+2011,2011-03-02,A5008985646,"University of California, Riverside",Anaka Aiyar,0,2011,2025,2,2,new_collab,"University of California, Riverside",A5069316069,Vinish Kathuria,13.0,1998.0,13.0,older,1000-03-02,True
+2011,2011-01-10,A5066800852,Georgia Institute of Technology,Spencer Backman,2,2009,2025,1,1,new_collab,Georgia Institute of Technology,A5013838917,Arash Asadi,14.0,1997.0,12.0,older,1002-01-10,True
+2011,2011-11-22,A5085980410,University of Vermont,Brian Cunniff,0,2011,2025,1,1,new_collab,University of Vermont,A5016068947,Kheng Newick,2.0,2009.0,2.0,same_age,1000-11-22,True
+2011,2011-06-16,A5036833355,Stanford University,Katharine L. Cheung,0,2011,2025,1,1,new_collab,Stanford University,A5112232108,Sandeep Soman,31.0,1980.0,31.0,much_older,1000-06-16,True
+2011,2011-03-03,A5052355819,,Matthew A. Caporizzo,0,2011,2025,1,1,new_collab,,A5067296368,Yujie Sun,7.0,2004.0,7.0,older,1000-03-03,True
+2011,2011-01-02,A5079985070,Stanford University,Rachelle K. Gould,16,1995,2025,1,1,new_collab,Stanford University,A5002521661,Nicole M. Ardoin,9.0,2002.0,-7.0,same_age,1016-01-02,True
+2011,2011-08-03,A5110213117,University of Vermont,Adrian Ivakhiv,20,1991,2025,1,1,new_collab,University of Vermont,A5067788447,Bron Taylor,33.0,1978.0,13.0,older,1020-08-03,True
+2012,2012-11-19,A5070850590,Université Laval,Jean-Gabriel Young,0,2012,2025,1,1,new_collab,Université Laval,A5079979267,Antoine Allard,39.0,1973.0,39.0,much_older,1000-11-19,True
+2012,2012-01-23,A5053427181,,Mathew Failla,0,2012,2025,1,1,new_collab,,A5017539840,Lynn Snyder‐Mackler,32.0,1980.0,32.0,much_older,1000-01-23,True
+2012,2012-01-30,A5040072620,,Yangguang Ou,0,2012,2025,1,1,new_collab,,A5085411317,Amy E. Rupert,1.0,2011.0,1.0,same_age,1000-01-30,True
+2012,2012-12-04,A5067002514,,Amritanshu Pandey,0,2012,2025,1,1,new_collab,,A5085154631,Chandarani Sutar,0.0,2012.0,0.0,same_age,1000-12-04,True
+2012,2012-01-01,A5031617048,,Matthew J. Scarborough,19,1993,2025,1,1,new_collab,,A5086435331,Michael Arends,6.0,2006.0,-13.0,younger,1019-01-01,True
+2013,2013-01-12,A5054824999,University of North Texas Health Science Center,Nimrat Chatterjee,0,2013,2025,1,1,new_collab,University of North Texas Health Science Center,A5051357361,Beatriz A. Santillan,0.0,2013.0,0.0,same_age,1000-01-12,True
+2013,2013-04-15,A5091823137,University of Mauritius,Trishnee Bhurosy,0,2013,2025,3,3,new_collab,University of Mauritius,A5070314115,Rajesh Jeewon,11.0,2002.0,11.0,older,1000-04-15,True
+2013,2013-06-07,A5078189369,,Jean Bessette,6,2007,2025,1,1,new_collab,,A5015456062,Jessica Enoch,37.0,1976.0,31.0,much_older,1006-06-07,True
+2013,2013-01-15,A5112965505,Cornell University,Nick Cheney,0,2013,2025,1,1,new_collab,Cornell University,A5112191507,Jeff Clune,9.0,2004.0,9.0,older,1000-01-15,True
+2014,2014-09-05,A5017116907,Syracuse University,Nicole E. Conroy,1,2013,2025,1,1,new_collab,Syracuse University,A5109565855,Ambika Krishnakumar,20.0,1994.0,19.0,much_older,1001-09-05,True
+2014,2014-03-12,A5076884495,University of Vermont,David B. Bernstein,0,2014,2025,1,3,existing_collab,University of Vermont,A5100613698,Binh Nguyen,22.0,1992.0,22.0,much_older,1000-03-12,True
+2014,2014-01-04,A5082336655,University of Vermont,Nathalie Mathieu‐Bolh,23,1991,2025,2,2,new_collab,University of Vermont,A5014940245,Xavier Pautrel,18.0,1996.0,-5.0,same_age,1023-01-04,True
+2014,2014-01-31,A5016604588,,Molly Stanley,1,2013,2025,1,1,new_collab,,A5105410002,Michael Murray,43.0,1971.0,42.0,much_older,1001-01-31,True
+2014,2014-01-29,A5005224275,University of Chicago,R. Chase Cockrell,0,2014,2025,1,1,new_collab,University of Chicago,A5078078996,Scott Christley,10.0,2004.0,10.0,older,1000-01-28,True
+2015,2015-03-12,A5085946010,University of New Mexico,Gregory Rowangould,2,2013,2025,3,3,new_collab,University of New Mexico,A5001138240,Amir Poorfakhraei,1.0,2014.0,-1.0,same_age,1002-03-12,True
+2015,2015-01-01,A5048480750,,Marieka Brouwer Burg,3,2012,2025,1,1,new_collab,,A5043745796,Eleanor Harrison‐Buck,8.0,2007.0,5.0,same_age,1003-01-01,True
+2015,2015-02-05,A5052810664,"University of California, Santa Barbara",Patrick J. Callery,0,2015,2025,1,1,new_collab,"University of California, Santa Barbara",A5056937856,Eréndira Aceves‐Bueno,0.0,2015.0,0.0,same_age,1000-02-05,True
+2016,2016-12-23,A5011360985,National University of Singapore,Emily Beam,6,2010,2025,1,1,new_collab,National University of Singapore,A5004821535,Slesh A. Shrestha,6.0,2010.0,0.0,same_age,1006-12-23,True
+2016,2016-12-20,A5003569149,University of Utah,Amy Hughes Lansing,2,2014,2025,3,3,new_collab,University of Utah,A5113708230,Sara L. Turner,28.0,1988.0,26.0,much_older,1002-12-20,True
+2017,2017-10-15,A5074355050,Purdue University West Lafayette,Andrea J. Etter,0,2017,2025,1,1,new_collab,Purdue University West Lafayette,A5049708444,Clara Assisi,16.0,2001.0,16.0,much_older,1000-10-15,True
+2017,2017-01-09,A5010948910,University of Vermont,Jessica DeMink-Carthew,2,2015,2025,1,1,new_collab,University of Vermont,A5029648054,Mark W. Olofson,2.0,2015.0,0.0,same_age,1002-01-09,True
+2017,2017-05-20,A5087248140,Virginia Tech,Alexis Brieant,0,2017,2025,1,1,new_collab,Virginia Tech,A5071706154,Christopher Holmes,42.0,1975.0,42.0,much_older,1000-05-20,True
+2018,2018-10-20,A5077733558,University of Utah,Zobayer Ahmmad,0,2018,2025,3,3,new_collab,University of Utah,A5062352129,Akiko Kamimura,49.0,1969.0,49.0,much_older,1000-10-20,True
+2018,2018-12-07,A5008683066,Michigan State University,Eliana Castro,5,2013,2025,1,1,new_collab,Michigan State University,A5039347295,Dorinda J. Carter Andrews,9.0,2009.0,4.0,same_age,1005-12-07,True
+2018,2018-09-17,A5060287667,,Jacques Bailly,89,1929,2023,2,2,new_collab,,A5047394308,Todd H. J. Pettigrew,18.0,2000.0,-71.0,much_younger,1089-09-17,True
+2019,2019-01-28,A5005762300,University of Colorado Boulder,Kathryn Hinkelman,0,2019,2025,2,2,new_collab,University of Colorado Boulder,A5038193137,Yunyang Ye,14.0,2005.0,14.0,older,1000-01-28,True
+2020,2020-07-28,A5016548616,University of Vermont,Emily H. Belarmino,0,2020,2025,11,11,new_collab,University of Vermont,A5047780964,Meredith T. Niles,12.0,2008.0,12.0,older,1000-07-28,True
+2020,2020-01-17,A5049222482,University of Vermont,Vicki L. Brennan,21,1999,2025,1,1,new_collab,University of Vermont,A5033825902,Marina L. Peterson,0.0,2020.0,-21.0,much_younger,1021-01-17,True
+2020,2020-06-03,A5059832943,University of Massachusetts Amherst,Cee Carter,0,2020,2025,1,1,new_collab,University of Massachusetts Amherst,A5028947868,Daniel Morales Morales,59.0,1961.0,59.0,much_older,1000-06-03,True
+2021,2021-01-26,A5002226064,,Joe Ament,2,2019,2025,1,1,new_collab,,A5086374059,Daniel Tobin,39.0,1982.0,37.0,much_older,1002-01-26,True
+1999,1999-05-11,A5040821463,Massachusetts Institute of Technology,Peter Sheridan Dodds,0,1999,2025,1,1,new_collab,Massachusetts Institute of Technology,A5109969840,Daniel H. Rothman,16.0,1983.0,16.0,much_older,1000-05-11,False
+2000,2000-12-28,A5040821463,Massachusetts Institute of Technology,Peter Sheridan Dodds,1,1999,2025,6,7,existing_collab,Massachusetts Institute of Technology,A5109969840,Daniel H. Rothman,17.0,1983.0,16.0,much_older,1001-12-28,False
+2000,2000-12-13,A5040821463,Massachusetts Institute of Technology,Peter Sheridan Dodds,1,1999,2025,1,1,new_collab,Massachusetts Institute of Technology,A5020490780,Joshua S. Weitz,30.0,1970.0,29.0,much_older,1001-12-13,False
+2001,2001-03-03,A5040821463,Massachusetts Institute of Technology,Peter Sheridan Dodds,2,1999,2025,1,1,new_collab,Massachusetts Institute of Technology,A5007934989,Nick Bowles,7.0,1994.0,5.0,same_age,1002-03-03,False
+2001,2001-04-14,A5040821463,Massachusetts Institute of Technology,Peter Sheridan Dodds,2,1999,2025,1,1,new_collab,Massachusetts Institute of Technology,A5040248352,D. Rothman,30.0,1971.0,28.0,much_older,1002-04-14,False
+2001,2001-03-03,A5040821463,Massachusetts Institute of Technology,Peter Sheridan Dodds,2,1999,2025,1,2,existing_collab,Massachusetts Institute of Technology,A5020490780,Joshua S. Weitz,31.0,1970.0,29.0,much_older,1002-03-03,False
+2002,2002-05-08,A5040821463,Earth Island Institute,Peter Sheridan Dodds,3,1999,2025,1,2,existing_collab,Earth Island Institute,A5007934989,Nick Bowles,8.0,1994.0,5.0,same_age,1003-05-08,False
+2002,2002-05-08,A5040821463,Earth Island Institute,Peter Sheridan Dodds,3,1999,2025,1,1,new_collab,Earth Island Institute,A5000679279,Duncan J. Watts,4.0,1998.0,1.0,same_age,1003-05-08,False
+2002,2002-05-08,A5040821463,Earth Island Institute,Peter Sheridan Dodds,3,1999,2025,1,1,new_collab,Earth Island Institute,A5067142016,M. E. J. Newman,39.0,1963.0,36.0,much_older,1003-05-08,False
+2002,2002-05-08,A5040821463,Earth Island Institute,Peter Sheridan Dodds,3,1999,2025,1,3,existing_collab,Earth Island Institute,A5020490780,Joshua S. Weitz,32.0,1970.0,29.0,much_older,1003-05-08,False
+2003,2003-08-09,A5040821463,Columbia University,Peter Sheridan Dodds,4,1999,2025,2,3,existing_collab,Columbia University,A5000679279,Duncan J. Watts,5.0,1998.0,1.0,same_age,1004-08-09,False
+2003,2003-02-14,A5040821463,Columbia University,Peter Sheridan Dodds,4,1999,2025,1,1,new_collab,Columbia University,A5045935220,Charles F. Sabel,25.0,1978.0,21.0,much_older,1004-02-14,False
+2003,2003-01-14,A5040821463,Columbia University,Peter Sheridan Dodds,4,1999,2025,1,1,new_collab,Columbia University,A5001893057,Roby Muhamad,4.0,1999.0,0.0,same_age,1004-01-14,False
+2003,2003-02-14,A5040821463,Columbia University,Peter Sheridan Dodds,4,1999,2025,1,1,new_collab,Columbia University,A5001328411,Michael Sergi,-5.0,2008.0,-9.0,younger,1004-02-14,False
+2003,2003-10-08,A5040821463,Columbia University,Peter Sheridan Dodds,4,1999,2025,1,4,existing_collab,Columbia University,A5020490780,Joshua S. Weitz,33.0,1970.0,29.0,much_older,1004-10-08,False
+2003,2003-01-01,A5040821463,Columbia University,Peter Sheridan Dodds,4,1999,2025,1,1,new_collab,Columbia University,A5052114337,ML Henninger,0.0,2003.0,-4.0,same_age,1004-01-01,False
+2003,2003-02-14,A5040821463,Columbia University,Peter Sheridan Dodds,4,1999,2025,1,1,new_collab,Columbia University,A5005607685,KG Patton,1.0,2002.0,-3.0,same_age,1004-02-14,False
+2003,2003-10-08,A5040821463,Columbia University,Peter Sheridan Dodds,4,1999,2025,1,1,new_collab,Columbia University,A5058626878,Karen Pagnano,2.0,2001.0,-2.0,same_age,1004-10-08,False
+2003,2003-10-08,A5040821463,Columbia University,Peter Sheridan Dodds,4,1999,2025,1,1,new_collab,Columbia University,A5077283928,LL Griffin,7.0,1996.0,3.0,same_age,1004-10-08,False
+2004,2004-05-27,A5040821463,Columbia University,Peter Sheridan Dodds,5,1999,2025,2,5,existing_collab,Columbia University,A5000679279,Duncan J. Watts,6.0,1998.0,1.0,same_age,1005-05-27,False
+2005,2005-08-16,A5040821463,Columbia University,Peter Sheridan Dodds,6,1999,2025,1,1,new_collab,Columbia University,A5058815871,Matthew Salganik,1.0,2004.0,-5.0,same_age,1006-08-16,False
+2005,2005-01-06,A5040821463,Columbia University,Peter Sheridan Dodds,6,1999,2025,2,7,existing_collab,Columbia University,A5000679279,Duncan J. Watts,7.0,1998.0,1.0,same_age,1006-01-06,False
+2005,2005-07-24,A5040821463,Columbia University,Peter Sheridan Dodds,6,1999,2025,1,2,existing_collab,Columbia University,A5001893057,Roby Muhamad,6.0,1999.0,0.0,same_age,1006-07-24,False
+2005,2005-08-16,A5040821463,Columbia University,Peter Sheridan Dodds,6,1999,2025,1,1,new_collab,Columbia University,A5103485800,Daniel C. Medina,4.0,2001.0,-2.0,same_age,1006-08-16,False
+2005,2005-01-04,A5040821463,Columbia University,Peter Sheridan Dodds,6,1999,2025,2,2,new_collab,Columbia University,A5087618628,Berthold Koletzko,24.0,1981.0,18.0,much_older,1006-01-04,False
+2005,2005-01-04,A5040821463,Columbia University,Peter Sheridan Dodds,6,1999,2025,1,1,new_collab,Columbia University,A5109098737,Hans Akerblom,43.0,1962.0,37.0,much_older,1006-01-04,False
+2005,2005-01-04,A5040821463,Columbia University,Peter Sheridan Dodds,6,1999,2025,2,2,new_collab,Columbia University,A5057787547,Margaret Ashwell,27.0,1978.0,21.0,much_older,1006-01-04,False
+2006,2006-08-11,A5040821463,Santa Fe Institute,Peter Sheridan Dodds,7,1999,2025,1,2,existing_collab,Santa Fe Institute,A5058815871,Matthew Salganik,2.0,2004.0,-5.0,same_age,1007-08-11,False
+2006,2006-08-11,A5040821463,Santa Fe Institute,Peter Sheridan Dodds,7,1999,2025,1,8,existing_collab,Santa Fe Institute,A5000679279,Duncan J. Watts,8.0,1998.0,1.0,same_age,1007-08-11,False
+2007,2007-12-08,A5040821463,University of Vermont,Peter Sheridan Dodds,8,1999,2025,2,10,existing_collab,University of Vermont,A5000679279,Duncan J. Watts,9.0,1998.0,1.0,same_age,1008-12-08,False
+2007,2007-12-08,A5040821463,University of Vermont,Peter Sheridan Dodds,8,1999,2025,1,1,new_collab,University of Vermont,A5033935340,Nobuyuki Hanaki,5.0,2002.0,-3.0,same_age,1008-12-08,False
+2007,2007-12-08,A5040821463,University of Vermont,Peter Sheridan Dodds,8,1999,2025,1,1,new_collab,University of Vermont,A5002658393,Alexander Peterhansl,5.0,2002.0,-3.0,same_age,1008-12-08,False
+2008,2008-01-01,A5040821463,University of Vermont,Peter Sheridan Dodds,9,1999,2025,1,1,new_collab,University of Vermont,A5072177058,Wesley R. Hartmann,3.0,2005.0,-6.0,same_age,1009-01-01,False
+2008,2008-01-01,A5040821463,University of Vermont,Peter Sheridan Dodds,9,1999,2025,1,1,new_collab,University of Vermont,A5072027141,Puneet Manchanda,11.0,1997.0,2.0,same_age,1009-01-01,False
+2008,2008-01-01,A5040821463,University of Vermont,Peter Sheridan Dodds,9,1999,2025,1,1,new_collab,University of Vermont,A5004863713,Harikesh S. Nair,8.0,2000.0,-1.0,same_age,1009-01-01,False
+2008,2008-07-08,A5040821463,University of Vermont,Peter Sheridan Dodds,9,1999,2025,1,1,new_collab,University of Vermont,A5066370550,Matthew S. Bothner,7.0,2001.0,-2.0,same_age,1009-07-08,False
+2008,2008-01-01,A5040821463,University of Vermont,Peter Sheridan Dodds,9,1999,2025,1,1,new_collab,University of Vermont,A5059050651,David Godes,19.0,1989.0,10.0,older,1009-01-01,False
+2008,2008-01-01,A5040821463,University of Vermont,Peter Sheridan Dodds,9,1999,2025,1,1,new_collab,University of Vermont,A5035743198,Kartik Hosanagar,6.0,2002.0,-3.0,same_age,1009-01-01,False
+2008,2008-07-08,A5040821463,University of Vermont,Peter Sheridan Dodds,9,1999,2025,1,1,new_collab,University of Vermont,A5021426140,Catherine M. Tucker,12.0,1996.0,3.0,same_age,1009-07-08,False
+2008,2008-07-08,A5040821463,University of Vermont,Peter Sheridan Dodds,9,1999,2025,1,1,new_collab,University of Vermont,A5011729491,Self-organized Criticality,8.0,2000.0,-1.0,same_age,1009-07-08,False
+2009,2009-06-02,A5040821463,University of Vermont,Peter Sheridan Dodds,10,1999,2025,2,2,new_collab,University of Vermont,A5074476792,Joshua L. Payne,4.0,2005.0,-6.0,same_age,1010-06-02,False
+2009,2009-08-05,A5040821463,University of Vermont,Peter Sheridan Dodds,10,1999,2025,1,1,new_collab,University of Vermont,A5041730016,Margaret J. Eppstein,39.0,1970.0,29.0,much_older,1010-08-05,False
+2009,2009-01-30,A5040821463,University of Vermont,Peter Sheridan Dodds,10,1999,2025,1,1,new_collab,University of Vermont,A5002034958,Christopher M. Danforth,3.0,2006.0,-7.0,same_age,1010-01-30,False
+2011,2011-01-27,A5040821463,University of Vermont,Peter Sheridan Dodds,12,1999,2025,6,6,new_collab,University of Vermont,A5060223489,Kameron Decker Harris,2.0,2009.0,-10.0,younger,1012-01-27,False
+2011,2011-01-03,A5040821463,University of Vermont,Peter Sheridan Dodds,12,1999,2025,1,1,new_collab,University of Vermont,A5112615531,Isabel M. Kloumann,1.0,2010.0,-11.0,younger,1012-01-03,False
+2011,2011-12-17,A5040821463,University of Vermont,Peter Sheridan Dodds,12,1999,2025,1,1,new_collab,University of Vermont,A5060228016,Catherine A. Bliss,4.0,2007.0,-8.0,younger,1012-12-17,False
+2011,2011-05-12,A5040821463,University of Vermont,Peter Sheridan Dodds,12,1999,2025,1,2,existing_collab,University of Vermont,A5002034958,Christopher M. Danforth,5.0,2006.0,-7.0,same_age,1012-05-12,False
+2011,2011-12-17,A5040821463,University of Vermont,Peter Sheridan Dodds,12,1999,2025,5,7,existing_collab,University of Vermont,A5074476792,Joshua L. Payne,6.0,2005.0,-6.0,same_age,1012-12-17,False
+2012,2012-05-04,A5040821463,University of Vermont,Peter Sheridan Dodds,13,1999,2025,2,3,existing_collab,University of Vermont,A5060228016,Catherine A. Bliss,5.0,2007.0,-8.0,younger,1013-05-04,False
+2012,2012-05-04,A5040821463,University of Vermont,Peter Sheridan Dodds,13,1999,2025,2,3,existing_collab,University of Vermont,A5112615531,Isabel M. Kloumann,2.0,2010.0,-11.0,younger,1013-05-04,False
+2012,2012-01-10,A5040821463,University of Vermont,Peter Sheridan Dodds,13,1999,2025,2,8,existing_collab,University of Vermont,A5060223489,Kameron Decker Harris,3.0,2009.0,-10.0,younger,1013-01-10,False
+2012,2012-01-10,A5040821463,University of Vermont,Peter Sheridan Dodds,13,1999,2025,2,4,existing_collab,University of Vermont,A5002034958,Christopher M. Danforth,6.0,2006.0,-7.0,same_age,1013-01-10,False
+2013,2013-01-25,A5040821463,Applied Mathematics (United States),Peter Sheridan Dodds,14,1999,2025,1,1,new_collab,University of Vermont,A5062403203,James P. Bagrow,9.0,2004.0,-5.0,same_age,1014-01-25,False
+2013,2013-01-18,A5040821463,Applied Mathematics (United States),Peter Sheridan Dodds,14,1999,2025,1,1,new_collab,University of Vermont,A5059471763,Suma Desu,0.0,2013.0,-14.0,younger,1014-01-18,False
+2013,2013-12-28,A5040821463,Applied Mathematics (United States),Peter Sheridan Dodds,14,1999,2025,3,3,new_collab,University of Vermont,A5012787401,Morgan R. Frank,0.0,2013.0,-14.0,younger,1014-12-28,False
+2013,2013-01-25,A5040821463,Applied Mathematics (United States),Peter Sheridan Dodds,14,1999,2025,1,1,new_collab,University of Vermont,A5057205814,Narine Manukyan,2.0,2011.0,-12.0,younger,1014-01-25,False
+2013,2013-01-12,A5040821463,Applied Mathematics (United States),Peter Sheridan Dodds,14,1999,2025,3,3,new_collab,University of Vermont,A5113881318,Lewis Mitchell,31.0,1982.0,17.0,much_older,1014-01-12,False
+2013,2013-01-06,A5040821463,Applied Mathematics (United States),Peter Sheridan Dodds,14,1999,2025,1,1,new_collab,University of Vermont,A5078987306,Andrew J. Reagan,1.0,2012.0,-13.0,younger,1014-01-06,False
+2013,2013-01-12,A5040821463,Applied Mathematics (United States),Peter Sheridan Dodds,14,1999,2025,1,1,new_collab,University of Vermont,A5048331010,Eric Bloedorn,22.0,1991.0,8.0,older,1014-01-12,False
+2013,2013-08-28,A5040821463,Applied Mathematics (United States),Peter Sheridan Dodds,14,1999,2025,1,1,new_collab,University of Vermont,A5022060193,Lashon B. Booker,31.0,1982.0,17.0,much_older,1014-08-28,False
+2013,2013-01-19,A5040821463,Applied Mathematics (United States),Peter Sheridan Dodds,14,1999,2025,1,1,new_collab,University of Vermont,A5085914374,L. Karl Branting,26.0,1987.0,12.0,older,1014-01-19,False
+2013,2013-01-18,A5040821463,Applied Mathematics (United States),Peter Sheridan Dodds,14,1999,2025,1,1,new_collab,University of Vermont,A5101453839,Michael J. Smith,54.0,1959.0,40.0,much_older,1014-01-18,False
+2013,2013-01-20,A5040821463,Applied Mathematics (United States),Peter Sheridan Dodds,14,1999,2025,1,1,new_collab,University of Vermont,A5050883332,Brian F. Tivnan,15.0,1998.0,1.0,same_age,1014-01-20,False
+2013,2013-01-06,A5040821463,Applied Mathematics (United States),Peter Sheridan Dodds,14,1999,2025,5,9,existing_collab,University of Vermont,A5002034958,Christopher M. Danforth,7.0,2006.0,-7.0,same_age,1014-01-06,False
+2013,2013-04-13,A5040821463,Applied Mathematics (United States),Peter Sheridan Dodds,14,1999,2025,1,1,new_collab,University of Vermont,A5113316116,Joshua Bongard,6.0,2007.0,-8.0,younger,1014-04-13,False
+2013,2013-12-28,A5040821463,Applied Mathematics (United States),Peter Sheridan Dodds,14,1999,2025,3,11,existing_collab,University of Vermont,A5060223489,Kameron Decker Harris,4.0,2009.0,-10.0,younger,1014-12-28,False
+2014,2014-07-21,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,2,2,new_collab,University of Vermont,A5053832932,Eric M. Clark,56.0,1958.0,41.0,much_older,1015-07-21,False
+2014,2014-02-22,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,1,1,new_collab,University of Vermont,A5025928838,Chris Jones,49.0,1965.0,34.0,much_older,1015-02-22,False
+2014,2014-10-21,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,1,1,new_collab,University of Vermont,A5036174847,Diann E. Gaalema,9.0,2005.0,-6.0,same_age,1015-10-21,False
+2014,2014-06-30,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,1,1,new_collab,University of Vermont,A5091829898,T. J. White,44.0,1970.0,29.0,much_older,1015-06-30,False
+2014,2014-02-22,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,1,1,new_collab,University of Vermont,A5084783510,Ryan Redner,4.0,2010.0,-11.0,younger,1015-02-22,False
+2014,2014-07-21,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,1,1,new_collab,University of Vermont,A5022414447,R.W. Everett,50.0,1964.0,35.0,much_older,1015-07-21,False
+2014,2014-10-21,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,1,1,new_collab,University of Vermont,A5000752691,Marion E. Couch,31.0,1983.0,16.0,much_older,1015-10-21,False
+2014,2014-01-12,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,6,15,existing_collab,University of Vermont,A5002034958,Christopher M. Danforth,8.0,2006.0,-7.0,same_age,1015-01-12,False
+2014,2014-01-12,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,2,5,existing_collab,University of Vermont,A5060228016,Catherine A. Bliss,7.0,2007.0,-8.0,younger,1015-01-12,False
+2014,2014-02-22,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,3,6,existing_collab,University of Vermont,A5012787401,Morgan R. Frank,1.0,2013.0,-14.0,younger,1015-02-22,False
+2014,2014-07-21,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,2,5,existing_collab,University of Vermont,A5113881318,Lewis Mitchell,32.0,1982.0,17.0,much_older,1015-07-21,False
+2014,2014-10-21,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,1,1,new_collab,University of Vermont,A5085877098,William L. Gottesman,1.0,2013.0,-14.0,younger,1015-10-21,False
+2014,2014-10-18,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,1,2,existing_collab,University of Vermont,A5078987306,Andrew J. Reagan,2.0,2012.0,-13.0,younger,1015-10-18,False
+2014,2014-10-21,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,2,2,new_collab,University of Vermont,A5101587041,Jake Ryland Williams,3.0,2011.0,-12.0,younger,1015-10-21,False
+2014,2014-07-21,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,1,1,new_collab,University of Vermont,A5020396160,Paul R. Lessard,3.0,2011.0,-12.0,younger,1015-07-21,False
+2014,2014-02-22,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,1,2,existing_collab,University of Vermont,A5059471763,Suma Desu,1.0,2013.0,-14.0,younger,1015-02-22,False
+2014,2014-01-12,A5040821463,Northwestern University,Peter Sheridan Dodds,15,1999,2025,2,3,existing_collab,University of Vermont,A5062403203,James P. Bagrow,10.0,2004.0,-5.0,same_age,1015-01-12,False
+2015,2015-08-23,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,4,6,existing_collab,University of Vermont,A5053832932,Eric M. Clark,57.0,1958.0,41.0,much_older,1016-08-23,False
+2015,2015-03-05,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,6,8,existing_collab,University of Vermont,A5101587041,Jake Ryland Williams,4.0,2011.0,-12.0,younger,1016-03-05,False
+2015,2015-10-14,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,1,2,existing_collab,University of Vermont,A5025928838,Chris Jones,50.0,1965.0,34.0,much_older,1016-10-14,False
+2015,2015-01-16,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,1,1,new_collab,University of Vermont,A5090115501,Richard A. Galbraith,63.0,1952.0,47.0,much_older,1016-01-16,False
+2015,2015-09-19,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,12,27,existing_collab,University of Vermont,A5002034958,Christopher M. Danforth,9.0,2006.0,-7.0,same_age,1016-09-19,False
+2015,2015-03-05,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,University of Vermont,A5082696905,Eitan Adam Pechenick,0.0,2015.0,-16.0,much_younger,1016-03-05,False
+2015,2015-05-09,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,University of Vermont,A5045451254,Javier García-Bernardo,5.0,2010.0,-11.0,younger,1016-05-09,False
+2015,2015-01-16,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,University of Vermont,A5031168379,Neil F. Johnson,44.0,1971.0,28.0,much_older,1016-01-16,False
+2015,2015-10-29,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,4,7,existing_collab,University of Vermont,A5062403203,James P. Bagrow,11.0,2004.0,-5.0,same_age,1016-10-28,False
+2015,2015-02-16,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,University of Vermont,A5036317033,Nicholas Allgaier,3.0,2012.0,-13.0,younger,1016-02-16,False
+2015,2015-01-05,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5016008616,Tobias Banaschewski,45.0,1970.0,29.0,much_older,1016-01-05,False
+2015,2015-01-05,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5079179983,Gareth J. Barker,,,,,1016-01-05,False
+2015,2015-10-14,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5031114437,Arun L.W. Bokde,21.0,1994.0,5.0,same_age,1016-10-14,False
+2015,2015-08-23,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,University of Vermont,A5066791342,Josh Bongard,16.0,1999.0,0.0,same_age,1016-08-23,False
+2015,2015-03-05,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5079797597,Uli Bromberg,4.0,2011.0,-12.0,younger,1016-03-05,False
+2015,2015-01-07,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5033792391,Christian Büchel,45.0,1970.0,29.0,much_older,1016-01-07,False
+2015,2015-02-16,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5089357930,Anna Cattrell,8.0,2007.0,-8.0,younger,1016-02-16,False
+2015,2015-01-05,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5054548219,Patricia Conrod,22.0,1993.0,6.0,same_age,1016-01-05,False
+2015,2015-02-16,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5000742405,Sylvane Desrivières,22.0,1993.0,6.0,same_age,1016-02-16,False
+2015,2015-09-19,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5044329719,Herta Flor,43.0,1972.0,27.0,much_older,1016-09-19,False
+2015,2015-01-03,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5078842273,Vincent Frouin,23.0,1992.0,7.0,older,1016-01-03,False
+2015,2015-10-14,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5018388957,Jürgen Gallinat,19.0,1996.0,3.0,same_age,1016-10-14,False
+2015,2015-02-16,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5085160808,Penny Gowland,26.0,1989.0,10.0,older,1016-02-16,False
+2015,2015-10-29,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5000701045,Andreas Heinz,60.0,1955.0,44.0,much_older,1016-10-28,False
+2015,2015-11-03,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5031881090,Bernd Ittermann,29.0,1986.0,13.0,older,1016-11-03,False
+2015,2015-08-23,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,University of Vermont,A5068370605,Scott Mackey,11.0,2004.0,-5.0,same_age,1016-08-23,False
+2015,2015-10-26,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5028382889,Jean‐Luc Martinot,25.0,1990.0,9.0,older,1016-10-26,False
+2015,2015-01-16,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,1,1,new_collab,University of Vermont,A5016188638,Kevin D. Murphy,48.0,1967.0,32.0,much_older,1016-01-16,False
+2015,2015-03-05,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5075640613,Frauke Nees,7.0,2008.0,-9.0,younger,1016-03-05,False
+2015,2015-08-25,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,University of Vermont,A5063754646,Dimitri Papadopoulos Orfanos,18.0,1997.0,2.0,same_age,1016-08-25,False
+2015,2015-01-07,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5059687987,Luise Poustka,13.0,2002.0,-3.0,same_age,1016-01-07,False
+2015,2015-10-26,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5063406820,Michael N. Smolka,18.0,1997.0,2.0,same_age,1016-10-26,False
+2015,2015-09-19,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,University of Vermont,A5054161290,Henrik Walter,,,,,1016-09-19,False
+2015,2015-08-25,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,University of Vermont,A5050499058,Robert Whelan,32.0,1983.0,16.0,much_older,1016-08-25,False
+2015,2015-01-07,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5090364896,Günter Schumann,58.0,1957.0,42.0,much_older,1016-01-07,False
+2015,2015-08-23,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,2,new_collab,,A5001775538,Hugh Garavan,23.0,1992.0,7.0,older,1016-08-23,False
+2015,2015-05-09,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,1,2,existing_collab,University of Vermont,A5020396160,Paul R. Lessard,4.0,2011.0,-12.0,younger,1016-05-09,False
+2015,2015-08-25,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,4,existing_collab,University of Vermont,A5059471763,Suma Desu,2.0,2013.0,-14.0,younger,1016-08-25,False
+2015,2015-01-16,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,1,1,new_collab,University of Vermont,A5010862346,Emily M. Cody,0.0,2015.0,-16.0,much_younger,1016-01-16,False
+2015,2015-10-14,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,4,6,existing_collab,University of Vermont,A5078987306,Andrew J. Reagan,3.0,2012.0,-13.0,younger,1016-10-14,False
+2015,2015-10-14,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,3,8,existing_collab,University of Vermont,A5113881318,Lewis Mitchell,33.0,1982.0,17.0,much_older,1016-10-14,False
+2015,2015-05-09,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,1,7,existing_collab,University of Vermont,A5012787401,Morgan R. Frank,2.0,2013.0,-14.0,younger,1016-05-09,False
+2015,2015-10-14,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,1,12,existing_collab,University of Vermont,A5060223489,Kameron Decker Harris,6.0,2009.0,-10.0,younger,1016-10-14,False
+2015,2015-01-03,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,1,4,existing_collab,University of Vermont,A5112615531,Isabel M. Kloumann,5.0,2010.0,-11.0,younger,1016-01-03,False
+2015,2015-01-07,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,1,1,new_collab,University of Vermont,A5074081869,Karine Megerdoomian,16.0,1999.0,0.0,same_age,1016-01-07,False
+2015,2015-02-16,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,1,1,new_collab,University of Vermont,A5028539192,Matthew T. McMahon,17.0,1998.0,1.0,same_age,1016-02-16,False
+2015,2015-05-09,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,2,3,existing_collab,University of Vermont,A5050883332,Brian F. Tivnan,17.0,1998.0,1.0,same_age,1016-05-09,False
+2015,2015-10-29,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,1,1,new_collab,University of Vermont,A5002713363,Kevin Murphy,53.0,1962.0,37.0,much_older,1016-10-28,False
+2015,2015-01-16,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,1,1,new_collab,University of Vermont,A5067729121,IMAGEN Consortium,-2.0,2017.0,-18.0,much_younger,1016-01-16,False
+2015,2015-05-09,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,1,1,new_collab,University of Vermont,A5072341866,Hong Qi,23.0,1992.0,7.0,older,1016-05-09,False
+2015,2015-01-05,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,1,1,new_collab,University of Vermont,A5033313280,James M. Shultz,31.0,1984.0,15.0,much_older,1016-01-05,False
+2015,2015-03-05,A5040821463,University of Vermont,Peter Sheridan Dodds,16,1999,2025,1,1,new_collab,University of Vermont,A5005791313,Alyssa Cohen,20.0,1995.0,4.0,same_age,1016-03-05,False
+2016,2016-05-21,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,1,1,new_collab,University of Vermont,A5030917007,Mark Ibrahim,0.0,2016.0,-17.0,much_younger,1017-05-21,False
+2016,2016-01-29,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,11,38,existing_collab,University of Vermont,A5002034958,Christopher M. Danforth,10.0,2006.0,-7.0,same_age,1017-01-28,False
+2016,2016-01-22,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,7,13,existing_collab,University of Vermont,A5078987306,Andrew J. Reagan,4.0,2012.0,-13.0,younger,1017-01-22,False
+2016,2016-01-29,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,3,11,existing_collab,University of Vermont,A5113881318,Lewis Mitchell,34.0,1982.0,17.0,much_older,1017-01-28,False
+2016,2016-07-25,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,2,2,new_collab,University of Vermont,A5050995537,Dilan Kiley,0.0,2016.0,-17.0,much_younger,1017-07-25,False
+2016,2016-12-20,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,1,1,new_collab,University of Vermont,A5075017836,Thomas McAndrew,5.0,2011.0,-12.0,younger,1017-12-20,False
+2016,2016-08-05,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,1,2,existing_collab,University of Vermont,A5113316116,Joshua Bongard,9.0,2007.0,-8.0,younger,1017-08-05,False
+2016,2016-01-22,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,1,1,new_collab,University of Vermont,A5065579564,Paul Hines,11.0,2005.0,-6.0,same_age,1017-01-22,False
+2016,2016-05-21,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,4,11,existing_collab,University of Vermont,A5062403203,James P. Bagrow,12.0,2004.0,-5.0,same_age,1017-05-21,False
+2016,2016-05-21,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,1,7,existing_collab,University of Vermont,A5053832932,Eric M. Clark,58.0,1958.0,41.0,much_older,1017-05-21,False
+2016,2016-04-17,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,1,3,existing_collab,University of Vermont,A5025928838,Chris Jones,51.0,1965.0,34.0,much_older,1017-04-17,False
+2016,2016-11-08,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,3,11,existing_collab,University of Vermont,A5101587041,Jake Ryland Williams,5.0,2011.0,-12.0,younger,1017-11-08,False
+2016,2016-01-22,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,1,1,new_collab,University of Vermont,A5102722156,Allison N. Kurti,7.0,2009.0,-10.0,younger,1017-01-22,False
+2016,2016-01-05,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,1,1,new_collab,University of Vermont,A5052464553,Mitchell C. Norotsky,24.0,1992.0,7.0,older,1017-01-05,False
+2016,2016-04-17,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,2,3,existing_collab,University of Vermont,A5010862346,Emily M. Cody,1.0,2015.0,-16.0,much_younger,1017-04-17,False
+2016,2016-05-14,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,1,1,new_collab,University of Vermont,A5067925308,Jennie C. Stephens,19.0,1997.0,2.0,same_age,1017-05-14,False
+2016,2016-07-25,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,1,1,new_collab,University of Vermont,A5070620133,Yves Dubief,19.0,1997.0,2.0,same_age,1017-07-25,False
+2016,2016-01-22,A5040821463,University of Vermont,Peter Sheridan Dodds,17,1999,2025,2,2,new_collab,University of Vermont,A5030855474,Sharon E. Alajajian,1.0,2015.0,-16.0,much_younger,1017-01-22,False
+2017,2017-01-16,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,4,17,existing_collab,University of Vermont,A5078987306,Andrew J. Reagan,5.0,2012.0,-13.0,younger,1018-01-16,False
+2017,2017-01-16,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,5,43,existing_collab,University of Vermont,A5002034958,Christopher M. Danforth,11.0,2006.0,-7.0,same_age,1018-01-16,False
+2017,2017-10-11,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,1,4,existing_collab,University of Vermont,A5050883332,Brian F. Tivnan,19.0,1998.0,1.0,same_age,1018-10-11,False
+2017,2017-05-09,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,3,14,existing_collab,University of Vermont,A5101587041,Jake Ryland Williams,6.0,2011.0,-12.0,younger,1018-05-09,False
+2017,2017-10-11,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,1,1,new_collab,University of Vermont,A5071151240,Andrew Reece,9.0,2008.0,-9.0,younger,1018-10-11,False
+2017,2017-05-06,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,1,1,new_collab,University of Vermont,A5003630074,Katharina Lix,1.0,2016.0,-17.0,much_younger,1018-05-06,False
+2017,2017-01-16,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,1,1,new_collab,University of Vermont,A5052478281,Ellen J. Langer,46.0,1971.0,28.0,much_older,1018-01-16,False
+2017,2017-05-06,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,1,1,new_collab,University of Vermont,A5047121345,David Rushing Dewhurst,0.0,2017.0,-18.0,much_younger,1018-05-06,False
+2017,2017-10-09,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,1,1,new_collab,University of Vermont,A5041348179,Fletcher F. Hazlehurst,0.0,2017.0,-18.0,much_younger,1018-10-09,False
+2017,2017-05-06,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,1,1,new_collab,University of Vermont,A5052932345,Colin M. Van Oort,0.0,2017.0,-18.0,much_younger,1018-05-06,False
+2017,2017-05-06,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,2,13,existing_collab,University of Vermont,A5113881318,Lewis Mitchell,35.0,1982.0,17.0,much_older,1018-05-06,False
+2017,2017-02-22,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,1,3,existing_collab,University of Vermont,A5082696905,Eitan Adam Pechenick,2.0,2015.0,-16.0,much_younger,1018-02-22,False
+2017,2017-08-25,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,1,3,existing_collab,University of Vermont,A5030855474,Sharon E. Alajajian,2.0,2015.0,-16.0,much_younger,1018-08-25,False
+2017,2017-01-16,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,1,1,new_collab,University of Vermont,A5020061373,Stephen Alajajian,2.0,2015.0,-16.0,much_younger,1018-01-16,False
+2017,2017-01-19,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,1,8,existing_collab,University of Vermont,A5012787401,Morgan R. Frank,4.0,2013.0,-14.0,younger,1018-01-19,False
+2017,2017-08-25,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,1,1,new_collab,University of Vermont,A5017407756,Jacob Lahne,7.0,2010.0,-11.0,younger,1018-08-25,False
+2017,2017-01-16,A5040821463,University of Vermont,Peter Sheridan Dodds,18,1999,2025,1,1,new_collab,University of Vermont,A5109170216,A Thesis,34.0,1983.0,16.0,much_older,1018-01-16,False
+2018,2018-12-24,A5040821463,University of Vermont,Peter Sheridan Dodds,19,1999,2025,1,1,new_collab,University of Vermont,A5032839489,Tyler J. Gray,0.0,2018.0,-19.0,much_younger,1019-12-24,False
+2018,2018-07-17,A5040821463,University of Vermont,Peter Sheridan Dodds,19,1999,2025,3,20,existing_collab,University of Vermont,A5078987306,Andrew J. Reagan,6.0,2012.0,-13.0,younger,1019-07-17,False
+2018,2018-12-24,A5040821463,University of Vermont,Peter Sheridan Dodds,19,1999,2025,6,49,existing_collab,University of Vermont,A5002034958,Christopher M. Danforth,12.0,2006.0,-7.0,same_age,1019-12-24,False
+2018,2018-06-14,A5040821463,University of Vermont,Peter Sheridan Dodds,19,1999,2025,1,1,new_collab,University of Vermont,A5047404909,Aaron J. Schwartz,12.0,2006.0,-7.0,same_age,1019-06-14,False
+2018,2018-07-17,A5040821463,University of Vermont,Peter Sheridan Dodds,19,1999,2025,1,1,new_collab,University of Vermont,A5017106847,Jarlath O’Neil‐Dunne,12.0,2006.0,-7.0,same_age,1019-07-17,False
+2018,2018-06-14,A5040821463,University of Vermont,Peter Sheridan Dodds,19,1999,2025,1,1,new_collab,University of Vermont,A5009887999,Taylor H. Ricketts,29.0,1989.0,10.0,older,1019-06-14,False
+2018,2018-06-14,A5040821463,University of Vermont,Peter Sheridan Dodds,19,1999,2025,1,1,new_collab,University of Vermont,A5047780964,Meredith T. Niles,10.0,2008.0,-9.0,younger,1019-06-14,False
+2018,2018-01-14,A5040821463,University of Vermont,Peter Sheridan Dodds,19,1999,2025,1,1,new_collab,University of Vermont,A5015837313,Benjamin Freixas Emery,0.0,2018.0,-19.0,much_younger,1019-01-14,False
+2018,2018-01-15,A5040821463,University of Vermont,Peter Sheridan Dodds,19,1999,2025,1,2,existing_collab,University of Vermont,A5047121345,David Rushing Dewhurst,1.0,2017.0,-18.0,much_younger,1019-01-15,False
+2018,2018-01-26,A5040821463,University of Vermont,Peter Sheridan Dodds,19,1999,2025,1,1,new_collab,University of Vermont,A5084930117,Ryan J. Gallagher,21.0,1997.0,2.0,same_age,1019-01-26,False
+2018,2018-12-24,A5040821463,University of Vermont,Peter Sheridan Dodds,19,1999,2025,1,8,existing_collab,University of Vermont,A5053832932,Eric M. Clark,60.0,1958.0,41.0,much_older,1019-12-24,False
+2018,2018-01-14,A5040821463,University of Vermont,Peter Sheridan Dodds,19,1999,2025,1,1,new_collab,University of Vermont,A5086144303,Ted A. James,,,,,1019-01-14,False
+2018,2018-01-14,A5040821463,University of Vermont,Peter Sheridan Dodds,19,1999,2025,1,4,existing_collab,University of Vermont,A5025928838,Chris Jones,53.0,1965.0,34.0,much_older,1019-01-14,False
+2018,2018-06-14,A5040821463,University of Vermont,Peter Sheridan Dodds,19,1999,2025,1,1,new_collab,University of Vermont,A5015190058,Amulya Alapati,0.0,2018.0,-19.0,much_younger,1019-06-14,False
+2018,2018-12-24,A5040821463,University of Vermont,Peter Sheridan Dodds,19,1999,2025,1,1,new_collab,University of Vermont,A5073525862,Promise O. Ukandu,1.0,2017.0,-18.0,much_younger,1019-12-24,False
+2019,2019-08-29,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,1,new_collab,University of Vermont,A5019567426,Sebastià V. Amengual Garí,3.0,2016.0,-17.0,much_younger,1020-08-28,False
+2019,2019-02-21,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,1,new_collab,University of Vermont,A5037224346,W. Owen Brimijoin,17.0,2002.0,-3.0,same_age,1020-02-21,False
+2019,2019-01-13,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,1,new_collab,University of Vermont,A5028520758,Philip W. Robinson,53.0,1966.0,33.0,much_older,1020-01-13,False
+2019,2019-09-20,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,1,new_collab,University of Vermont,A5059048502,Joshua R. Minot,0.0,2019.0,-20.0,much_younger,1020-09-20,False
+2019,2019-11-08,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,1,new_collab,University of Vermont,A5109561489,Michael Arnold,58.0,1961.0,38.0,much_older,1020-11-08,False
+2019,2019-11-08,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,1,new_collab,University of Vermont,A5015816708,Thayer Alshaabi,0.0,2019.0,-20.0,much_younger,1020-11-08,False
+2019,2019-09-20,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,1,new_collab,University of Vermont,A5067816571,Jane L. Adams,44.0,1975.0,24.0,much_older,1020-09-20,False
+2019,2019-09-20,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,3,existing_collab,University of Vermont,A5047121345,David Rushing Dewhurst,2.0,2017.0,-18.0,much_younger,1020-09-20,False
+2019,2019-08-29,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,2,22,existing_collab,University of Vermont,A5078987306,Andrew J. Reagan,7.0,2012.0,-13.0,younger,1020-08-28,False
+2019,2019-11-08,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,4,53,existing_collab,University of Vermont,A5002034958,Christopher M. Danforth,13.0,2006.0,-7.0,same_age,1020-11-08,False
+2019,2019-01-13,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,2,existing_collab,University of Vermont,A5047404909,Aaron J. Schwartz,13.0,2006.0,-7.0,same_age,1020-01-13,False
+2019,2019-09-20,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,2,existing_collab,University of Vermont,A5017106847,Jarlath O’Neil‐Dunne,13.0,2006.0,-7.0,same_age,1020-09-20,False
+2019,2019-08-29,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,2,existing_collab,University of Vermont,A5009887999,Taylor H. Ricketts,30.0,1989.0,10.0,older,1020-08-28,False
+2019,2019-11-08,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,2,existing_collab,University of Vermont,A5047780964,Meredith T. Niles,11.0,2008.0,-9.0,younger,1020-11-08,False
+2019,2019-11-08,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,2,existing_collab,University of Vermont,A5015837313,Benjamin Freixas Emery,1.0,2018.0,-19.0,much_younger,1020-11-08,False
+2019,2019-01-13,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,1,new_collab,University of Vermont,A5049616466,Laura Jennings,10.0,2009.0,-10.0,younger,1020-01-13,False
+2019,2019-09-20,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,1,new_collab,University of Vermont,A5086123703,Elizabeth C. Pinel,66.0,1953.0,46.0,much_older,1020-09-20,False
+2019,2019-08-29,A5040821463,University of Vermont,Peter Sheridan Dodds,20,1999,2025,1,1,new_collab,University of Vermont,A5090040147,Lizzy Pope,10.0,2009.0,-10.0,younger,1020-08-28,False
+2020,2020-01-19,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,1,1,new_collab,University of Vermont,A5073214741,Henry Mitchell,,,,,1021-01-19,False
+2020,2020-01-19,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,1,1,new_collab,University of Vermont,A5033950605,J. Matthew Mahoney,35.0,1985.0,14.0,older,1021-01-19,False
+2020,2020-02-09,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,10,63,existing_collab,University of Vermont,A5002034958,Christopher M. Danforth,14.0,2006.0,-7.0,same_age,1021-02-09,False
+2020,2020-05-06,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,2,4,existing_collab,University of Vermont,A5015837313,Benjamin Freixas Emery,2.0,2018.0,-19.0,much_younger,1021-05-06,False
+2020,2020-01-16,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,2,4,existing_collab,University of Vermont,A5047780964,Meredith T. Niles,12.0,2008.0,-9.0,younger,1021-01-16,False
+2020,2020-01-20,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,1,2,existing_collab,University of Vermont,A5032839489,Tyler J. Gray,2.0,2018.0,-19.0,much_younger,1021-01-20,False
+2020,2020-01-20,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,5,8,existing_collab,University of Vermont,A5047121345,David Rushing Dewhurst,3.0,2017.0,-18.0,much_younger,1021-01-20,False
+2020,2020-01-21,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,5,6,existing_collab,University of Vermont,A5015816708,Thayer Alshaabi,1.0,2019.0,-20.0,much_younger,1021-01-21,False
+2020,2020-01-21,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,1,3,existing_collab,University of Vermont,A5050995537,Dilan Kiley,4.0,2016.0,-17.0,much_younger,1021-01-21,False
+2020,2020-10-15,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,2,2,new_collab,University of Vermont,A5102965438,Matthew Arnold,,,,,1021-10-15,False
+2020,2020-05-06,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,4,5,existing_collab,University of Vermont,A5059048502,Joshua R. Minot,1.0,2019.0,-20.0,much_younger,1021-05-06,False
+2020,2020-01-19,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,2,3,existing_collab,University of Vermont,A5109561489,Michael Arnold,59.0,1961.0,38.0,much_older,1021-01-19,False
+2020,2020-10-09,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,2,3,existing_collab,University of Vermont,A5067816571,Jane L. Adams,45.0,1975.0,24.0,much_older,1021-10-09,False
+2020,2020-02-12,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,2,24,existing_collab,University of Vermont,A5078987306,Andrew J. Reagan,8.0,2012.0,-13.0,younger,1021-02-12,False
+2020,2020-01-19,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,1,1,new_collab,University of Vermont,A5082132467,Kelsey Linnell,3.0,2017.0,-18.0,much_younger,1021-01-19,False
+2020,2020-01-21,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,1,2,existing_collab,University of Vermont,A5075017836,Thomas McAndrew,9.0,2011.0,-12.0,younger,1021-01-21,False
+2020,2020-01-16,A5040821463,University of Vermont,Peter Sheridan Dodds,21,1999,2025,1,1,new_collab,University of Vermont,A5079619171,Jeanie Lim,0.0,2020.0,-21.0,much_younger,1021-01-16,False
+2021,2021-01-19,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,11,16,existing_collab,University of Vermont,A5059048502,Joshua R. Minot,2.0,2019.0,-20.0,much_younger,1022-01-19,False
+2021,2021-06-06,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,2,4,existing_collab,University of Vermont,A5102965438,Matthew Arnold,,,,,1022-06-06,False
+2021,2021-01-19,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,12,18,existing_collab,University of Vermont,A5015816708,Thayer Alshaabi,2.0,2019.0,-20.0,much_younger,1022-01-19,False
+2021,2021-01-19,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,11,14,existing_collab,University of Vermont,A5067816571,Jane L. Adams,46.0,1975.0,24.0,much_older,1022-01-19,False
+2021,2021-06-22,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,5,29,existing_collab,University of Vermont,A5078987306,Andrew J. Reagan,9.0,2012.0,-13.0,younger,1022-06-22,False
+2021,2021-06-06,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,21,84,existing_collab,University of Vermont,A5002034958,Christopher M. Danforth,15.0,2006.0,-7.0,same_age,1022-06-06,False
+2021,2021-03-09,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,2,2,new_collab,University of Vermont,A5046167284,Anne Marie Stupinski,2.0,2019.0,-20.0,much_younger,1022-03-09,False
+2021,2021-03-09,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,8,11,existing_collab,University of Vermont,A5109561489,Michael Arnold,60.0,1961.0,38.0,much_older,1022-03-09,False
+2021,2021-01-06,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,3,3,new_collab,University of Vermont,A5069820090,Matthew Price,46.0,1975.0,24.0,much_older,1022-01-06,False
+2021,2021-01-19,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,2,3,existing_collab,University of Vermont,A5082132467,Kelsey Linnell,4.0,2017.0,-18.0,much_younger,1022-01-19,False
+2021,2021-01-06,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,3,existing_collab,University of Vermont,A5075017836,Thomas McAndrew,10.0,2011.0,-12.0,younger,1022-01-06,False
+2021,2021-04-12,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,2,existing_collab,University of Vermont,A5079619171,Jeanie Lim,1.0,2020.0,-21.0,much_younger,1022-04-12,False
+2021,2021-01-06,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,6,14,existing_collab,University of Vermont,A5047121345,David Rushing Dewhurst,4.0,2017.0,-18.0,much_younger,1022-01-06,False
+2021,2021-01-27,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,3,3,new_collab,University of Vermont,A5039331886,Todd F. DeLuca,15.0,2006.0,-7.0,same_age,1022-01-27,False
+2021,2021-06-07,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,3,3,new_collab,University of Vermont,A5101604835,Yuhang Zheng,24.0,1997.0,2.0,same_age,1022-06-07,False
+2021,2021-01-19,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,3,3,new_collab,University of Vermont,A5001538666,Konstantinos Anastasakis,13.0,2008.0,-9.0,younger,1022-01-19,False
+2021,2021-03-20,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,3,3,new_collab,University of Vermont,A5008010244,Boyoon Choi,21.0,2000.0,-1.0,same_age,1022-03-20,False
+2021,2021-01-20,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,3,3,new_collab,University of Vermont,A5061204372,Allison Min,0.0,2021.0,-22.0,much_younger,1022-01-20,False
+2021,2021-01-19,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,3,3,new_collab,University of Vermont,A5003423956,Michael M. Bessey,0.0,2021.0,-22.0,much_younger,1022-01-19,False
+2021,2021-09-25,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,5,existing_collab,University of Vermont,A5015837313,Benjamin Freixas Emery,3.0,2018.0,-19.0,much_younger,1022-09-25,False
+2021,2021-01-19,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,5,existing_collab,University of Vermont,A5047780964,Meredith T. Niles,13.0,2008.0,-9.0,younger,1022-01-19,False
+2021,2021-09-06,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5108286740,Nicholas Cheney,9.0,2012.0,-13.0,younger,1022-09-06,False
+2021,2021-03-08,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5059729548,Danne C. Elbers,4.0,2017.0,-18.0,much_younger,1022-03-08,False
+2021,2021-01-06,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5015402613,Alison C. Legrand,18.0,2003.0,-4.0,same_age,1022-01-06,False
+2021,2021-03-20,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5019365416,Zoe M. F. Brier,5.0,2016.0,-17.0,much_younger,1022-03-20,False
+2021,2021-01-01,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5057557219,Katherine van Stolk‐Cooke,7.0,2014.0,-15.0,younger,1022-01-01,False
+2021,2021-09-25,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5077511376,Kelly Peck,16.0,2005.0,-6.0,same_age,1022-09-25,False
+2021,2021-03-20,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5082878426,Zachary W. Adams,14.0,2007.0,-8.0,younger,1022-03-20,False
+2021,2021-12-23,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,12,existing_collab,University of Vermont,A5062403203,James P. Bagrow,17.0,2004.0,-5.0,same_age,1022-12-23,False
+2021,2021-01-01,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,2,existing_collab,University of Vermont,A5084930117,Ryan J. Gallagher,24.0,1997.0,2.0,same_age,1022-01-01,False
+2021,2021-01-01,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,9,existing_collab,University of Vermont,A5012787401,Morgan R. Frank,8.0,2013.0,-14.0,younger,1022-01-01,False
+2021,2021-01-01,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,14,existing_collab,University of Vermont,A5113881318,Lewis Mitchell,39.0,1982.0,17.0,much_older,1022-01-01,False
+2021,2021-12-23,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,3,existing_collab,University of Vermont,A5047404909,Aaron J. Schwartz,15.0,2006.0,-7.0,same_age,1022-12-23,False
+2021,2021-01-20,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5027414437,Mikaela Irene Fudolig,7.0,2014.0,-15.0,younger,1022-01-20,False
+2021,2021-06-07,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5089082846,Julia Witte Zimmerman,0.0,2021.0,-22.0,much_younger,1022-06-07,False
+2021,2021-12-23,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5073688320,Juniper Lovato,1.0,2020.0,-21.0,much_younger,1022-12-23,False
+2021,2021-06-07,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5050707519,Suzie Beaulieu,10.0,2011.0,-12.0,younger,1022-06-07,False
+2021,2021-03-09,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,3,existing_collab,University of Vermont,A5001893057,Roby Muhamad,22.0,1999.0,0.0,same_age,1022-03-09,False
+2021,2021-07-31,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5100421454,Yi Li,33.0,1988.0,11.0,older,1022-07-31,False
+2021,2021-01-19,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5015966523,Asieh Ahani,8.0,2013.0,-14.0,younger,1022-01-19,False
+2021,2021-01-27,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5049215328,Haimao Zhan,11.0,2010.0,-11.0,younger,1022-01-27,False
+2021,2021-01-03,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5035181510,Kevin P. Foley,38.0,1983.0,16.0,much_older,1022-01-03,False
+2021,2021-06-06,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5083900520,Adam Fox,,,,,1022-06-06,False
+2021,2021-01-20,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5102849076,Ethan Davis,26.0,1995.0,4.0,same_age,1022-01-20,False
+2021,2021-03-08,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5022175819,Wolfgang Mieder,49.0,1972.0,27.0,much_older,1022-03-08,False
+2021,2021-05-23,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,1,1,new_collab,University of Vermont,A5016272206,Kelly Gothard,17.0,2004.0,-5.0,same_age,1022-05-23,False
+2021,2021-01-13,A5040821463,University of Vermont,Peter Sheridan Dodds,22,1999,2025,3,3,new_collab,University of Vermont,A5036140974,Matthew Price,15.0,2006.0,-7.0,same_age,1022-01-13,False
+2022,2022-02-09,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,4,existing_collab,University of Vermont,A5082132467,Kelsey Linnell,5.0,2017.0,-18.0,much_younger,1023-02-09,False
+2022,2022-06-25,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,3,4,existing_collab,University of Vermont,A5027414437,Mikaela Irene Fudolig,8.0,2014.0,-15.0,younger,1023-06-25,False
+2022,2022-04-28,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,2,5,existing_collab,University of Vermont,A5047404909,Aaron J. Schwartz,16.0,2006.0,-7.0,same_age,1023-04-28,False
+2022,2022-02-09,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,2,4,existing_collab,University of Vermont,A5009887999,Taylor H. Ricketts,33.0,1989.0,10.0,older,1023-02-09,False
+2022,2022-09-25,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,2,4,existing_collab,University of Vermont,A5017106847,Jarlath O’Neil‐Dunne,16.0,2006.0,-7.0,same_age,1023-09-25,False
+2022,2022-02-09,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,8,92,existing_collab,University of Vermont,A5002034958,Christopher M. Danforth,16.0,2006.0,-7.0,same_age,1023-02-09,False
+2022,2022-06-25,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,3,existing_collab,,A5058815871,Matthew Salganik,18.0,2004.0,-5.0,same_age,1023-06-25,False
+2022,2022-03-01,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,11,existing_collab,,A5000679279,Duncan J. Watts,24.0,1998.0,1.0,same_age,1023-03-01,False
+2022,2022-02-23,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,3,19,existing_collab,University of Vermont,A5059048502,Joshua R. Minot,3.0,2019.0,-20.0,much_younger,1023-02-23,False
+2022,2022-09-25,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,2,existing_collab,University of Vermont,A5108286740,Nicholas Cheney,10.0,2012.0,-13.0,younger,1023-09-25,False
+2022,2022-03-12,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,1,new_collab,University of Vermont,A5008021208,Marc Maier,33.0,1989.0,10.0,older,1023-03-12,False
+2022,2022-02-09,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,2,existing_collab,University of Vermont,A5059729548,Danne C. Elbers,5.0,2017.0,-18.0,much_younger,1023-02-09,False
+2022,2022-03-12,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,1,new_collab,University of Vermont,A5032451310,Alexander Richard,69.0,1953.0,46.0,much_older,1023-03-12,False
+2022,2022-03-01,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,1,new_collab,University of Vermont,A5108520440,Vamsi Krishna Ithapu,13.0,2009.0,-10.0,younger,1023-03-01,False
+2022,2022-02-09,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,3,existing_collab,University of Vermont,A5046167284,Anne Marie Stupinski,3.0,2019.0,-20.0,much_younger,1023-02-09,False
+2022,2022-02-09,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,4,22,existing_collab,University of Vermont,A5015816708,Thayer Alshaabi,3.0,2019.0,-20.0,much_younger,1023-02-09,False
+2022,2022-04-23,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,12,existing_collab,University of Vermont,A5109561489,Michael Arnold,61.0,1961.0,38.0,much_older,1023-04-23,False
+2022,2022-02-09,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,2,16,existing_collab,University of Vermont,A5067816571,Jane L. Adams,47.0,1975.0,24.0,much_older,1023-02-09,False
+2022,2022-04-23,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,2,5,existing_collab,University of Vermont,A5069820090,Matthew Price,47.0,1975.0,24.0,much_older,1023-04-23,False
+2022,2022-09-25,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,2,existing_collab,University of Vermont,A5015402613,Alison C. Legrand,19.0,2003.0,-4.0,same_age,1023-09-25,False
+2022,2022-04-28,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,2,existing_collab,University of Vermont,A5019365416,Zoe M. F. Brier,6.0,2016.0,-17.0,much_younger,1023-04-28,False
+2022,2022-06-25,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,2,existing_collab,University of Vermont,A5057557219,Katherine van Stolk‐Cooke,8.0,2014.0,-15.0,younger,1023-06-25,False
+2022,2022-02-09,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,2,existing_collab,University of Vermont,A5077511376,Kelly Peck,17.0,2005.0,-6.0,same_age,1023-02-09,False
+2022,2022-03-01,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,2,existing_collab,University of Vermont,A5082878426,Zachary W. Adams,15.0,2007.0,-8.0,younger,1023-03-01,False
+2022,2022-01-02,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,3,7,existing_collab,University of Vermont,A5102965438,Matthew Arnold,,,,,1023-01-02,False
+2022,2022-09-25,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,15,existing_collab,University of Vermont,A5047121345,David Rushing Dewhurst,5.0,2017.0,-18.0,much_younger,1023-09-25,False
+2022,2022-09-25,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,30,existing_collab,University of Vermont,A5078987306,Andrew J. Reagan,10.0,2012.0,-13.0,younger,1023-09-25,False
+2022,2022-09-25,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,1,2,existing_collab,University of Vermont,A5052932345,Colin M. Van Oort,5.0,2017.0,-18.0,much_younger,1023-09-25,False
+2022,2022-03-25,A5040821463,University of Vermont,Peter Sheridan Dodds,23,1999,2025,2,5,existing_collab,University of Vermont,A5036140974,Matthew Price,16.0,2006.0,-7.0,same_age,1023-03-25,False
+2023,2023-04-07,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,7,11,existing_collab,University of Vermont,A5027414437,Mikaela Irene Fudolig,9.0,2014.0,-15.0,younger,1024-04-07,False
+2023,2023-01-31,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,4,4,new_collab,University of Vermont,A5047203759,Laura S. P. Bloomfield,37.0,1986.0,13.0,older,1024-01-31,False
+2023,2023-10-06,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,5,10,existing_collab,University of Vermont,A5069820090,Matthew Price,48.0,1975.0,24.0,much_older,1024-10-06,False
+2023,2023-01-31,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,2,2,new_collab,University of Vermont,A5019875132,Yoshi M. Bird,19.0,2004.0,-5.0,same_age,1024-01-31,False
+2023,2023-01-28,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,2,2,new_collab,University of Vermont,A5000821343,Johanna E. Hidalgo,1.0,2022.0,-23.0,much_younger,1024-01-28,False
+2023,2023-01-03,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,4,4,new_collab,University of Vermont,A5040399099,Julia Kim,20.0,2003.0,-4.0,same_age,1024-01-03,False
+2023,2023-09-11,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,4,4,new_collab,University of Vermont,A5092887068,Jordan Llorin,0.0,2023.0,-24.0,much_younger,1024-09-11,False
+2023,2023-03-19,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,5,6,existing_collab,University of Vermont,A5073688320,Juniper Lovato,3.0,2020.0,-21.0,much_younger,1024-03-19,False
+2023,2023-06-20,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,5,5,new_collab,University of Vermont,A5045202621,Ellen W. McGinnis,,,,,1024-06-20,False
+2023,2023-09-30,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,5,5,new_collab,University of Vermont,A5006991081,Ryan S. McGinnis,68.0,1955.0,44.0,much_older,1024-09-30,False
+2023,2023-04-07,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,5,9,existing_collab,University of Vermont,A5009887999,Taylor H. Ricketts,34.0,1989.0,10.0,older,1024-04-07,False
+2023,2023-01-07,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,4,4,new_collab,University of Vermont,A5073011363,Kathryn Stanton,19.0,2004.0,-5.0,same_age,1024-01-07,False
+2023,2023-09-30,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,15,107,existing_collab,University of Vermont,A5002034958,Christopher M. Danforth,17.0,2006.0,-7.0,same_age,1024-09-30,False
+2023,2023-10-06,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5066625861,Casey Buck,3.0,2020.0,-21.0,much_younger,1024-10-06,False
+2023,2023-01-03,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5091730117,Janine Cerutti,7.0,2016.0,-17.0,much_younger,1024-01-03,False
+2023,2023-09-08,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5042640763,Rachel Gehman,2.0,2021.0,-22.0,much_younger,1024-09-08,False
+2023,2023-09-01,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5073630928,Marc Hickok,3.0,2020.0,-21.0,much_younger,1024-09-01,False
+2023,2023-01-10,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5027833322,Richard J. Norton,33.0,1990.0,9.0,older,1024-01-10,False
+2023,2023-01-21,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5111572847,Vanessa Ramirez,35.0,1988.0,11.0,older,1024-01-21,False
+2023,2023-01-03,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5015730232,Camille Noufi,4.0,2019.0,-20.0,much_younger,1024-01-03,False
+2023,2023-04-07,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5003700236,Dejan Marković,68.0,1955.0,44.0,much_older,1024-04-07,False
+2023,2023-07-25,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,4,23,existing_collab,University of Vermont,A5059048502,Joshua R. Minot,4.0,2019.0,-20.0,much_younger,1024-07-25,False
+2023,2023-03-19,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,4,16,existing_collab,,A5109561489,Michael Arnold,62.0,1961.0,38.0,much_older,1024-03-19,False
+2023,2023-01-07,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,4,26,existing_collab,,A5015816708,Thayer Alshaabi,4.0,2019.0,-20.0,much_younger,1024-01-07,False
+2023,2023-01-21,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,2,18,existing_collab,,A5067816571,Jane L. Adams,48.0,1975.0,24.0,much_older,1024-01-21,False
+2023,2023-04-07,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,16,existing_collab,University of Vermont,A5047121345,David Rushing Dewhurst,6.0,2017.0,-18.0,much_younger,1024-04-07,False
+2023,2023-09-01,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,3,existing_collab,University of Vermont,A5032839489,Tyler J. Gray,5.0,2018.0,-19.0,much_younger,1024-09-01,False
+2023,2023-03-19,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,2,11,existing_collab,University of Vermont,A5012787401,Morgan R. Frank,10.0,2013.0,-14.0,younger,1024-03-19,False
+2023,2023-04-07,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,31,existing_collab,University of Vermont,A5078987306,Andrew J. Reagan,11.0,2012.0,-13.0,younger,1024-04-07,False
+2023,2023-10-06,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5036096197,Will Thompson,,,,,1024-10-06,False
+2023,2023-09-30,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5092527914,Alex Freidrichsen,0.0,2023.0,-24.0,much_younger,1024-09-30,False
+2023,2023-04-07,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,2,4,existing_collab,University of Vermont,A5108286740,Nicholas Cheney,11.0,2012.0,-13.0,younger,1024-04-07,False
+2023,2023-09-19,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5035623867,Philip Mueller,,,,,1024-09-19,False
+2023,2023-09-01,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5016813671,Parisa Suchdev,0.0,2023.0,-24.0,much_younger,1024-09-01,False
+2023,2023-01-10,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,2,2,new_collab,University of Vermont,A5054876523,Kathryn E. Cramer,,,,,1024-01-10,False
+2023,2023-09-11,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5071117363,Morgan Weaving,3.0,2020.0,-21.0,much_younger,1024-09-11,False
+2023,2023-09-19,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5025164505,Khandis R. Blake,23.0,2000.0,-1.0,same_age,1024-09-19,False
+2023,2023-07-25,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5090589044,Nick Haslam,32.0,1991.0,8.0,older,1024-07-25,False
+2023,2023-09-19,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5029372639,Cordelia Fine,37.0,1986.0,13.0,older,1024-09-19,False
+2023,2023-10-06,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,8,existing_collab,University of Vermont,A5102965438,Matthew Arnold,,,,,1024-10-06,False
+2023,2023-09-30,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5091049253,Shania Lunna,1.0,2022.0,-23.0,much_younger,1024-09-30,False
+2023,2023-07-25,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5055843861,Isabel Berman,,,,,1024-07-25,False
+2023,2023-01-31,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5065237904,Skylar Bagdon,0.0,2023.0,-24.0,much_younger,1024-01-31,False
+2023,2023-09-19,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5009730528,Genevieve Lewis,,,,,1024-09-19,False
+2023,2023-07-25,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5050584017,William Copeland,66.0,1957.0,42.0,much_older,1024-07-25,False
+2023,2023-01-28,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,5,existing_collab,University of Vermont,A5082132467,Kelsey Linnell,6.0,2017.0,-18.0,much_younger,1024-01-28,False
+2023,2023-09-01,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,4,existing_collab,University of Vermont,A5075017836,Thomas McAndrew,12.0,2011.0,-12.0,younger,1024-09-01,False
+2023,2023-01-21,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,5,existing_collab,University of Vermont,A5017106847,Jarlath O’Neil‐Dunne,17.0,2006.0,-7.0,same_age,1024-01-21,False
+2023,2023-04-07,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,3,existing_collab,University of Vermont,A5059729548,Danne C. Elbers,6.0,2017.0,-18.0,much_younger,1024-04-07,False
+2023,2023-01-07,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5006946801,Jennifer La,50.0,1973.0,26.0,much_older,1024-01-07,False
+2023,2023-01-21,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,,A5113777237,Robert Gramling,37.0,1986.0,13.0,older,1024-01-21,False
+2023,2023-10-06,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5078664314,Mary T. Brophy,33.0,1990.0,9.0,older,1024-10-06,False
+2023,2023-01-31,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5018592922,Nhan Do,31.0,1992.0,7.0,older,1024-01-31,False
+2023,2023-04-07,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5074054089,Nathanael R. Fillmore,15.0,2008.0,-9.0,younger,1024-04-07,False
+2023,2023-09-11,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,,A5049807926,Henry H. Wu,30.0,1993.0,6.0,same_age,1024-09-11,False
+2023,2023-01-10,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,3,existing_collab,,A5084930117,Ryan J. Gallagher,26.0,1997.0,2.0,same_age,1024-01-10,False
+2023,2023-09-08,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,,A5047517174,Brooke Foucault Welles,16.0,2007.0,-8.0,younger,1024-09-08,False
+2023,2023-01-10,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,,A5021330226,Randall Harp,16.0,2007.0,-8.0,younger,1024-01-10,False
+2023,2023-01-31,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5008021208,Marc A. Maier,34.0,1989.0,10.0,older,1024-01-31,False
+2023,2023-10-06,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5051502882,Bradford Demarest,10.0,2013.0,-14.0,younger,1024-10-06,False
+2023,2023-01-03,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,2,existing_collab,University of Vermont,A5089082846,Julia Witte Zimmerman,2.0,2021.0,-22.0,much_younger,1024-01-03,False
+2023,2023-10-06,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5092160841,Denis Hudon,0.0,2023.0,-24.0,much_younger,1024-10-06,False
+2023,2023-01-07,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5026024797,Jonathan St. Onge,5.0,2018.0,-19.0,much_younger,1024-01-07,False
+2023,2023-09-08,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,1,1,new_collab,University of Vermont,A5078442658,Milo Z. Trujillo,3.0,2020.0,-21.0,much_younger,1024-09-08,False
+2023,2023-04-29,A5040821463,Harvard University,Peter Sheridan Dodds,24,1999,2025,5,10,existing_collab,University of Vermont,A5036140974,Matthew Price,17.0,2006.0,-7.0,same_age,1024-04-28,False
