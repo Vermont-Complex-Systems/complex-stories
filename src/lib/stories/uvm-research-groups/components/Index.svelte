@@ -1,15 +1,11 @@
 <!-- src/routes/+page.svelte -->
 <script>
-  import { Plot, Dot, HTMLTooltip } from 'svelteplot';
   import Scrolly from '$lib/components/helpers/Scrolly.svelte';
-  import CombinedBubbleChart from './CombinedBubbleChart.svelte';
+  import MorphingChart from './MorphingChart.svelte';
+  import Hero from './Hero.svelte';
   import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
-  import coauthorData from "../data/dodds_coauthors.csv";
-  // import DoddsPaperData from "../data/dodds_papers.csv";
-  import embeddings from "../data/umap_results.csv";
-  import paperData from "../data/papers_2023_or_dodds.csv"
-  
-  let DoddsPaperData = $derived(paperData.filter(p => p.ego_aid === "A5040821463"));
+  import coauthorData from "../data/uvm_2023_or_dodds.csv";
+  import paperData from "../data/papers_uvm_2023_or_dodds.csv"
   
   let { story, data } = $props();
   
@@ -20,14 +16,14 @@
   let scrollyIndex = $state();
 </script>
 
-
 <svelte:head>
   <title>Academic Career Analysis</title>
 </svelte:head>
 
+<Hero {coauthorData} {paperData} />
 
 <section>
-  <h1>Academic Career Timeline: Collaborators & Publications</h1>
+  <h1>Academic Career Timeline: Collaborators & Publications (WIP)</h1>
   
   <div class="scrolly-container">
     <!-- Scrolling text on the left -->
@@ -50,10 +46,10 @@
 
     <!-- Combined chart on the right -->
     <div class="chart-container">
-      <CombinedBubbleChart 
+      <MorphingChart 
         {scrollyIndex} 
         {coauthorData}
-        paperData={DoddsPaperData} 
+        {paperData} 
         {width} 
         {height} 
       />
@@ -61,31 +57,7 @@
   </div>
 </section>
 
-<div class="plot-container">
-<Plot 
-    height={1000} width={1000} 
-    x={{ domain: [-6, 16], grid: true }} y={{ domain: [-5, 11], grid: true }}>
-    <Dot data={embeddings} x="umap_1" y="umap_2" />
-    {#snippet overlay()}
-        <HTMLTooltip
-            data={embeddings}
-            x="umap_1"
-            y="umap_2">
-            {#snippet children({ datum })}
-                <div>
-                    <div>Title: {datum.title}</div>
-                </div>
-            {/snippet}
-        </HTMLTooltip>
-    {/snippet}
-</Plot>
-</div>
-
 <style>
-  .plot-container {
-    margin-bottom: 1.5rem;
-  }
-
   section {
     padding: 2rem;
     max-width: 1600px;

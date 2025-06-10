@@ -1,14 +1,26 @@
+import * as d3 from 'd3';
+
 export function createCoauthorPoint(d, targetY) {
   const ageDiff = +d.age_diff;
-  let color = "#20A387FF"; // Same age (green)
   
+  // Use D3 color scale for age differences
+  const ageColorScale = d3.scaleOrdinal()
+    .domain(['older', 'same', 'younger'])
+    .range(['#404788FF', '#20A387FF', '#FDE725FF']);
+  
+  let color = ageColorScale('same'); // Default same age
   if (ageDiff > 7) {
-    color = "#404788FF"; // Older (blue)
+    color = ageColorScale('older');
   } else if (ageDiff < -7) {
-    color = "#FDE725FF"; // Younger (yellow)
+    color = ageColorScale('younger');
   }
 
-  const radius = Math.sqrt(+d.all_times_collabo || 1) * 2 + 3;
+  // Use D3 scale for radius based on collaborations
+  const radiusScale = d3.scaleSqrt()
+    .domain([1, 20]) // Typical collaboration range
+    .range([3, 9]); // Min and max radius
+  
+  const radius = radiusScale(+d.all_times_collabo || 1);
 
   return {
     x: 0, // Will be set during placement
@@ -31,12 +43,15 @@ export function createPaperPoint(d, targetY) {
   const citedBy = +d.cited_by_count || 0;
   const nbCoauthors = +d.nb_coauthors || 1;
   
-  // Just grey for papers - much simpler
   const color = "#888888"; // Grey for all papers
 
-  // Size based on citations with a maximum cap
-  const baseRadius = Math.sqrt(citedBy + 1) * 1.2 + 2;
-  const radius = Math.min(baseRadius, 10); // Cap at 15px radius
+  // Use D3 scale for paper radius based on citations
+  const citationScale = d3.scaleSqrt()
+    .domain([0, 1000]) // Typical citation range
+    .range([3, 15])    // Min and max radius
+    .clamp(true);      // Clamp to max radius
+  
+  const radius = citationScale(citedBy);
 
   return {
     x: 0, // Will be set during placement
@@ -76,10 +91,12 @@ export function canUseCenterLine(point, allPointsOfType) {
 }
 
 export function tryHorizontalPlacement(point, placedPoints, centerX, allPointsOfType) {
-  const maxOffset = 150; // Smaller since we have half the space
+  // Use D3 range for cleaner step generation
+  const maxOffset = 150;
   const step = 5;
+  const offsets = d3.range(0, maxOffset + 1, step);
   
-  for (let offset = 0; offset <= maxOffset; offset += step) {
+  for (const offset of offsets) {
     const positions = offset === 0 ? [0] : [offset, -offset];
     
     for (const xOffset of positions) {
@@ -102,14 +119,14 @@ export function tryHorizontalPlacement(point, placedPoints, centerX, allPointsOf
 
 export function tryVerticalPlacement(point, placedPoints, centerX) {
   const step = 5;
+  const maxYOffset = 100;
+  const yOffsets = d3.range(step, maxYOffset + 1, step);
+  const xOffsets = [0, 10, -10, 20, -20];
   
-  // Try moderate vertical offsets with small horizontal adjustments
-  for (let yOffset = step; yOffset <= 100; yOffset += step) {
+  for (const yOffset of yOffsets) {
     const yPositions = [yOffset, -yOffset];
     
     for (const yOff of yPositions) {
-      const xOffsets = [0, 10, -10, 20, -20];
-      
       for (const xOff of xOffsets) {
         const testX = centerX + xOff;
         const testY = point.y + yOff;
@@ -126,12 +143,19 @@ export function tryVerticalPlacement(point, placedPoints, centerX) {
 }
 
 export function tryFinalFallback(point, placedPoints, centerX) {
-  // Large vertical offsets with random horizontal placement
-  for (let yOffset = 105; yOffset <= 200; yOffset += 10) {
+  // Use D3 range for fallback positioning
+  const yOffsets = d3.range(105, 201, 10);
+  
+  for (const yOffset of yOffsets) {
     const yPositions = [yOffset, -yOffset];
     
     for (const yOff of yPositions) {
-      const testX = centerX + (Math.random() - 0.5) * 100;
+      // Use D3 random for horizontal placement
+      const randomScale = d3.scaleLinear()
+        .domain([0, 1])
+        .range([-50, 50]);
+      
+      const testX = centerX + randomScale(Math.random());
       const testY = point.y + yOff;
       
       if (!checkCollision(testX, testY, point, placedPoints)) {
@@ -150,77 +174,58 @@ export function placePoint(point, placedPoints, centerX, allPointsOfType) {
          tryFinalFallback(point, placedPoints, centerX);
 }
 
-export function processCombinedDataPoints(coauthorData, paperData, width, height) {
+export function processCombinedDataPoints(coauthorData, paperData, width, height, timeScale) {
   if ((!coauthorData || coauthorData.length === 0) && (!paperData || paperData.length === 0)) {
     return [];
   }
 
-  // Constants
-  const margin = 80;
-  const chartHeight = height - 2 * margin;
+  const xScale = d3.scaleLinear()
+    .domain([0, 1])
+    .range([0, width]);
   
-  // Define center lines - papers closer to the divider
-  const leftCenterX = width * 0.25; // Coauthors on left quarter
-  const rightCenterX = width * 0.6;  // Papers closer to center
+  const leftCenterX = xScale(0.25);  // Coauthors on left quarter
+  const rightCenterX = xScale(0.6);  // Papers closer to center
 
-  // Get the actual date range from ALL data and extend the max year (like the working version)
-  const allDates = [];
-  if (coauthorData) allDates.push(...coauthorData.map(d => new Date(d.pub_date)));
-  if (paperData) allDates.push(...paperData.map(d => new Date(d.pub_date)));
-  
-  const minDate = new Date(Math.min(...allDates));
-  const actualMaxDate = new Date(Math.max(...allDates));
-  
-  // Extend max year by 2 years for visual breathing room (exactly like working version)
-  const maxDate = new Date(actualMaxDate.getFullYear() + 2, 11, 31);
+  // FIXED: Consistent date parsing
+  const parseDate = (dateStr) => {
+    // Handle both YYYY-MM-DD and YYYY formats
+    if (dateStr.includes('-')) {
+      return new Date(dateStr);
+    } else {
+      return new Date(parseInt(dateStr), 0, 1); // January 1st of the year
+    }
+  };
 
-  // Group by exact publication date for natural jiggling
-  const byDate = new Map();
-  
-  // Add coauthor data
+  // Combine all data and parse dates consistently
+  const allData = [];
   if (coauthorData) {
-    coauthorData.forEach(d => {
-      const dateKey = d.pub_date;
-      if (!byDate.has(dateKey)) byDate.set(dateKey, []);
-      byDate.get(dateKey).push({ ...d, dataType: 'coauthor' });
-    });
+    allData.push(...coauthorData.map(d => ({...d, parsedDate: parseDate(d.pub_date), type: 'coauthor'})));
   }
-  
-  // Add paper data
   if (paperData) {
-    paperData.forEach(d => {
-      const dateKey = d.pub_date;
-      if (!byDate.has(dateKey)) byDate.set(dateKey, []);
-      byDate.get(dateKey).push({ ...d, dataType: 'paper' });
-    });
+    allData.push(...paperData.map(d => ({...d, parsedDate: parseDate(d.pub_date), type: 'paper'})));
   }
 
-  // Create ALL points first with their target Y positions based on exact dates (exactly like working version)
   const coauthorPoints = [];
   const paperPoints = [];
   
-  for (const [dateKey, dateData] of byDate) {
-    const pubDate = new Date(dateKey);
-    const dateProgress = (pubDate - minDate) / (maxDate - minDate);
-    const targetY = margin + dateProgress * chartHeight;
+  // Process each data point
+  for (const d of allData) {
+    const targetY = timeScale(d.parsedDate);
     
-    for (const d of dateData) {
-      if (d.dataType === 'coauthor') {
-        coauthorPoints.push(createCoauthorPoint(d, targetY));
-      } else {
-        paperPoints.push(createPaperPoint(d, targetY));
-      }
+    if (d.type === 'coauthor') {
+      coauthorPoints.push(createCoauthorPoint(d, targetY));
+    } else {
+      paperPoints.push(createPaperPoint(d, targetY));
     }
   }
 
-  // Sort each type separately
-  coauthorPoints.sort((a, b) => b.collabs - a.collabs);
-  paperPoints.sort((a, b) => b.cited_by_count - a.cited_by_count);
+  // Sort by importance
+  coauthorPoints.sort((a, b) => d3.descending(+a.collabs || 0, +b.collabs || 0));
+  paperPoints.sort((a, b) => d3.descending(+a.cited_by_count || 0, +b.cited_by_count || 0));
 
-  // Place points separately for each type
   const placedPoints = [];
   
-  // Place coauthor points on the left
+  // Place coauthor points
   for (const point of coauthorPoints) {
     if (placePoint(point, placedPoints, leftCenterX, coauthorPoints)) {
       placedPoints.push(point);
@@ -231,7 +236,7 @@ export function processCombinedDataPoints(coauthorData, paperData, width, height
     }
   }
   
-  // Place paper points on the right (closer to center)
+  // Place paper points
   for (const point of paperPoints) {
     if (placePoint(point, placedPoints, rightCenterX, paperPoints)) {
       placedPoints.push(point);
@@ -245,7 +250,7 @@ export function processCombinedDataPoints(coauthorData, paperData, width, height
   return [...coauthorPoints, ...paperPoints];
 }
 
-// Helper function to get the date range for grid alignment (exactly like working version)
+// FIXED: Simplified date range calculation
 export function getCombinedDataDateRange(coauthorData, paperData) {
   // Combine all data first
   const allData = [];
@@ -257,16 +262,25 @@ export function getCombinedDataDateRange(coauthorData, paperData) {
   }
   
   if (allData.length === 0) {
-    return [new Date('1999-01-01'), new Date('2027-12-31')];
+    return [new Date('1999-01-01'), new Date('2025-12-31')];
   }
   
-  // Use the exact same logic as the working single version
-  const allDates = allData.map(d => new Date(d.pub_date));
-  const minDate = new Date(Math.min(...allDates));
-  const actualMaxDate = new Date(Math.max(...allDates));
+  // Consistent date parsing
+  const parseDate = (dateStr) => {
+    if (dateStr.includes('-')) {
+      return new Date(dateStr);
+    } else {
+      return new Date(parseInt(dateStr), 0, 1);
+    }
+  };
   
-  // Extend max year by 2 years to match the processDataPoints function (exactly like working version)
-  const maxDate = new Date(actualMaxDate.getFullYear() + 2, 11, 31);
+  // Use D3 extent for clean min/max calculation
+  const allDates = allData.map(d => parseDate(d.pub_date));
+  const [minDate, maxDate] = d3.extent(allDates);
   
-  return [minDate, maxDate];
+  // Add some padding to the range
+  const paddedMinDate = new Date(minDate.getFullYear() - 1, 0, 1);
+  const paddedMaxDate = new Date(maxDate.getFullYear() + 1, 11, 31);
+  
+  return [paddedMinDate, paddedMaxDate];
 }
