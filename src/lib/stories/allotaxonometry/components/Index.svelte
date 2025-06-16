@@ -1,313 +1,159 @@
 <script lang="ts">
-  import Scrolly from "$lib/components/helpers/Scrolly.svelte";
-  import { Plot, Dot } from 'svelteplot';
-  import { Tween } from 'svelte/motion';
-  import { cubicOut } from 'svelte/easing';
+  import * as d3 from "d3";
+  import { combElems, rank_turbulence_divergence, diamond_count, wordShift_dat, balanceDat } from 'allotaxonometer-ui';
+  import { Dashboard } from 'allotaxonometer-ui';
+  import { Slider } from "bits-ui";
+  
+  import boys1895 from '../data/boys-1895.json';
+  import boys1968 from '../data/boys-1968.json';
 
-  let { story } = $props();
-  let value = $state();
-  let currentStep = $derived(story.steps[value]);
+      // Process the data directly
+    let sys1 = $state(boys1895);
+    let sys2 = $state(boys1968);
+    let alpha = $state(0.58);
+    let title = $state(['Boys 1895', 'Boys 1968']); // Make this mutable
 
-  // Create simple, fixed data points
-  const baseData = [
-    { id: 1, baseX: 0, baseY: 0 },
-    { id: 2, baseX: 1, baseY: 1 },
-    { id: 3, baseX: 2, baseY: 0.5 },
-    { id: 4, baseX: -1, baseY: -1 },
-    { id: 5, baseX: -0.5, baseY: 1.5 },
-    { id: 6, baseX: 1.5, baseY: -0.5 },
-    { id: 7, baseX: 0.5, baseY: 2 },
-    { id: 8, baseX: -1.5, baseY: 0.5 }
-  ];
+    let showSidebar = $state(true);
+  
+    let DashboardHeight = 815;
+    let DashboardWidth = 1200;
+    let DiamondHeight = 500;
+    let DiamondWidth = DiamondHeight;
+    let marginInner = 140;
+    let WordshiftWidth = 300;
+    let marginDiamond = 40;
+    
+    const alphas = d3.range(0,18).map(v => +(v/12).toFixed(2)).concat([1, 2, 5, Infinity]);
+    let alphaIndex = $state(7); // Start at 0.58
 
-  // Tweened transform parameters
-  const offsetX = new Tween(0, { duration: 800, easing: cubicOut });
-  const offsetY = new Tween(0, { duration: 800, easing: cubicOut });
-  const scaleX = new Tween(1, { duration: 600, easing: cubicOut });
-  const scaleY = new Tween(1, { duration: 600, easing: cubicOut });
-
-  // Transform the data based on tweened values
-  let plotData = $derived(
-    baseData.map(point => ({
-      id: point.id,
-      x: point.baseX * scaleX.current + offsetX.current,
-      y: point.baseY * scaleY.current + offsetY.current
-    }))
-  );
-
-  // Watch for scroll changes
-  $effect(() => {
-    if (value === undefined) {
-      offsetX.target = 0;
-      offsetY.target = 0;
-      scaleX.target = 1;
-      scaleY.target = 1;
-      return;
-    }
-
-    switch (value) {
-      case 0:
-        offsetX.target = 0;
-        offsetY.target = 0;
-        scaleX.target = 1;
-        scaleY.target = 1;
-        break;
-      case 1:
-        offsetX.target = 1.8;
-        offsetY.target = 0;
-        scaleX.target = 1;
-        scaleY.target = 1;
-        break;
-      case 2:
-        offsetX.target = 0;
-        offsetY.target = 0;
-        scaleX.target = 1.8;
-        scaleY.target = 1;
-        break;
-      case 3:
-        offsetX.target = 0;
-        offsetY.target = 1;
-        scaleX.target = -1;
-        scaleY.target = 0.5;
-        break;
-      case 4:
-        offsetX.target = 0;
-        offsetY.target = 0;
-        scaleX.target = 1.5;
-        scaleY.target = 1.5;
-        break;
-      default:
-        offsetX.target = 0;
-        offsetY.target = 0;
-        scaleX.target = 1;
-        scaleY.target = 1;
-    }
-  });
+    $effect(() => {
+        alpha = alphas[alphaIndex];
+    });
+    // Data processing
+    let me = $derived(sys1 && sys2 ? combElems(sys1, sys2) : null);
+    let rtd = $derived(me ? rank_turbulence_divergence(me, alpha) : null);
+    let dat = $derived(me && rtd ? diamond_count(me, rtd) : null);
+    
+    let barData = $derived(me && dat ? wordShift_dat(me, dat).slice(0, 30) : []);
+    let balanceData = $derived(sys1 && sys2 ? balanceDat(sys1, sys2) : []);
+    let maxlog10 = $derived(me ? Math.ceil(d3.max([Math.log10(d3.max(me[0].ranks)), Math.log10(d3.max(me[1].ranks))])) : 0);
+    let max_count_log = $derived(dat ? Math.ceil(Math.log10(d3.max(dat.counts, d => d.value))) + 1 : 2);
+    let max_shift = $derived(barData.length > 0 ? d3.max(barData, d => Math.abs(d.metric)) : 1);
+  
 </script>
-
-<section id="scrolly">
-  <div class="scrolly-container">
-    <!-- Scrolling text on the left -->
-    <div class="text-container">
-      <Scrolly bind:value>
-        {#each story.steps as step, i}
-          {@const active = value === i}
-          <div class="step" class:active>
-            <div class="step-content">
-              <div class="step-number">Step {i + 1}</div>
-              <h3>{step.data.event || `Step ${i + 1}`}</h3>
-              <p class="step-text">{step.text}</p>
-              <div class="step-meta">
-                <span class="year">{step.data.year}</span>
-              </div>
-            </div>
-          </div>
-        {/each}
-      </Scrolly>
-    </div>
-
-    <!-- Fixed visualization on the right -->
-    <div class="viz-container">
-      <div class="viz-content">
-        <h2>Data Transform: <span>{currentStep?.data.year || "Start"}</span></h2>
+<div class="app-layout">
+  {#if showSidebar}
+  <aside class="sidebar">
+      <div class="alpha-container">
         
-        <div class="plot-container">
-          <Plot grid maxWidth={500} height={400} 
-                x={{ domain: [-4, 4] }} 
-                y={{ domain: [-2, 4] }}>
-            <Dot data={plotData} 
-                 x="x" 
-                 y="y" 
-                 fill="#667eea" 
-                 opacity={0.8} 
-                 r={6} />
-          </Plot>
-        </div>
-        
-        <div class="stats">
-          <div class="stat">
-            <span class="label">Offset X:</span> 
-            <span class="value">{offsetX.current.toFixed(1)}</span>
-          </div>
-          <div class="stat">
-            <span class="label">Offset Y:</span> 
-            <span class="value">{offsetY.current.toFixed(1)}</span>
-          </div>
-          <div class="stat">
-            <span class="label">Scale X:</span> 
-            <span class="value">{scaleX.current.toFixed(1)}</span>
-          </div>
-          <div class="stat">
-            <span class="label">Scale Y:</span> 
-            <span class="value">{scaleY.current.toFixed(1)}</span>
-          </div>
-        </div>
+          <span class="alpha-value">α={alpha}</span>
 
-        {#if !currentStep}
-          <p class="start-message">Scroll down to see the transformation</p>
-        {/if}
-      </div>
-    </div>
-  </div>
-</section>
+          <input 
+            type="range"
+            min="0"
+            max={alphas.length - 1}
+            value={alphaIndex}
+            oninput={(e) => alphaIndex = parseInt(e.target.value)}
+            list="alpha-settings"
+            class="myslider"
+          />
+          
+          <datalist id="alpha-settings">
+            {#each alphas as ax, i}
+              <option value={i} label={ax}></option>
+            {/each}
+          </datalist>
+  </aside>
+{/if}
+
+<main class="dashboard-wrapper">
+<Dashboard 
+    {dat}
+    {alpha}
+    divnorm={rtd.normalization}
+    {barData}
+    {balanceData}
+    {title}
+    {maxlog10}
+    {max_count_log}
+    height={DashboardHeight}
+    width={DashboardWidth}
+    {DiamondHeight}
+    {DiamondWidth}
+    {marginInner}
+    {marginDiamond}
+    {WordshiftWidth}
+    xDomain={[-max_shift * 1.5, max_shift * 1.5]}
+/>
+</main>
+</div>
+
 
 <style>
-  #scrolly {
-    min-height: 100vh;
+
+
+.myslider {
+  width: 100%;
+  height: 0.5rem;
+  background-color: #e5e7eb; /* gray-200 in Tailwind */
+  border-radius: 0.5rem;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+
+.alpha-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.alpha-container > * + * {
+  margin-top: 1rem; /* Replicates space-y-4 */
+}
+
+
+.alpha-value {
+  font-size: 1rem; /* text-2xl */
+  font-family: monospace; /* font-mono */
+}
+
+
+
+@media (max-width: 768px) {
+  .app-layout {
+    flex-direction: column;
   }
 
-  .scrolly-container {
-    display: flex;
-    min-height: 100vh;
-    max-width: 1200px;
-    margin: 0 auto;
-    gap: 2rem;
-  }
-
-  .text-container {
-    flex: 1;
-    min-width: 0; /* Allow flex shrinking */
-  }
-
-  .viz-container {
-    flex: 1;
-    position: sticky;
-    top: 2rem;
-    height: 90vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .viz-content {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-    border: 1px solid #e2e8f0;
-    padding: 2rem;
+  .sidebar {
     width: 100%;
-    max-width: 600px;
-    text-align: center;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
   }
+}
 
-  .viz-content h2 {
-    margin: 0 0 1.5rem 0;
-    font-size: 1.5rem;
-    color: #2d3748;
-  }
 
-  .viz-content h2 span {
-    color: #667eea;
-    font-weight: bold;
-  }
+.app-layout {
+  display: flex;
+  height: 100vh;           /* Full screen height */
+  width: 100vw;           
+  overflow: hidden;
+}
 
-  .plot-container {
-    margin-bottom: 1.5rem;
-  }
+.sidebar {
+  width: 150px;            /* Set your sidebar width */
+  background: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+  padding: 1.5rem;         /* Matches p-6 */
+  overflow-y: auto;
+  box-sizing: border-box;
+}
 
-  .stats {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    font-family: monospace;
-    font-size: 0.8rem;
-  }
+.dashboard-wrapper {
+  flex: 1;
+  overflow: auto;
+  padding: .5rem;
+  background: white;
+}
 
-  .stat {
-    background: #f7fafc;
-    padding: 0.5rem;
-    border-radius: 4px;
-    min-width: 80px;
-  }
-
-  .label {
-    color: #4a5568;
-  }
-
-  .value {
-    color: #667eea;
-    font-weight: bold;
-  }
-
-  .start-message {
-    color: #718096;
-    font-size: 1.1rem;
-    margin-top: 1rem;
-  }
-
-  /* Text container styles */
-  .step {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    padding: 2rem;
-    opacity: 0.3;
-    transition: opacity 0.3s ease;
-  }
-
-  .step.active {
-    opacity: 1;
-  }
-
-  .step-content {
-    max-width: 500px;
-  }
-
-  .step-number {
-    font-family: monospace;
-    font-size: 0.9rem;
-    color: #667eea;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-  }
-
-  .step h3 {
-    font-size: 1.8rem;
-    margin: 0 0 1rem 0;
-    color: #2d3748;
-    line-height: 1.2;
-  }
-
-  .step-text {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: #4a5568;
-    margin: 0 0 1rem 0;
-  }
-
-  .step-meta {
-    font-family: monospace;
-    font-size: 0.9rem;
-    color: #718096;
-  }
-
-  .year {
-    background: #edf2f7;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-weight: bold;
-  }
-
-  /* Responsive design */
-  @media (max-width: 768px) {
-    .scrolly-container {
-      flex-direction: column;
-    }
-
-    .viz-container {
-      position: relative;
-      height: auto;
-      order: -1; /* Put viz on top on mobile */
-    }
-
-    .viz-content {
-      margin-bottom: 2rem;
-    }
-
-    .step {
-      min-height: 60vh;
-      padding: 1rem;
-    }
-  }
 </style>

@@ -30,7 +30,8 @@
 	"dependencies": {
 		"@lucide/svelte": "^0.511.0",
 		"@rollup/plugin-dsv": "^3.0.5",
-		"bits-ui": "^1.6.0",
+		"allotaxonometer-ui": "^0.1.8",
+		"bits-ui": "^2.8.0",
 		"d3": "^7.9.0",
 		"d3-array": "^3.2.4",
 		"d3-random": "^3.0.1",
