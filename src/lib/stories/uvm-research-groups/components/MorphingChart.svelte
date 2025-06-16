@@ -130,7 +130,8 @@
     2: { yearRange: [1999, 2025], colorMode: 'shared_institutions', highlightedAuthor: null, viewMode: 'normal', translateToYear: 2018 },
     3: { yearRange: [2006, 2017], colorMode: 'age_diff', highlightedAuthor: null, viewMode: 'normal', translateToYear: 2023 },
     4: { yearRange: [1999, 2025], colorMode: 'age_diff', highlightedAuthor: 'A5002034958', viewMode: 'overview' },
-    5: { yearRange: [2006, 2025], colorMode: 'age_diff', highlightedAuthor: null, viewMode: 'normal' }
+    5: { yearRange: [1999, 2025], colorMode: 'age_diff', highlightedAuthor: 'A5078987306', viewMode: 'overview' },
+    6: { yearRange: [2006, 2025], colorMode: 'shared_institutions', highlightedAuthor: null, viewMode: 'normal' }
   };
 
   // Apply step configuration

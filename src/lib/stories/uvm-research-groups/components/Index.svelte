@@ -23,7 +23,7 @@
 <Hero {coauthorData} {paperData} />
 
 <section>
-  <h1>Academic Career Timeline: Collaborators & Publications (WIP)</h1>
+  <h1>Academic Career Timeline: Collaborators & Publications</h1>
   
   <div class="scrolly-container">
     <!-- Scrolling text on the left -->

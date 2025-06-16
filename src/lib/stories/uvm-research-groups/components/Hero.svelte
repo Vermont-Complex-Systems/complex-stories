@@ -117,7 +117,7 @@
     <svg bind:this={svgElement} width="100%" height="100%">
         <!-- Title -->
       <text x={svgWidth/2} y="40" text-anchor="middle" class="title">
-        How does research and collaboration co-evolve over time?
+        How does research and collaboration co-evolve over time?  (WIP)
       </text>
       <!-- Left section: Collaborators -->
       <text x={svgWidth*0.13} y={svgHeight/2} text-anchor="middle" class="section">

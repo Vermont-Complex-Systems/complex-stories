@@ -59,7 +59,16 @@
     },
     {
       "type": "markdown",
-      "value": "**Full Career Timeline (1999-2023)**: The complete picture reveals the dramatic growth in collaboration density over time. The size of each circle represents the total number of collaborations with that person.",
+      "value": "**Power of two**: Also we can look at repeated collaboration over time we presumable grad students.",
+      "data": {
+        "year": "2008-2015", 
+        "event": "Complete Overview",
+        "focus": "Full network expansion"
+      }
+    },
+    {
+      "type": "markdown",
+      "value": "**Full Career Timeline (1999-2023)**: The complete picture reveals the dramatic growth in collaboration density over time. Not all researchers are like that. It varies dramatically by domain, and even within a domain. Some researchers collaborate extensively outside of their home institutions",
       "data": {
         "year": "1999-2023", 
         "event": "Complete Overview",
