@@ -1,12 +1,8 @@
 <script>
     import { Button } from "bits-ui";
     
-    let { isDarkMode = $bindable(false) } = $props();
+    let { toggleTheme, isDarkMode } = $props();
     
-    function toggleTheme() {
-        isDarkMode = !isDarkMode;
-        document.documentElement.classList.toggle('dark', isDarkMode);
-    }
 </script>
 
 <div class="theme-toggle">

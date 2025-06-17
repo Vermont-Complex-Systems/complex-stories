@@ -6,25 +6,30 @@
     import StatusCard from './sidebar/StatusCard.svelte';
     
     let { 
-        sidebarCollapsed = $bindable(false),
+        collapsed = false,
+        onToggle,
         sys1 = $bindable(null),
         sys2 = $bindable(null),
         title = $bindable(['System 1', 'System 2']),
         alpha = $bindable(0.58),
+        alphaIndex = $bindable(7),
+        alphas,
+        handleFileUpload,
+        uploadStatus,
         me,
         rtd,
         isDataReady
     } = $props();
 </script>
 
-<aside class="sidebar" style="width: {sidebarCollapsed ? '4rem' : '15rem'}">
+<aside class="sidebar" style="width: {collapsed ? '4rem' : '15rem'}">
     <div class="sidebar-header">
-        {#if !sidebarCollapsed}
+        {#if !collapsed}
             <h2 class="sidebar-title">Allotaxonograph</h2>
         {/if}
-        <Button.Root onclick={() => sidebarCollapsed = !sidebarCollapsed} variant="ghost" size="sm">
+        <Button.Root onclick={onToggle} variant="ghost" size="sm">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                {#if sidebarCollapsed}
+                {#if collapsed}
                     <path d="M9 18l6-6-6-6"/>
                 {:else}
                     <path d="M15 18l-6-6 6-6"/>
@@ -33,11 +38,11 @@
         </Button.Root>
     </div>
     
-    {#if !sidebarCollapsed}
+    {#if !collapsed}
         <div class="sidebar-content">
             <Accordion.Root type="multiple" value={["upload", "alpha", "info"]} class="accordion">
-                <UploadSection bind:sys1 bind:sys2 bind:title />
-                <AlphaControl bind:alpha />
+                <UploadSection bind:sys1 bind:sys2 bind:title {handleFileUpload} {uploadStatus} />
+                <AlphaControl bind:alpha bind:alphaIndex {alphas} />
                 <DataInfo {title} {me} {rtd} {isDataReady} />
             </Accordion.Root>
 
@@ -65,6 +70,7 @@
         </div>
     {/if}
 </aside>
+
 
 <style>
     /* Sidebar styles */

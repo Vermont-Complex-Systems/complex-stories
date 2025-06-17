@@ -54,7 +54,7 @@
     }
 
     .alpha-value {
-        font-size: 1.75rem;
+        font-size: 1rem;
         font-family: monospace;
         font-weight: 600;
         color: var(--text-primary);

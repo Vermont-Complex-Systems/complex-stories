@@ -1,22 +1,33 @@
 <script>
-  import * as d3 from "d3";
-  import { Dashboard } from 'allotaxonometer-ui';
-  import { combElems, rank_turbulence_divergence, diamond_count, wordShift_dat, balanceDat } from 'allotaxonometer-ui';
-  import ThemeToggle from './ThemeToggle.svelte';
-  import Sidebar from './Sidebar.svelte';
+    import * as d3 from "d3";
+    import { Dashboard } from 'allotaxonometer-ui';
+    import { combElems, rank_turbulence_divergence, diamond_count, wordShift_dat, balanceDat } from 'allotaxonometer-ui';
+    import ThemeToggle from './ThemeToggle.svelte';
+    import Sidebar from './Sidebar.svelte';
     
+    // Import default data
     import boys1895 from '../data/boys-1895.json';
     import boys1968 from '../data/boys-1968.json';
 
-    // Process the data directly
+    // =============================================================================
+    // LOCAL STATE
+    // =============================================================================
+    
+    // Data systems
     let sys1 = $state(boys1895);
     let sys2 = $state(boys1968);
-    let alpha = $state(0.58);
-    let title = $state(['Boys 1895', 'Boys 1968']); // Make this mutable
-    
+    let title = $state(['Boys 1895', 'Boys 1968']);
+
+    // UI State
     let sidebarCollapsed = $state(false);
     let isDarkMode = $state(false);
 
+    // Alpha parameter
+    let alpha = $state(0.58);
+    const alphas = d3.range(0,18).map(v => +(v/12).toFixed(2)).concat([1, 2, 5, Infinity]);
+    let alphaIndex = $state(7); // Start at 0.58
+
+    // Dashboard dimensions
     let DashboardHeight = 815;
     let DashboardWidth = $derived(sidebarCollapsed ? 1200 : 900);
     let DiamondHeight = 600;
@@ -25,14 +36,49 @@
     let marginDiamond = 40;
     let WordshiftWidth = $derived(sidebarCollapsed ? 550 : 400);
 
-    const alphas = d3.range(0,18).map(v => +(v/12).toFixed(2)).concat([1, 2, 5, Infinity]);
-    let alphaIndex = $state(7); // Start at 0.58
+    // File upload
+    let uploadStatus = $state('');
+
 
     $effect(() => {
         alpha = alphas[alphaIndex];
     });
 
-    // Data processing
+    function toggleSidebar() {
+        sidebarCollapsed = !sidebarCollapsed;
+    }
+
+    function toggleTheme() {
+        isDarkMode = !isDarkMode;
+        document.documentElement.classList.toggle('dark', isDarkMode);
+    }
+
+    async function handleFileUpload(file, system) {
+        try {
+            uploadStatus = `Loading ${system}...`;
+            const text = await file.text();
+            const data = JSON.parse(text);
+            
+            if (system === 'sys1') {
+                sys1 = data;
+                title[0] = file.name.replace('.json', '');
+            } else {
+                sys2 = data;
+                title[1] = file.name.replace('.json', '');
+            }
+            
+            uploadStatus = `${system.toUpperCase()} loaded successfully!`;
+            setTimeout(() => uploadStatus = '', 3000);
+        } catch (error) {
+            uploadStatus = `Error loading ${system}: ${error.message}`;
+            setTimeout(() => uploadStatus = '', 5000);
+        }
+    }
+
+    // =============================================================================
+    // DATA PROCESSING PIPELINE
+    // =============================================================================
+    
     let me = $derived(sys1 && sys2 ? combElems(sys1, sys2) : null);
     let rtd = $derived(me ? rank_turbulence_divergence(me, alpha) : null);
     let dat = $derived(me && rtd ? diamond_count(me, rtd) : null);
@@ -46,61 +92,65 @@
 </script>
 
 <div class="dashboard-app">
-    <ThemeToggle bind:isDarkMode />
+    <ThemeToggle {toggleTheme} {isDarkMode} />
     
     <div class="app-container">
         <div class="layout">
             <Sidebar 
-                bind:sidebarCollapsed 
+                collapsed={sidebarCollapsed}
+                onToggle={toggleSidebar}
                 bind:sys1 
-                bind:sys2 
-                bind:title 
-                bind:alpha 
-                {me} 
-                {rtd} 
-                {isDataReady} 
+                bind:sys2
+                bind:title
+                bind:alpha
+                bind:alphaIndex
+                {alphas}
+                {handleFileUpload}
+                {uploadStatus}
+                {me}
+                {rtd}
+                {isDataReady}
             />
 
-        <!-- Main Content -->
-        <main class="main-content {sidebarCollapsed ? 'collapsed-sidebar' : ''}">
-            {#if isDataReady}
-                <Dashboard 
-                    {dat}
-                    {alpha}
-                    divnorm={rtd.normalization}
-                    {barData}
-                    {balanceData}
-                    {title}
-                    {maxlog10}
-                    {max_count_log}
-                    height={DashboardHeight}
-                    width={DashboardWidth}
-                    {DiamondHeight}
-                    {DiamondWidth}
-                    {marginInner}
-                    {marginDiamond}
-                    {WordshiftWidth}
-                    xDomain={[-max_shift * 1.5, max_shift * 1.5]}
-                    class="dashboard"
-                />
-            {:else}
-                <div class="loading-container">
-                    <div class="loading-content">
-                        <div class="spinner"></div>
-                        <p class="loading-text">Loading dashboard...</p>
+            <!-- Main Content -->
+            <main class="main-content {sidebarCollapsed ? 'collapsed-sidebar' : ''}">
+                {#if isDataReady}
+                    <Dashboard 
+                        {dat}
+                        {alpha}
+                        divnorm={rtd.normalization}
+                        {barData}
+                        {balanceData}
+                        {title}
+                        {maxlog10}
+                        {max_count_log}
+                        height={DashboardHeight}
+                        width={DashboardWidth}
+                        {DiamondHeight}
+                        {DiamondWidth}
+                        {marginInner}
+                        {marginDiamond}
+                        {WordshiftWidth}
+                        xDomain={[-max_shift * 1.5, max_shift * 1.5]}
+                        class="dashboard"
+                    />
+                {:else}
+                    <div class="loading-container">
+                        <div class="loading-content">
+                            <div class="spinner"></div>
+                            <p class="loading-text">Loading dashboard...</p>
+                        </div>
                     </div>
-                </div>
-            {/if}
-        </main>
+                {/if}
+            </main>
+        </div>
     </div>
-</div>
 </div>
 
 <style>
     @import '../styles/app.css';
 
-    /* OVERRIDES */
-    
+    /* Component-specific overrides */
     .dashboard-app :global(button) {
         background: transparent !important;
         color: var(--dash-text-primary) !important;
