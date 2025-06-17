@@ -1,0 +1,6 @@
+/* Main CSS file - imports all other styles */
+
+@import './variables.css';
+@import './layout.css';
+@import './sidebar.css';
+@import './components.css';
