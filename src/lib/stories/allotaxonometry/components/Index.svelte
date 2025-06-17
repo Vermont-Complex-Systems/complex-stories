@@ -48,11 +48,6 @@
         sidebarCollapsed = !sidebarCollapsed;
     }
 
-    function toggleTheme() {
-        isDarkMode = !isDarkMode;
-        document.documentElement.classList.toggle('dark', isDarkMode);
-    }
-
     async function handleFileUpload(file, system) {
         try {
             uploadStatus = `Loading ${system}...`;
@@ -92,7 +87,7 @@
 </script>
 
 <div class="dashboard-app">
-    <ThemeToggle {toggleTheme} {isDarkMode} />
+    <ThemeToggle bind:isDarkMode />
     
     <div class="app-container">
         <div class="layout">

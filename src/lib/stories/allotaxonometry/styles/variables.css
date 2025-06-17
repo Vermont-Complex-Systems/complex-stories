@@ -14,7 +14,8 @@
     --radius: 6px;
 }
 
-:global(.dark) {
+/* Dark theme - remove :global() wrapper */
+.dark {
     --bg-primary: #0f0f0f;
     --bg-secondary: #1a1a1a;
     --text-primary: #f5f5f5;
