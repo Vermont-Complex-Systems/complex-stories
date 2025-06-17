@@ -2,23 +2,15 @@
     "steps": [
     {
       "type": "markdown",
-      "value": "Lets start with an empty canvas. Just the diamond plot."
+      "value": "This is the diamond plot. The axis here represents the rank for different types for a pair of systems. If John and James are very frequent, exactly as frequent, they will rank both high on the axis, and sit on the diagonal."
     },
     {
       "type": "markdown",
-      "value": "Lets have the rects show up on the middle line."
+      "value": "As we saw John was the most popular baby name in 1895, while it was ranked third in 1968. Now, you'll notice that as you hover on less frequent types, they tend to have more types in it. This is because each cell represents the number of times a baby names appear; there is only one John, appearing 8 thousands times, while there are many names that appear only once or twice, like 'Alpheus' or 'Woodie'. The legend shows the number of counts per cell, that is how many types have ranked in that cell. "
     },
     {
       "type": "markdown",
-      "value": "We fill one side, smooth transition."
-    },
-    {
-      "type": "markdown",
-      "value": "We fill the other side."
-    },
-    {
-      "type": "markdown",
-      "value": "Lets show the other plots."
+      "value": "If we look at 1968, we can see that Michael was in the tail in 1895, before taking the first rank in 1968. The bottom right plot help keeping track of the contribution from each system in the shared vocabulary, as we throw out any names that are not shared between the two systems."
     }
   ]
 }
