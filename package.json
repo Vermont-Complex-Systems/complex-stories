@@ -45,6 +45,6 @@
 		"rehype-katex": "^7.0.1",
 		"remark-math": "^6.0.0",
 		"svelte-exmarkdown": "^5.0.1",
-		"svelteplot": "^0.2.8"
+		"svelteplot": "^0.3.5"
 	}
 }
