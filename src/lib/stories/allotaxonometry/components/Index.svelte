@@ -1,5 +1,6 @@
 <script>
     import * as d3 from "d3";
+    import { base } from '$app/paths';
     import { Dashboard } from 'allotaxonometer-ui';
     import { combElems, rank_turbulence_divergence, diamond_count, wordShift_dat, balanceDat } from 'allotaxonometer-ui';
     import ThemeToggle from './ThemeToggle.svelte';
@@ -86,7 +87,14 @@
     let isDataReady = $derived(dat && barData && balanceData && me && rtd);
 </script>
 
+
 <div class="dashboard-app">
+    <div class="logo-container">
+		<a href="{base}/" class="logo-link">
+			<img src="{base}/octopus-swim-left.png" alt="Home" class="logo" />
+		</a>
+	</div>
+    
     <ThemeToggle bind:isDarkMode />
     
     <div class="app-container">
@@ -145,6 +153,30 @@
 <style>
     @import '../styles/app.css';
 
+    .logo-container {
+		max-width: 250px;
+		transition: transform var(--transition-medium) ease;
+        position: absolute;
+        top: 1rem;
+        right: 3.5rem;
+        z-index: 1001;
+	}
+
+    .logo-container:hover {
+		transform: rotate(var(--left-tilt)) scale(1.05);
+	}
+
+    .logo-link {
+		display: block;
+		border: none;
+	}
+	
+	.logo {
+		width: 100%;
+		height: auto;
+		border-radius: var(--border-radius);
+		max-height: 4rem;
+	}
     /* Component-specific overrides */
     .dashboard-app :global(button) {
         background: transparent !important;

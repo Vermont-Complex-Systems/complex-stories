@@ -16,7 +16,7 @@
     <Accordion.Content class="accordion-content">
         <div class="alpha-control">
             <div class="alpha-display">
-                <span class="alpha-value">α={alpha}</span>
+                <span class="alpha-value">α = {alpha}</span>
             </div>
             
             <div class="slider-container">
@@ -55,7 +55,7 @@
 
     .alpha-value {
         font-size: 1rem;
-        font-family: monospace;
+        font-family: "EB Garamond", "Garamond", "Century Schoolbook L", "URW Bookman L", "Bookman Old Style", "Times", serif;
         font-weight: 600;
         color: var(--text-primary);
     }

@@ -4,3 +4,11 @@
 @import './layout.css';
 @import './sidebar.css';
 @import './components.css';
+
+[data-separator-root] {
+    margin-top: 1.2rem;   /* my-4 = 1rem top */
+    margin-bottom: 1.2rem;/* my-4 = 1rem bottom */
+    flex-shrink: 0;     /* shrink-0 */
+    height: 1px;        /* h-px */
+    width: 100%;        /* w-full */
+}

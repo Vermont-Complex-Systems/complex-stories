@@ -1,5 +1,5 @@
 <script>
-    import { Accordion, Button } from "bits-ui";
+    import { Accordion, Button, Separator } from "bits-ui";
     import UploadSection from './sidebar/UploadSection.svelte';
     import AlphaControl from './sidebar/AlphaControl.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
@@ -42,7 +42,9 @@
         <div class="sidebar-content">
             <Accordion.Root type="multiple" value={["upload", "alpha", "info"]} class="accordion">
                 <UploadSection bind:sys1 bind:sys2 bind:title {handleFileUpload} {uploadStatus} />
+                <Separator.Root/>
                 <AlphaControl bind:alpha bind:alphaIndex {alphas} />
+                <Separator.Root/>
                 <DataInfo {title} {me} {rtd} {isDataReady} />
             </Accordion.Root>
 
@@ -174,4 +176,5 @@
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
     }
+
 </style>
