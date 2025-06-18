@@ -1,14 +1,12 @@
 <script>
     import * as d3 from "d3";
-    import { base } from "$app/paths";
     import { fade, fly } from 'svelte/transition';
-    import ThemeToggle from './ThemeToggle.svelte';
-
     import { innerWidth } from 'svelte/reactivity/window';
     import { Diamond, Legend, DivergingBarChart, Dashboard } from 'allotaxonometer-ui';
     import { combElems, rank_turbulence_divergence, diamond_count, wordShift_dat, balanceDat } from 'allotaxonometer-ui';
     import BarChartRank from './BarChartRank.svelte';
     import Slider from './Slider.svelte';
+    import Nav from './Nav.svelte';
 
     import boys1895 from '../data/boys-1895.json';
     import boys1968 from '../data/boys-1968.json';
@@ -48,16 +46,34 @@
     let max_count_log = $derived(dat ? Math.ceil(Math.log10(d3.max(dat.counts, d => d.value))) + 1 : 2);
     let isDataReady = $derived(dat && barData && balanceData && me && rtd);
 
-    $effect(() => { alpha = alphas[alphaIndex]; });
+    $effect(() => { 
+        alpha = alphas[alphaIndex]; }
+    );
 
-     // Use $derived instead of $effect for state synchronization
+    // Track scrolly progress to distinguish entering vs leaving the section
+    let maxStepReached = $state(0);
+    let hasStartedScrolly = $derived(maxStepReached > 0);
+
+    $effect(() => {
+        if (scrollyIndex !== undefined) {
+            maxStepReached = Math.max(maxStepReached, scrollyIndex);
+        }
+    });
+
+    // Determine effective step: distinguish between entering (start at 0) vs leaving (keep final state)
+    let effectiveStep = $derived(
+        scrollyIndex !== undefined 
+            ? scrollyIndex  // We're in the scrolly section - use actual step
+            : hasStartedScrolly 
+                ? maxStepReached  // We've left the scrolly section - maintain final state
+                : 0  // We're entering the scrolly section - start at step 0
+    );
+
+    // Update your renderedData to use effectiveStep:
     let renderedData = $derived.by(() => {
         if (!dat || !barData) return null;
-            
-        // Treat undefined scrollyIndex as step 0 (initial state)
-        const currentStep = scrollyIndex ?? 0;
         
-        switch (currentStep) {
+        switch (effectiveStep) {
             case 0:
                 return {
                     ...dat,
@@ -81,30 +97,16 @@
                     }))
                 };
                 
-            case 2:
+            default: // case 2 and beyond
                 return dat;
-                
-            default:
-                return null;
         }
     });
 
-    $inspect(scrollyIndex)
+
+
 </script>
 
-<div class="sticky-header">
-    <div class="header-controls">
-        <div class="logo-container">
-            <a href="{base}/" class="logo-link">
-                <img src="{base}/octopus-swim-left.png" alt="Home" class="logo" />
-            </a>
-        </div>
-        
-        <ThemeToggle bind:isDarkMode />
-    </div>
-</div>
-
-
+<Nav bind:isDarkMode />
 
 <section>
     <h1>A whirlwind tour of the <a href="https://vermont-complex-systems.github.io/complex-stories/allotaxonometry" target="_blank">allotaxonometer</a></h1>
@@ -129,8 +131,8 @@
         {#if isDataReady && renderedData}
             <div class="visualization-container">
                 <!-- Diamond plot: show for steps 0, 1, 2 (including undefined as 0) -->
-                {#if (scrollyIndex ?? 0) >= 0 && (scrollyIndex ?? 0) <= 2}
-                <div class="diamondplot" out:fly={{ y: -50, duration: 800 }}>
+                {#if effectiveStep >= 0}
+                <div class="diamondplot">
                     <Diamond
                         dat={renderedData} 
                         {alpha} 
@@ -144,14 +146,13 @@
                 </div>
                 {/if}
                 
-                <!-- Additional charts: show for steps 1, 2 -->
-                {#if (scrollyIndex ?? 0) >= 1 && (scrollyIndex ?? 0) <= 2}
+                <!-- Additional charts: show from step 1 onwards (no upper limit) -->
+                {#if effectiveStep >= 1}
                     <div class="additional-charts" 
                         in:fade={{ duration: 800, delay: 300 }}
                     >
                         <div class="legend-container" 
-                            in:fly={{ x: -50, duration: 600, delay: 500 }}
-                            out:fly={{  x: -50, duration: 800, delay: 300 }}>
+                            in:fly={{ x: -50, duration: 600, delay: 500 }}>
                             <Legend
                                 diamond_dat={dat.counts}
                                 DiamondHeight={DiamondHeight}
@@ -159,8 +160,8 @@
                             />
                         </div>
                         
-                        <!-- Balance chart: always present for positioning, but opacity controlled -->
-                        <div class="balance-container" style="opacity: {(scrollyIndex ?? 0) >= 2 ? 1 : 0};">
+                        <!-- Balance chart: visible from step 2 onwards -->
+                        <div class="balance-container" style="opacity: {effectiveStep >= 2 ? 1 : 0};">
                             <DivergingBarChart
                                 data={balanceData}
                                 DiamondHeight={DiamondHeight}
@@ -180,7 +181,7 @@
             {@const active = scrollyIndex === i}
             <div class="step" class:active>
                 <p> 
-                    <Md text={"Step: " + i + " " + text.value}/>
+                    <Md text={text.value}/>
                 </p>
             </div>
         {/each}
@@ -215,77 +216,11 @@
     </div>
     
 <p>We also show how the α parameter let us tweak the relative importance of the divergence metric. Try α = ∞, you will see that types tend to be correlated with their frequency, with Michael at the top. By contrast, α = 0 allow us to inspect what is happenning further down in the tail. We also finally learn what those contour lines mean! </p>
+
 </section>
 
 
 <style>
-    .sticky-header :global(button) {
-        background: transparent !important;
-        color: var(--dash-text-primary) !important;
-        border: 1px solid var(--dash-border-color) !important;
-        padding: 0.5rem !important;
-    }
-
-    .sticky-header :global(button:hover) {
-        background: var(--dash-bg-secondary) !important;
-    }
-
-    .sticky-header {
-        position: sticky;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-        pointer-events: none;
-        width: 100vw; /* Full viewport width */
-        margin-left: calc(-50vw + 50%); /* Break out of any container */
-        height: auto; /* Let content determine height */
-    }
-
-    .header-controls {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 1rem;
-        pointer-events: auto;
-        padding: 1rem 3.4rem 1rem 1rem;
-        width: 100%;
-        /* Removed absolute positioning */
-    }
-
-    .logo-container {
-        max-width: 250px;
-        transition: transform var(--transition-medium) ease;
-        flex-shrink: 0; /* Prevent logo from shrinking */
-    }
-
-    .logo-container:hover {
-        transform: rotate(var(--left-tilt)) scale(1.05);
-    }
-
-    .logo-link {
-        display: block;
-        border: none;
-    }
-    
-    .logo {
-        width: 100%;
-        height: auto;
-        border-radius: var(--border-radius);
-        max-height: 3rem;
-    }
-
-    @media (max-width: 768px) {
-        .header-controls {
-            padding: 0.5rem;
-            gap: 0.5rem;
-        }
-        
-        .logo {
-            max-height: 2.5rem;
-        }
-    }
-
 	section {
 		margin: 2rem auto;
 		max-width: 1200px;
@@ -385,24 +320,39 @@
 	}
 
 	.step p {
-		padding: 0.5rem 1rem;
-		background: whitesmoke;
-		color: #ccc;
-		border-radius: 5px;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		transition: background 500ms ease, color 500ms ease;
-		box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
-		z-index: 10;
-		width: 40%;
-		transform: translateX(-60%);
-	}
+        padding: 0.5rem 1rem;
+        background: var(--step-bg, #f5f5f5);
+        color: var(--step-text, #ccc);
+        border-radius: 5px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        box-shadow: var(--step-shadow, 1px 1px 10px rgba(0, 0, 0, 0.2));
+        z-index: 10;
+        transition: background 500ms ease, color 500ms ease, box-shadow 500ms ease;
+        width: 40%;
+        transform: translateX(-60%);
+    }
 
-	.step.active p {
-		background: white;
-		color: black;
-	}
+    
+    .step.active p {
+        background: var(--step-active-bg, white);
+        color: var(--step-active-text, black);
+        box-shadow: var(--step-active-shadow, 1px 1px 10px rgba(0, 0, 0, 0.2));
+    }
+    
+    /* Dark mode overrides */
+    :global(.dark) .step p {
+        --step-bg: #2a2a2a;
+        --step-text: #888;
+        --step-shadow: 1px 1px 10px rgba(227, 227, 227, 0.5);
+    }
+
+    :global(.dark) .step.active p {
+        --step-active-bg: #383838;
+        --step-active-text: #fff;
+        --step-active-shadow: 1px 1px 10px rgba(230, 230, 230, 0.5);
+    }
 
 	@media (max-width: 1200px) {
 		section {
@@ -419,7 +369,7 @@
 			top: calc(50vh - 275px);
 			width: 100%;
 			max-width: 600px;
-			margin: 2rem auto;
+			margin: 2rem 0 2rem auto; /* Keep right-aligned like desktop */
 			display: flex;
 			justify-content: center;
 			align-items: center;
