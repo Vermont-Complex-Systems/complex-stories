@@ -7,12 +7,13 @@
 	
 	let { children } = $props();
 	
-	// Check if we're on a story page (individual story route)
+	// Check if we're on a story page (individual story route) or blog post
 	let isStoryPage = $derived(page.route.id === '/[slug]');
+	let isBlogPost = $derived(page.route.id === '/blog/[slug]');
+	let showHeader = $derived(!isStoryPage && !isBlogPost);
 </script>
 
-<!-- Only show header if NOT on a story page -->
-{#if !isStoryPage}
+{#if showHeader}
 	<Header />
 {/if}
 

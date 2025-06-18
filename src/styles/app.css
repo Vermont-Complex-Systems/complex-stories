@@ -75,9 +75,9 @@
 
 /* DARK MODE - only when .dark class is present (mode-watcher controlled) */
 .dark {
-    --color-bg: var(--color-gray-1000);
+    --color-bg: var(--color-gray-900);
     --color-fg: var(--color-gray-100);
-    --color-primary: var(--color-gray-1000);
+    --color-primary: var(--color-gray-900);
     --color-secondary-gray: var(--color-gray-400);
     --color-link: var(--color-gray-100);
     --color-link-hover: var(--color-gray-400);
@@ -91,8 +91,8 @@
     --color-input-bg: var(--color-gray-900);
     --color-input-fg: var(--color-gray-50);
     --color-placeholder: var(--color-gray-400);
-    --color-default-story-bg: var(--color-gray-800);
-    --fade: linear-gradient(180deg, rgba(25, 25, 25, 0) 0%, rgba(25, 25, 25, 0.8) 30%, rgba(25, 25, 25, 1) 50%);
+    --color-default-story-bg: var(--color-gray-600);
+    --fade: linear-gradient(180deg, rgba(25, 25, 25, 0) 0%, rgba(25, 25, 25, 0.8) 30%, rgba(38, 38, 38, 1) 50%);
 }
 
 @media screen and (prefers-reduced-motion: no-preference) {

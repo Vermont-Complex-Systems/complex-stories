@@ -1,0 +1,4 @@
+slug,title,tease,excerpt,date,author,tags,content_type,hide
+welcome,"Why scientific data essays","Why scientific data essays","A longer excerpt that provides more detail about this inaugural post",1/15/2024,"Jonathan St-Onge","announcement,welcome",markdown,
+allotax-ui,"Hello Allotaxonometer-ui","A new library","Because we used it for allotax-ui",1/15/2024,"Jonathan St-Onge","technical",markdown,
+ssr,"What is SSR","Server-side rendering","Because we used it for allotax-ui",1/15/2024,"Jonathan St-Onge","technical",markdown,true
