@@ -1,12 +1,14 @@
 <script>
     import * as d3 from "d3";
+    import { base } from "$app/paths";
     import { fade, fly } from 'svelte/transition';
-    
+    import ThemeToggle from './ThemeToggle.svelte';
+
     import { innerWidth } from 'svelte/reactivity/window';
     import { Diamond, Legend, DivergingBarChart, Dashboard } from 'allotaxonometer-ui';
     import { combElems, rank_turbulence_divergence, diamond_count, wordShift_dat, balanceDat } from 'allotaxonometer-ui';
     import BarChartRank from './BarChartRank.svelte';
-    
+    import Slider from './Slider.svelte';
 
     import boys1895 from '../data/boys-1895.json';
     import boys1968 from '../data/boys-1968.json';
@@ -16,14 +18,16 @@
     
     let { story, data } = $props();
     
-    let scrollyIndex = $state(0);
+    let scrollyIndex = $state();
 	
 	const steps = data.steps;
+    let isDarkMode = $state(false);
 
     // Data systems
     let sys1 = $state(boys1895);
     let sys2 = $state(boys1968);
     let title = $state(['Boys 1895', 'Boys 1968']);
+    
     let alpha = $state(0.58);
     const alphas = d3.range(0,18).map(v => +(v/12).toFixed(2)).concat([1, 2, 5, Infinity]);
     let alphaIndex = $state(7); // Start at 0.58
@@ -32,8 +36,6 @@
     let DiamondWidth = DiamondHeight;
     let marginInner = 160;
     let marginDiamond = 40;
-    let DashboardHeight = 815;
-    let DashboardWidth = 1200;
     let max_shift = $derived(barData.length > 0 ? d3.max(barData, d => Math.abs(d.metric)) : 1);
     
     let me = $derived(sys1 && sys2 ? combElems(sys1, sys2) : null);
@@ -46,55 +48,62 @@
     let max_count_log = $derived(dat ? Math.ceil(Math.log10(d3.max(dat.counts, d => d.value))) + 1 : 2);
     let isDataReady = $derived(dat && barData && balanceData && me && rtd);
 
-    let renderedData = $state(null);
+    $effect(() => { alpha = alphas[alphaIndex]; });
 
-    $effect(() => {
-        alpha = alphas[alphaIndex];
-    });
-
-    // Initialize with the original data
-    $effect(() => {
-        if (dat && !renderedData) {
-            renderedData = dat;
-            renderedBarData = barData;
+     // Use $derived instead of $effect for state synchronization
+    let renderedData = $derived.by(() => {
+        if (!dat || !barData) return null;
+            
+        // Treat undefined scrollyIndex as step 0 (initial state)
+        const currentStep = scrollyIndex ?? 0;
+        
+        switch (currentStep) {
+            case 0:
+                return {
+                    ...dat,
+                    counts: dat.counts.map(d => ({
+                        ...d,
+                        x1: Math.ceil(d.coord_on_diag),
+                        y1: Math.ceil(d.coord_on_diag),
+                        types: ""
+                    }))
+                };
+                
+            case 1:
+                return {
+                    ...dat,
+                    counts: dat.counts.map(d => ({
+                        ...d,
+                        x1: d.which_sys === "right" ? Math.ceil(d.coord_on_diag) : d.x1,
+                        y1: d.which_sys === "right" ? Math.ceil(d.coord_on_diag) : d.y1,
+                        types: d.which_sys === "right" ? "" : d.types,
+                        value: d.which_sys === "right" ? 0 : d.value
+                    }))
+                };
+                
+            case 2:
+                return dat;
+                
+            default:
+                return null;
         }
     });
 
-    // Simple reactive logic like the working example
-    $effect(() => {
-        if (!dat || !barData) return;
-            
-
-        if (scrollyIndex === 0) {
-            renderedData = {
-                ...dat,
-                counts: dat.counts.map(d => ({
-                    ...d,
-                    x1: Math.ceil(d.coord_on_diag),
-                    y1: Math.ceil(d.coord_on_diag),
-                    types: ""
-                }))
-            };
-            
-
-        } else if (scrollyIndex === 1) {
-            renderedData = {
-                ...dat,
-                counts: dat.counts.map(d => ({
-                    ...d,
-                    x1: d.which_sys === "right" ? Math.ceil(d.coord_on_diag) : d.x1,
-                    y1: d.which_sys === "right" ? Math.ceil(d.coord_on_diag) : d.y1,
-                    types: d.which_sys === "right" ? "" : d.types,
-                    value: d.which_sys === "right" ? 0 : d.value
-                }))
-            };
-
-
-        } else {
-            renderedData = dat;
-        }
-    });
+    $inspect(scrollyIndex)
 </script>
+
+<div class="sticky-header">
+    <div class="header-controls">
+        <div class="logo-container">
+            <a href="{base}/" class="logo-link">
+                <img src="{base}/octopus-swim-left.png" alt="Home" class="logo" />
+            </a>
+        </div>
+        
+        <ThemeToggle bind:isDarkMode />
+    </div>
+</div>
+
 
 
 <section>
@@ -119,45 +128,48 @@
     <div class="chart-container-scrolly">
         {#if isDataReady && renderedData}
             <div class="visualization-container">
-    {#if scrollyIndex <= 2}
-        <div class="diamondplot" out:fly={{ y: -50, duration: 800 }}>
-            <Diamond
-                dat={renderedData} 
-                {alpha} 
-                divnorm={rtd.normalization} 
-                {title} 
-                {maxlog10}
-                {DiamondHeight} 
-                {marginInner} 
-                {marginDiamond}
-            />
-        </div>
-    {/if}
-    
-    <!-- Rest stays the same -->
-    {#if scrollyIndex >= 1}
-        <div class="additional-charts" 
-            in:fade={{ duration: 800, delay: 300 }}
-            out:fade={{ duration: 400 }}
-        >
-            <div class="legend-container" in:fly={{ x: -50, duration: 600, delay: 500 }}>
-                <Legend
-                    diamond_dat={dat.counts}
-                    DiamondHeight={DiamondHeight}
-                    max_count_log={max_count_log || 5}
-                />
+                <!-- Diamond plot: show for steps 0, 1, 2 (including undefined as 0) -->
+                {#if (scrollyIndex ?? 0) >= 0 && (scrollyIndex ?? 0) <= 2}
+                <div class="diamondplot" out:fly={{ y: -50, duration: 800 }}>
+                    <Diamond
+                        dat={renderedData} 
+                        {alpha} 
+                        divnorm={rtd.normalization} 
+                        {title} 
+                        {maxlog10}
+                        {DiamondHeight} 
+                        {marginInner} 
+                        {marginDiamond}
+                    />
+                </div>
+                {/if}
+                
+                <!-- Additional charts: show for steps 1, 2 -->
+                {#if (scrollyIndex ?? 0) >= 1 && (scrollyIndex ?? 0) <= 2}
+                    <div class="additional-charts" 
+                        in:fade={{ duration: 800, delay: 300 }}
+                    >
+                        <div class="legend-container" 
+                            in:fly={{ x: -50, duration: 600, delay: 500 }}
+                            out:fly={{  x: -50, duration: 800, delay: 300 }}>
+                            <Legend
+                                diamond_dat={dat.counts}
+                                DiamondHeight={DiamondHeight}
+                                max_count_log={max_count_log || 5}
+                            />
+                        </div>
+                        
+                        <!-- Balance chart: always present for positioning, but opacity controlled -->
+                        <div class="balance-container" style="opacity: {(scrollyIndex ?? 0) >= 2 ? 1 : 0};">
+                            <DivergingBarChart
+                                data={balanceData}
+                                DiamondHeight={DiamondHeight}
+                                DiamondWidth={DiamondWidth}
+                            />
+                        </div>
+                    </div>
+                {/if}
             </div>
-            
-            <div class="balance-container" style="opacity: {scrollyIndex >= 2 ? 1 : 0};">
-                <DivergingBarChart
-                    data={balanceData}
-                    DiamondHeight={DiamondHeight}
-                    DiamondWidth={DiamondWidth}
-                />
-            </div>
-        </div>
-    {/if}
-</div>
         {/if}
     </div>
 
@@ -177,6 +189,7 @@
 </section>
 
 <section>
+    <h1>The full picture</h1>
     <p>We now add the wordshift plot, which allows us to have a more direct view of how types shift across pairs of systems. </p>
     <div class="dashboard-section">
         <div class="dashboard-container">
@@ -198,90 +211,79 @@
                 class="dashboard"
         />
         </div>
+        <Slider bind:alphaIndex {alphas} />
     </div>
-    <div class="slider-container">
-    <div class="alpha-display">
-        <span class="alpha-value">α = {alpha}</span>
-    </div>
-    <input 
-                type="range"
-                min="0"
-                max={alphas.length - 1}
-                value={alphaIndex}
-                oninput={(e) => alphaIndex = parseInt(e.target.value)}
-                class="alpha-slider"
-    />
-    <div class="slider-labels">
-                <span>0</span>
-                <span>∞</span>
-            </div>
-</div>
-<p>We also show how the α parameter let us tweak the relative importance of divergence. We also finally learn what those contour lines mean! </p>
+    
+<p>We also show how the α parameter let us tweak the relative importance of the divergence metric. Try α = ∞, you will see that types tend to be correlated with their frequency, with Michael at the top. By contrast, α = 0 allow us to inspect what is happenning further down in the tail. We also finally learn what those contour lines mean! </p>
 </section>
 
+
 <style>
-
-
-    .alpha-display {
-        text-align: center;
-        padding: 0.5rem;
-        background-color: transparent;
-        border: none;
+    .sticky-header :global(button) {
+        background: transparent !important;
+        color: var(--dash-text-primary) !important;
+        border: 1px solid var(--dash-border-color) !important;
+        padding: 0.5rem !important;
     }
 
-    .alpha-value {
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: var(--text-primary);
-        margin-bottom: 0.25rem;
+    .sticky-header :global(button:hover) {
+        background: var(--dash-bg-secondary) !important;
     }
 
-    .slider-container {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-
-        max-width: 300px;
-        flex-direction: column;
-        gap: 0.25rem;
+    .sticky-header {
+        position: sticky;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        pointer-events: none;
+        width: 100vw; /* Full viewport width */
+        margin-left: calc(-50vw + 50%); /* Break out of any container */
+        height: auto; /* Let content determine height */
     }
 
-    .alpha-slider {
-        width: 100%;
-        height: 3px;
-        background-color: var(--border-color);
-        border-radius: 2px;
-        outline: none;
-        cursor: pointer;
-        -webkit-appearance: none;
-        appearance: none;
-    }
-
-    .alpha-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 12px;
-        height: 12px;
-        background: var(--accent-color);
-        border-radius: 50%;
-        cursor: pointer;
-    }
-
-    .alpha-slider::-moz-range-thumb {
-        width: 12px;
-        height: 12px;
-        background: var(--accent-color);
-        border-radius: 50%;
-        cursor: pointer;
-        border: none;
-    }
-
-    .slider-labels {
+    .header-controls {
         display: flex;
-        justify-content: space-between;
-        font-size: 0.7rem;
-        color: var(--text-muted);
-        opacity: 0.6;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 1rem;
+        pointer-events: auto;
+        padding: 1rem 3.4rem 1rem 1rem;
+        width: 100%;
+        /* Removed absolute positioning */
+    }
+
+    .logo-container {
+        max-width: 250px;
+        transition: transform var(--transition-medium) ease;
+        flex-shrink: 0; /* Prevent logo from shrinking */
+    }
+
+    .logo-container:hover {
+        transform: rotate(var(--left-tilt)) scale(1.05);
+    }
+
+    .logo-link {
+        display: block;
+        border: none;
+    }
+    
+    .logo {
+        width: 100%;
+        height: auto;
+        border-radius: var(--border-radius);
+        max-height: 3rem;
+    }
+
+    @media (max-width: 768px) {
+        .header-controls {
+            padding: 0.5rem;
+            gap: 0.5rem;
+        }
+        
+        .logo {
+            max-height: 2.5rem;
+        }
     }
 
 	section {
@@ -290,11 +292,6 @@
 		padding: 0 2rem;
 	}
 
-	/* Allow viz sections to overflow the max-width */
-	section:has(.chart-container-scrolly) {
-		max-width: none; /* Remove width constraint for sections with visualizations */
-		padding: 0 1rem; /* Reduce padding to give more space */
-	}
 
 	section p {
 		font-size: 22px;
@@ -303,6 +300,7 @@
 	}
 
 	/* Keep only the first section's scrolly styles */
+
 	.chart-container-scrolly {
 		width: 40%;
 		position: sticky;
@@ -348,6 +346,7 @@
             align-items: flex-start;
             transition: opacity 600ms ease;
         }
+    
 	/* Scoped CSS transitions - only for diamond plot */
 	.diamondplot :global(rect) {
 		transition: 
@@ -447,25 +446,25 @@
 		}
 	}
 
-/* Dashboard section styles */
-section:has(.dashboard-section) {
-    max-width: 100vw;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-}
+    /* Dashboard section styles */
+    section:has(.dashboard-section) {
+        max-width: 100vw;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+    }
 
-.dashboard-section {
-    width: 100%;
-    padding: 4rem 0 0 8rem; /* Only top and side padding */
-    text-align: center;
-}
+    .dashboard-section {
+        width: 100%;
+        padding: 4rem 0 0 8rem; /* Only top and side padding */
+        text-align: center;
+    }
 
-.dashboard-container {
-    width: 100vw;
-    margin-left: calc(-50vw + 50%); /* Break out of container */
-    display: flex;
-    justify-content: center;
-    padding: 1rem 0;
-}
+    .dashboard-container {
+        width: 100vw;
+        margin-left: calc(-50vw + 50%); /* Break out of container */
+        display: flex;
+        justify-content: center;
+        padding: 1rem 0;
+    }
 </style>
