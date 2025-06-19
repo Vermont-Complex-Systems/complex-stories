@@ -12,7 +12,7 @@
 
 <Meta 
   title="Scrollytelling Stories"
-  description="Interactive data stories that unfold as you scroll"
+  description="Scientific data essays that uncover the challenges of computational science."
 />
 
 <Home />

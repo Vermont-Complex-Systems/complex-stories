@@ -6,15 +6,11 @@
   let { data } = $props();
   const { posts } = data;
 
-  const copy = {
-    title: "Blog - Complex Stories",
-    description: "Insights, tutorials, and thoughts on complex systems, data visualization, and the stories that emerge from data."
-  };
 </script>
 
 <Meta 
-  title={copy.title}
-  description={copy.description}
+  title="Blog - Complex Stories"
+  description="Insights, tutorials, and thoughts on complex systems, data visualization, and the stories that emerge from data."
 />
 
 <Blog {posts} />

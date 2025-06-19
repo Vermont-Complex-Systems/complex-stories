@@ -31,7 +31,8 @@
 	
 	@media (max-width: 768px) {
 		#content {
-			padding: 0.5rem 1rem 1rem;
+			padding: 0 1rem 1rem; /* Reduced top padding from 0.5rem to 0.25rem */
+			margin-top: -0.5rem; /* Pull content up slightly */
 		}
 	}
 </style>

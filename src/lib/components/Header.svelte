@@ -71,19 +71,19 @@
 
 <style>
 	.header {
-    position: sticky;
-    top: 0;
-    z-index: var(--z-overlay);
-    width: 100%;
-    background: var(--color-bg);
-    padding: 1.5rem 0 0.5rem 0; /* Slightly more top padding */
-    min-height: 7rem; /* Adjust height */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-  }
-  
+		position: sticky;
+		top: 0;
+		z-index: var(--z-overlay);
+		width: 100%;
+		background: var(--color-bg);
+		padding: 1.5rem 0 0.5rem 0; /* Current padding */
+		min-height: 7rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		position: relative;
+		}
+	
   .header-left {
     position: absolute;
     left: 2.5rem;
@@ -135,9 +135,11 @@
   
   .logo {
     width: 100%;
-    height: auto;
+    height: auto; /* This is good */
     border-radius: var(--border-radius);
     max-height: 8rem;
+    /* Add this to preserve aspect ratio */
+    object-fit: contain;
   }
   
   .header-right {
@@ -215,38 +217,48 @@
 	}
 	
 	 @media (max-width: 768px) {
-		.header {
-		padding: 1rem 0;
-		min-height: 5rem;
-		}
-		
-		.header-left {
-		left: 2rem;
-		top: 2rem;
-		}
-		
-		.site-title {
-		font-size: clamp(1.25rem, 4vw, 1.5rem);
-		}
-		
-		.site-subtitle {
-		font-size: var(--font-size-xsmall);
-		}
-		
-		.logo-container {
-		max-width: 150px;
-		margin-top: 0.5rem;
-		}
-		
-		.header-right {
-		top: 1rem;
-		right: 1rem;
-		}
-		
-		.logo {
-		max-height: 4rem;
-		}
-	}
+
+	/* Hide theme toggle on mobile */
+    .theme-toggle {
+      display: none;
+    }
+
+    .header {
+    	padding: 1rem 0 0 0; /* Reduced bottom padding from 1rem to 0.25rem */
+    	min-height: 5rem;
+    }
+    
+    .header-left {
+      left: 2rem;
+      top: 2rem;
+    }
+    
+    .site-title {
+      font-size: clamp(1.25rem, 4vw, 1.5rem);
+    }
+    
+    .site-subtitle {
+      font-size: var(--font-size-xsmall);
+    }
+    
+    .logo-container {
+      max-width: 150px;
+      margin-left: 3.5rem;
+      aspect-ratio: 1; /* Adjust this to match your logo's actual ratio */
+    }
+    
+    .header-right {
+      top: 1rem;
+      right: 1rem;
+    }
+    
+    .logo {
+      max-height: 4rem;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
   
 	:global(.dark) .logo {
 		filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));

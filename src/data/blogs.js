@@ -2,17 +2,11 @@
 import data from "$data/blog.csv";
 import { timeParse, timeFormat } from "d3";
 
-// Debug: Log the first row to see what columns we actually have
-console.log('Raw blog CSV data (first row):', data[0]);
-console.log('Available columns:', Object.keys(data[0] || {}));
-
 const parseDate = timeParse("%m/%d/%Y");
 const formatMonth = timeFormat("%b %Y");
 
 const clean = data
   .map((d) => {
-    console.log('Processing row:', d); // Debug each row
-    
     return {
       ...d,
       date: parseDate(d.date),

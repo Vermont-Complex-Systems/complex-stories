@@ -21,6 +21,14 @@
   }
 </script>
 
+<Meta 
+  title={`${blog.title} - Complex Stories`}
+  description={blog.excerpt || blog.tease || `Read ${blog.title} on Complex Stories blog`}
+  keywords={blog.tags?.join(', ') || ''}
+  author={blog.author?.join(', ') || 'Vermont Complex Systems Institute'}
+/>
+
+
 <ModeWatcher />
 
 <!-- Floating navigation -->
