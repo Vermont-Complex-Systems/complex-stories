@@ -45,6 +45,6 @@
 
   {#each preloadFont as href}
     <link rel="preload" {href} as="font" type="font/woff2" crossorigin />
-      <link rel="preload" href="font/AtlasTypewriter.woff2" as="font" type="font/woff2" crossorigin>
   {/each}
+  
 </svelte:head>

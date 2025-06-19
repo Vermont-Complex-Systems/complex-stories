@@ -1,5 +1,5 @@
 
-<a href="https://vermont-complex-systems.github.io/complex-stories/allotaxonometry" target="_blank" rel="noopener">
+<a href="https://vermont-complex-systems.github.io/complex-stories/allotaxonometry" target="_blank" rel="noopener" style="display: block; padding-bottom: 3rem;">
     <img src="/py_allotax_example005-crop.jpg" alt="ALLotaxonometry">
 </a>
 
@@ -9,7 +9,9 @@ The thing is that some people only want to use tools programatically, say from a
 
 > How can we make tools from complex systems available to a diversity of users?
 
-The [allotaxonometer-ui](https://github.com/Vermont-Complex-Systems/allotaxonometer-ui) library is our answer to this problem. Inspired by [bits-ui](https://bits-ui.com/), the `allotaxonometer-ui` is a headless component library that lets us share components and utility functions to build the allotaxonograph. It underlies the following projects and stories
+The [allotaxonometer-ui](https://github.com/Vermont-Complex-Systems/allotaxonometer-ui) library is our answer to this problem. 
+
+Inspired by [bits-ui](https://bits-ui.com/), `allotaxonometer-ui` is a headless component library that lets us share components and utility functions to build the allotaxonograph. It is `npm` installable, and callable from `python` using the `subprocess` module (the same approach could be generalized to other scientific programming languages). It underlies the following projects and stories
 
 <div class="image-grid">
   
@@ -35,9 +37,61 @@ The [allotaxonometer-ui](https://github.com/Vermont-Complex-Systems/allotaxonome
   </div>
 </div>
 
+A nice feature with `allotaxonometer-ui` is that you can either import the full allotaxonograph
+
+```svelte
+<script>
+  import { Dashboard } from 'allotaxonometer-ui';
+  import { 
+    combElems, 
+    rank_turbulence_divergence, 
+    diamond_count, wordShift_dat, 
+    balanceDat 
+    } from 'allotaxonometer-ui';
+
+  // Do data processing steps
+</script>
+
+<Dashboard 
+    dat={DiadmondData}
+    {alpha}
+    divnorm={rtd.normalization}
+    {barData}
+    {balanceData}
+    <!-- rest props... -->
+/>
+```
+
+Or individual components, which can be used with more granularity in scrolly telling:
+
+```svelte
+<script>
+  import { Diamond, Legend } from 'allotaxonometer-ui';
+  import { fade, fly } from 'svelte/transition';
+</script>
+
+<div class="additional-charts"  
+    in:fade={{ duration: 800, delay: 300 }} 
+    >
+  <div class="legend-container" 
+        in:fly={{ x: -50, duration: 600, delay: 500 }}>
+        <Legend
+            diamond_dat={dat.counts}
+            DiamondHeight={DiamondHeight}
+            max_count_log={max_count_log || 5}
+        />
+    </div>
+</div>
+```
+
+See this [simple app](https://github.com/Vermont-Complex-Systems/allotaxonometer-ui/blob/main/dev/apps/VanillaApp.svelte) for the rest of the code example.
+
+## The old gods
+
 To better understand the contribution, we should consider first what researchers typically do when they develop new tools. If they believe in the ideals of open science, they might release their code, as with the original [matlab version](https://gitlab.com/compstorylab/allotaxonometer) of the allotaxonometer. But as "[amateur software developer](https://www.youtube.com/watch?v=zwRdO9_GGhY)", the code might be of varying quality in terms of maintainability and accessibility. Most scientists are not profesional developers, and even if they are it takes time to improve computer code such that it is accessible. Hence, the code might be release, but more or less easy to access for researchers around the world. 
 
 The code will be also in a scientific language of choice, which most likely than not is not designed for the web. This means that it makes it hard to translate from the static world to the interactive, browser world by which most people discover new stuff. Thus, what do we need to take such tools as the allotaxonograph, and make it maitainable and shareable?
 
 ## The voyage begins
 
+We iterated a few versions before getting to `allotaxonometer-ui`. We separated the computing required for the allotaxonograph from the charting code, each put in their own codebase. We had charting code for the static plot used in `py-allotax`, and a different code for the interactive world. The problem with that is that any work put one one chart wouldn't benefit the other one. 
