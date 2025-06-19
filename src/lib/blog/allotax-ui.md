@@ -11,14 +11,14 @@ The [allotaxonometer-ui](https://github.com/Vermont-Complex-Systems/allotaxonome
 <div class="image-grid">
   
   <div class="image-item">
-    <a href="/allotaxonometry" target="_blank" rel="noopener">
+    <a href="https://vermont-complex-systems.github.io/complex-stories/allotaxonometry" target="_blank" rel="noopener">
       <img src="/common/thumbnails/screenshots/allotaxonometry.jpg" alt="ALLotaxonometry">
     </a>
     <p class="image-caption">ALLotaxonometry</p>
   </div>
   
   <div class="image-item" style="max-width:90%;">
-    <a href="/allotax-scrolly" target="_blank" rel="noopener">
+    <a href="https://vermont-complex-systems.github.io/complex-stories/allotax-scrolly" target="_blank" rel="noopener">
       <img src="/common/thumbnails/screenshots/allotax-scrolly.jpg" alt="A whirlwind tour of the allotaxonometer">
     </a>
     <p class="image-caption">A whirlwind tour of the allotaxonometer</p>

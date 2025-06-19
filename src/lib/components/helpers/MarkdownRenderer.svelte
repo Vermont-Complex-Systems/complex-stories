@@ -3,7 +3,8 @@
     import 'katex/dist/katex.min.css';
     import rehypeKatex from 'rehype-katex';
     import remarkMath from 'remark-math';
-    import rehypeRaw from 'rehype-raw'; // Add this import
+    import rehypeRaw from 'rehype-raw';
+    import { base } from '$app/paths';
 
     let { text } = $props();
 
@@ -13,7 +14,7 @@
             rehypePlugin: [rehypeKatex]
         },
         { 
-            rehypePlugin: [rehypeRaw] // Add this plugin to enable HTML
+            rehypePlugin: [rehypeRaw]
         }
     ];
 
@@ -26,7 +27,13 @@
         content = content.replace(/\[\^(\d+)\]/g, '');
 
         // Remove leading whitespace at the beginning of each line
-        return content.replace(/^[ \t]+/gm, '');
+        content = content.replace(/^[ \t]+/gm, '');
+
+        // Add base path to relative URLs that start with /
+        // Only for src and href attributes
+        content = content.replace(/(src|href)="\/([^"]*?)"/g, `$1="${base}/$2"`);
+
+        return content;
     }
 </script>
 
