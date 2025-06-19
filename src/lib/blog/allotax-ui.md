@@ -3,15 +3,15 @@
     <img src="/py_allotax_example005-crop.jpg" alt="ALLotaxonometry">
 </a>
 
-The allotaxonograph is a scientific tool developed by the [Computational Story Lab](https://compstorylab.org/) to compare any pairs of systems with meaningfully rankable components. For instance, think about baby names at different times, with their count frequency being heavy-tailed (that is, the most frequent baby names occur an order of magnitude more than less frequent names). It is a tool designed to understand complex systems, but could benefit a larger audience, such as policy makers or applied scientists.
+The allotaxonograph is a scientific tool developed by the [Computational Story Lab](https://compstorylab.org/) to compare any pairs of systems with meaningfully rankable components. For instance, consider the popularity of baby names across different time periods. Baby name frequencies follow a heavy-tailed distribution—a few names are *very* popular, occurring an order of magnitude more frequently than rarer names. The allotaxonograph allows us to compare these popularity patterns while accounting for the heavy-tailed nature of the data. Originally designed to understand complex systems, this tool could benefit a broader audience, including policy makers and applied scientists.
 
-The thing is that some people only want to use tools programmatically, say from a jupyter notebook using the Python programming language. Others only want a drag and drop approach, where they just want to drop their data on a standalone page and be able to download the results. At the institute, this has led to the following question:
+The thing is that some people only want to use the tool programmatically, say from a jupyter notebook using the `Python` programming language. Others only want a drag and drop approach, where they just want to drop their data on a standalone page and be able to download the results. At the institute, this has led to the following question:
 
 > How can we make tools from complex systems available to a diversity of users?
 
 The [allotaxonometer-ui](https://github.com/Vermont-Complex-Systems/allotaxonometer-ui) library is one answer to this challenge. 
 
-Inspired by [bits-ui](https://bits-ui.com/), `allotaxonometer-ui` is a headless component library that lets us share web components and utility functions to build the allotaxonograph. It is `npm`-installable, and callable from `python` using the `subprocess` module (the same approach could be generalized to other scientific programming languages). It underlies the following projects and stories:
+Inspired by [bits-ui](https://bits-ui.com/), `allotaxonometer-ui` is a Javascript library that lets us share web components and utility functions to build and visualize the allotaxonograph. It is `npm`-installable, but callable from `python` using the `subprocess` module (the same approach could be generalized to other scientific programming languages). It underlies the following projects and stories:
 
 <div class="image-grid">
   
@@ -116,9 +116,9 @@ where $\alpha$ in both cases is the parameter in the rank divergence metric $D_\
 
 ## The old gods
 
-To better understand the contribution, we should consider first what researchers typically do when they develop new tools. If they believe in the ideals of open science, they might release their code, as with the original allotaxonometer's matlab version. But as "amateur software developers", the code might be of varying quality in terms of maintainability and accessibility. Most scientists are not professional developers, and even if they are it takes time to improve computer code such that it is accessible. Hence, the code might be released, but more or less easy to access for researchers around the world.
+To better understand the contribution, we should consider first what researchers typically do when they develop new tools. If they believe in the ideals of open science, they might release their code, as with the original allotaxonometer's [matlab version](https://gitlab.com/compstorylab/allotaxonometer). But as "[amateur software developers](https://www.youtube.com/watch?v=zwRdO9_GGhY)", the code might be of varying quality in terms of maintainability and accessibility. Most scientists are not professional developers, and even if they are it takes time to improve computer code such that it is accessible. Hence, the code might be released, but more or less easy to access for researchers around the world.
 
-The code will also be in a scientific language of choice, which more likely than not is not designed for the web. This means that it makes it hard to translate from the static world to the interactive, browser world by which most people discover new stuff. Thus, what do we need to take such tools as the allotaxonograph, and make it maintainable and shareable?
+The code will also be written in a scientific programming language, which more often than not is not designed for the web. This makes it difficult to translate from the static world to the interactive, browser-based world through which most people discover new content. So, what do we need to make tools like the allotaxonograph maintainable and shareable?
 
 ## The voyage begins
 
@@ -136,3 +136,5 @@ Making `d3`-powered visualizations work in both contexts required careful engine
 ## Looking ahead
 
 Researchers can now embed the allotaxonograph in static websites, generate publication-ready PDFs with embedded graphs, or share them via simple hosting - no complex server infrastructure required. The visualizations are accessible, archival-friendly, and still provide rich interactivity when possible. We'll dive deeper into the technical implementation in another post, but the key insight was that modern web frameworks like `Svelte` make this kind of hybrid rendering achievable, even for teams coming from scientific rather than web development backgrounds.
+
+But we're not done. Borrowing more extensively from [bits-ui](https://bits-ui.com/), we could expose more subcomponents of the allotaxonograph (down to the contour lines, or axis) so that we give full power to web developers. The library still could be optimized for speed in many ways. As library, the `allotaxonometer-ui` can be tested more, as well as extended in a systematic fashion to bring new collaborators (such as students) to incorporate more metrics.

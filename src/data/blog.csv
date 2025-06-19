@@ -1,4 +1,4 @@
 slug,title,tease,excerpt,date,author,tags,content_type,hide
 welcome,"Why scientific data essays","","A longer excerpt that provides more detail about this inaugural post",6/19/2025,"Jonathan St-Onge","announcement,welcome",markdown,
-allotax-ui,"Hello Allotaxonometer-ui","Bridging the divide between interactivity and static","Because we used it for allotax-ui",6/19/2025,"Jonathan St-Onge","library, front-end",markdown,
+allotax-ui,"Hello Allotaxonometer-ui","Bridging the divide between interactive and static data visualizations","Because we used it for allotax-ui",6/19/2025,"Jonathan St-Onge","library, front-end",markdown,
 ssr,"What is SSR","Server-side rendering","Because we used it for allotax-ui",6/19/2025,"Jonathan St-Onge","technical",markdown,true
