@@ -3,12 +3,13 @@
 @import "font.css";
 @import "reset.css";
 
+
 /* colors defined in variables.css */
 :root {
     /* font */
-    --sans: "Atlas Grotesk", -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
-    --serif: "Tiempos Text", Iowan Old Style, Times New Roman, Times, serif;
-    --mono: "Atlas Typewriter", Menlo, Consolas, Monaco, monospace;
+    --sans: "Atlas Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --serif: "Tiempos Text", "Times New Roman", Times, serif;
+    --mono: "Atlas Typewriter", "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
 
     /* z-index */
     --z-bottom: -100;
@@ -41,7 +42,7 @@
     --color-default-story-bg: var(--color-gray-100);
     --fade: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.8) 30%, rgba(255, 255, 255, 1) 50%);
 
-    --font-size-giant: clamp(3rem, 4vw, 5rem);
+    --font-size-giant: clamp(3rem, 10vw, 4rem);
     --font-size-large: clamp(1.5rem, 2.5vw, 2.5rem);
     --font-size-medium: clamp(1rem, 1.75vw, 1.5rem);
     --font-size-small: clamp(15px, 1.25vw, 1rem);
@@ -52,7 +53,7 @@
     --font-weight-thin: 100;
 
     --margin: 16px;
-    --width-column-wide: 1280px;
+    --width-column-wide: 1180px;
     --width-column-regular: 720px;
     --width-padded: 80vw;
     --margin-left: 10vw;
@@ -75,9 +76,9 @@
 
 /* DARK MODE - only when .dark class is present (mode-watcher controlled) */
 .dark {
-    --color-bg: var(--color-gray-1000);
+    --color-bg: var(--color-gray-900);
     --color-fg: var(--color-gray-100);
-    --color-primary: var(--color-gray-1000);
+    --color-primary: var(--color-gray-900);
     --color-secondary-gray: var(--color-gray-400);
     --color-link: var(--color-gray-100);
     --color-link-hover: var(--color-gray-400);
@@ -91,8 +92,8 @@
     --color-input-bg: var(--color-gray-900);
     --color-input-fg: var(--color-gray-50);
     --color-placeholder: var(--color-gray-400);
-    --color-default-story-bg: var(--color-gray-800);
-    --fade: linear-gradient(180deg, rgba(25, 25, 25, 0) 0%, rgba(25, 25, 25, 0.8) 30%, rgba(25, 25, 25, 1) 50%);
+    --color-default-story-bg: var(--color-gray-600);
+    --fade: linear-gradient(180deg, rgba(25, 25, 25, 0) 0%, rgba(25, 25, 25, 0.8) 30%, rgba(38, 38, 38, 1) 50%);
 }
 
 @media screen and (prefers-reduced-motion: no-preference) {

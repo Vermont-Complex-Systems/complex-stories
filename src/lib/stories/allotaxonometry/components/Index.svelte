@@ -1,313 +1,191 @@
-<script lang="ts">
-  import Scrolly from "$lib/components/helpers/Scrolly.svelte";
-  import { Plot, Dot } from 'svelteplot';
-  import { Tween } from 'svelte/motion';
-  import { cubicOut } from 'svelte/easing';
+<script>
+    import * as d3 from "d3";
+    import { base } from '$app/paths';
+    import { Dashboard } from 'allotaxonometer-ui';
+    import { combElems, rank_turbulence_divergence, diamond_count, wordShift_dat, balanceDat } from 'allotaxonometer-ui';
+    import ThemeToggle from './ThemeToggle.svelte';
+    import Sidebar from './Sidebar.svelte';
+    
+    // Import default data
+    import boys1895 from '../data/boys-1895.json';
+    import boys1968 from '../data/boys-1968.json';
 
-  let { story } = $props();
-  let value = $state();
-  let currentStep = $derived(story.steps[value]);
+    // =============================================================================
+    // LOCAL STATE
+    // =============================================================================
+    
+    // Data systems
+    let sys1 = $state(boys1895);
+    let sys2 = $state(boys1968);
+    let title = $state(['Boys 1895', 'Boys 1968']);
 
-  // Create simple, fixed data points
-  const baseData = [
-    { id: 1, baseX: 0, baseY: 0 },
-    { id: 2, baseX: 1, baseY: 1 },
-    { id: 3, baseX: 2, baseY: 0.5 },
-    { id: 4, baseX: -1, baseY: -1 },
-    { id: 5, baseX: -0.5, baseY: 1.5 },
-    { id: 6, baseX: 1.5, baseY: -0.5 },
-    { id: 7, baseX: 0.5, baseY: 2 },
-    { id: 8, baseX: -1.5, baseY: 0.5 }
-  ];
+    // UI State
+    let sidebarCollapsed = $state(false);
+    let isDarkMode = $state(false);
 
-  // Tweened transform parameters
-  const offsetX = new Tween(0, { duration: 800, easing: cubicOut });
-  const offsetY = new Tween(0, { duration: 800, easing: cubicOut });
-  const scaleX = new Tween(1, { duration: 600, easing: cubicOut });
-  const scaleY = new Tween(1, { duration: 600, easing: cubicOut });
+    // Alpha parameter
+    let alpha = $state(0.58);
+    const alphas = d3.range(0,18).map(v => +(v/12).toFixed(2)).concat([1, 2, 5, Infinity]);
+    let alphaIndex = $state(7); // Start at 0.58
 
-  // Transform the data based on tweened values
-  let plotData = $derived(
-    baseData.map(point => ({
-      id: point.id,
-      x: point.baseX * scaleX.current + offsetX.current,
-      y: point.baseY * scaleY.current + offsetY.current
-    }))
-  );
+    // Dashboard dimensions
+    let DashboardHeight = 815;
+    let DashboardWidth = $derived(sidebarCollapsed ? 1200 : 900);
+    let DiamondHeight = 600;
+    let DiamondWidth = DiamondHeight;
+    let marginInner = 160;
+    let marginDiamond = 40;
+    let WordshiftWidth = $derived(sidebarCollapsed ? 550 : 400);
 
-  // Watch for scroll changes
-  $effect(() => {
-    if (value === undefined) {
-      offsetX.target = 0;
-      offsetY.target = 0;
-      scaleX.target = 1;
-      scaleY.target = 1;
-      return;
+    // File upload
+    let uploadStatus = $state('');
+
+
+    $effect(() => {
+        alpha = alphas[alphaIndex];
+    });
+
+    function toggleSidebar() {
+        sidebarCollapsed = !sidebarCollapsed;
     }
 
-    switch (value) {
-      case 0:
-        offsetX.target = 0;
-        offsetY.target = 0;
-        scaleX.target = 1;
-        scaleY.target = 1;
-        break;
-      case 1:
-        offsetX.target = 1.8;
-        offsetY.target = 0;
-        scaleX.target = 1;
-        scaleY.target = 1;
-        break;
-      case 2:
-        offsetX.target = 0;
-        offsetY.target = 0;
-        scaleX.target = 1.8;
-        scaleY.target = 1;
-        break;
-      case 3:
-        offsetX.target = 0;
-        offsetY.target = 1;
-        scaleX.target = -1;
-        scaleY.target = 0.5;
-        break;
-      case 4:
-        offsetX.target = 0;
-        offsetY.target = 0;
-        scaleX.target = 1.5;
-        scaleY.target = 1.5;
-        break;
-      default:
-        offsetX.target = 0;
-        offsetY.target = 0;
-        scaleX.target = 1;
-        scaleY.target = 1;
+    async function handleFileUpload(file, system) {
+        try {
+            uploadStatus = `Loading ${system}...`;
+            const text = await file.text();
+            const data = JSON.parse(text);
+            
+            if (system === 'sys1') {
+                sys1 = data;
+                title[0] = file.name.replace('.json', '');
+            } else {
+                sys2 = data;
+                title[1] = file.name.replace('.json', '');
+            }
+            
+            uploadStatus = `${system.toUpperCase()} loaded successfully!`;
+            setTimeout(() => uploadStatus = '', 3000);
+        } catch (error) {
+            uploadStatus = `Error loading ${system}: ${error.message}`;
+            setTimeout(() => uploadStatus = '', 5000);
+        }
     }
-  });
+
+    // =============================================================================
+    // DATA PROCESSING PIPELINE
+    // =============================================================================
+    
+    let me = $derived(sys1 && sys2 ? combElems(sys1, sys2) : null);
+    let rtd = $derived(me ? rank_turbulence_divergence(me, alpha) : null);
+    let dat = $derived(me && rtd ? diamond_count(me, rtd) : null);
+    
+    let barData = $derived(me && dat ? wordShift_dat(me, dat).slice(0, 30) : []);
+    let balanceData = $derived(sys1 && sys2 ? balanceDat(sys1, sys2) : []);
+    let maxlog10 = $derived(me ? Math.ceil(d3.max([Math.log10(d3.max(me[0].ranks)), Math.log10(d3.max(me[1].ranks))])) : 0);
+    let max_count_log = $derived(dat ? Math.ceil(Math.log10(d3.max(dat.counts, d => d.value))) + 1 : 2);
+    let max_shift = $derived(barData.length > 0 ? d3.max(barData, d => Math.abs(d.metric)) : 1);
+    let isDataReady = $derived(dat && barData && balanceData && me && rtd);
 </script>
 
-<section id="scrolly">
-  <div class="scrolly-container">
-    <!-- Scrolling text on the left -->
-    <div class="text-container">
-      <Scrolly bind:value>
-        {#each story.steps as step, i}
-          {@const active = value === i}
-          <div class="step" class:active>
-            <div class="step-content">
-              <div class="step-number">Step {i + 1}</div>
-              <h3>{step.data.event || `Step ${i + 1}`}</h3>
-              <p class="step-text">{step.text}</p>
-              <div class="step-meta">
-                <span class="year">{step.data.year}</span>
-              </div>
-            </div>
-          </div>
-        {/each}
-      </Scrolly>
-    </div>
 
-    <!-- Fixed visualization on the right -->
-    <div class="viz-container">
-      <div class="viz-content">
-        <h2>Data Transform: <span>{currentStep?.data.year || "Start"}</span></h2>
-        
-        <div class="plot-container">
-          <Plot grid maxWidth={500} height={400} 
-                x={{ domain: [-4, 4] }} 
-                y={{ domain: [-2, 4] }}>
-            <Dot data={plotData} 
-                 x="x" 
-                 y="y" 
-                 fill="#667eea" 
-                 opacity={0.8} 
-                 r={6} />
-          </Plot>
-        </div>
-        
-        <div class="stats">
-          <div class="stat">
-            <span class="label">Offset X:</span> 
-            <span class="value">{offsetX.current.toFixed(1)}</span>
-          </div>
-          <div class="stat">
-            <span class="label">Offset Y:</span> 
-            <span class="value">{offsetY.current.toFixed(1)}</span>
-          </div>
-          <div class="stat">
-            <span class="label">Scale X:</span> 
-            <span class="value">{scaleX.current.toFixed(1)}</span>
-          </div>
-          <div class="stat">
-            <span class="label">Scale Y:</span> 
-            <span class="value">{scaleY.current.toFixed(1)}</span>
-          </div>
-        </div>
+<div class="dashboard-app">
+    <div class="logo-container">
+		<a href="{base}/" class="logo-link">
+			<img src="{base}/octopus-swim-left.png" alt="Home" class="logo" />
+		</a>
+	</div>
+    
+    <ThemeToggle bind:isDarkMode />
+    
+    <div class="app-container">
+        <div class="layout">
+            <Sidebar 
+                collapsed={sidebarCollapsed}
+                onToggle={toggleSidebar}
+                bind:sys1 
+                bind:sys2
+                bind:title
+                bind:alpha
+                bind:alphaIndex
+                {alphas}
+                {handleFileUpload}
+                {uploadStatus}
+                {me}
+                {rtd}
+                {isDataReady}
+            />
 
-        {#if !currentStep}
-          <p class="start-message">Scroll down to see the transformation</p>
-        {/if}
-      </div>
+            <!-- Main Content -->
+            <main class="main-content {sidebarCollapsed ? 'collapsed-sidebar' : ''}">
+                {#if isDataReady}
+                    <Dashboard 
+                        {dat}
+                        {alpha}
+                        divnorm={rtd.normalization}
+                        {barData}
+                        {balanceData}
+                        {title}
+                        {maxlog10}
+                        {max_count_log}
+                        height={DashboardHeight}
+                        width={DashboardWidth}
+                        {DiamondHeight}
+                        {DiamondWidth}
+                        {marginInner}
+                        {marginDiamond}
+                        {WordshiftWidth}
+                        xDomain={[-max_shift * 1.5, max_shift * 1.5]}
+                        class="dashboard"
+                    />
+                {:else}
+                    <div class="loading-container">
+                        <div class="loading-content">
+                            <div class="spinner"></div>
+                            <p class="loading-text">Loading dashboard...</p>
+                        </div>
+                    </div>
+                {/if}
+            </main>
+        </div>
     </div>
-  </div>
-</section>
+</div>
 
 <style>
-  #scrolly {
-    min-height: 100vh;
-  }
+    @import '../styles/app.css';
 
-  .scrolly-container {
-    display: flex;
-    min-height: 100vh;
-    max-width: 1200px;
-    margin: 0 auto;
-    gap: 2rem;
-  }
+    .logo-container {
+		max-width: 250px;
+		transition: transform var(--transition-medium) ease;
+        position: absolute;
+        top: 1rem;
+        right: 3.5rem;
+        z-index: 1001;
+	}
 
-  .text-container {
-    flex: 1;
-    min-width: 0; /* Allow flex shrinking */
-  }
+    .logo-container:hover {
+		transform: rotate(var(--left-tilt)) scale(1.05);
+	}
 
-  .viz-container {
-    flex: 1;
-    position: sticky;
-    top: 2rem;
-    height: 90vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .viz-content {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-    border: 1px solid #e2e8f0;
-    padding: 2rem;
-    width: 100%;
-    max-width: 600px;
-    text-align: center;
-  }
-
-  .viz-content h2 {
-    margin: 0 0 1.5rem 0;
-    font-size: 1.5rem;
-    color: #2d3748;
-  }
-
-  .viz-content h2 span {
-    color: #667eea;
-    font-weight: bold;
-  }
-
-  .plot-container {
-    margin-bottom: 1.5rem;
-  }
-
-  .stats {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    font-family: monospace;
-    font-size: 0.8rem;
-  }
-
-  .stat {
-    background: #f7fafc;
-    padding: 0.5rem;
-    border-radius: 4px;
-    min-width: 80px;
-  }
-
-  .label {
-    color: #4a5568;
-  }
-
-  .value {
-    color: #667eea;
-    font-weight: bold;
-  }
-
-  .start-message {
-    color: #718096;
-    font-size: 1.1rem;
-    margin-top: 1rem;
-  }
-
-  /* Text container styles */
-  .step {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    padding: 2rem;
-    opacity: 0.3;
-    transition: opacity 0.3s ease;
-  }
-
-  .step.active {
-    opacity: 1;
-  }
-
-  .step-content {
-    max-width: 500px;
-  }
-
-  .step-number {
-    font-family: monospace;
-    font-size: 0.9rem;
-    color: #667eea;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-  }
-
-  .step h3 {
-    font-size: 1.8rem;
-    margin: 0 0 1rem 0;
-    color: #2d3748;
-    line-height: 1.2;
-  }
-
-  .step-text {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: #4a5568;
-    margin: 0 0 1rem 0;
-  }
-
-  .step-meta {
-    font-family: monospace;
-    font-size: 0.9rem;
-    color: #718096;
-  }
-
-  .year {
-    background: #edf2f7;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-weight: bold;
-  }
-
-  /* Responsive design */
-  @media (max-width: 768px) {
-    .scrolly-container {
-      flex-direction: column;
+    .logo-link {
+		display: block;
+		border: none;
+	}
+	
+	.logo {
+		width: 100%;
+		height: auto;
+		border-radius: var(--border-radius);
+		max-height: 4rem;
+	}
+    /* Component-specific overrides */
+    .dashboard-app :global(button) {
+        background: transparent !important;
+        color: var(--dash-text-primary) !important;
+        border: 1px solid var(--dash-border-color) !important;
+        padding: 0.5rem !important;
     }
 
-    .viz-container {
-      position: relative;
-      height: auto;
-      order: -1; /* Put viz on top on mobile */
+    .dashboard-app :global(button:hover) {
+        background: var(--dash-bg-secondary) !important;
     }
-
-    .viz-content {
-      margin-bottom: 2rem;
-    }
-
-    .step {
-      min-height: 60vh;
-      padding: 1rem;
-    }
-  }
 </style>

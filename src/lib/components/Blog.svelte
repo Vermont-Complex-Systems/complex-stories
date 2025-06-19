@@ -1,76 +1,97 @@
+<!-- src/lib/components/Blog.svelte -->
 <script>
   import { descending } from "d3";
-  import { getContext } from "svelte";
-  import Stories from "$lib/components/Stories.svelte";
+  import BlogPosts from "$lib/components/Blog.Posts.svelte";
   import FilterBar from "$lib/components/FilterBar.svelte";
+  import HeroText from "$lib/components/HeroText.svelte";
   import { ChevronDown } from "lucide-svelte";
 
-  const initMax = 6;
-  const { stories } = getContext("Home");
+  let { posts } = $props();
 
-  let maxStories = $state(initMax);
+  const initMax = 6; // Show 6 blog posts initially
+  let maxPosts = $state(initMax);
   let activeFilter = $state(undefined);
 
-  // Extract unique filters from all stories
-  let allFilters = $derived.by(() => {
-    const filterSet = new Set();
-    stories.forEach(story => {
-      if (story.filters && Array.isArray(story.filters)) {
-        story.filters.forEach(filter => filterSet.add(filter));
+  // Extract unique tags from all posts for filtering
+  let allTags = $derived.by(() => {
+    const tagSet = new Set();
+    posts.forEach(post => {
+      if (post.tags && Array.isArray(post.tags)) {
+        post.tags.forEach(tag => tagSet.add(tag));
       }
     });
-    return Array.from(filterSet).sort();
+    return Array.from(tagSet).sort();
   });
 
   let filtered = $derived.by(() => {
-    const f = stories.filter((d) => {
-      const inFilter = activeFilter ? d.filters.includes(activeFilter) : true;
+    const f = posts.filter((post) => {
+      const inFilter = activeFilter ? 
+        post.tags?.includes(activeFilter.replace(/_/g, ' ')) : true;
       return inFilter;
     });
-    f.sort((a, b) => descending(a.id, b.id));
+    f.sort((a, b) => descending(a.date, b.date)); // Most recent first
     return f;
   });
 
-  let displayedStories = $derived(filtered.slice(0, maxStories));
+  let displayedPosts = $derived(filtered.slice(0, maxPosts));
 
   function onLoadMore(e) {
     e.preventDefault();
     e.stopPropagation();
-    maxStories = filtered.length;
+    maxPosts = filtered.length;
   }
 
   // Reset pagination when filter changes
   $effect(() => {
     activeFilter;
-    maxStories = initMax;
+    maxPosts = initMax;
   });
 </script>
 
-<div class="content">
-  <!-- Add FilterBar here -->
-  <FilterBar bind:activeFilter filters={allFilters} />
-  
-  <div class="stories">
-    <Stories stories={displayedStories} />
+<div class="blog-container">
+  <!-- Hero section -->
+  <section class="blog-hero column-wide">
+    <HeroText>
+      <h1>Blog</h1>
+      <p>
+        Insights, tutorials, and thoughts on complex systems, data visualization, 
+        and the stories that emerge from data.
+      </p>
+    </HeroText>
+  </section>
+
+  <!-- Filter bar -->
+  <FilterBar bind:activeFilter filters={allTags} />
+
+  <!-- Blog posts -->
+  <div class="blog-content">
+    <BlogPosts posts={displayedPosts} />
   </div>
 
-  {#if filtered.length > maxStories}
-    <div class="more" class:visible={filtered.length > maxStories}>
+  <!-- Load more button -->
+  {#if filtered.length > maxPosts}
+    <div class="more" class:visible={filtered.length > maxPosts}>
       <button onclick={onLoadMore} class="load-more-btn">
         <ChevronDown class="chevron" />
-        <span class="text">Load More Stories</span>
+        <span class="text">Load More Posts</span>
       </button>
     </div>
   {/if}
 </div>
 
 <style>
-  .content {
+  .blog-container {
     position: relative;
+    min-height: 100vh;
   }
 
-  .stories {
+  .blog-hero {
+    padding: 2rem 0;
+  }
+
+  .blog-content {
     margin-top: 0;
+    position: relative;
   }
 
   .more {
@@ -119,17 +140,19 @@
     background: var(--color-button-hover);
   }
 
-
   .text {
     flex-shrink: 0;
   }
 
   @media (max-width: 768px) {
+    .blog-hero {
+      padding: 1rem 0;
+    }
+
     .load-more-btn {
       padding: 0.875rem 1.75rem;
       margin-bottom: 12%;
       font-size: var(--font-size-xsmall);
     }
-    
   }
 </style>

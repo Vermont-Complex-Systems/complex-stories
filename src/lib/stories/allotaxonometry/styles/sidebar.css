@@ -1,0 +1,81 @@
+/* Sidebar styles */
+.sidebar {
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    transition: width 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+    min-height: 80px; /* Ensure consistent height */
+}
+
+/* When collapsed, center the toggle button */
+.sidebar[style*="4rem"] .sidebar-header {
+    padding: 1rem;
+    justify-content: center;
+}
+
+.sidebar-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.sidebar-content {
+    padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow-y: auto;
+}
+
+.sidebar-collapsed {
+    padding: 1rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.collapsed-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    border-radius: var(--radius);
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.collapsed-item:hover {
+    background-color: var(--border-color);
+}
+
+.alpha-icon {
+    width: 2rem;
+    height: 2rem;
+    background-color: var(--accent-color);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.alpha-mini {
+    font-size: 0.75rem;
+    font-family: monospace;
+    color: var(--text-secondary);
+}

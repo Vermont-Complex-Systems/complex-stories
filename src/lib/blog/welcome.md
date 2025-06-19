@@ -1,0 +1,17 @@
+Welcome to our blog!
+
+This is where we will make announcements, discuss challenges in supporting interactive visualization in science, and share thoughts that won't make it into stories. Think of it as our making-of, or behind-the-scenes look at promoting data essays in science at the [Vermont Complex Systems Institute](https://vermontcomplexsystems.org/). It is also a place where we showcase what we do at the [Vermont Research Open-Source Program Office (VERSO)](https://verso.w3.uvm.edu/), which specializes in improving the open-source ecosystem on and off the University of Vermont campus.
+
+We started this blog for a couple of reasons, chief among them to keep track of the daily challenges in carrying out data-driven, computational projects. As scientists, we are typically trained to become domain experts. Most of us are not computer scientists, but we are increasingly confronted with the following reality:
+
+> The scientific ideals—reproducibility, providing accurate descriptions of the world, or more generally making true statements about the world—are dependent on good programming practices.
+
+We use data essays as a playground to explore and share ideas about adopting good programming practices, while providing fun stories communicating our science. By good programming practices, we mean the following:
+
+- **Writing maintainable code that is easily reproducible, shareable and reusable**. As Ms. Casey would say, please try to enjoy each quality equally, and not show preference for any over the others. Writing maintainable code is writing reproducible code. This includes anything from good variable naming to adopting dependencies that we can trust to be there in the long run. See [Patrick Ball: Principled Data Processing](https://www.youtube.com/watch?v=ZSunU9GQdcI) for an example of what we mean.
+- **Testing code, when necessary**. In industry, software engineers write extensive tests that ensure the code is doing what it is expected to do. It might seem like a weird idea, but it is not. Too often, computer code is doing exactly what it is set up to do, which might or might not be what we intended. But sometimes it is fine to just hack your way through as well.
+- **Deploying a database, once again when necessary**. In some cases, a team might want to reuse the same data, which might be changing over time. As with code, the data can be tested to make sure that the data collection process was bug-free, or trustworthy. Or there might be a need to scale the data process, either in terms of size or speed. Then, having a database accessed via some API is a worthy goal. But there are important considerations about deploying databases, as they might be overkill in most projects.
+- **Project management**. How to work well as a team is often informal in science, but industries that lean heavily on computer code for making profits know better. Working effectively as teams is hard and requires some deep thinking. It is possible to do it without sacrificing the fun and creative side of the scientific process.
+- **Acquiring and structuring data**. Data collection is messy. Even surveys can be improved by creative interfaces, as boring surveys might fail to get attention. Web scraping is more an art than a science. Some people have more data than they know what to do with.
+
+While we share our scientific work through complex stories (visual data essays) *à la [Pudding](https://pudding.cool/)*, this blog will explore the underlying challenges and benefits of adopting good programming practices. 

@@ -1,0 +1,32 @@
+/* CSS Custom Properties for theming */
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --text-muted: #adb5bd;
+    --border-color: #e9ecef;
+    --accent-color: #0066cc;
+    --success-color: #28a745;
+    --error-color: #dc3545;
+    --warning-color: #ffc107;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --radius: 6px;
+    --border: #e9ecef;
+}
+
+/* Dark theme - remove :global() wrapper */
+.dark {
+    --bg-primary: #0f0f0f;
+    --bg-secondary: #1a1a1a;
+    --text-primary: #f5f5f5;
+    --text-secondary: #a3a3a3;
+    --text-muted: #a3a3a3;
+    --border: #404040;
+    --border-color: #404040;
+    --accent-color: #4a9eff;
+    --success-color: #22c55e;
+    --error-color: #ef4444;
+    --warning-color: #f59e0b;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
