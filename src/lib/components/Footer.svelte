@@ -116,16 +116,35 @@
 		transform: rotate(0deg);
 	}
 	
-	/* Responsive adjustments */
+	/* Mobile adjustments - keep same layout but make it fit */
 	@media (max-width: 768px) {
+		.footer {
+			padding: 2rem 1rem 1.5rem; /* Reduce padding */
+		}
+		
 		.footer-content {
-			flex-direction: column;
-			text-align: center;
+			gap: 1rem; /* Reduce gap between sections */
+		}
+		
+		.footer-section h3 {
+			font-size: 10px; /* Smaller headings */
+			margin-bottom: 0.75rem;
+		}
+		
+		.footer-section a {
+			font-size: 12px; /* Smaller links */
+		}
+		
+		.footer-section li {
+			margin-bottom: 0.3rem; /* Tighter spacing */
 		}
 		
 		.footer-logo {
-			order: -1;
-			margin-bottom: 2rem;
+			max-width: 100px; /* Smaller logo */
+		}
+		
+		.footer-logo-img {
+			max-height: 80px; /* Smaller max height */
 		}
 	}
 </style>

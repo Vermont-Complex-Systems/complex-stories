@@ -1,20 +1,25 @@
 <script>
-    // import type { Plugin } from 'svelte-exmarkdown';
-
     import Markdown from 'svelte-exmarkdown';
     import 'katex/dist/katex.min.css';
-	import rehypeKatex from 'rehype-katex';
-	import remarkMath from 'remark-math';
+    import rehypeKatex from 'rehype-katex';
+    import remarkMath from 'remark-math';
+    import rehypeRaw from 'rehype-raw'; // Add this import
 
     let { text } = $props();
 
     const plugins = [
-		{ remarkPlugin: [remarkMath], rehypePlugin: [rehypeKatex] }
-	];
+        { 
+            remarkPlugin: [remarkMath], 
+            rehypePlugin: [rehypeKatex]
+        },
+        { 
+            rehypePlugin: [rehypeRaw] // Add this plugin to enable HTML
+        }
+    ];
 
     function processContent(content) {
         if (!content) {
-            return ""; // Return empty string if content is undefined or null
+            return "";
         }
 
         // Remove reference markers like [^1]

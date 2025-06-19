@@ -41,7 +41,7 @@
     --color-default-story-bg: var(--color-gray-100);
     --fade: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.8) 30%, rgba(255, 255, 255, 1) 50%);
 
-    --font-size-giant: clamp(3rem, 4vw, 5rem);
+    --font-size-giant: clamp(3rem, 10vw, 4rem);
     --font-size-large: clamp(1.5rem, 2.5vw, 2.5rem);
     --font-size-medium: clamp(1rem, 1.75vw, 1.5rem);
     --font-size-small: clamp(15px, 1.25vw, 1rem);

@@ -1,8 +1,8 @@
 Welcome to our blog!
 
-This is where we will make announcements, discuss technical challenges and solutions in doing scientific data essays, and share some of our ideas that won't make it into stories. Think of it as our making-of, or behind-the-scenes look at promoting data essays in science.
+This is where we will make announcements, discuss challenges in supporting interactive visualization in science, and sharing thoughts that won't make it into stories. Think of it as our making-of, or behind-the-scenes look at promoting data essays in science at the [Vermont Complex Systems Institute](https://vermontcomplexsystems.org/).
 
-We started this blog to document, in a nice and interactive way, how we overcome daily challenges in carrying out computational projects in data science. As scientists, we are typically trained to become domain experts. Most of us are not computer scientists, but we are increasingly confronted with the following reality:
+We started this blog for a couple of reason, chief among those to keep track of the daily challenges in carrying out data-drive, computational projects. As scientists, we are typically trained to become domain experts. Most of us are not computer scientists, but we are increasingly confronted with the following reality:
 
 > The scientific ideals--reproducibility, providing accurate description of the world, or more generally making true statements about the world--are dependent on good programming practices.
 

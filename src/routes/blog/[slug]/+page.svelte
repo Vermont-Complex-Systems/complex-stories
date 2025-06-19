@@ -28,17 +28,10 @@
   author={blog.author?.join(', ') || 'Vermont Complex Systems Institute'}
 />
 
-
 <ModeWatcher />
 
-<!-- Floating navigation -->
+<!-- Floating theme toggle -->
 <div class="floating-nav">
-  <nav class="breadcrumb" aria-label="Breadcrumb">
-    <a href="{base}/" class="breadcrumb-link">Home</a>
-    <span class="breadcrumb-separator">/</span>
-    <a href="{base}/blog" class="breadcrumb-link">Blog</a>
-  </nav>
-  
   <button onclick={toggleTheme} class="floating-theme-toggle">
     {#if isDark}
       <Sun class="icon" />
@@ -51,8 +44,22 @@
 
 <article class="blog-post">
   <header class="post-header column-regular">
+    <!-- Back to Blog breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="{base}/blog" class="back-link">← Back to Blog</a>
+    </nav>
+    
+    <!-- Title -->
     <h1>{blog.title}</h1>
     
+    <!-- Tease -->
+    {#if blog.tease && blog.tease.trim()}
+      <p class="post-tease">
+        {blog.tease}
+      </p>
+    {/if}
+    
+    <!-- Meta -->
     <div class="post-meta">
       <time datetime={blog.date?.toISOString()}>
         {blog.month}
@@ -83,17 +90,13 @@
       </div>
     {/if}
   </div>
-
-  <footer class="post-footer column-regular">
-    <a href="{base}/blog" class="back-link">← Back to Blog</a>
-  </footer>
 </article>
 
 <style>
   /* Floating navigation container */
   .floating-nav {
     position: fixed;
-    top: 2.5rem; /* Keep this the same */
+    top: 2.5rem;
     right: 2.5rem;
     z-index: var(--z-overlay);
     display: flex;
@@ -101,33 +104,8 @@
     gap: 1rem;
   }
 
-  /* Breadcrumb in floating position */
-  .breadcrumb {
-    font-family: var(--mono);
-    font-size: var(--font-size-small);
-    color: var(--color-secondary-gray);
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  .breadcrumb-link {
-    color: var(--color-link);
-    text-decoration: none;
-    transition: color var(--transition-medium);
-  }
-
-  .breadcrumb-link:hover {
-    color: var(--color-link-hover);
-  }
-
-  .breadcrumb-separator {
-    margin: 0 0.5rem;
-    opacity: 0.6;
-  }
-
   /* Theme toggle */
   .floating-theme-toggle {
-    position: static; /* Changed since it's now in floating-nav */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -142,7 +120,7 @@
     width: 2.5rem;
     height: 2.5rem;
     box-shadow: none !important;
-    flex-shrink: 0; /* Prevent shrinking */
+    flex-shrink: 0;
   }
   
   .floating-theme-toggle:hover {
@@ -167,7 +145,28 @@
     opacity: 0.7;
   }
 
-  /* YOUR EXISTING STYLES */
+  /* Breadcrumb with back link */
+  .breadcrumb {
+    margin-bottom: 0.5rem;
+  }
+
+  .back-link {
+    font-family: var(--mono);
+    font-size: var(--font-size-small);
+    text-transform: uppercase;
+    color: var(--color-good-blue);
+    text-decoration: none;
+    transition: all var(--transition-medium);
+    letter-spacing: 0.5px;
+    display: inline-block;
+  }
+
+  .back-link:hover {
+    color: var(--color-link-hover);
+    transform: translateX(-2px);
+  }
+
+  /* Blog post styles */
   .blog-post {
     max-width: var(--width-column-wide);
     margin: 0 auto;
@@ -188,16 +187,26 @@
     text-transform: capitalize;
   }
 
+  /* Post tease */
+  .post-tease {
+    font-size: var(--font-size-medium);
+    color: var(--color-secondary-gray);
+    line-height: 1.4;
+    margin: 0 0 2rem 0;
+    font-weight: 300;
+  }
+
   .post-meta {
     font-family: var(--mono);
     font-size: var(--font-size-small);
     color: var(--color-secondary-gray);
-    text-transform: uppercase;
+    text-transform: capitalize;
     letter-spacing: 0.5px;
   }
 
   .authors {
     margin-left: 1rem;
+    text-transform: capitalize;
   }
 
   .tags {
@@ -219,46 +228,62 @@
     margin-bottom: 3rem;
   }
 
-  .post-footer {
-    text-align: center;
-    border-top: 1px solid var(--color-border);
-    padding-top: 2rem;
-  }
-
-  .back-link {
-    font-family: var(--mono);
-    font-size: var(--font-size-small);
-    text-transform: uppercase;
-    color: var(--color-link);
-    text-decoration: underline;
-  }
-
-  .back-link:hover {
-    color: var(--color-link-hover);
-  }
-
   @media (max-width: 768px) {
     .blog-post {
-      padding: 1rem 0.5rem;
+      padding: 2rem 0.5rem;
     }
     
     .post-header h1 {
-      font-size: var(--font-size-large);
+      font-size: var(--font-size-giant);
+    }
+
+    .post-tease {
+      font-size: var(--font-size-medium);
     }
 
     .floating-nav {
       top: 0.75rem;
       right: 0.75rem;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0.5rem;
     }
 
-    .breadcrumb {
-      font-size: var(--font-size-xsmall);
+    .back-link {
+      font-size: 12px;
+    }
+
+    :global(.post-content .image-grid) {
+    flex-direction: column;
+    align-items: center; /* Center the entire image items */
+    }
+    
+    :global(.post-content .image-item) {
+      max-width:90%; /* Limit width and center */    
+    }
+    
+    :global(.post-content .image-grid img) {
+      height: 250px;
     }
   }
 
+    :global(.post-content .image-item a) {
+  display: block;
+  text-decoration: none;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+  height: 200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Move shadow to container */
+  transition: transform var(--transition-medium), box-shadow var(--transition-medium);
+}
+
+:global(.post-content .image-grid img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0; /* Remove border-radius from image */
+  box-shadow: none; /* Remove shadow from image */
+  transition: none; /* Remove transition from image */
+  display: block;
+}
   /* All your existing global styles unchanged */
   :global(.post-content blockquote) {
     border: none;
@@ -274,6 +299,18 @@
   :global(.post-content blockquote p) {
     margin: 0;
   }
+  
+  :global(.post-content .image-caption) {
+  font-family: var(--sans);
+  font-size: var(--font-size-small);
+  color: var(--color-secondary-gray);
+  text-align: center;
+  margin: 0;
+  padding: 0 0.5rem;
+  line-height: 1.3;
+  font-weight: 500;
+}
+
 
   :global(.dark .post-content blockquote) {
     color: #4a90e2;
@@ -317,5 +354,35 @@
     margin: 0.75rem 0;
     line-height: 1.2;
   }
-  
+
+  /* Add to your blog post styles in +page.svelte */
+  :global(.post-content .image-grid) {
+    display: flex;
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+
+  :global(.post-content .image-grid img) {
+    flex: 1;
+    height: 200px;
+    object-fit: cover;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform var(--transition-medium), box-shadow var(--transition-medium);
+  }
+
+  :global(.post-content .image-grid img:hover) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  :global(.dark .post-content .image-grid img) {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  :global(.dark .post-content .image-grid img:hover) {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+
 </style>

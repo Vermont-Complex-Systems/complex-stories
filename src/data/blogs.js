@@ -15,10 +15,16 @@ const clean = data
       // Try different possible column names for title
       title: d.title || d.hed || d.short || d.name || 'Untitled',
       // Try different possible column names for description  
-      tease: d.tease || d.description || d.excerpt || d.summary || '',
+      tease: d.tease || d.description || d.summary || '',
       excerpt: d.excerpt || d.tease || d.description || d.summary || '',
       // Handle author field
-      author: d.author ? d.author.split(",").map(a => a.trim()) : [],
+      author: d.author ? d.author.split(",").map(a => 
+          a.trim()
+          .toLowerCase()
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
+        ) : [],
       // Handle tags field
       tags: d.tags ? d.tags.split(",").map(t => t.trim()) : [],
       hasMarkdown: d.content_type === 'markdown',
