@@ -1,3 +1,3 @@
 # Complex stories
 
-A website by the Vermont Complex Systems Institute that showcase our work with data essays. 
+Scientific data essay at the Vermont Complex Systems Institute, inspired by [The Pudding](https://pudding.cool/).
