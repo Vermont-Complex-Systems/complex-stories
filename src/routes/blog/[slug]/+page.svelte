@@ -81,7 +81,7 @@
     </div>
   </header>
 
-  <div class="post-content column-regular">
+  <div class="post-content column-wide">
     {#if blog.hasMarkdown}
       <MarkdownRenderer text={content} />
     {:else}
@@ -302,13 +302,8 @@
 
   /* Inline code */
   :global(.post-content p code, .post-content li code) {
-    background: var(--color-input-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 3px;
-    padding: 0.2em 0.4em;
     font-family: var(--mono);
-    font-size: 0.65em;
-    white-space: nowrap;
+    font-size: 0.75em;
   }
 
   /* Dark mode code */
