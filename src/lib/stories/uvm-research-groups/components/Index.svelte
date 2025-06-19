@@ -1,5 +1,6 @@
 <!-- src/routes/+page.svelte -->
 <script>
+    import Nav from './Nav.svelte';
   import Scrolly from '$lib/components/helpers/Scrolly.svelte';
   import MorphingChart from './MorphingChart.svelte';
   import Hero from './Hero.svelte';
@@ -11,6 +12,8 @@
   
   const doddsSection = data.zoomingIn;
   
+  let isDarkMode = $state(false);
+
   let width = $state(900);
   let height = 1800;
   let scrollyIndex = $state();
@@ -19,6 +22,8 @@
 <svelte:head>
   <title>Academic Career Analysis</title>
 </svelte:head>
+
+<Nav bind:isDarkMode />
 
 <Hero {coauthorData} {paperData} />
 
@@ -66,7 +71,7 @@
 
   h1 {
     text-align: center;
-    color: #333;
+    color: var(--step-bg);
     margin-bottom: 2rem;
     font-size: 1.8rem;
   }
@@ -90,28 +95,53 @@
     height: fit-content;
   }
 
-  .step {
-    min-height: 60vh;
-    display: flex;
-    align-items: center;
-    opacity: 0.3;
-    transition: opacity 0.5s ease;
-    margin-bottom: 2rem;
+    
+    .step {
+      justify-content: center;
+      height: 80vh;
+      display: flex;
+      align-items: center;
+      place-items: center;
+      opacity: 0.3;
+      transition: opacity 0.5s ease;
+      margin-bottom: 2rem;
+    }
+
+	
+    .step p {
+          font-size: 1.1rem;
+          line-height: 1.6;
+          color: var(--step-bg);
+          background: white;
+          padding: 1.5rem;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          transition: background 500ms ease, color 500ms ease, box-shadow 500ms ease;
   }
 
-  .step.active {
-    opacity: 1;
-  }
+    .step.active {
+      opacity: 1;
+    }
+      
+    .step.active p {
+        background: var(--step-active-bg, white);
+        color: var(--step-active-text, black);
+        box-shadow: var(--step-active-shadow, 1px 1px 10px rgba(0, 0, 0, 0.2));
+    }
+    
+    /* Dark mode overrides */
+    :global(.dark) .step p {
+        --step-bg: #2a2a2a;
+        --step-text: #888;
+        --step-shadow: 1px 1px 10px rgba(227, 227, 227, 0.5);
+    }
 
-  .step p {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: #333;
-    background: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  }
+    :global(.dark) .step.active p {
+        --step-active-bg: #383838;
+        --step-active-text: #fff;
+        --step-active-shadow: 1px 1px 10px rgba(230, 230, 230, 0.5);
+    }
+
 
   /* Medium screens */
   @media (max-width: 1200px) {

@@ -53,6 +53,7 @@
     --font-weight-thin: 100;
 
     --margin: 16px;
+    --width-column-full-screen: 1280px;
     --width-column-wide: 1180px;
     --width-column-regular: 720px;
     --width-padded: 80vw;

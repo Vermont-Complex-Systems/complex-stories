@@ -170,24 +170,24 @@
     align-items: center;
     height: 100vh;
     font-size: 1.5rem;
-    color: #666;
+    color: #c2c2c2;
   }
 
   .title {
     font-size: 24px;
     font-weight: bold;
-    fill: #333;
+    fill: #c2c2c2;
   }
 
   .section {
     font-size: 18px;
     font-weight: 600;
-    fill: #555;
+    fill: #c2c2c2;
   }
 
   .hint {
     font-size: 16px;
-    fill: #777;
+    fill: #c2c2c2;
     animation: bounce 2s infinite;
   }
 

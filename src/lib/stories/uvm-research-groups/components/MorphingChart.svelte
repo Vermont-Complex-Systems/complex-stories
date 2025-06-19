@@ -34,7 +34,7 @@
 
   // FIXED: Consistent margins with space for circle radius
   const MARGIN_TOP = 50;
-  const MARGIN_BOTTOM = 300; // Extra space for circles at bottom
+  const MARGIN_BOTTOM = 415; // Extra space for circles at bottom
   const MAX_CIRCLE_RADIUS = 15; // From radiusScale max
 
   // FIXED: D3 time scale with proper margins accounting for circle radius
@@ -219,7 +219,7 @@
   <div class="viz-content">
     <div class="plot-container">
       <svg {width} {height} 
-           style="background: white; transform: scaleX({scaleX}) scaleY({scaleY}) translateY({translateY}px); transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);">
+           style="transform: scaleX({scaleX}) scaleY({scaleY}) translateY({translateY}px); transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);">
         
         <g>
           <text x={width * 0.25} y={MARGIN_TOP - 30} text-anchor="middle" font-size="14" font-weight="bold" fill="#666">Coauthors</text>
@@ -228,7 +228,7 @@
           {#each yearTicks as year}
             {@const yearDate = new Date(year, 0, 1)}
             {@const y = timeScale(yearDate)}
-            <line x1="0" x2={width} y1={y} y2={y} stroke="#f0f0f0" stroke-width="1"/>
+            <line x1="0" x2={width} y1={y} y2={y} stroke="#f0f0f0" stroke-width="0.1"/>
             <text x="10" y={y - 5} text-anchor="start" font-size="11" fill="#666">{year}</text>
           {/each}
           
@@ -275,21 +275,14 @@
     width: 100%;
   }
 
-  .viz-content {
-    padding: 2rem;
-    width: 100%;
-    text-align: center;
-    overflow: visible; /* Don't clip the legend */
-  }
 
   .plot-container {
-      margin-bottom: 1.5rem;
       display: flex;
       justify-content: center;
       position: relative; /* For absolute positioning of legend */
     }
 
-  h2 {
+  /* h2 {
     position: sticky;
     top: 0;
     z-index: 10;
@@ -307,7 +300,7 @@
   h2 span {
     color: #667eea;
     font-weight: bold;
-  }
+  } */
 
   .start-message {
     color: #718096;

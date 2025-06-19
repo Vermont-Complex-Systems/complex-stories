@@ -59,7 +59,8 @@
   .legend {
     position: absolute;
     right: -200px;
-    background: rgba(255, 255, 255, 0.95);
+    top: 2rem;
+    background: var(--step-bg);
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 12px;
@@ -91,7 +92,7 @@
   .legend-title {
     font-weight: bold;
     font-size: 12px;
-    color: #333;
+    color: var(--step-bg);
     margin-bottom: 4px;
     text-align: center;
     border-bottom: 1px solid #eee;
@@ -100,6 +101,7 @@
 
   .legend-items {
     display: flex;
+    color: var(--step-bg);
     flex-direction: column;
     gap: 6px;
   }
@@ -123,13 +125,10 @@
     transition: background-color 0.4s ease;
   }
 
-  .paper-dot {
-    border-width: 1.5px;
-  }
 
   .legend-item span {
     font-size: 10px;
-    color: #555;
+    color: var(--step-bg);
     line-height: 1.2;
   }
 
