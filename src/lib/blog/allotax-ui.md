@@ -1,4 +1,7 @@
-![/py_allotax_example005-crop.jpg](/py_allotax_example005-crop.jpg)
+
+<a href="https://vermont-complex-systems.github.io/complex-stories/allotaxonometry" target="_blank" rel="noopener">
+    <img src="/py_allotax_example005-crop.jpg" alt="ALLotaxonometry">
+</a>
 
 The allotaxonograph is a scientific tool developed by the [Computational Story Lab](https://compstorylab.org/) to compare any pairs of systems with meaningfully rankable components. For instance, think about baby names at different times, with their count frequency being heavy-tailed (that is, the most frequent baby names occur an order of magnitude more than less frequent names). It is a tool designed to understand complex systems, but could benefit to a larger audience, such as policy makers or applied scientists.
 
