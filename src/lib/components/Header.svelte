@@ -69,25 +69,27 @@
 <!-- Menu component -->
 <Menu visible={isMenuOpen} close={closeMenu} />
 
+<!-- Header.svelte - keep all your script the same, just update the styles -->
 <style>
-	.header {
-		position: sticky;
-		top: 0;
-		z-index: var(--z-overlay);
-		width: 100%;
-		background: var(--color-bg);
-		padding: 1.5rem 0 0.5rem 0; /* Current padding */
-		min-height: 7rem;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		position: relative;
-		}
-	
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-overlay);
+    width: 100%;
+    background: var(--color-bg);
+    padding: 1.5rem 0 0.5rem 0;
+    min-height: 7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* All your existing .header-left, .title-link, etc. styles stay the same... */
   .header-left {
     position: absolute;
     left: 2.5rem;
-    top: 2.5rem; /* Fixed position from top instead of center */
+    top: 2.5rem;
   }
   
   .title-link {
@@ -135,97 +137,99 @@
   
   .logo {
     width: 100%;
-    height: auto; /* This is good */
+    height: auto;
     border-radius: var(--border-radius);
     max-height: 8rem;
-    /* Add this to preserve aspect ratio */
     object-fit: contain;
   }
   
   .header-right {
     position: absolute;
-    top: 2.5rem; /* Move down to give more space */
+    top: 2.5rem;
     right: 2.5rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
-	
-	.theme-toggle {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		/* Remove all background and border styles */
-		background: transparent !important;
-		border: none !important;
-		/* Keep the icon color matching the foreground */
-		color: var(--color-fg) !important;
-		text-transform: none !important;
-		cursor: pointer;
-		padding: 0.5rem;
-		border-radius: 0.5rem;
-		transition: all var(--transition-medium);
-		width: 2.5rem;
-		height: 2.5rem;
-		/* Remove box-shadow */
-		box-shadow: none !important;
-		backdrop-filter: none;
-	}
-	
-	.menu-toggle {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		/* Override global button styles */
-		background: rgba(255, 255, 255, 0.9) !important;
-		/* border: 1px solid rgba(0, 0, 0, 0.08) !important; */
-		color: #4a5568 !important;
-		/* Reset global button styles */
-		text-transform: none !important;
-		cursor: pointer;
-		padding: 0.5rem;
-		border-radius: 0.5rem;
-		transition: all var(--transition-medium);
-		width: 2.5rem;
-		height: 2.5rem;
-		backdrop-filter: blur(12px);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-	}
-	
-	/* Dark mode styles */
-	:global(.dark) .theme-toggle,
-	:global(.dark) .menu-toggle {
-		background: var(--color-bg) !important;
-		border-color: var(--color-bg) !important;
-		color: #e2e8f0 !important;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-	}
-	
-	.theme-toggle:hover,
-	.menu-toggle:hover {
-		background: rgba(247, 250, 252, 0.95) !important;
-		border-color: rgba(0, 0, 0, 0.15) !important;
-		transform: rotate(var(--right-tilt)) scale(1.05);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-	}
-	
-	:global(.dark) .theme-toggle:hover,
-	:global(.dark) .menu-toggle:hover {
-		background: rgba(74, 85, 104, 0.95) !important;
-		border-color: rgba(255, 255, 255, 0.2) !important;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-	}
-	
-	 @media (max-width: 768px) {
 
-	/* Hide theme toggle on mobile */
+  /* CLEAN button styles - no !important needed */
+  .theme-toggle,
+  .menu-toggle {
+    /* Reset any browser defaults */
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    
+    /* Our component styling */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    transition: all var(--transition-medium);
+  }
+  
+  .theme-toggle {
+    /* Theme toggle is transparent */
+    background: transparent;
+    color: var(--color-fg);
+  }
+  
+  .menu-toggle {
+    /* Menu toggle has a background */
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    color: #4a5568;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .theme-toggle:hover {
+    transform: rotate(var(--right-tilt)) scale(1.05);
+    background: rgba(0, 0, 0, 0.05);
+  }
+  
+  .menu-toggle:hover {
+    background: rgba(247, 250, 252, 0.95);
+    border-color: rgba(0, 0, 0, 0.15);
+    transform: rotate(var(--right-tilt)) scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Dark mode - clean and simple */
+  :global(.dark) .theme-toggle {
+    color: var(--color-fg);
+  }
+  
+  :global(.dark) .menu-toggle {
+    background: rgba(74, 85, 104, 0.9);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  :global(.dark) .theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  :global(.dark) .menu-toggle:hover {
+    background: rgba(74, 85, 104, 0.95);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Mobile styles */
+  @media (max-width: 768px) {
     .theme-toggle {
       display: none;
     }
 
     .header {
-    	padding: 1rem 0 0 0; /* Reduced bottom padding from 1rem to 0.25rem */
-    	min-height: 5rem;
+      padding: 1rem 0 0 0;
+      min-height: 5rem;
     }
     
     .header-left {
@@ -244,7 +248,6 @@
     .logo-container {
       max-width: 150px;
       margin-left: 3.5rem;
-      aspect-ratio: 1; /* Adjust this to match your logo's actual ratio */
     }
     
     .header-right {
@@ -254,15 +257,14 @@
     
     .logo {
       max-height: 4rem;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
     }
   }
   
-	:global(.dark) .logo {
-		filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
-		padding: 4px;
-		border-radius: var(--border-radius);
-	}
+  :global(.dark) .logo {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+    padding: 4px;
+    border-radius: var(--border-radius);
+  }
+
+  
 </style>

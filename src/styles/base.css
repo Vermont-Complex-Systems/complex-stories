@@ -1,0 +1,228 @@
+/* =============================================================================
+   BASE COMPONENT STYLES
+   
+   Minimal, sensible defaults for interactive elements.
+   These build on Josh's reset to provide basic functionality.
+   Components can override these as needed.
+   ============================================================================= */
+
+/* =============================================================================
+   BUTTONS
+   ============================================================================= */
+
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+    /* Reset browser defaults (Josh's reset handles font: inherit) */
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    
+    /* Minimal base styling */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius);
+    transition: all var(--transition-fast);
+    
+    /* Accessibility */
+    touch-action: manipulation; /* Prevents double-tap zoom on mobile */
+}
+
+button:disabled,
+input[type="button"]:disabled,
+input[type="submit"]:disabled,
+input[type="reset"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Primary button variant (opt-in with .btn-primary class) */
+.btn-primary {
+    background: var(--color-button-bg);
+    color: var(--color-button-fg);
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--color-button-hover);
+}
+
+/* =============================================================================
+   FORM INPUTS
+   ============================================================================= */
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="url"],
+input[type="number"],
+textarea,
+select {
+    /* Build on Josh's reset (font: inherit) */
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-input-bg);
+    color: var(--color-input-fg);
+    transition: border-color var(--transition-fast);
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus,
+input[type="url"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--color-focus);
+    box-shadow: 0 0 0 1px var(--color-focus);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 6rem;
+}
+
+::placeholder {
+    color: var(--color-placeholder);
+    opacity: 1;
+}
+
+/* =============================================================================
+   SELECT DROPDOWNS
+   ============================================================================= */
+
+select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20256%20448%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M255.9%20168c0-4.2-1.6-7.9-4.8-11.2-3.2-3.2-6.9-4.8-11.2-4.8H16c-4.2%200-7.9%201.6-11.2%204.8S0%20163.8%200%20168c0%204.4%201.6%208.2%204.8%2011.4l112%20112c3.1%203.1%206.8%204.6%2011.2%204.6%204.4%200%208.2-1.5%2011.4-4.6l112-112c3-3.2%204.5-7%204.5-11.4z%22%2F%3E%3C%2Fsvg%3E");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 0.75rem;
+    padding-right: 2.5rem;
+    appearance: none;
+}
+
+/* =============================================================================
+   CHECKBOXES AND RADIOS
+   ============================================================================= */
+
+input[type="checkbox"],
+input[type="radio"] {
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.5rem;
+    cursor: pointer;
+}
+
+/* =============================================================================
+   TABLES
+   ============================================================================= */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+th,
+td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+}
+
+th {
+    font-weight: 600;
+    background: var(--color-input-bg);
+}
+
+/* =============================================================================
+   HORIZONTAL RULES
+   ============================================================================= */
+
+hr {
+    border: none;
+    height: 1px;
+    background: var(--color-border);
+    margin: 2rem 0;
+}
+
+/* =============================================================================
+   CODE BLOCKS
+   ============================================================================= */
+
+code {
+    font-family: var(--mono);
+    font-size: 0.875em;
+    background: var(--color-input-bg);
+    padding: 0.125rem 0.25rem;
+    border-radius: 2px;
+}
+
+pre {
+    font-family: var(--mono);
+    background: var(--color-input-bg);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+pre code {
+    background: none;
+    padding: 0;
+}
+
+/* =============================================================================
+   BLOCKQUOTES
+   ============================================================================= */
+
+blockquote {
+    margin: 2rem 0;
+    padding: 0 0 0 1.5rem;
+    border-left: 3px solid var(--color-border);
+    font-style: italic;
+    color: var(--color-secondary-gray);
+}
+
+/* =============================================================================
+   LISTS
+   ============================================================================= */
+
+ul,
+ol {
+    padding-left: 1.5rem;
+    margin: 1rem 0;
+}
+
+li {
+    margin: 0.25rem 0;
+}
+
+/* =============================================================================
+   DEFINITION LISTS
+   ============================================================================= */
+
+dl {
+    margin: 1rem 0;
+}
+
+dt {
+    font-weight: 600;
+    margin-top: 1rem;
+}
+
+dd {
+    margin: 0.25rem 0 0 1.5rem;
+}
