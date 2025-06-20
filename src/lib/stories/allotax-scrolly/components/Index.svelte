@@ -19,7 +19,7 @@
     let scrollyIndex = $state();
 	
 	const steps = data.steps;
-    let isDarkMode = $state(false);
+    let isDark = $state(false);
 
     // Data systems
     let sys1 = $state(boys1895);
@@ -106,7 +106,8 @@
 
 </script>
 
-<Nav bind:isDarkMode />
+<Nav bind:isDark />
+
 
 <section>
     <h1>A whirlwind tour of the <a href="https://vermont-complex-systems.github.io/complex-stories/allotaxonometry" target="_blank">allotaxonometer</a></h1>
@@ -221,18 +222,30 @@
 
 
 <style>
-	section {
-        margin: 1rem auto; /* Reduced from 2rem */
-        max-width: 1200px;
-        padding: 0 2rem;
+     @import '../theme.css';
+
+    section {
+        margin: var(--story-spacing-sm) auto;
+        max-width: var(--story-max-width);
+        padding: 0 var(--story-spacing-md);
     }
 
+    
+    section h1 {
+        font-size: var(--font-size-giant);
+        padding: var(--story-spacing-sm) 0 var(--story-spacing-lg) 0;
+    }
+
+    section h1 a {
+            font-family: var(--mono);
+        }
 
 	section p {
-		font-size: 22px;
-		max-width: 800px;
-		line-height: 1.3;
-	}
+        font-size: var(--story-text-size);
+        max-width: var(--story-text-width);
+        line-height: var(--story-line-height);
+    }
+
 
     .initial-chart {
         margin-top: 2rem; /* Add more space above charts */
@@ -242,22 +255,20 @@
 	/* Keep only the first section's scrolly styles */
 
 	.chart-container-scrolly {
-        margin-top: 3rem; /* More space before the diamond plot section */
-		width: 40%;
-		position: sticky;
-		top: calc(50vh - 350px); /* Moved up by 75px */
-		right: 5%;
-		margin-left: auto;
-	}
+        margin-top: var(--story-spacing-lg);
+        width: var(--scrolly-chart-width);
+        position: sticky;
+        top: var(--scrolly-sticky-offset);
+        float: right;
+        margin-right: 5%;
+        clear: both;
+    }
 
 	 .visualization-container {
         display: flex;
         flex-direction: column;
         gap: 1rem;
-        
-        /* Allow it to be as wide as needed */
-        width: max-content;
-        max-width: 100%;
+        /* Don't constrain the width - let it be natural */
     }
 
 	.diamondplot {
@@ -297,6 +308,11 @@
     }
     
 	/* Scoped CSS transitions - only for diamond plot */
+    .diamondplot :global(rect),
+    .diamondplot :global(text) {
+        transition: all var(--diamond-transition);
+    }
+
 	.diamondplot :global(rect) {
 		transition: 
 			x 700ms cubic-bezier(0.76, 0, 0.24, 1), 
@@ -314,24 +330,18 @@
 			opacity 700ms cubic-bezier(0.76, 0, 0.24, 1);
 	}
 
-	.diamondplot :global(circle) {
-		transition: 
-			cx 700ms cubic-bezier(0.76, 0, 0.24, 1), 
-			cy 700ms cubic-bezier(0.76, 0, 0.24, 1),
-			fill 700ms cubic-bezier(0.76, 0, 0.24, 1),
-			opacity 700ms cubic-bezier(0.76, 0, 0.24, 1);
-	}
-
 	.spacer {
 		height: 75vh;
 	}
 
-	.step {
-		height: 80vh;
-		display: flex;
-		place-items: center;
-		justify-content: center;
-	}
+	 .step {
+        height: 80vh;
+        display: flex;
+        place-items: center;
+        justify-content: flex-start; /* Align to left */
+        margin-right: 60%;
+    }
+
 
 	.step p {
         padding: 0.5rem 1rem;
@@ -344,8 +354,6 @@
         box-shadow: var(--step-shadow, 1px 1px 10px rgba(0, 0, 0, 0.2));
         z-index: 10;
         transition: background 500ms ease, color 500ms ease, box-shadow 500ms ease;
-        width: 40%;
-        transform: translateX(-60%);
     }
 
     
@@ -369,47 +377,68 @@
     }
 
 	@media (max-width: 1200px) {
-		section {
-			padding: 0 1rem;
-		}
+        section {
+            padding: 0 1rem; /* Less side padding */
+        }
 
-		section p {
-			font-size: 18px;
-			max-width: none;
-		}
+        section p {
+            font-size: 18px; /* Smaller text */
+            max-width: none;
+        }
 
-		.chart-container-scrolly {
-            /* Increase width or make it flexible */
-            width: min(600px, 50vw); /* Use pixels or larger percentage */
+        .chart-container-scrolly {
             position: sticky;
-            top: calc(50vh - 275px);
-            right: 5%;
-            margin-left: auto;
-            
-            /* Ensure it doesn't overflow */
-            overflow: visible; /* or overflow: auto if you want scrollbars */
-        }   
+            top: calc(50vh - 200px); /* Less aggressive positioning */
+            width: 100%;
+            max-width: 600px;
+            margin: 2rem auto; /* Center it, not right-aligned */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-		.additional-charts {
-			flex-direction: column;
-			gap: 1rem;
-			align-items: center;
-		}
+        .additional-charts {
+            flex-direction: column;
+            gap: 1rem; /* Much smaller gap */
+            margin-left: 0; /* Remove the 12rem offset */
+            align-items: center;
+        }
 
-		.step {
-			margin-left: 0;
-			padding: 0 1rem;
-			justify-content: center;
-		}
+        .step p {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+            transform: none; /* Remove the translateX offset */
+        }
+    }
 
-		.step p {
-			width: 100%;
-			max-width: 600px;
-			margin: 0 auto;
-			text-align: center;
-			transform: none;
-		}
-	}
+    /* Add extra small screen support */
+    @media (max-width: 768px) {
+
+        section h1 {
+            font-size: var(--font-size-xlarge); 
+        }
+        
+        section h1 a {
+               font-size: var(--font-size-large);
+               font-family: var(--mono);
+        }
+        
+        .initial-chart {
+            margin: 1.5rem 0; /* Tighter spacing */
+        }
+        
+        .chart-container-scrolly {
+            top: calc(50vh - 150px); /* Even less aggressive */
+            max-width: 90vw; /* Use more screen width */
+        }
+        
+        section p {
+            font-size: 16px; /* Even smaller text */
+            line-height: 1.4; /* Better readability */
+        }
+    }
 
     /* Dashboard section styles */
     section:has(.dashboard-section) {
@@ -420,14 +449,14 @@
     }
 
     .dashboard-section {
-        width: 100%;
-        padding: 4rem 0 0 8rem; /* Only top and side padding */
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        padding: 4rem 0 0 8rem;
         text-align: center;
     }
 
     .dashboard-container {
-        width: 100vw;
-        margin-left: calc(-50vw + 50%); /* Break out of container */
+        width: 100%;
         display: flex;
         justify-content: center;
         padding: 1rem 0;

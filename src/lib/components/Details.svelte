@@ -28,7 +28,6 @@
 
 <style>
   details {
-    font-size: var(--font-size-small);
     font-family: var(--sans);
     font-weight: var(--font-weight-bold);
     padding: 1rem 0;
@@ -36,12 +35,12 @@
   }
 
   summary {
-    color: var(--color-fg);  /* Fixed: use our defined color */
+    color: var(--color-fg);
     padding-bottom: 0.75rem;
-    font-size: max(16px, var(--font-size-small));
+    font-size: var(--font-size-medium); /* Increased from small */
     cursor: pointer;
     transition: transform calc(var(--1s) * 0.25);
-    list-style: none; /* Remove default triangle */
+    list-style: none;
   }
 
   /* Custom triangle for summary */
@@ -66,11 +65,13 @@
     padding: 1rem;
     font-family: var(--serif);
     font-weight: var(--font-weight-normal);
+    font-size: var(--font-size-medium); /* Add explicit size */
   }
 
   .inner p {
     margin: 0.75rem 0;
-    line-height: 1.6;
+    line-height: 1.5;
+    font-size: var(--font-size-medium); /* Ensure paragraphs are readable */
   }
 
   .inner p:first-child {
@@ -91,6 +92,7 @@
   li {
     padding-bottom: 1rem;
     line-height: 1.5;
+    font-size: var(--font-size-medium); /* Add explicit size for list items */
   }
 
   li:last-child {
@@ -103,6 +105,7 @@
     font-weight: var(--font-weight-bold);
     display: block;
     margin-bottom: 0.25rem;
+    font-size: var(--font-size-medium); /* Ensure strong text is readable too */
   }
 
   /* Link styling within details */

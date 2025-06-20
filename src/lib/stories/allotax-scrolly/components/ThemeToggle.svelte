@@ -1,36 +1,71 @@
 <script>
     import { Button } from "bits-ui";
+    import { Sun, Moon } from "lucide-svelte";
+    import { ModeWatcher, setMode } from "mode-watcher";
+
+    let { 
+        isDark = $bindable(false),
+        class: className = "",
+        hideOnMobile = true
+    } = $props();
     
-    let { isDarkMode = $bindable(false) } = $props();
+    // Build the class string inside the component
+    let buttonClass = $derived(`theme-toggle ${className} ${hideOnMobile ? 'hide-mobile' : ''}`);
+    
+    $effect(() => {
+        isDark = document.documentElement.classList.contains('dark');
+    });
     
     function toggleTheme() {
-        isDarkMode = !isDarkMode;
-        document.documentElement.classList.toggle('dark', isDarkMode);
+        isDark = !isDark;
+        setMode(isDark ? 'dark' : 'light');
     }
 </script>
 
-<div class="theme-toggle">
-    <Button.Root onclick={toggleTheme} variant="outline" size="sm">
-        {#if isDarkMode}
-            <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="5"/>
-                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-            </svg>
-        {:else}
-            <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-            </svg>
-        {/if}
-        <span class="sr-only">Toggle theme</span>
-    </Button.Root>
-</div>
+<ModeWatcher />
+
+<Button.Root 
+    onclick={toggleTheme}  
+    class={buttonClass}
+>
+    {#if isDark}
+        <Sun class="icon" />
+    {:else}
+        <Moon class="icon" />
+    {/if}
+    <span class="sr-only">Toggle theme</span>
+</Button.Root>
 
 <style>
-    .theme-toggle {
-        position: absolute;
-        top: 1rem;
-        right: 1.5rem;
-        z-index: 1001;
+    :global(.theme-toggle) {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent !important;
+        border: none !important;
+        color: var(--color-fg) !important;
+        cursor: pointer;
+        padding: 0.5rem !important;
+        border-radius: 0.5rem;
+        transition: all var(--transition-medium);
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+
+
+    :global(.theme-toggle:hover) {
+        background: rgba(0, 0, 0, 0.05) !important;
+        transform: rotate(var(--right-tilt)) scale(1.05);
+    }
+    
+    :global(.dark .theme-toggle:hover) {
+        background: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    @media (max-width: 768px) {
+        :global(.theme-toggle.hide-mobile) {
+            display: none !important;
+        }
     }
 
     .sr-only {

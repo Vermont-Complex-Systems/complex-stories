@@ -62,14 +62,12 @@
   </section>
 {/each}
 
-<!-- Your existing styles stay the same -->
 <style>
   .section-heading {
     line-height: 1.2;
     margin-top: 3rem;      /* Add space above section headings */
     margin-bottom: 1.5rem; /* Add space below section headings */
   }
-
 
   .below {
     margin-top: 2rem;

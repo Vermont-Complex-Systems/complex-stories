@@ -20,9 +20,10 @@
 
     /* Semantic type scale */
     --font-size-giant: clamp(3rem, 10vw, 4rem);
+    --font-size-xlarge: clamp(1.8rem, 5vw, 3rem);
     --font-size-large: clamp(1.5rem, 2.5vw, 2.5rem);
     --font-size-medium: clamp(1rem, 1.75vw, 1.5rem);
-    --font-size-small: clamp(15px, 1.25vw, 1rem);
+    --font-size-small: clamp(15px, 1.25vw, 1.2rem);
     --font-size-xsmall: clamp(12px, 1vw, 0.8rem);
 
     /* Layout tokens */

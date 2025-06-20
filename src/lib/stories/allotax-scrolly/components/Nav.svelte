@@ -1,60 +1,59 @@
 <script>
     import ThemeToggle from './ThemeToggle.svelte';
     import { base } from "$app/paths";
-    let { isDarkMode = $bindable(false) } = $props();
+    let { isDark = $bindable(false) } = $props();
 </script>
 
-<div class="sticky-header">
-    <div class="header-controls">
-        <div class="logo-container">
-            <a href="{base}/" class="logo-link">
-                <img src="{base}/octopus-swim-left.png" alt="Home" class="logo" />
-            </a>
-        </div>
-        
-        <ThemeToggle bind:isDarkMode />
+<header class="header">
+    <!-- Remove utility classes -->
+    <div class="logo-container">
+        <a href="{base}/" class="logo-link">
+            <img src="{base}/octopus-swim-right.png" alt="Home" class="logo" />
+        </a>
     </div>
-</div>
+    
+    <!-- Desktop theme toggle -->
+    <div class="theme-container">
+        <ThemeToggle bind:isDark hideOnMobile={true} />
+    </div>
+    
+    <!-- Mobile author info -->
+    <div class="mobile-author">
+        <span class="author-name">By <a href="{base}/author/jonathan-st-onge">Jonathan St-Onge</a></span>
+    </div>
+</header>
 
 <style>
-     .sticky-header :global(button) {
-        background: transparent !important;
-        color: var(--dash-text-primary) !important;
-        border: 1px solid var(--dash-border-color) !important;
-        padding: 0.5rem !important;
-    }
-
-    .sticky-header :global(button:hover) {
-        background: var(--dash-bg-secondary) !important;
-    }
-
-    .sticky-header {
-        position: sticky;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-        pointer-events: none;
-        width: 100vw; /* Full viewport width */
-        margin-left: calc(-50vw + 50%); /* Break out of any container */
-        height: auto; /* Let content determine height */
-    }
-
-    .header-controls {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 1rem;
-        pointer-events: auto;
-        padding: 1rem 3.4rem 1rem 1rem;
+     .header {
+        z-index: var(--z-overlay);
         width: 100%;
-        /* Removed absolute positioning */
+        background: var(--color-bg);
+        padding: 1.5rem 0 0.5rem 0;
+        min-height: 5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* Keep it as a normal block element */
+        position: relative; /* Only need this for absolute positioning of children */
+        top: 1.5rem;
+    }
+
+     .theme-container {
+        position: absolute;
+        top: 2.5rem;
+        right: 2.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .logo-container {
-        max-width: 250px;
+        max-width: 10.625rem;
         transition: transform var(--transition-medium) ease;
-        flex-shrink: 0; /* Prevent logo from shrinking */
+        position: absolute; /* Relative to header */
+        top: 0.5rem;
+        left: 0.5rem;
+        margin: 0;
     }
 
     .logo-container:hover {
@@ -70,17 +69,57 @@
         width: 100%;
         height: auto;
         border-radius: var(--border-radius);
-        max-height: 3rem;
+        max-height: 8rem;
+        object-fit: contain;
+    }
+
+    .mobile-author {
+        display: none;
     }
 
     @media (max-width: 768px) {
-        .header-controls {
-            padding: 0.5rem;
-            gap: 0.5rem;
-        }
         
+
         .logo {
             max-height: 2.5rem;
+        }
+
+        .theme-container {
+            display: none;
+        }
+
+        .mobile-author {
+            display: block;
+            position: absolute; /* Relative to header */
+            top: 0.5rem;
+            right: 0.5rem;
+        }
+
+        .author-name {
+            font-family: var(--mono);
+            font-size: var(--font-size-xsmall);
+            color: var(--color-secondary-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .logo-container {
+            top: 0.25rem;
+            left: -5px;
+            max-width: 5rem;
+        }
+
+        .mobile-author {
+            top: 0.25rem;
+            right: 1rem;
+        }
+
+        .author-name {
+            font-size: var(--font-size-xsmall);
         }
     }
 </style>
