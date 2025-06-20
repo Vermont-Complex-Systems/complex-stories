@@ -1,0 +1,79 @@
+/* =============================================================================
+   ALLOTAX-SCROLLY STORY THEME
+   
+   Story-specific overrides and custom styling
+   ============================================================================= */
+
+/* Story-specific design tokens */
+:root {
+    /* Override global theme for this story */
+    --story-accent: #4a90e2;
+    --story-bg: var(--color-bg);
+    --story-text: var(--color-fg);
+    
+    /* Story-specific layout tokens */
+    --diamond-height: 600px;
+    --diamond-transition: 700ms cubic-bezier(0.76, 0, 0.24, 1);
+    --scrolly-step-width: 40%;
+    --scrolly-chart-width: 40%;
+    
+    /* Story nav tokens */
+    --dash-text-primary: var(--color-fg);
+    --dash-border-color: var(--color-border);
+    --dash-bg-secondary: var(--color-input-bg);
+}
+
+/* Story-specific component patterns */
+.story-section {
+    margin: 2rem auto;
+    max-width: 1200px;
+    padding: 0 2rem;
+}
+
+.story-text {
+    font-size: 22px;
+    max-width: 800px;
+    line-height: 1.3;
+}
+
+.scrolly-layout {
+    display: grid;
+    grid-template-columns: 1fr var(--scrolly-chart-width);
+    gap: 2rem;
+    align-items: start;
+}
+
+.scrolly-sticky {
+    position: sticky;
+    top: calc(50vh - 275px);
+    justify-self: end;
+}
+
+/* Story-specific transitions */
+.diamond-smooth :global(rect),
+.diamond-smooth :global(circle),
+.diamond-smooth :global(text) {
+    transition: all var(--diamond-transition);
+}
+
+@media (max-width: 1200px) {
+    .scrolly-layout {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .scrolly-sticky {
+        position: static;
+        justify-self: center;
+        max-width: 600px;
+    }
+    
+    .story-section {
+        padding: 0 1rem;
+    }
+    
+    .story-text {
+        font-size: 18px;
+        max-width: none;
+    }
+}

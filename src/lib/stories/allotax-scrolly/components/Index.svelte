@@ -222,10 +222,10 @@
 
 <style>
 	section {
-		margin: 2rem auto;
-		max-width: 1200px;
-		padding: 0 2rem;
-	}
+        margin: 1rem auto; /* Reduced from 2rem */
+        max-width: 1200px;
+        padding: 0 2rem;
+    }
 
 
 	section p {
@@ -234,53 +234,67 @@
 		line-height: 1.3;
 	}
 
+    .initial-chart {
+        margin-top: 2rem; /* Add more space above charts */
+        margin-bottom: 2rem; /* And below charts */
+    }
+
 	/* Keep only the first section's scrolly styles */
 
 	.chart-container-scrolly {
+        margin-top: 3rem; /* More space before the diamond plot section */
 		width: 40%;
 		position: sticky;
-		top: calc(50vh - 275px);
+		top: calc(50vh - 350px); /* Moved up by 75px */
 		right: 5%;
 		margin-left: auto;
 	}
 
-	.visualization-container {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		height: 100%;
-	}
+	 .visualization-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        
+        /* Allow it to be as wide as needed */
+        width: max-content;
+        max-width: 100%;
+    }
 
 	.diamondplot {
-		flex: 0 0 auto;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-	}
+        flex: 0 0 auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        
+        /* Ensure the Diamond has enough space */
+        min-width: 600px; /* Match your DiamondHeight */
+        min-height: 600px;
+    }
 
 	.additional-charts {
-		display: flex;
-		gap: 8rem;
-        margin-left: 3rem;
-		justify-content: center;
-		margin-top: 2rem;
-		flex: 0 0 auto;
-	}
+        display: flex;
+        gap: 15rem; /* Your preferred spacing */
+        margin-left: 12rem; /* Your preferred positioning */
+        justify-content: center;
+        margin-top: 2rem;
+        flex: 0 0 auto;
+    }
 
-	.legend-container {
-		flex: 0 0 auto;
-		display: flex;
-		justify-content: center;
-		align-items: flex-start;
-	}
+	/* Keep the rest of your styles the same */
+    .legend-container {
+        flex: 0 0 auto;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
 
-	.balance-container {
-            flex: 0 0 auto;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            transition: opacity 600ms ease;
-        }
+    .balance-container {
+        flex: 0 0 auto;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        transition: opacity 600ms ease;
+    }
     
 	/* Scoped CSS transitions - only for diamond plot */
 	.diamondplot :global(rect) {
@@ -365,15 +379,16 @@
 		}
 
 		.chart-container-scrolly {
-			position: sticky;
-			top: calc(50vh - 275px);
-			width: 100%;
-			max-width: 600px;
-			margin: 2rem 0 2rem auto; /* Keep right-aligned like desktop */
-			display: flex;
-			justify-content: center;
-			align-items: center;
-		}
+            /* Increase width or make it flexible */
+            width: min(600px, 50vw); /* Use pixels or larger percentage */
+            position: sticky;
+            top: calc(50vh - 275px);
+            right: 5%;
+            margin-left: auto;
+            
+            /* Ensure it doesn't overflow */
+            overflow: visible; /* or overflow: auto if you want scrollbars */
+        }   
 
 		.additional-charts {
 			flex-direction: column;
