@@ -22,8 +22,8 @@
     flex-wrap: wrap;
     list-style-type: none;
     padding: 0;
-    gap: 32px;
-    margin-bottom: 32px;
+    gap: 2rem; /* Use our spacing token instead of hardcoded 32px */
+    margin-bottom: 2rem; /* Use our spacing token instead of hardcoded 32px */
   }
 
   li {
@@ -33,30 +33,41 @@
     color: var(--color-fg);
   }
 
-  li:hover img {
-    transform: rotate(var(--left-tilt)) scale(1.05);
-  }
-
   a {
+    display: block; /* Makes the entire card clickable */
     padding: 0;
     color: var(--color-fg);
+    text-decoration: none; /* Remove default link underline */
+    transition: color var(--transition-medium);
   }
 
-  li:hover a {
+  a:hover {
     color: var(--color-link-hover);
   }
 
   img {
+    width: 100%; /* Ensure consistent image sizing */
+    height: auto;
     margin-bottom: 0.25em;
+    border-radius: var(--border-radius); /* Add subtle rounding */
     transition: transform calc(var(--1s) * 0.25);
+  }
+
+  li:hover img {
+    transform: rotate(var(--left-tilt)) scale(1.05);
   }
 
   span {
     font-family: var(--sans);
     font-weight: var(--font-weight-bold);
     font-size: var(--font-size-small);
-    display: inline-block;
-    padding-top: 6px;
-    text-decoration: underline 2px;
+    display: block; /* Makes it easier to style as a block */
+    padding-top: 0.375rem; /* Use rem instead of px */
+    text-decoration: underline 2px var(--color-fg);
+    transition: text-decoration-color var(--transition-medium);
+  }
+
+  a:hover span {
+    text-decoration-color: var(--color-link-hover);
   }
 </style>

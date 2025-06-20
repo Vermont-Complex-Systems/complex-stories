@@ -24,8 +24,8 @@
 
   let filtered = $derived.by(() => {
     const f = stories.filter((d) => {
-      const inFilter = activeFilter ? d.filters.includes(activeFilter) : true;
-      return inFilter;
+      // Simplified: if no active filter, show all; otherwise check if story has the filter
+      return !activeFilter || d.filters.includes(activeFilter);
     });
     f.sort((a, b) => descending(a.id, b.id));
     return f;
@@ -41,13 +41,12 @@
 
   // Reset pagination when filter changes
   $effect(() => {
-    activeFilter;
+    activeFilter; // Track the dependency
     maxStories = initMax;
   });
 </script>
 
 <div class="content">
-  <!-- Add FilterBar here -->
   <FilterBar bind:activeFilter filters={allFilters} />
   
   <div class="stories">
@@ -55,9 +54,9 @@
   </div>
 
   {#if filtered.length > maxStories}
-    <div class="more" class:visible={filtered.length > maxStories}>
+    <div class="more">
       <button onclick={onLoadMore} class="load-more-btn">
-        <ChevronDown class="chevron" />
+        <ChevronDown class="chevron" size={20} />
         <span class="text">Load More Stories</span>
       </button>
     </div>
@@ -74,13 +73,13 @@
   }
 
   .more {
-    display: none;
-    height: 40vh;
-    max-height: 400px;
+    height: 30vh;
+    max-height: 300px;
     background: var(--fade);
     position: absolute;
     width: 100%;
     bottom: 0;
+    display: flex;
     flex-direction: column;
     justify-content: flex-end;
     align-items: center;
@@ -88,30 +87,36 @@
     pointer-events: none;
   }
 
-  .more.visible {
-    display: flex;
-  }
-
   .load-more-btn {
-    transition: transform var(--transition-medium) ease;
-    margin-bottom: 15%;
+    /* Reset button defaults first */
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    
+    /* Our button styling */
     display: flex;
     align-items: center;
     gap: 0.5rem;
     padding: 1rem 2rem;
-    pointer-events: all;
+    margin-bottom: 2rem; /* Fixed spacing instead of percentage */
     background: var(--color-button-bg);
     color: var(--color-button-fg);
     border: 1px solid var(--color-border);
     border-radius: 2rem;
-    cursor: pointer;
     font-family: var(--font-form);
     font-size: var(--font-size-small);
+    font-weight: var(--font-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     white-space: nowrap;
     min-width: fit-content;
-    text-transform: uppercase;
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0.5px;
+    transition: transform var(--transition-medium) ease;
+    pointer-events: all;
+    
+    /* Ensure good touch target size */
+    min-height: 44px; /* iOS recommended minimum */
   }
 
   .load-more-btn:hover {
@@ -119,17 +124,36 @@
     background: var(--color-button-hover);
   }
 
-
   .text {
     flex-shrink: 0;
   }
 
+  /* Mobile improvements */
   @media (max-width: 768px) {
-    .load-more-btn {
-      padding: 0.875rem 1.75rem;
-      margin-bottom: 12%;
-      font-size: var(--font-size-xsmall);
+    .more {
+      height: 25vh; /* Shorter on mobile */
+      max-height: 200px; /* Less intrusive */
     }
     
+    .load-more-btn {
+      padding: 1.125rem 2.25rem; /* LARGER on mobile, not smaller */
+      margin-bottom: 1.5rem; /* Safer distance from bottom */
+      font-size: var(--font-size-small); /* Keep readable size */
+      min-height: 48px; /* Even better touch target */
+    }
+  }
+
+  /* Very small screens */
+  @media (max-width: 480px) {
+    .more {
+      height: 20vh;
+      max-height: 150px;
+    }
+    
+    .load-more-btn {
+      padding: 1rem 1.75rem; /* Slightly smaller to fit */
+      font-size: var(--font-size-xsmall);
+      gap: 0.375rem; /* Tighter gap */
+    }
   }
 </style>

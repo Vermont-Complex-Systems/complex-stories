@@ -57,9 +57,8 @@
     grid-template-columns: 1fr;
     gap: 2rem;
     max-width: var(--width-column-wide);
-    margin: 0 auto; /* This should center it */
+    margin: 0 auto;
     padding: 0 1rem;
-    width: 100%; /* Add this to ensure full width */
   }
 
   @media (min-width: 768px) {

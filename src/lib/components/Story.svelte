@@ -15,9 +15,7 @@
   } = $props();
 
   const style = bgColor ? `--story-bg: ${bgColor};` : "";
-  
   const imagePath = `${base}/common/thumbnails/screenshots`;
-  const hasImage = true;
   const finalHref = isExternal ? href : `${base}${href}`;
 </script>
 
@@ -36,16 +34,7 @@
     class="inner"
   >
     <div class="screenshot">
-      {#if hasImage}
-        <img src="{imagePath}/{slug}.jpg" loading="lazy" alt="Thumbnail for {short}" />
-        <div class="card-content fallback" style="display: none;">
-          <span class="story-number">#{id}</span>
-        </div>
-      {:else}
-        <div class="card-content">
-          <span class="story-number">#{id}</span>
-        </div>
-      {/if}
+      <img src="{imagePath}/{slug}.jpg" loading="lazy" alt="Thumbnail for {short}" />
     </div>
     
     <div class="text">
@@ -63,32 +52,30 @@
   .info {
     display: flex;
     justify-content: space-between;
-    font-family: var(--mono, monospace);
-    margin-bottom: 8px;
+    font-family: var(--mono);
+    margin-bottom: 0.5rem; /* Convert 8px to rem */
     align-items: center;
     user-select: none;
-    transition: transform calc(var(--1s, 1s) * 0.25);
+    transition: transform calc(var(--1s) * 0.25);
     -webkit-font-smoothing: antialiased;
   }
 
   .id {
-    border: 1px solid var(--color-fg, #333);
+    border: 1px solid var(--color-fg);
     width: 4em;
     text-align: center;
-    padding: 4px;
+    padding: 0.25rem; /* Convert 4px to rem */
     border-radius: 2em;
-    font-size: var(--14px, 14px);
+    font-size: var(--font-size-xsmall);
     text-transform: uppercase;
     margin: 0;
   }
 
   .month {
-    font-size: var(--14px, 14px);
+    font-size: var(--font-size-xsmall);
     text-transform: uppercase;
     margin: 0;
   }
-
-
 
   a {
     display: block;
@@ -98,19 +85,20 @@
   }
 
   a:focus-visible {
-    outline: 2px solid var(--color-focus, #0066cc);
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
   }
 
   .story:hover .info {
-    transform: translateY(-4px);
+    transform: translateY(-0.25rem); /* Convert -4px to rem */
   }
 
   .screenshot {
-    background: var(--story-bg, var(--color-default-story-bg, #ddd));
+    background: var(--story-bg, var(--color-default-story-bg));
     aspect-ratio: 1;
     position: relative;
     overflow: hidden;
-    border-radius: 2px;
+    border-radius: var(--border-radius);
   }
 
   img {
@@ -118,10 +106,10 @@
     bottom: 0;
     left: 50%;
     transform: translate(-50%, 0) scale(1);
-    width: calc(100% - (var(--padding, 16px) * 2));
+    width: calc(100% - (var(--padding) * 2));
     aspect-ratio: 6/7;
     transform-origin: center center;
-    transition: transform calc(var(--1s, 1s) * 0.25);
+    transition: transform calc(var(--1s) * 0.25);
     object-fit: cover;
   }
 
@@ -129,49 +117,29 @@
     transform: translate(-50%, 0) scale(1.05);
   }
 
-  .card-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    color: white;
-    transition: transform calc(var(--1s, 1s) * 0.25);
-  }
-
-  .story:hover .card-content {
-    transform: translate(-50%, -50%) scale(1.05);
-  }
-
-  .story-number {
-    display: block;
-    font-size: var(--24px, 24px);
-    font-weight: bold;
-  }
-
   .text {
-    font-family: var(--sans, sans-serif);
-    margin-top: 12px;
+    font-family: var(--sans);
+    margin-top: 0.75rem; /* Convert 12px to rem */
   }
 
   h3.short {
-    color: var(--color-fg, #333);
-    font-size: clamp(var(--24px, 24px), 6vw, var(--28px, 28px));
+    color: var(--color-fg);
+    font-size: clamp(var(--font-size-medium), 6vw, var(--font-size-large));
     line-height: 1;
-    margin: 0;
-    margin-bottom: 8px;
-    letter-spacing: -0.8px;
+    margin: 0 0 0.5rem 0; /* Convert 8px to rem */
+    letter-spacing: -0.05em; /* Convert -0.8px to em for better scaling */
   }
 
   p.tease {
-    color: var(--color-secondary-gray, var(--color-fg, #666));
-    font-size: var(--16px, 16px);
+    color: var(--color-secondary-gray);
+    font-size: var(--font-size-small);
     margin: 0;
+    line-height: 1.4;
   }
 
   @media (min-width: 960px) {
     h3.short {
-      font-size: clamp(var(--24px, 24px), 2.75vw, var(--32px, 32px));
+      font-size: clamp(var(--font-size-medium), 2.75vw, var(--font-size-large));
     }
   }
 </style>

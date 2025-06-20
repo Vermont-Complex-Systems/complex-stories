@@ -4,8 +4,18 @@
     filters = [] 
   } = $props();
 
+  // Helper function to convert filter to slug (DRY principle)
+  function createSlug(filter) {
+    return filter?.toLowerCase()?.replace(/[^a-z]/g, "_");
+  }
+
+  // Helper function to convert filter to display name
+  function createDisplayName(filter) {
+    return filter?.replace(/_/g, ' ');
+  }
+
   function toggleFilter(filter) {
-    const slug = filter?.toLowerCase()?.replace(/[^a-z]/g, "_");
+    const slug = createSlug(filter);
     activeFilter = slug === activeFilter ? undefined : slug;
   }
 </script>
@@ -17,8 +27,8 @@
       <!-- Desktop filters -->
       <div class="filters--desktop">
         {#each filters as filter, i}
-          {@const slug = filter?.toLowerCase()?.replace(/[^a-z]/g, "_")}
-          {@const displayName = filter?.replace(/_/g, ' ')}
+          {@const slug = createSlug(filter)}
+          {@const displayName = createDisplayName(filter)}
           {@const active = slug === activeFilter}
           <button
             class:active
@@ -34,8 +44,8 @@
         <select bind:value={activeFilter}>
           <option value={undefined}>All</option>
           {#each filters as filter}
-            {@const slug = filter?.toLowerCase()?.replace(/[^a-z]/g, "_")}
-            {@const displayName = filter?.replace(/_/g, ' ')}
+            {@const slug = createSlug(filter)}
+            {@const displayName = createDisplayName(filter)}
             <option value={slug}>{displayName}</option>
           {/each}
         </select>
@@ -51,7 +61,6 @@
     z-index: calc(var(--z-overlay) - 100);
     width: 100%;
     background: var(--color-bg);
-    /* Removed: border-bottom: 1px solid var(--color-border); */
     transition: all var(--transition-medium);
   }
   
@@ -65,7 +74,7 @@
   }
   
   .spacer {
-    width: 250px;
+    width: 15.625rem; /* Convert 250px to rem */
   }
   
   .filters-wrapper {
@@ -82,9 +91,16 @@
   }
 
   .filters--desktop button {
+    /* Reset button defaults first */
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    
+    /* Our button styling */
     display: flex;
     align-items: center;
-    background: none;
     padding: 0.5rem 1rem;
     border: 1px solid transparent;
     border-radius: var(--border-radius);
@@ -95,7 +111,6 @@
     color: var(--color-secondary-gray);
     opacity: 0.6;
     transition: all var(--transition-medium);
-    cursor: pointer;
   }
 
   .filters--desktop button:hover {
@@ -116,7 +131,11 @@
   }
 
   .filters--mobile select {
-    /* Your reset.css already handles select styling */
+    /* Ensure consistent styling with base.css */
+    min-width: 8rem;
+    font-family: var(--mono);
+    font-size: var(--font-size-small);
+    text-transform: uppercase;
   }
 
   /* Responsive */

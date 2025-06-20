@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import { Youtube, Github, Linkedin, MessageCircle } from "lucide-svelte";
 </script>
 
 <footer class="footer">
@@ -15,8 +16,30 @@
 		<div class="footer-section">
 			<h3>Follow Us</h3>
 			<ul>
-				<li><a href="https://www.youtube.com/@example" target="_blank" rel="noreferrer">YouTube</a></li>
-				<li><a href="https://twitter.com/example" target="_blank" rel="noreferrer">Twitter</a></li>
+				<li>
+					<a href="https://www.youtube.com/@UVMcomplexity" target="_blank" rel="noreferrer">
+						<Youtube class="icon" size={16} />
+						<span>YouTube</span>
+					</a>
+				</li>
+				<li>
+					<a href="https://github.com/Vermont-complex-systems" target="_blank" rel="noreferrer">
+						<Github class="icon" size={16} />
+						<span>GitHub</span>
+					</a>
+				</li>
+				<li>
+					<a href="https://linkedin.com/school/uvm-vcsc/" target="_blank" rel="noreferrer">
+						<Linkedin class="icon" size={16} />
+						<span>LinkedIn</span>
+					</a>
+				</li>
+				<li>
+					<a href="https://discord.gg/3VYnT5D4" target="_blank" rel="noreferrer">
+						<MessageCircle class="icon" size={16} />
+						<span>Discord</span>
+					</a>
+				</li>
 			</ul>
 		</div>
 		
@@ -29,19 +52,18 @@
 <style>
 	.footer {
 		margin-top: auto;
-		background-color: var(--color-uvm-green); /* UVM green in light mode */
+		background-color: var(--color-uvm-green);
 		border-top: 1px solid var(--color-border);
 		padding: 3rem 2rem 2rem;
 	}
 	
-	/* Keep dark background in dark mode */
 	:global(.dark) .footer {
 		background-color: var(--color-gray-800);
 		border-top-color: var(--color-gray-700);
 	}
 	
 	.footer-content {
-		max-width: 1200px;
+		max-width: var(--width-column-wide); /* Use design system width */
 		margin: 0 auto;
 		display: flex;
 		justify-content: space-between;
@@ -59,10 +81,9 @@
 		text-transform: uppercase;
 		font-size: var(--font-size-xsmall);
 		margin-bottom: 1rem;
-		color: var(--color-uvm-gold); /* UVM gold in light mode */
+		color: var(--color-uvm-gold);
 	}
 	
-	/* Keep light text in dark mode */
 	:global(.dark) .footer-section h3 {
 		color: var(--color-gray-100);
 	}
@@ -78,10 +99,13 @@
 	}
 	
 	.footer-section a {
-		color: var(--color-white); /* White text on green background */
+		color: var(--color-white);
 		text-decoration: underline;
 		font-weight: 500;
 		transition: color var(--transition-medium);
+		display: flex;
+		align-items: center;
+		gap: 0.5rem; /* Space between icon and text */
 	}
 	
 	:global(.dark) .footer-section a {
@@ -89,7 +113,7 @@
 	}
 	
 	.footer-section a:hover {
-		color: var(--color-uvm-gold); /* Gold on hover in light mode */
+		color: var(--color-uvm-gold);
 	}
 	
 	:global(.dark) .footer-section a:hover {
@@ -100,13 +124,13 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		max-width: 160px;
+		max-width: 10rem; /* Convert 160px to rem */
 	}
 	
 	.footer-logo-img {
 		width: 100%;
 		height: auto;
-		max-height: 120px;
+		max-height: 7.5rem; /* Convert 120px to rem */
 		border-radius: var(--border-radius);
 		transform: rotate(var(--left-tilt));
 		transition: transform var(--transition-medium);
@@ -115,36 +139,38 @@
 	.footer-logo-img:hover {
 		transform: rotate(0deg);
 	}
+
 	
-	/* Mobile adjustments - keep same layout but make it fit */
+	/* Mobile adjustments */
 	@media (max-width: 768px) {
 		.footer {
-			padding: 2rem 1rem 1.5rem; /* Reduce padding */
+			padding: 2rem 1rem 1.5rem;
 		}
 		
 		.footer-content {
-			gap: 1rem; /* Reduce gap between sections */
+			gap: 1rem;
 		}
 		
 		.footer-section h3 {
-			font-size: 10px; /* Smaller headings */
+			font-size: var(--font-size-xsmall); /* Use design system instead of hardcoded 10px */
 			margin-bottom: 0.75rem;
 		}
 		
 		.footer-section a {
-			font-size: 12px; /* Smaller links */
+			font-size: var(--font-size-xsmall); /* Use design system instead of hardcoded 12px */
 		}
 		
 		.footer-section li {
-			margin-bottom: 0.3rem; /* Tighter spacing */
+			margin-bottom: 0.3rem;
 		}
 		
 		.footer-logo {
-			max-width: 100px; /* Smaller logo */
+			max-width: 6.25rem; /* Convert 100px to rem */
 		}
 		
 		.footer-logo-img {
-			max-height: 80px; /* Smaller max height */
+			max-height: 5rem; /* Convert 80px to rem */
 		}
+	
 	}
 </style>

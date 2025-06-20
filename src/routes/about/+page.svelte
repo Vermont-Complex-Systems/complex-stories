@@ -15,5 +15,9 @@
   ];
 </script>
 
-<Meta {copy} {preloadFont} />
+<Meta 
+  title={copy.title}
+  description={copy.description}
+  {preloadFont} 
+/>
 <About {copy} {authors} />

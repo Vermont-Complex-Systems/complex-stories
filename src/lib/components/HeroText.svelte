@@ -7,9 +7,9 @@
 </div>
 
 <style>
-  div {
+  .hero-text {
     line-height: 1.65;
-    padding: 2em 0;
+    padding: 2rem 0; /* Convert 2em to rem */
   }
 
   :global(.hero-text h1) {
@@ -18,6 +18,7 @@
     font-family: var(--sans);
     font-weight: var(--font-weight-bold);
     -webkit-font-smoothing: antialiased;
+    line-height: 1.1; /* Add explicit line-height for large text */
   }
 
   :global(.hero-text p) {
@@ -25,12 +26,13 @@
     font-size: var(--font-size-large);
     line-height: 1.4;
     max-width: var(--width-padded);
+    margin-top: 1.5rem; /* Add explicit spacing */
     -webkit-font-smoothing: antialiased;
   }
 
-  @media only screen and (min-width: 960px) {
-    div {
-      padding: 4em 0 2em 0;
+  @media (min-width: 960px) {
+    .hero-text {
+      padding: 4rem 0 2rem 0; /* Convert 4em 2em to rem */
     }
   }
 </style>

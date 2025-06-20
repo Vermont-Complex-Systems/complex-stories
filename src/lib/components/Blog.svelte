@@ -72,7 +72,7 @@
   {#if filtered.length > maxPosts}
     <div class="more" class:visible={filtered.length > maxPosts}>
       <button onclick={onLoadMore} class="load-more-btn">
-        <ChevronDown class="chevron" />
+        <ChevronDown class="chevron" size={20} />
         <span class="text">Load More Posts</span>
       </button>
     </div>
@@ -114,6 +114,14 @@
   }
 
   .load-more-btn {
+    /* Reset button defaults first */
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    
+    /* Apply our styling */
     transition: transform var(--transition-medium) ease;
     margin-bottom: 15%;
     display: flex;
@@ -125,7 +133,6 @@
     color: var(--color-button-fg);
     border: 1px solid var(--color-border);
     border-radius: 2rem;
-    cursor: pointer;
     font-family: var(--font-form);
     font-size: var(--font-size-small);
     white-space: nowrap;
@@ -138,6 +145,10 @@
   .load-more-btn:hover {
     transform: translateY(-2px);
     background: var(--color-button-hover);
+  }
+
+  .chevron {
+    flex-shrink: 0;
   }
 
   .text {

@@ -1,4 +1,3 @@
-<!-- src/lib/components/Header.svelte -->
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { ModeWatcher, setMode } from "mode-watcher";
@@ -47,9 +46,9 @@
 	<div class="header-right">
 		<button onclick={toggleTheme} class="theme-toggle">
 			{#if isDark}
-				<Sun class="icon" />
+				<Sun class="icon" size={20} />
 			{:else}
-				<Moon class="icon" />
+				<Moon class="icon" size={20} />
 			{/if}
 			<span class="sr-only">Toggle theme</span>
 		</button>
@@ -60,16 +59,14 @@
 			class="menu-toggle"
 			aria-label="Open menu"
 		>
-			<MenuIcon class="icon" />
+			<MenuIcon class="icon" size={20} />
 			<span class="sr-only">Open menu</span>
 		</button>
 	</div>
 </header>
 
-<!-- Menu component -->
 <Menu visible={isMenuOpen} close={closeMenu} />
 
-<!-- Header.svelte - keep all your script the same, just update the styles -->
 <style>
   .header {
     position: sticky;
@@ -85,7 +82,6 @@
     position: relative;
   }
 
-  /* All your existing .header-left, .title-link, etc. styles stay the same... */
   .header-left {
     position: absolute;
     left: 2.5rem;
@@ -100,7 +96,7 @@
   }
   
   .title-link:hover {
-    transform: translateY(-2px);
+    transform: translateY(-0.125rem); /* Convert -2px to rem */
   }
   
   .site-title {
@@ -118,11 +114,11 @@
     margin: 0.25rem 0 0 0;
     color: var(--color-secondary-gray);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.03em; /* Convert 0.5px to em for better scaling */
   }
   
   .logo-container {
-    max-width: 250px;
+    max-width: 15.625rem; /* Convert 250px to rem */
     transition: transform var(--transition-medium) ease;
   }
   
@@ -152,7 +148,7 @@
     gap: 0.5rem;
   }
 
-  /* CLEAN button styles - no !important needed */
+  /* Clean button styles */
   .theme-toggle,
   .menu-toggle {
     /* Reset any browser defaults */
@@ -173,13 +169,11 @@
   }
   
   .theme-toggle {
-    /* Theme toggle is transparent */
     background: transparent;
     color: var(--color-fg);
   }
   
   .menu-toggle {
-    /* Menu toggle has a background */
     background: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(0, 0, 0, 0.08);
     color: #4a5568;
@@ -199,7 +193,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
   
-  /* Dark mode - clean and simple */
+  /* Dark mode */
   :global(.dark) .theme-toggle {
     color: var(--color-fg);
   }
@@ -220,6 +214,7 @@
     border-color: rgba(255, 255, 255, 0.2);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   }
+
 
   /* Mobile styles */
   @media (max-width: 768px) {
@@ -246,7 +241,7 @@
     }
     
     .logo-container {
-      max-width: 150px;
+      max-width: 9.375rem; /* Convert 150px to rem */
       margin-left: 3.5rem;
     }
     
@@ -262,9 +257,7 @@
   
   :global(.dark) .logo {
     filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
-    padding: 4px;
+    padding: 0.25rem; /* Convert 4px to rem */
     border-radius: var(--border-radius);
   }
-
-  
 </style>
