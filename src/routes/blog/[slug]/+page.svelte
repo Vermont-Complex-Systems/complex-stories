@@ -4,7 +4,7 @@
   import MarkdownRenderer from '$lib/components/helpers/MarkdownRenderer.svelte';
   import { base } from '$app/paths';
   import { ModeWatcher, setMode } from "mode-watcher";
-  import { Sun, Moon } from "lucide-svelte";
+  import { Sun, Moon } from "@lucide/svelte";
   
   let { data } = $props();
   const { blog, content } = data;

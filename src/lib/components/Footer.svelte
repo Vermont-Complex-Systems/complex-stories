@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { Youtube, Github, Linkedin, MessageCircle } from "lucide-svelte";
+	import { Youtube, Github, Linkedin, MessageCircle } from "@lucide/svelte";
 </script>
 
 <footer class="footer">

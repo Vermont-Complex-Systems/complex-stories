@@ -1,13 +1,14 @@
 <!-- SimpleHero.svelte -->
 <script>
-  let { coauthorData, paperData } = $props();
+  import Nav from './Nav.svelte';
+  
+  let { coauthorData, paperData, isDark } = $props();
 
   let svgElement;
   let svgWidth = $state(800);
   let svgHeight = $state(600);
 
   // Data filtering
-  console.log(coauthorData)
   let coauthors = $derived(coauthorData?.filter(c => c.uvm_faculty_2023 === "True"));
   let hasData = $derived(coauthors.length > 0 && paperData.length > 0);
 
@@ -111,6 +112,9 @@
 </script>
 
 <div class="hero">
+  <Nav bind:isDark />
+
+
   {#if !hasData}
     <div class="loading">Loading...</div>
   {:else}

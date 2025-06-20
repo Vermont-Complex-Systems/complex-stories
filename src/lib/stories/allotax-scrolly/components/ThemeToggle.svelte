@@ -1,6 +1,6 @@
 <script>
     import { Button } from "bits-ui";
-    import { Sun, Moon } from "lucide-svelte";
+    import { Sun, Moon } from "@lucide/svelte";
     import { ModeWatcher, setMode } from "mode-watcher";
 
     let { 

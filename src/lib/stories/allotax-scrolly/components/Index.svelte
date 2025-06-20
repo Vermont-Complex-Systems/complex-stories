@@ -222,18 +222,17 @@
 
 
 <style>
-     @import '../theme.css';
 
     section {
-        margin: var(--story-spacing-sm) auto;
-        max-width: var(--story-max-width);
-        padding: 0 var(--story-spacing-md);
+        margin: 1rem auto;
+        max-width: 1200px;
+        padding: 0 2rem;
     }
 
     
     section h1 {
         font-size: var(--font-size-giant);
-        padding: var(--story-spacing-sm) 0 var(--story-spacing-lg) 0;
+        padding: 1rem 0 3rem 0;
     }
 
     section h1 a {
@@ -255,7 +254,7 @@
 	/* Keep only the first section's scrolly styles */
 
 	.chart-container-scrolly {
-        margin-top: var(--story-spacing-lg);
+        margin-top: 3rem;
         width: var(--scrolly-chart-width);
         position: sticky;
         top: var(--scrolly-sticky-offset);

@@ -4,7 +4,7 @@
   import BlogPosts from "$lib/components/Blog.Posts.svelte";
   import FilterBar from "$lib/components/FilterBar.svelte";
   import HeroText from "$lib/components/HeroText.svelte";
-  import { ChevronDown } from "lucide-svelte";
+  import { ChevronDown } from "@lucide/svelte";
 
   let { posts } = $props();
 

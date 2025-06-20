@@ -100,7 +100,7 @@
   /* Ensure paragraphs have proper spacing */
   :global(.column-regular p) {
     margin: 1rem 0;
-    line-height: 1.6;
+    line-height: 1.5;
   }
 
   /* First paragraph in a section shouldn't have top margin */

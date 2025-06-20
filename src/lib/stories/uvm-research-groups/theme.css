@@ -19,8 +19,6 @@
     
     /* Story-specific design tokens */
     --story-accent: #4a90e2;
-    --diamond-height: 600px;
-    --diamond-transition: 700ms cubic-bezier(0.76, 0, 0.24, 1);
     --scrolly-chart-width: 40%;
     --scrolly-sticky-offset: calc(50vh - 350px);
     

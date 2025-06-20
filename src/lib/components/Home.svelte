@@ -3,7 +3,7 @@
   import { getContext } from "svelte";
   import Stories from "$lib/components/Stories.svelte";
   import FilterBar from "$lib/components/FilterBar.svelte";
-  import { ChevronDown } from "lucide-svelte";
+  import { ChevronDown } from "@lucide/svelte";
 
   const initMax = 6;
   const { stories } = getContext("Home");

@@ -24,18 +24,11 @@
 </header>
 
 <style>
-     .header {
-        z-index: var(--z-overlay);
-        width: 100%;
-        background: var(--color-bg);
-        padding: 1.5rem 0 0.5rem 0;
-        min-height: 5rem;
+     header {
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        justify-content: center;
-        /* Keep it as a normal block element */
-        position: relative; /* Only need this for absolute positioning of children */
-        top: 1.5rem;
+        padding: 1rem 2rem;
     }
 
      .theme-container {

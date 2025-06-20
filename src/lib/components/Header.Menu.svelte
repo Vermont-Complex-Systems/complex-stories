@@ -1,7 +1,7 @@
 <script>
 	import { base } from "$app/paths";
 	import { afterNavigate } from "$app/navigation";
-	import { X, Youtube, Github, MessageCircle, Linkedin } from "lucide-svelte";
+	import { X, Youtube, Github, MessageCircle, Linkedin } from "@lucide/svelte";
 	
 	let { visible, close } = $props();
 	
