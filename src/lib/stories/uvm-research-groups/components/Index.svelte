@@ -50,11 +50,12 @@
 
 <section id="embeddings" class="story">
   <h3>Embeddings</h3>
-  <p>Instead of using time to position content, we can also use embeddings. (WIP)</p>
+  <p>Instead of using time to position paper, we can also use embeddings. (WIP)</p>
 
   <Plot width={1200} height={800} 
     x={{ domain: [-6, 18], grid: true }}
-    y={{ domain: [-5, 13], grid: true }}>
+    y={{ domain: [-5, 13], grid: true }}
+    caption="UMAP embeddings of Peter's papers and a sample of UVM faculties."> 
       <Dot
           data={embeddings}
           x="umap_1"
@@ -62,7 +63,7 @@
           stroke="black"
           fill="white" />
   </Plot>
-
+  <p>(show same plot than before, but just the coauthor side that is rotated on the side. It would be nice to make it brushable, so that we highlight the paper positions for chosen coauthors. Doing so could help visualize changes in coauthors correlate with changes in how ego explore the embedding space. Or not.)</p>
 </section>
 
 <style>

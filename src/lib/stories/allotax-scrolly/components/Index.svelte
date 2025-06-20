@@ -109,7 +109,7 @@
 <Nav bind:isDark />
 
 
-<section>
+<section id="story"  class="story">
     <h1>A whirlwind tour of the <a href="https://vermont-complex-systems.github.io/complex-stories/allotaxonometry" target="_blank">allotaxonometer</a></h1>
 
     <p>Here is the rank of the baby names for boys in 1895:</p>
@@ -222,17 +222,19 @@
 
 
 <style>
+     @import '../theme.css';
 
-    section {
-        margin: 1rem auto;
+     :global(#story) {
         max-width: 1200px;
+        margin: 0 auto;
         padding: 0 2rem;
     }
 
-    
     section h1 {
-        font-size: var(--font-size-giant);
-        padding: 1rem 0 3rem 0;
+        font-size: var(--font-size-xlarge);
+        margin: 2rem 0 3rem 0;
+        text-align: left;
+        font-family: var(--serif);
     }
 
     section h1 a {
@@ -240,10 +242,10 @@
         }
 
 	section p {
-        font-size: var(--story-text-size);
-        max-width: var(--story-text-width);
-        line-height: var(--story-line-height);
-    }
+      font-size: 22px;
+      max-width: 800px;
+      line-height: 1.3;
+  }
 
 
     .initial-chart {
@@ -254,7 +256,7 @@
 	/* Keep only the first section's scrolly styles */
 
 	.chart-container-scrolly {
-        margin-top: 3rem;
+        margin-top: var(--story-spacing-lg);
         width: var(--scrolly-chart-width);
         position: sticky;
         top: var(--scrolly-sticky-offset);
