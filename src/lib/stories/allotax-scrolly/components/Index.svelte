@@ -143,22 +143,23 @@
 <section id="story"  class="story">
     <h1>A whirlwind tour of the <a href="https://vermont-complex-systems.github.io/complex-stories/allotaxonometry" target="_blank">allotaxonometer</a></h1>
 
-    <p>Every year in Quebec, the newspaper <em>Lapresse</em> does a short analysis of baby names dynamics. On June 22nd, they examined the trend of 433 000 unique baby names Québecois has given to their child, over 4.1 millions birth since <span class="year-1980">1980</span> . They found that Emma hit the first place in <span class="year-2023">2023</span>, while Noah stayed at the top for the fourth consecutive years. Some names have made a come back, such as <em>Chalie</em>, a popular name in the 2000s that lost ground in the 2010, before making a come back between 2018 and 2023.</p>
+    <p>Every year in Quebec, the newspaper <em>La Presse</em> does a <a href="https://www.lapresse.ca/societe/2025-06-22/palmares-des-prenoms/pres-d-un-demi-siecle-en-modes-et-tendances.php">short analysis</a> of baby name dynamics. On June 22nd, they examined the trend of 433,000 unique baby names Quebecers have given to their children, over 4.1 million births since <span class="year-1980">1980</span>. They found that Emma hit first place in <span class="year-2023">2023</span>, while Noah stayed at the top for the fourth consecutive year. Some names have made a comeback, such as <em>Charlie</em>, a popular name in the 2000s that lost ground in the 2010s, before making a comeback between 2018 and 2023.</p>
     
-    <p>Here is the rank of the {@render G(isGirls ? 'girl' : 'boy')} baby names in <span class="year-1980">1980</span>:</p>
-
+    <p>Here is the ranking of the {@render G(isGirls ? 'girl' : 'boy')} baby names in <span class="year-1980">1980</span>:</p>
+    
     <div class="initial-chart">
         <BarChartRank data={sys1.slice(0, 30)} fill={"#a6a6a6"} />
     </div>
     
     <p>Here is the ranking for {@render G(isGirls ? 'girl' : 'boy')} baby names in Quebec for <span class="year-2023">2023</span>:</p>
+
     <div class="initial-chart">
         <BarChartRank data={sys2.slice(0, 30)} fill={"#c3e6f3e6"} />
     </div>
     
-    <p>I really like this analysis, but there are some limitations in comparing ranks using raw counts, especially when it comes to systems that are known to be "heavy-tailed". That is, when a few names, or types, occur many more times in your dataset than less frequent ones, aka the tail. For instance, in the analysis the author compares babynames between "then and now". By just looking at raw counts, we are stuck with such comparison where top ranking baby names in <span class="year-1980">1980</span> might now be in the tail, which is a bit underwhelming. How can we know about the most surprising comparison, given the heavy tail distribution?</p>
-    
-    <p>Allotaxonometer provides a systematic way to analyze these shifts using so-called divergence metrics.</p>
+    <p>I really like this analysis, but there are some limitations in comparing ranks using raw counts, especially when it comes to systems that are known to be "heavy-tailed". That is, when a few names, or types, occur many more times in your dataset than less frequent ones, aka the tail. For instance, in the analysis the author compares baby names between "then and now". By just looking at raw counts, we are stuck with such comparisons where top-ranking baby names in <span class="year-1980">1980</span> might now be in the tail, which is a bit underwhelming. How can we know about the most surprising comparisons, given the heavy-tailed distribution?</p>
+
+    <p>Allotaxonometer provides a systematic way to analyze these shifts using <a href="https://arxiv.org/abs/2008.13078">divergence metrics</a>.</p>
 
     <div class="chart-container-scrolly">
         {#if isDataReady && renderedData}
@@ -224,7 +225,7 @@
 
 <section>
     <h1>The full picture</h1>
-    <p>We now add the final chart in our canvas, the wordshift plot, with our divergence metric of choice, the rank-turbulence divergence. The worshift plot show a more direct view of how baby names shift across pairs of systems, with the rank being shown in pale grey. For instance, {@render G(isGirls ? 'Florence' : 'Noah')} going from the {isGirls ? '409' : '855'} rank in <span class="year-1980">1980</span> to {isGirls ? '1.5' : '1'} in <span class="year-2023">2023</span>.</p>
+    <p>We now add the final chart to our canvas, the wordshift plot, with our divergence metric of choice, the rank-turbulence divergence. The wordshift plot shows a more direct view of how baby names shift across pairs of systems, with the rank being shown in pale grey. For instance, {@render G(isGirls ? 'Florence' : 'Noah')} going from the {isGirls ? '409' : '855'} rank in <span class="year-1980">1980</span> to {isGirls ? '1.5' : '1'} in <span class="year-2023">2023</span>.</p>
     <div class="dashboard-section">
     <div class="dashboard-container">
         <div class="math-overlay">
@@ -253,14 +254,14 @@
 </div>
 
     
-<p>Where the α parameter let us tweak the relative importance of the divergence metric, as shown in the top left expression. Try α = ∞, you will see that types tend to be similarly ranked with their frequency, with {@render G(isGirls ? 'Julie' : 'Eric')} at the top. By contrast, α = 0 allow us to inspect what is happenning further down in the tail. Finally, those contour lines underlying the diamond plot help guide our interpretation of the rank-divergence metric, tracking how α is varied.</p>
+<p>Where the α parameter lets us tweak the relative importance of the divergence metric, as shown in the top left expression. Try α = ∞, you will see that types tend to be similarly ranked with their frequency, with {@render G(isGirls ? 'Julie' : 'Eric')} at the top. By contrast, α = 0 allows us to inspect what is happening further down in the tail. Finally, those contour lines underlying the diamond plot help guide our interpretation of the rank-divergence metric, tracking how α is varied.</p>
 
-<p>For much more details about this tool, see the foundational <a href="https://epjdatascience.springeropen.com/articles/10.1140/epjds/s13688-023-00400-x">paper</a>. To try the tool with your own dataset, visit our <a href="{base}/allotaxonometry">web app</a>. If you are more a coder, you might enjoy our <a href="https://github.com/car-d00r/py-allotax">Python version</a>.</p>
+<p>For much more detail about this tool, see the foundational <a href="https://epjdatascience.springeropen.com/articles/10.1140/epjds/s13688-023-00400-x">paper</a>. To try the tool with your own dataset, visit our <a href="{base}/allotaxonometry">web app</a>. If you are more of a coder, you might enjoy our <a href="https://github.com/car-d00r/py-allotax">Python version</a>.</p>
 
 </section>
 
 <section id="appendix">
-    <em>Appendix: Data can be found <a href="https://www.donneesquebec.ca/recherche/dataset/banque-de-prenoms-garcons/resource/c35c6bc3-fbc1-47bd-bfa9-90be087f954a">here</a>, Lapresse trend analysis can be found <a href="https://www.lapresse.ca/societe/2025-06-22/palmares-des-prenoms/pres-d-un-demi-siecle-en-modes-et-tendances.php">here</a>. </em>
+    <em>Appendix: Data can be found <a href="https://www.donneesquebec.ca/recherche/dataset/banque-de-prenoms-garcons/resource/c35c6bc3-fbc1-47bd-bfa9-90be087f954a">here</a>, La Presse trend analysis can be found <a href="https://www.lapresse.ca/societe/2025-06-22/palmares-des-prenoms/pres-d-un-demi-siecle-en-modes-et-tendances.php">here</a>. </em>
 </section>
 
 
