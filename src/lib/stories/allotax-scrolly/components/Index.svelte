@@ -1,17 +1,37 @@
 <script>
     import * as d3 from "d3";
+    import { base } from "$app/paths";
     import { fade, fly } from 'svelte/transition';
     import { innerWidth } from 'svelte/reactivity/window';
     import { Diamond, Legend, DivergingBarChart, Dashboard } from 'allotaxonometer-ui';
     import { combElems, rank_turbulence_divergence, diamond_count, wordShift_dat, balanceDat } from 'allotaxonometer-ui';
+    
     import BarChartRank from './BarChartRank.svelte';
+
     import Slider from './Slider.svelte';
     import Nav from './Nav.svelte';
-
-    import boys1895 from '../data/boys-1895.json';
-    import boys1968 from '../data/boys-1968.json';
     
+    import boys1980 from '../data/boys-qc-1980.json';
+    import boys2023 from '../data/boys-qc-2023.json';
+    import girls1980 from '../data/girls-qc-1980.json';
+    import girls2023 from '../data/girls-qc-2023.json';
+    
+    // Create data object for easy switching
+    const datasets = {
+        girls: {
+            sys1: girls1980,
+            sys2: girls2023,
+            title: ['Girls 1980', 'Girls 2023']
+        },
+        boys: {
+            sys1: boys1980,
+            sys2: boys2023,
+            title: ['Boys 1980', 'Boys 2023']
+        }
+    };
+
     import Scrolly from '$lib/components/helpers/Scrolly.svelte';
+    import ScrollyMd from './ScrollyMarkdown.svelte'; // New import
     import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
     
     let { story, data } = $props();
@@ -19,12 +39,15 @@
     let scrollyIndex = $state();
 	
 	const steps = data.steps;
+
     let isDark = $state(false);
+    let isGirls = $state(true);
 
     // Data systems
-    let sys1 = $state(boys1895);
-    let sys2 = $state(boys1968);
-    let title = $state(['Boys 1895', 'Boys 1968']);
+    let currentDataset = $derived(isGirls ? datasets.girls : datasets.boys);
+    let sys1 = $derived(currentDataset.sys1);
+    let sys2 = $derived(currentDataset.sys2);
+    let title = $derived(currentDataset.title);
     
     let alpha = $state(0.58);
     const alphas = d3.range(0,18).map(v => +(v/12).toFixed(2)).concat([1, 2, 5, Infinity]);
@@ -59,6 +82,9 @@
             maxStepReached = Math.max(maxStepReached, scrollyIndex);
         }
     });
+
+    let delta_sum = $derived(d3.sum(dat.deltas.map(d => +d)).toFixed(3));
+    let math = $derived(`$D_{\\alpha}^R (\\Omega_1 || \\Omega_2 = ${delta_sum})$\n$\\propto \\sum_\\tau | \\frac{1}{r_{\\tau,1}^{${alpha == 'Infinity' ? '\\infty' : alpha}}} - \\frac{1}{r_{\\tau,2}^{${alpha == 'Infinity' ? '\\infty' : alpha}}} |$`);
 
     // Determine effective step: distinguish between entering (start at 0) vs leaving (keep final state)
     let effectiveStep = $derived(
@@ -102,31 +128,37 @@
         }
     });
 
-
-
 </script>
 
-<Nav bind:isDark />
+{#snippet G(text)}
+    <span class="gender-text" class:girls={isGirls} class:boys={!isGirls}>
+        {text}
+    </span>
+{/snippet}
+
+
+<Nav bind:isDark bind:isGirls />
 
 
 <section id="story"  class="story">
     <h1>A whirlwind tour of the <a href="https://vermont-complex-systems.github.io/complex-stories/allotaxonometry" target="_blank">allotaxonometer</a></h1>
 
-    <p>Here is the rank of the baby names for boys in 1895:</p>
+    <p>Every year in Quebec, the newspaper <em>Lapresse</em> does a short analysis of baby names dynamics. On June 22nd, they examined the trend of 433 000 unique baby names Québecois has given to their child, over 4.1 millions birth since <span class="year-1980">1980</span> . They found that Emma hit the first place in <span class="year-2023">2023</span>, while Noah stayed at the top for the fourth consecutive years. Some names have made a come back, such as <em>Chalie</em>, a popular name in the 2000s that lost ground in the 2010, before making a come back between 2018 and 2023.</p>
+    
+    <p>Here is the rank of the {@render G(isGirls ? 'girl' : 'boy')} baby names in <span class="year-1980">1980</span>:</p>
+
     <div class="initial-chart">
         <BarChartRank data={sys1.slice(0, 30)} fill={"#a6a6a6"} />
     </div>
     
-    <p>Here is the ranking for boy baby names in the US for 1968:</p>
+    <p>Here is the ranking for {@render G(isGirls ? 'girl' : 'boy')} baby names in Quebec for <span class="year-2023">2023</span>:</p>
     <div class="initial-chart">
         <BarChartRank data={sys2.slice(0, 30)} fill={"#c3e6f3e6"} />
     </div>
     
-    <p>
-        If you wanted to compare which baby name got more popular over time, how would you do it? 
-        You can say that John is more popular than James within 1895, and that John lost its first rank in favor of Michael in 1968. Then what? What about the less frequent names in the tail of the distribution, how can we asses there growth over time, even though the distribution is dominated by a few very popular name? The Allotaxonometer provides a systematic way to analyze these shifts.
-    </p>
-
+    <p>I really like this analysis, but there are some limitations in comparing ranks using raw counts, especially when it comes to systems that are known to be "heavy-tailed". That is, when a few names, or types, occur many more times in your dataset than less frequent ones, aka the tail. For instance, in the analysis the author compares babynames between "then and now". By just looking at raw counts, we are stuck with such comparison where top ranking baby names in <span class="year-1980">1980</span> might now be in the tail, which is a bit underwhelming. How can we know about the most surprising comparison, given the heavy tail distribution?</p>
+    
+    <p>Allotaxonometer provides a systematic way to analyze these shifts using so-called divergence metrics.</p>
 
     <div class="chart-container-scrolly">
         {#if isDataReady && renderedData}
@@ -182,7 +214,7 @@
             {@const active = scrollyIndex === i}
             <div class="step" class:active>
                 <p> 
-                    <Md text={text.value}/>
+                    <ScrollyMd text={text.value} {isGirls} />
                 </p>
             </div>
         {/each}
@@ -192,41 +224,90 @@
 
 <section>
     <h1>The full picture</h1>
-    <p>We now add the wordshift plot, which allows us to have a more direct view of how types shift across pairs of systems. </p>
+    <p>We now add the final chart in our canvas, the wordshift plot, with our divergence metric of choice, the rank-turbulence divergence. The worshift plot show a more direct view of how baby names shift across pairs of systems, with the rank being shown in pale grey. For instance, {@render G(isGirls ? 'Florence' : 'Noah')} going from the {isGirls ? '409' : '855'} rank in <span class="year-1980">1980</span> to {isGirls ? '1.5' : '1'} in <span class="year-2023">2023</span>.</p>
     <div class="dashboard-section">
-        <div class="dashboard-container">
-            <Dashboard 
-                {dat}
-                {alpha}
-                divnorm={rtd?.normalization || 1}
-                {barData}
-                {balanceData}
-                {title}
-                {maxlog10}
-                {max_count_log}
-                width={innerWidth.current - 40}
-                {DiamondHeight}
-                {DiamondWidth}
-                {marginInner}
-                {marginDiamond}
-                xDomain={[-max_shift * 1.5, max_shift * 1.5]}
-                class="dashboard"
-        />
+    <div class="dashboard-container">
+        <div class="math-overlay">
+            <Md text={math} />
         </div>
-        <Slider bind:alphaIndex {alphas} />
+        
+        <Dashboard 
+            {dat}
+            {alpha}
+            divnorm={rtd?.normalization || 1}
+            {barData}
+            {balanceData}
+            {title}
+            {maxlog10}
+            {max_count_log}
+            width={Math.min(innerWidth.current - 40, 1400)} 
+            {DiamondHeight}
+            {DiamondWidth}
+            {marginInner}
+            {marginDiamond}
+            xDomain={[-max_shift * 1.5, max_shift * 1.5]}
+            class="dashboard"
+        />
     </div>
-    
-<p>We also show how the α parameter let us tweak the relative importance of the divergence metric. Try α = ∞, you will see that types tend to be correlated with their frequency, with Michael at the top. By contrast, α = 0 allow us to inspect what is happenning further down in the tail. We also finally learn what those contour lines mean! </p>
+    <Slider bind:alphaIndex {alphas} />
+</div>
 
+    
+<p>Where the α parameter let us tweak the relative importance of the divergence metric, as shown in the top left expression. Try α = ∞, you will see that types tend to be similarly ranked with their frequency, with {@render G(isGirls ? 'Julie' : 'Eric')} at the top. By contrast, α = 0 allow us to inspect what is happenning further down in the tail. Finally, those contour lines underlying the diamond plot help guide our interpretation of the rank-divergence metric, tracking how α is varied.</p>
+
+<p>For much more details about this tool, see the foundational <a href="https://epjdatascience.springeropen.com/articles/10.1140/epjds/s13688-023-00400-x">paper</a>. To try the tool with your own dataset, visit our <a href="{base}/allotaxonometry">web app</a>. If you are more a coder, you might enjoy our <a href="https://github.com/car-d00r/py-allotax">Python version</a>.</p>
+
+</section>
+
+<section id="appendix">
+    <em>Appendix: Data can be found <a href="https://www.donneesquebec.ca/recherche/dataset/banque-de-prenoms-garcons/resource/c35c6bc3-fbc1-47bd-bfa9-90be087f954a">here</a>, Lapresse trend analysis can be found <a href="https://www.lapresse.ca/societe/2025-06-22/palmares-des-prenoms/pres-d-un-demi-siecle-en-modes-et-tendances.php">here</a>. </em>
 </section>
 
 
 <style>
-     @import '../theme.css';
+    /* Sticky container for the toggle */
+.year-1980,
+.year-2023,
+.gender-text {
+        font-weight: 600;
+        text-decoration: underline;
+        text-decoration-thickness: 2px;
+        text-underline-offset: 3px;
+        transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 0.1rem 0.2rem;
+        border-radius: 0.25rem;
+    }
+
+    .gender-text.girls {
+        color: #be185d; /* Dark pink */
+        text-decoration-color: #ec4899; /* Lighter pink underline */
+        background: rgba(236, 72, 153, 0.1); /* Very light pink background */
+    }
+
+    .gender-text.boys {
+        color: #1e40af; /* Dark blue */
+        text-decoration-color: #3b82f6; /* Lighter blue underline */
+        background: rgba(59, 130, 246, 0.1); /* Very light blue background */
+    }
+
+
+     /* Year highlighting */
+    .year-1980 {
+        background: rgb(230, 230, 230);
+        color: #374151;
+        text-decoration-color: rgb(148, 148, 148);
+    }
+    
+    .year-2023 {
+        background: rgb(195, 230, 243);
+        color: #374151;
+        border-radius: 0.3rem;
+        text-decoration-color: rgb(129, 208, 237); /* Lighter blue underline */
+    }
 
      :global(#story) {
         max-width: 1200px;
-        margin: 0 auto;
+        margin: 2rem auto;
         padding: 0 2rem;
     }
 
@@ -245,6 +326,7 @@
       font-size: 22px;
       max-width: 800px;
       line-height: 1.3;
+      margin: 1rem 0 1rem 0;
   }
 
 
@@ -256,10 +338,10 @@
 	/* Keep only the first section's scrolly styles */
 
 	.chart-container-scrolly {
-        margin-top: var(--story-spacing-lg);
-        width: var(--scrolly-chart-width);
+        margin-top:  3rem;
+        width: 40%;
         position: sticky;
-        top: var(--scrolly-sticky-offset);
+        top: calc(50vh - 350px);
         float: right;
         margin-right: 5%;
         clear: both;
@@ -311,10 +393,11 @@
 	/* Scoped CSS transitions - only for diamond plot */
     .diamondplot :global(rect),
     .diamondplot :global(text) {
-        transition: all var(--diamond-transition);
+        transition: 700ms cubic-bezier(0.76, 0, 0.24, 1);
     }
 
-	.diamondplot :global(rect) {
+	
+    .diamondplot :global(rect) {
 		transition: 
 			x 700ms cubic-bezier(0.76, 0, 0.24, 1), 
 			y 700ms cubic-bezier(0.76, 0, 0.24, 1),
@@ -375,6 +458,42 @@
         --step-active-bg: #383838;
         --step-active-text: #fff;
         --step-active-shadow: 1px 1px 10px rgba(230, 230, 230, 0.5);
+    }
+
+    /* Dark mode support */
+    :global(.dark) .gender-text.girls {
+        color: #fbb6ce;
+        background: rgba(236, 72, 153, 0.2);
+    }
+
+    :global(.dark) .gender-text.boys {
+        color: #93c5fd;
+        background: rgba(59, 130, 246, 0.2);
+    }
+    
+    .math-overlay {
+        position: absolute;
+        top: 5rem;
+        left: 3rem;
+        z-index: 10;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 0 0;
+        border-radius: 0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        max-width: 200px; /* Constrain overlay width */
+        overflow: hidden; /* Prevent overflow */
+        line-height: 1.2; /* Tighter line spacing for math */
+    }
+
+    .math-overlay :global(.markdown-content) {
+        font-size: 1.2rem;
+        margin: 0;
+    }
+
+    .math-overlay :global(.katex) {
+        font-size: 0.9em !important;
     }
 
 	@media (max-width: 1200px) {
@@ -456,10 +575,13 @@
         text-align: center;
     }
 
-    .dashboard-container {
+     .dashboard-container {
         width: 100%;
         display: flex;
         justify-content: center;
         padding: 1rem 0;
+        position: relative;
+        max-width: 1400px; /* Constrain dashboard container */
+        margin: 0 auto; /* Center it */
     }
 </style>

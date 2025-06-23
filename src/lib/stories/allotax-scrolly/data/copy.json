@@ -1,16 +1,16 @@
 {
-    "steps": [
+  "steps": [
     {
       "type": "markdown",
-      "value": "This is the diamond plot. The axis here represents the rank for different types for a pair of systems. If John and James are very frequent, exactly as frequent, they will rank both high on the axis, and sit on the diagonal."
+      "value": "This is the diamond plot. The axis here represents the rank for different types for a pair of systems. If, say, <span class=\"name-highlight\">{{topName2023}}</span> and <span class=\"name-highlight\">{{secondName2023}}</span> were very frequent both now and then, exactly as frequent, they will rank both high on the axis, and sit on the diagonal."
     },
     {
       "type": "markdown",
-      "value": "As we saw John was the most popular baby name in 1895, while it was ranked third in 1968. Now, you'll notice that as you hover on less frequent types, they tend to have more types in it. This is because each cell represents the number of times a baby names appear; there is only one John, appearing 8 thousands times, while there are many names that appear only once or twice, like 'Alpheus' or 'Woodie'. The legend shows the number of counts per cell, that is how many types have ranked in that cell. "
-    },
+      "value": "As we saw <span class=\"name-highlight\">{{topName1980}}</span> was the most popular baby name in <span class=\"year-1980\">1980</span>, while it was ranked much lower in <span class=\"year-2023\">2023</span>. Now, you'll notice that as you hover on less frequent types, they tend to have more types in it. This is because each cell represents the number of times a baby names appear; there is only one <span class=\"name-highlight\">{{topName2023}}</span>, appearing hundred or thousand times, while there are many names that appear only once or twice, like <span class=\"name-highlight\">{{lastName1980}}</span> or <span class=\"name-highlight\">{{secondLastName1990}}</span>. The legend is indicating the scale, with darker color showing there are more counts per cell."
+    }, 
     {
       "type": "markdown",
-      "value": "If we look at 1968, we can see that Michael was in the tail in 1895, before taking the first rank in 1968. The bottom right plot help keeping track of the contribution from each system in the shared vocabulary, as we throw out any names that are not shared between the two systems."
+      "value": "We now add <span class=\"year-2023\">2023</span> to examine the shift in popularity. The bottom right plot help keeping track of the contribution from each system in the shared vocabulary, as we throw out any names that are not shared between the two systems. As discussed in the analysis, we can see that <span class=\"name-highlight\">{{surpriseName}}</span> was in the tail in <span class=\"year-1980\">1980</span>, before ranking much higher in <span class=\"year-2023\">2023</span>. "
     }
   ]
 }

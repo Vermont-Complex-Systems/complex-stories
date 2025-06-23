@@ -1,53 +1,108 @@
 <script>
     import ThemeToggle from './ThemeToggle.svelte';
+    import ToggleSex from './ToggleSex.svelte';
     import { base } from "$app/paths";
-    let { isDark = $bindable(false) } = $props();
+    
+    let { 
+        isDark = $bindable(false),
+        isGirls = $bindable(true)
+    } = $props();
 </script>
 
 <header class="header">
-    <!-- Remove utility classes -->
-    <div class="logo-container">
-        <a href="{base}/" class="logo-link">
-            <img src="{base}/octopus-swim-right.png" alt="Home" class="logo" />
-        </a>
+    <!-- Left side: Logo -->
+    <div class="header-left">
+        <div class="logo-container">
+            <a href="{base}/" class="logo-link">
+                <img src="{base}/octopus-swim-right.png" alt="Home" class="logo" />
+            </a>
+        </div>
     </div>
     
-    <!-- Desktop theme toggle -->
-    <div class="theme-container">
-        <ThemeToggle bind:isDark hideOnMobile={true} />
+    <!-- Center: Could be used for navigation items if needed -->
+    <div class="header-center">
+        <!-- Empty for now, but could contain nav items -->
     </div>
     
-    <!-- Mobile author info -->
-    <div class="mobile-author">
-        <span class="author-name">By <a href="{base}/author/jonathan-st-onge">Jonathan St-Onge</a></span>
+    <!-- Right side: Toggles and author info -->
+    <div class="header-right">
+        <!-- Desktop toggles -->
+        <div class="toggles-container">
+            <ToggleSex bind:isGirls />
+            <ThemeToggle bind:isDark hideOnMobile={true} />
+        </div>
+        
+        <!-- Mobile author info -->
+        <div class="mobile-author">
+            <span class="author-name">By <a href="{base}/author/jonathan-st-onge">Jonathan St-Onge</a></span>
+        </div>
     </div>
 </header>
 
 <style>
-     header {
+   header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem 2rem;
+        padding: 0 2rem; /* Much smaller vertical padding */
+        position: sticky;
+        top: 0;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(15px);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+        z-index: 1000;
+        transition: all 300ms ease;
+        min-height: 1rem; /* Much shorter header */
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        box-sizing: border-box;
+        overflow: visible; /* Allow logo to overflow */
     }
 
-     .theme-container {
-        position: absolute;
-        top: 2.5rem;
-        right: 2.5rem;
+    /* Dark mode with more transparency */
+    :global(.dark) header {
+        background: rgba(30, 30, 30, 0.7); /* More transparent - was 0.95 */
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03); /* More subtle border */
+    }
+
+    /* Optional: Even more transparent on hover/scroll */
+    header:hover {
+        background: rgba(255, 255, 255, 0.8); /* Slightly less transparent on hover */
+    }
+
+    :global(.dark) header:hover {
+        background: rgba(30, 30, 30, 0.8);
+    }
+
+    /* Header sections */
+    .header-left {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        flex: 0 0 auto;
     }
 
-    .logo-container {
-        max-width: 10.625rem;
-        transition: transform var(--transition-medium) ease;
-        position: absolute; /* Relative to header */
-        top: 0.5rem;
-        left: 0.5rem;
-        margin: 0;
+    .header-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
     }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        flex: 0 0 auto;
+    }
+
+    /* Fix the logo positioning - remove absolute positioning */
+    .logo-container {
+        max-width: 12rem; /* Increased from 10.625rem */
+        transition: transform var(--transition-medium) ease;
+        margin: 0;
+        position: relative;
+        z-index: 10; /* Ensure it stays above other content */
+    }
+
 
     .logo-container:hover {
         transform: rotate(var(--left-tilt)) scale(1.05);
@@ -58,12 +113,21 @@
         border: none;
     }
     
+    
     .logo {
         width: 100%;
         height: auto;
         border-radius: var(--border-radius);
-        max-height: 8rem;
+        max-height: 4.5rem; /* Increased from 3rem */
         object-fit: contain;
+        /* Allow logo to extend above header */
+        transform: translateY(0.6rem); /* Moves logo up slightly */
+    }
+
+    .toggles-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
     }
 
     .mobile-author {
@@ -71,21 +135,26 @@
     }
 
     @media (max-width: 768px) {
-        
-
-        .logo {
-            max-height: 2.5rem;
+        header {
+            padding: 0.5rem 1rem;
+            min-height: 3rem;
+            background: rgba(255, 255, 255, 0.8); /* Less transparent on mobile for readability */
         }
 
-        .theme-container {
+        :global(.dark) header {
+            background: rgba(30, 30, 30, 0.8);
+        }
+
+        .logo {
+            max-height: 2rem;
+        }
+
+        .toggles-container {
             display: none;
         }
 
         .mobile-author {
             display: block;
-            position: absolute; /* Relative to header */
-            top: 0.5rem;
-            right: 0.5rem;
         }
 
         .author-name {
@@ -101,18 +170,12 @@
 
     @media (max-width: 480px) {
         .logo-container {
-            top: 0.25rem;
-            left: -5px;
             max-width: 5rem;
-        }
-
-        .mobile-author {
-            top: 0.25rem;
-            right: 1rem;
         }
 
         .author-name {
             font-size: var(--font-size-xsmall);
         }
     }
+    
 </style>
