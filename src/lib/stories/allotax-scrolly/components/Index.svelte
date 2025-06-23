@@ -142,6 +142,10 @@
 
 <section id="story"  class="story">
     <h1>A whirlwind tour of the <a href="https://vermont-complex-systems.github.io/complex-stories/allotaxonometry" target="_blank">allotaxonometer</a></h1>
+    <div class="article-meta">
+        <p class="author">By <a href="{base}/author/jonathan-st-onge">Jonathan St-Onge</a></p>
+        <p class="date">June 23, 2025</p>
+    </div>
 
     <p>Every year in Quebec, the newspaper <em>La Presse</em> does a <a href="https://www.lapresse.ca/societe/2025-06-22/palmares-des-prenoms/pres-d-un-demi-siecle-en-modes-et-tendances.php">short analysis</a> of baby name dynamics. On June 22nd, they examined the trend of 433,000 unique baby names Quebecers have given to their children, over 4.1 million births since <span class="year-1980">1980</span>. They found that Emma hit first place in <span class="year-2023">2023</span>, while Noah stayed at the top for the fourth consecutive year. Some names have made a comeback, such as <em>Charlie</em>, a popular name in the 2000s that lost ground in the 2010s, before making a comeback between 2018 and 2023.</p>
     
@@ -266,6 +270,25 @@
 
 
 <style>
+    .article-meta {
+        margin: -1rem 0 2rem 0; /* Negative margin to pull closer to title */
+        font-family: var(--sans);
+    }
+
+    .article-meta .author {
+        font-size: var(--font-size-medium);
+        color: var(--color-secondary-gray);
+        margin: 0 0 0.25rem 0;
+        font-weight: 500;
+    }
+
+    .article-meta .date {
+        font-size: var(--font-size-small);
+        color: var(--color-tertiary-gray);
+        margin: 0;
+        font-weight: 400;
+    }
+
     /* Sticky container for the toggle */
 .year-1980,
 .year-2023,
