@@ -201,7 +201,7 @@
                 </div>
             {/if}
 
-            {#if !canExport && !disabled}
+            {#if !canExport}
                 <div class="export-help">
                     {!dat || !rtd ? 'Processing data...' : 'Upload data to enable exports'}
                 </div>
