@@ -1,7 +1,7 @@
 <script>
     import { base } from '$app/paths';
     import ThemeToggle from './ThemeToggle.svelte';
-    import { uiState } from './state.svelte.ts';
+    import { uiState } from '../state.svelte.ts';
 </script>
 
 <nav class="nav">

@@ -2,7 +2,7 @@
     import Nav from './Nav.svelte';
     import Sidebar from './Sidebar.svelte';
     import Allotaxonograph from './Allotaxonograph.svelte';
-    import { uiState } from './state.svelte.ts';
+    import { uiState } from '../state.svelte.ts';
 </script>
 
 <div class="dashboard-app">
@@ -15,7 +15,7 @@
             </aside>
             
             <main class="main-content {uiState.sidebarCollapsed ? 'collapsed-sidebar' : ''}">
-                <Allotaxonograph height={815} />
+                <Allotaxonograph />
             </main>
         </div>
     </div>

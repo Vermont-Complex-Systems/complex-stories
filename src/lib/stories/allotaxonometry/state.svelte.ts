@@ -1,45 +1,62 @@
 import * as d3 from "d3";
 import { combElems, rank_turbulence_divergence, diamond_count, wordShift_dat, balanceDat } from 'allotaxonometer-ui';
 
+type AcceptedData = {
+    types: string[];
+    counts: number[];
+    totalunique: number;
+    probs: number[];
+}
+
 // Import default data
-import boys1895 from '../data/boys-1895.json';
-import boys1968 from '../data/boys-1968.json';
+import boys1895 from './data/boys-1895.json';
+import boys1968 from './data/boys-1968.json';
 
 // =============================================================================
-// UI STATE AND CONSTANTS
+// SIMPLE UI STATE (only for sidebar/nav, not data)
 // =============================================================================
 
 export const uiState = $state({
     sidebarCollapsed: false,
     isDarkMode: false,
-    uploadStatus: '',
-    title: ['Boys 1895', 'Boys 1968']
+    uploadStatus: ''
 });
 
-export const alphaState = $state({
-    alphaIndex: 7
-});
+// =============================================================================
+// CONSTANTS
+// =============================================================================
 
 export const alphas = d3.range(0,18).map(v => +(v/12).toFixed(2)).concat([1, 2, 5, Infinity]);
 
 // =============================================================================
-// REACTIVE DATA PROCESSING CLASS
+// MAIN ALLOTAXONOGRAPH CLASS - SINGLE SOURCE OF TRUTH
 // =============================================================================
 
-export class AllotaxonometerData {
-    // Reactive input state
-    sys1 = $state(boys1895);
-    sys2 = $state(boys1968);
+export class Allotaxonograph {
+    // Core data state
+    sys1 = $state<AcceptedData[] | null>(boys1895);
+    sys2 = $state<AcceptedData[] | null>(boys1968);
+    title = $state<string[]>(['Boys 1895', 'Boys 1968']);
     
-    // Derived alpha value from global alphaState
-    alpha = $derived(alphas[alphaState.alphaIndex]);
+    // Alpha control
+    alphaIndex = $state(7);
+    alpha = $derived(alphas[this.alphaIndex]);
     
-    // Reactive data pipeline
+    // Layout configuration
+    height = 815;
+    width = $derived(uiState.sidebarCollapsed ? 1200 : 900);
+    DiamondHeight = 600;
+    DiamondWidth = this.DiamondHeight;
+    marginInner = 160;
+    marginDiamond = 40;
+    WordshiftWidth = $derived(uiState.sidebarCollapsed ? 550 : 400);
+
+    // Core data pipeline
     me = $derived(this.sys1 && this.sys2 ? combElems(this.sys1, this.sys2) : null);
     rtd = $derived(this.me ? rank_turbulence_divergence(this.me, this.alpha) : null);
     dat = $derived(this.me && this.rtd ? diamond_count(this.me, this.rtd) : null);
     
-    // Derived data for components
+    // Derived data for dashboard
     barData = $derived(this.me && this.dat ? wordShift_dat(this.me, this.dat).slice(0, 30) : []);
     balanceData = $derived(this.sys1 && this.sys2 ? balanceDat(this.sys1, this.sys2) : []);
     
@@ -51,35 +68,52 @@ export class AllotaxonometerData {
     
     max_count_log = $derived(this.dat ? Math.ceil(Math.log10(d3.max(this.dat.counts, d => d.value))) + 1 : 2);
     max_shift = $derived(this.barData.length > 0 ? d3.max(this.barData, d => Math.abs(d.metric)) : 1);
+    
+    // Dashboard props
+    divnorm = $derived(this.rtd?.normalization);
+    xDomain = $derived([-this.max_shift * 1.5, this.max_shift * 1.5]);
     isDataReady = $derived(this.dat && this.barData && this.balanceData && this.me && this.rtd);
+    
+    // Methods
+    uploadData(sys1: AcceptedData[], sys2: AcceptedData[], titles?: string[]) {
+        this.sys1 = sys1;
+        this.sys2 = sys2;
+        if (titles) this.title = titles;
+    }
+    
+    updateAlpha(index: number) {
+        if (index >= 0 && index < alphas.length) {
+            this.alphaIndex = index;
+        }
+    }
 }
 
 // =============================================================================
-// SINGLETON DATA INSTANCE
+// SINGLETON INSTANCE
 // =============================================================================
 
-export const dataProcessor = new AllotaxonometerData();
+export const allotax = new Allotaxonograph();
 
 // =============================================================================
-// ACTIONS
+// UI ACTIONS
 // =============================================================================
 
 export function toggleSidebar() {
     uiState.sidebarCollapsed = !uiState.sidebarCollapsed;
 }
 
-export async function handleFileUpload(file, system) {
+export async function handleFileUpload(file: File, system: 'sys1' | 'sys2') {
     try {
         uiState.uploadStatus = `Loading ${system}...`;
         const text = await file.text();
         const data = JSON.parse(text);
         
         if (system === 'sys1') {
-            dataProcessor.sys1 = data;
-            uiState.title[0] = file.name.replace('.json', '');
+            allotax.sys1 = data;
+            allotax.title[0] = file.name.replace('.json', '');
         } else {
-            dataProcessor.sys2 = data;
-            uiState.title[1] = file.name.replace('.json', '');
+            allotax.sys2 = data;
+            allotax.title[1] = file.name.replace('.json', '');
         }
         
         uiState.uploadStatus = `${system.toUpperCase()} loaded successfully!`;

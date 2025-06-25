@@ -4,16 +4,14 @@
     import AlphaControl from './sidebar/AlphaControl.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
     import StatusCard from './sidebar/StatusCard.svelte';
-    import DownloadSection from './sidebar/DownloadSection.svelte';
     
     import { 
-        dataProcessor,
+        allotax,
         uiState,
-        alphaState,
         alphas,
         toggleSidebar,
         handleFileUpload
-    } from './state.svelte.ts';
+    } from '../state.svelte.ts';
 </script>
 
 <div class="sidebar-content">
@@ -36,40 +34,38 @@
         <div class="sidebar-body">
             <Accordion.Root type="multiple" value={["upload", "alpha", "info"]} class="accordion">
                 <UploadSection 
-                    bind:sys1={dataProcessor.sys1} 
-                    bind:sys2={dataProcessor.sys2} 
-                    bind:title={uiState.title} 
+                    bind:sys1={allotax.sys1} 
+                    bind:sys2={allotax.sys2} 
+                    bind:title={allotax.title} 
                     {handleFileUpload} 
                     uploadStatus={uiState.uploadStatus} 
                 />
                 <Separator.Root/>
                 <AlphaControl 
-                    alpha={dataProcessor.alpha} 
-                    bind:alphaIndex={alphaState.alphaIndex} 
+                    alpha={allotax.alpha} 
+                    bind:alphaIndex={allotax.alphaIndex} 
                     {alphas} 
                 />
                 <Separator.Root/>
                 <DataInfo 
-                    title={uiState.title} 
-                    me={dataProcessor.me} 
-                    rtd={dataProcessor.rtd} 
-                    isDataReady={dataProcessor.isDataReady} 
+                    title={allotax.title} 
+                    me={allotax.me} 
+                    rtd={allotax.rtd} 
+                    isDataReady={allotax.isDataReady} 
                 />
-                <!-- <Separator.Root/> -->
-                <!-- <DownloadSection /> -->
             </Accordion.Root>
 
-            <StatusCard isDataReady={dataProcessor.isDataReady} />
+            <StatusCard isDataReady={allotax.isDataReady} />
         </div>
     {:else}
         <div class="sidebar-collapsed">
-            <div class="collapsed-item" title="Alpha: {dataProcessor.alpha}">
+            <div class="collapsed-item" title="Alpha: {allotax.alpha}">
                 <div class="alpha-icon">α</div>
-                <div class="alpha-mini">{dataProcessor.alpha.toString().slice(0, 4)}</div>
+                <div class="alpha-mini">{allotax.alpha.toString().slice(0, 4)}</div>
             </div>
             
-            <div class="collapsed-item" title={dataProcessor.isDataReady ? 'Ready' : 'Processing...'}>
-                <div class="status-dot {dataProcessor.isDataReady ? 'ready' : 'processing'}"></div>
+            <div class="collapsed-item" title={allotax.isDataReady ? 'Ready' : 'Processing...'}>
+                <div class="status-dot {allotax.isDataReady ? 'ready' : 'processing'}"></div>
             </div>
 
             <div class="collapsed-item" title="Upload Data">📁</div>

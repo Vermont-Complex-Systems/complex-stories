@@ -1,34 +1,10 @@
 <script>
     import { Dashboard } from 'allotaxonometer-ui';
-    import { dataProcessor, uiState } from './state.svelte.ts';
-
-    let { height = 815 } = $props();
-
-    // Simple derived dimensions
-    let dashboardWidth = $derived(uiState.sidebarCollapsed ? 1200 : 900);
-    let wordshiftWidth = $derived(uiState.sidebarCollapsed ? 550 : 400);
+    import { allotax } from '../state.svelte.ts';
 </script>
 
-{#if dataProcessor.isDataReady}
-    <Dashboard 
-        dat={dataProcessor.dat}
-        alpha={dataProcessor.alpha}
-        divnorm={dataProcessor.rtd?.normalization}
-        barData={dataProcessor.barData}
-        balanceData={dataProcessor.balanceData}
-        title={uiState.title}
-        maxlog10={dataProcessor.maxlog10}
-        max_count_log={dataProcessor.max_count_log}
-        height={height}
-        width={dashboardWidth}
-        DiamondHeight={600}
-        DiamondWidth={600}
-        marginInner={160}
-        marginDiamond={40}
-        WordshiftWidth={wordshiftWidth}
-        xDomain={[-dataProcessor.max_shift * 1.5, dataProcessor.max_shift * 1.5]}
-        class="dashboard"
-    />
+{#if allotax.isDataReady}
+    <Dashboard {...allotax} />
 {:else}
     <div class="loading-container">
         <div class="loading-content">
