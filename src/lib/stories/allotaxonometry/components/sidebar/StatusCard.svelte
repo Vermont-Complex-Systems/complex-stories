@@ -14,9 +14,9 @@
 <style>
     .status-card {
         padding: 1rem;
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius);
-        background-color: var(--bg-primary);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius);
+        background-color: var(--color-bg);
     }
 
     .status-indicator {
@@ -32,11 +32,11 @@
     }
 
     .status-dot.ready {
-        background-color: var(--success-color);
+        background-color: var(--color-electric-green);
     }
 
     .status-dot.processing {
-        background-color: var(--warning-color);
+        background-color: var(--color-yellow);
         animation: pulse 2s infinite;
     }
 
@@ -46,8 +46,9 @@
     }
 
     .status-text {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: var(--text-primary);
+        font-size: var(--14px);
+        font-weight: var(--font-weight-normal);
+        color: var(--color-fg);
+        font-family: var(--font-form);
     }
 </style>

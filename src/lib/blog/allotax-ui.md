@@ -41,7 +41,7 @@ A nice feature with `allotaxonometer-ui` is that you can either import the full 
 
 ```svelte
 <script>
-  import { Dashboard } from 'allotaxonometer-ui';
+  import { Allotaxonograph } from 'allotaxonometer-ui';
   import { 
     combElems, 
     rank_turbulence_divergence, 
@@ -67,7 +67,7 @@ A nice feature with `allotaxonometer-ui` is that you can either import the full 
   // ...
 </script>
 
-<Dashboard 
+<Allotaxonograph 
     dat={diamondCountData}
     {alpha}
     divnorm={rtd.normalization}

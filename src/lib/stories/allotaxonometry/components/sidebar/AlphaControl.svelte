@@ -1,15 +1,13 @@
 <script>
-    import * as d3 from "d3";
     import { Accordion } from "bits-ui";
     
-    let { alpha = $bindable(0.58) } = $props();
-    
-    const alphas = d3.range(0,18).map(v => +(v/12).toFixed(2)).concat([1, 2, 5, Infinity]);
-    let alphaIndex = $state(7); // Start at 0.58
+    let { 
+        alpha = $bindable(0.58),
+        alphaIndex = $bindable(7),
+        alphas
+    } = $props();
 
-    $effect(() => {
-        alpha = alphas[alphaIndex];
-    });
+
 </script>
 
 <Accordion.Item value="alpha" class="accordion-item">
@@ -48,16 +46,16 @@
     .alpha-display {
         text-align: center;
         padding: 1rem;
-        background-color: var(--bg-secondary);
-        border-radius: var(--radius);
-        border: 1px solid var(--border-color);
+        background-color: var(--color-input-bg);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--color-border);
     }
 
     .alpha-value {
-        font-size: 1rem;
-        font-family: "EB Garamond", "Garamond", "Century Schoolbook L", "URW Bookman L", "Bookman Old Style", "Times", serif;
-        font-weight: 600;
-        color: var(--text-primary);
+        font-size: var(--font-size-small);
+        font-family: var(--font-body);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-fg);
     }
 
     .slider-container {
@@ -69,8 +67,8 @@
     .alpha-slider {
         width: 100%;
         height: 6px;
-        background-color: var(--border-color);
-        border-radius: 3px;
+        background-color: var(--color-border);
+        border-radius: var(--border-radius);
         outline: none;
         cursor: pointer;
         -webkit-appearance: none;
@@ -82,7 +80,7 @@
         appearance: none;
         width: 18px;
         height: 18px;
-        background: var(--accent-color);
+        background: var(--color-good-blue);
         border-radius: 50%;
         cursor: pointer;
     }
@@ -90,7 +88,7 @@
     .alpha-slider::-moz-range-thumb {
         width: 18px;
         height: 18px;
-        background: var(--accent-color);
+        background: var(--color-good-blue);
         border-radius: 50%;
         cursor: pointer;
         border: none;
@@ -99,7 +97,8 @@
     .slider-labels {
         display: flex;
         justify-content: space-between;
-        font-size: 0.75rem;
-        color: var(--text-muted);
+        font-size: var(--12px);
+        color: var(--color-secondary-gray);
+        font-family: var(--font-form);
     }
 </style>

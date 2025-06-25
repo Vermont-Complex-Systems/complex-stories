@@ -4,33 +4,12 @@
     let { 
         sys1 = $bindable(null),
         sys2 = $bindable(null),
-        title = $bindable(['System 1', 'System 2'])
+        title = $bindable(['System 1', 'System 2']),
+        handleFileUpload,
+        uploadStatus
     } = $props();
     
     let fileInput1, fileInput2;
-    let uploadStatus = $state('');
-
-    async function handleFileUpload(file, system) {
-        try {
-            uploadStatus = `Loading ${system}...`;
-            const text = await file.text();
-            const data = JSON.parse(text);
-            
-            if (system === 'sys1') {
-                sys1 = data;
-                title[0] = file.name.replace('.json', '');
-            } else {
-                sys2 = data;
-                title[1] = file.name.replace('.json', '');
-            }
-            
-            uploadStatus = `${system.toUpperCase()} loaded successfully!`;
-            setTimeout(() => uploadStatus = '', 3000);
-        } catch (error) {
-            uploadStatus = `Error loading ${system}: ${error.message}`;
-            setTimeout(() => uploadStatus = '', 5000);
-        }
-    }
 </script>
 
 <Accordion.Item value="upload" class="accordion-item">
@@ -89,6 +68,7 @@
         display: flex;
         flex-direction: column;
         gap: 1rem;
+        margin-top: 1rem;
     }
 
     .input-group {
@@ -98,9 +78,7 @@
     }
 
     .input-label {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: var(--text-primary);
+        font-size: var(--14px);
     }
 
     .file-input-wrapper {
@@ -116,36 +94,40 @@
     .file-input-button {
         width: 100%;
         padding: 0.75rem;
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius);
-        background-color: var(--bg-secondary);
-        color: var(--text-primary);
-        font-size: 0.875rem;
+        background-color: var(--color-input-bg);
+        color: var(--color-input-fg);
+        font-size: var(--14px);
+        font-family: var(--font-form);
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all var(--transition-medium) ease;
     }
 
     .file-input-button:hover {
-        background-color: var(--border-color);
-        border-color: var(--accent-color);
+        background-color: var(--color-gray-200);
+        border-color: var(--color-good-blue);
+    }
+
+    :global(.dark) .file-input-button:hover {
+        background-color: var(--color-gray-700);
     }
 
     .upload-status {
-        font-size: 0.875rem;
+        font-size: var(--14px);
         padding: 0.75rem;
-        border-radius: var(--radius);
-        font-weight: 500;
+        border-radius: var(--border-radius);
+        font-weight: var(--font-weight-normal);
+        font-family: var(--font-form);
     }
 
     .upload-status.success {
-        color: var(--success-color);
-        background-color: rgba(40, 167, 69, 0.1);
-        border: 1px solid var(--success-color);
+        color: var(--color-electric-green);
+        background-color: rgba(58, 230, 96, 0.1);
+        border: 1px solid var(--color-electric-green);
     }
 
     .upload-status.error {
-        color: var(--error-color);
-        background-color: rgba(220, 53, 69, 0.1);
-        border: 1px solid var(--error-color);
+        color: var(--color-red);
+        background-color: rgba(255, 83, 61, 0.1);
+        border: 1px solid var(--color-red);
     }
 </style>

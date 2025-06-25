@@ -4,32 +4,26 @@
     import AlphaControl from './sidebar/AlphaControl.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
     import StatusCard from './sidebar/StatusCard.svelte';
+    import DownloadSection from './sidebar/DownloadSection.svelte';
     
-    let { 
-        collapsed = false,
-        onToggle,
-        sys1 = $bindable(null),
-        sys2 = $bindable(null),
-        title = $bindable(['System 1', 'System 2']),
-        alpha = $bindable(0.58),
-        alphaIndex = $bindable(7),
+    import { 
+        dataProcessor,
+        uiState,
+        alphaState,
         alphas,
-        handleFileUpload,
-        uploadStatus,
-        me,
-        rtd,
-        isDataReady
-    } = $props();
+        toggleSidebar,
+        handleFileUpload
+    } from './state.svelte.ts';
 </script>
 
-<aside class="sidebar" style="width: {collapsed ? '4rem' : '15rem'}">
+<div class="sidebar-content">
     <div class="sidebar-header">
-        {#if !collapsed}
+        {#if !uiState.sidebarCollapsed}
             <h2 class="sidebar-title">Allotaxonograph</h2>
         {/if}
-        <Button.Root onclick={onToggle} variant="ghost" size="sm">
+        <Button.Root onclick={toggleSidebar} variant="ghost" size="sm">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                {#if collapsed}
+                {#if uiState.sidebarCollapsed}
                     <path d="M9 18l6-6-6-6"/>
                 {:else}
                     <path d="M15 18l-6-6 6-6"/>
@@ -38,50 +32,60 @@
         </Button.Root>
     </div>
     
-    {#if !collapsed}
-        <div class="sidebar-content">
+    {#if !uiState.sidebarCollapsed}
+        <div class="sidebar-body">
             <Accordion.Root type="multiple" value={["upload", "alpha", "info"]} class="accordion">
-                <UploadSection bind:sys1 bind:sys2 bind:title {handleFileUpload} {uploadStatus} />
+                <UploadSection 
+                    bind:sys1={dataProcessor.sys1} 
+                    bind:sys2={dataProcessor.sys2} 
+                    bind:title={uiState.title} 
+                    {handleFileUpload} 
+                    uploadStatus={uiState.uploadStatus} 
+                />
                 <Separator.Root/>
-                <AlphaControl bind:alpha bind:alphaIndex {alphas} />
+                <AlphaControl 
+                    alpha={dataProcessor.alpha} 
+                    bind:alphaIndex={alphaState.alphaIndex} 
+                    {alphas} 
+                />
                 <Separator.Root/>
-                <DataInfo {title} {me} {rtd} {isDataReady} />
+                <DataInfo 
+                    title={uiState.title} 
+                    me={dataProcessor.me} 
+                    rtd={dataProcessor.rtd} 
+                    isDataReady={dataProcessor.isDataReady} 
+                />
+                <!-- <Separator.Root/> -->
+                <!-- <DownloadSection /> -->
             </Accordion.Root>
 
-            <StatusCard {isDataReady} />
+            <StatusCard isDataReady={dataProcessor.isDataReady} />
         </div>
     {:else}
-        <!-- Collapsed sidebar content -->
         <div class="sidebar-collapsed">
-            <div class="collapsed-item" title="Alpha: {alpha}">
+            <div class="collapsed-item" title="Alpha: {dataProcessor.alpha}">
                 <div class="alpha-icon">α</div>
-                <div class="alpha-mini">{alpha.toString().slice(0, 4)}</div>
+                <div class="alpha-mini">{dataProcessor.alpha.toString().slice(0, 4)}</div>
             </div>
             
-            <div class="collapsed-item" title={isDataReady ? 'Ready' : 'Processing...'}>
-                <div class="status-dot {isDataReady ? 'ready' : 'processing'}"></div>
+            <div class="collapsed-item" title={dataProcessor.isDataReady ? 'Ready' : 'Processing...'}>
+                <div class="status-dot {dataProcessor.isDataReady ? 'ready' : 'processing'}"></div>
             </div>
 
-            <div class="collapsed-item" title="Upload Data">
-                📁
-            </div>
-
-            <div class="collapsed-item" title="Dataset Info">
-                📊
-            </div>
+            <div class="collapsed-item" title="Upload Data">📁</div>
+            <div class="collapsed-item" title="Dataset Info">📊</div>
         </div>
     {/if}
-</aside>
-
+</div>
 
 <style>
-    /* Sidebar styles */
-    .sidebar {
-        background-color: var(--bg-secondary);
-        border-right: 1px solid var(--border-color);
-        transition: width 0.3s ease;
+    .sidebar-content {
+        height: 100%;
         display: flex;
         flex-direction: column;
+        min-width: 0;
+        overflow: hidden;
+        max-width: 100%;
     }
 
     .sidebar-header {
@@ -89,30 +93,39 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        border-bottom: 1px solid var(--border-color);
+        gap: 2rem;
+        border-bottom: 1px solid var(--color-border);
         min-height: 80px;
+        flex-shrink: 0;
+        min-width: 0;
+        overflow: hidden;
+        max-width: 100%;
     }
 
     /* When collapsed, center the toggle button */
-    .sidebar[style*="4rem"] .sidebar-header {
+    .sidebar-content:has(.sidebar-collapsed) .sidebar-header,
+    .sidebar-header:has(+ * .sidebar-collapsed) {
         padding: 1rem;
         justify-content: center;
     }
 
     .sidebar-title {
-        font-size: 1.25rem;
-        font-weight: 600;
+        font-size: var(--font-size-small);
+        font-weight: var(--font-weight-bold);
         margin: 0;
-        color: var(--text-primary);
+        color: var(--color-fg);
+        font-family: var(--font-body);
     }
 
-    .sidebar-content {
+    .sidebar-body {
         padding: 1.5rem;
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 2rem;
         overflow-y: auto;
+        overflow-x: hidden;
+        max-width: 100%;
     }
 
     .sidebar-collapsed {
@@ -121,6 +134,7 @@
         flex-direction: column;
         align-items: center;
         gap: 1rem;
+        flex: 1;
     }
 
     .collapsed-item {
@@ -129,32 +143,37 @@
         align-items: center;
         gap: 0.25rem;
         padding: 0.5rem;
-        border-radius: var(--radius);
-        transition: background-color 0.2s ease;
+        border-radius: var(--border-radius);
+        transition: background-color var(--transition-medium) ease;
         cursor: pointer;
     }
 
     .collapsed-item:hover {
-        background-color: var(--border-color);
+        background-color: var(--color-gray-200);
+    }
+
+    :global(.dark) .collapsed-item:hover {
+        background-color: var(--color-gray-700);
     }
 
     .alpha-icon {
         width: 2rem;
         height: 2rem;
-        background-color: var(--accent-color);
-        border-radius: var(--radius);
+        background-color: var(--color-good-blue);
+        border-radius: var(--border-radius);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
-        font-size: 0.875rem;
-        font-weight: 600;
+        color: var(--color-white);
+        font-size: var(--14px);
+        font-weight: var(--font-weight-bold);
+        font-family: var(--font-form);
     }
 
     .alpha-mini {
-        font-size: 0.75rem;
-        font-family: monospace;
-        color: var(--text-secondary);
+        font-size: var(--12px);
+        font-family: var(--font-form);
+        color: var(--color-secondary-gray);
     }
 
     .status-dot {
@@ -164,11 +183,11 @@
     }
 
     .status-dot.ready {
-        background-color: var(--success-color);
+        background-color: var(--color-electric-green);
     }
 
     .status-dot.processing {
-        background-color: var(--warning-color);
+        background-color: var(--color-yellow);
         animation: pulse 2s infinite;
     }
 
@@ -176,5 +195,12 @@
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
     }
-
+  
+  :global([data-separator-root]) {
+            margin-top: 1.2rem;   /* my-4 = 1rem top */
+            margin-bottom: 1.2rem;/* my-4 = 1rem bottom */
+            flex-shrink: 0;     /* shrink-0 */
+            height: 1px;        /* h-px */
+            width: 100%;        /* w-full */
+        }
 </style>
