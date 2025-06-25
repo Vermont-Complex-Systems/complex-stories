@@ -41,6 +41,7 @@
 		"mode-watcher": "^1.0.7",
 		"p5-svelte": "^3.1.2",
 		"path-js": "^1.0.1",
+		"puppeteer": "^24.10.2",
 		"rehype-highlight": "^7.0.2",
 		"rehype-katex": "^7.0.1",
 		"rehype-raw": "^7.0.0",

@@ -4,6 +4,7 @@
     import AlphaControl from './sidebar/AlphaControl.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
     import StatusCard from './sidebar/StatusCard.svelte';
+    import DownloadSection from './sidebar/DownloadSection.svelte';
     
     import { 
         allotax,
@@ -52,6 +53,10 @@
                     me={allotax.me} 
                     rtd={allotax.rtd} 
                     isDataReady={allotax.isDataReady} 
+                />
+                <Separator.Root/>
+                <!-- Sidebar.svelte -->
+                <DownloadSection {...allotax}
                 />
             </Accordion.Root>
 
