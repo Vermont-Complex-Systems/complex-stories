@@ -1,5 +1,6 @@
 <script>
     import { Accordion, Button } from "bits-ui";
+    import { base } from '$app/paths'; // Add this import
 
     let {
         // Original props
@@ -88,7 +89,7 @@
                 barDataLength: barData.length
             });
             
-            const response = await fetch('/api/export', {
+            const response = await fetch(`${base}/api/export`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
