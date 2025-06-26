@@ -35,6 +35,11 @@
         "text": "#000"
     },
     {
+        "slug": "open-academic-analytics",
+        "bg": "hsl(52, 100%, 45%)",
+        "text": "#000"
+    },
+    {
         "slug": "explore-timeline",
         "bg": "hsl(52, 100%, 45%)",
         "text": "#000"
