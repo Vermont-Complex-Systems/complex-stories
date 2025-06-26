@@ -10,20 +10,31 @@
     try {
       const dashboard = document.getElementById('allotaxonometer-dashboard');
       
-      // Get the actual dimensions
+      // Scroll to top to ensure full visibility
+      window.scrollTo(0, 0);
+      
+      // Get computed dimensions including any overflow
       const rect = dashboard.getBoundingClientRect();
+      const computedStyle = getComputedStyle(dashboard);
+      
+      // Use scrollWidth/Height for full content size
+      const fullWidth = Math.max(rect.width, dashboard.scrollWidth);
+      const fullHeight = Math.max(rect.height, dashboard.scrollHeight);
       
       const dataUrl = await domtoimage.toPng(dashboard, {
-        quality: 1.0,           // Maximum quality
+        quality: 1.0,
         bgcolor: 'white',
-        scale: 2,               // 3x resolution for much higher quality
-        width: rect.width * 2,  // Scale dimensions too
-        height: rect.height * 2,
+        scale: 2,
+        width: fullWidth,   // Use full content width
+        height: fullHeight, // Use full content height
         style: {
-          width: rect.width + 'px',
-          height: rect.height + 'px',
+          // Ensure no clipping
+          overflow: 'visible',
+          position: 'static',
           transform: 'none',
-          position: 'static'
+          // Force the element to show its full size
+          width: fullWidth + 'px',
+          height: fullHeight + 'px'
         }
       });
       
@@ -35,6 +46,7 @@
       console.error('PNG export failed:', error);
     }
   }
+
 
   async function exportToSVG() {
     try {

@@ -79,7 +79,7 @@
         background-color: var(--color-bg);
         max-width: none;
         margin: 0;
-        padding: 4.5rem 0 0 0;
+        padding: 5.5rem 0 0 5.5rem; /* Added left and right padding */
         transition: padding-left var(--transition-medium) ease;
     }
 
