@@ -55,9 +55,7 @@
                     isDataReady={allotax.isDataReady} 
                 />
                 <Separator.Root/>
-                <!-- Sidebar.svelte -->
-                <DownloadSection {...allotax}
-                />
+                <DownloadSection {...allotax} />
             </Accordion.Root>
 
             <StatusCard isDataReady={allotax.isDataReady} />

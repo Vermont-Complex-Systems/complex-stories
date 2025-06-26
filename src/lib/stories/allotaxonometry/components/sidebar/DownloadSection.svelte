@@ -1,262 +1,196 @@
 <script>
-    import { Accordion, Button } from "bits-ui";
-    import { base } from '$app/paths'; // Add this import
+  import { Accordion } from "bits-ui";
+  import domtoimage from 'dom-to-image-more';
 
-    let {
-        // Original props
-        sys1,
-        sys2,
-        alpha,
-        title = ['System 1', 'System 2'],
-        topN = 30,
-        isDataReady = false,
-        class: className = '',
-        
-        // New props for pre-computed data
-        me = null,
-        rtd = null, 
-        dat = null,
-        barData = [],
-        balanceData = [],
-        maxlog10 = 0,
-        max_count_log = 2,
-        max_shift = 1
-    } = $props();
+  let { isDataReady = false } = $props();
+  
+  let showTooltip = $state(false);
 
-    // Add validation and logging
-    $effect(() => {
-        console.log('DownloadSection props:', { 
-            sys1: sys1 ? 'present' : 'missing', 
-            sys2: sys2 ? 'present' : 'missing', 
-            alpha, 
-            title, 
-            topN,
-            dat: dat ? 'present' : 'missing',
-            barDataLength: barData.length,
-            alphaType: typeof alpha,
-            alphaIsInfinity: alpha === Infinity,
-            alphaIsNaN: isNaN(alpha)
-        });
-    });
-
-    // Export state
-    let exporting = $state(false);
-    let exportProgress = $state('');
-    let lastExportType = $state('');
-
-    async function exportFile(format = 'pdf') {
-        console.log('exportFile called with:', { format, alpha, alphaType: typeof alpha });
-        
-        if (!sys1 || !sys2) {
-            alert('No data to export');
-            return;
+    async function exportToPNG() {
+    try {
+      const dashboard = document.getElementById('allotaxonometer-dashboard');
+      
+      // Get the actual dimensions
+      const rect = dashboard.getBoundingClientRect();
+      
+      const dataUrl = await domtoimage.toPng(dashboard, {
+        quality: 1.0,           // Maximum quality
+        bgcolor: 'white',
+        scale: 2,               // 3x resolution for much higher quality
+        width: rect.width * 2,  // Scale dimensions too
+        height: rect.height * 2,
+        style: {
+          width: rect.width + 'px',
+          height: rect.height + 'px',
+          transform: 'none',
+          position: 'static'
         }
-
-        if (!dat || !rtd) {
-            alert('Data not ready for export. Please wait for processing to complete.');
-            return;
-        }
-
-        // Validate alpha before proceeding
-        if (alpha === null || alpha === undefined) {
-            alert('Invalid alpha value: null or undefined');
-            return;
-        }
-
-        if (isNaN(alpha) && alpha !== Infinity) {
-            alert('Invalid alpha value: NaN');
-            return;
-        }
-        
-        exporting = true;
-        lastExportType = format;
-        exportProgress = 'Preparing data...';
-        
-        try {
-            exportProgress = 'Processing visualization...';
-            
-            // Handle Infinity serialization
-            const alphaForJSON = alpha === Infinity ? 'Infinity' : alpha;
-            
-            console.log('Sending pre-computed data to API:', {
-                alpha: alphaForJSON,
-                title1: title[0],
-                title2: title[1],
-                format,
-                topN,
-                datPresent: !!dat,
-                rtdPresent: !!rtd,
-                barDataLength: barData.length
-            });
-            
-            const response = await fetch(`${base}/api/export`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    // Send pre-computed data instead of raw data
-                    dat,
-                    rtd,
-                    barData: barData.slice(0, topN),
-                    balanceData,
-                    maxlog10,
-                    max_count_log,
-                    max_shift,
-                    alpha: alphaForJSON,
-                    title1: title[0],
-                    title2: title[1],
-                    format
-                })
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Export failed');
-            }
-            
-            exportProgress = 'Downloading file...';
-            
-            const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            
-            // Set filename based on format and titles
-            const sanitizedTitle1 = title[0].replace(/[^a-zA-Z0-9]/g, '_');
-            const sanitizedTitle2 = title[1].replace(/[^a-zA-Z0-9]/g, '_');
-            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-            
-            a.download = `${sanitizedTitle1}_vs_${sanitizedTitle2}_alpha${alphaForJSON}_${timestamp}.${format}`;
-            
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            exportProgress = 'Complete!';
-            setTimeout(() => {
-                exportProgress = '';
-                lastExportType = '';
-            }, 1000);
-            
-        } catch (error) {
-            console.error('Export failed:', error);
-            alert(`Export failed: ${error.message}`);
-            exportProgress = '';
-            lastExportType = '';
-        } finally {
-            exporting = false;
-        }
+      });
+      
+      const link = document.createElement('a');
+      link.download = 'dashboard.png';
+      link.href = dataUrl;
+      link.click();
+    } catch (error) {
+      console.error('PNG export failed:', error);
     }
+  }
 
-    // Updated computed properties for button states
-    let canExport = $derived(isDataReady && sys1 && sys2 && dat && rtd && !exporting);
-    let progressMessage = $derived(
-        exporting ? `${exportProgress} (${lastExportType.toUpperCase()})` : exportProgress
-    );
+  async function exportToSVG() {
+    try {
+      const dashboard = document.getElementById('allotaxonometer-dashboard');
+      const dataUrl = await domtoimage.toSvg(dashboard);
+      
+      const link = document.createElement('a');
+      link.download = 'dashboard.svg';
+      link.href = dataUrl;
+      link.click();
+    } catch (error) {
+      console.error('SVG export failed:', error);
+    }
+  }
 </script>
 
-<Accordion.Item value="download" class="accordion-item">
-    <Accordion.Header>
-        <Accordion.Trigger class="accordion-trigger">
-            <span>💾 Export Dashboard</span>
-        </Accordion.Trigger>
-    </Accordion.Header>
-    <Accordion.Content class="accordion-content">
-        <div class="download-section">
-            <div class="export-grid">
-                <Button.Root 
-                    onclick={() => exportFile('pdf')}
-                    disabled={!canExport}
-                    variant="default"
-                    size="sm"
-                    class="export-button"
-                >
-                    📄 PDF
-                </Button.Root>
+<Accordion.Item value="download">
+  <Accordion.Header>
+    <Accordion.Trigger class="section-trigger">
+      <div class="section-header">
+        <div class="icon">📥</div>
+        <span>Export</span>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 9l6 6 6-6"/>
+      </svg>
+    </Accordion.Trigger>
+  </Accordion.Header>
+  
+  <Accordion.Content class="section-content">
+    <div class="download-section">
+      <button onclick={exportToPNG} disabled={!isDataReady}>
+        Download PNG
+      </button>
+      <button onclick={exportToSVG} disabled={!isDataReady}>
+        Download SVG  
+      </button>
+      
+      <div 
+        class="pdf-button-container"
+        onmouseenter={() => showTooltip = true}
+        onmouseleave={() => showTooltip = false}
+    >
+        <button disabled={true}>
+        📄 PDF (Limited by Browser)
+        </button>
 
-                <Button.Root 
-                    onclick={() => exportFile('html')}
-                    disabled={!canExport}
-                    variant="outline"
-                    size="sm"
-                    class="export-button"
-                >
-                    🌐 HTML
-                </Button.Root>
-
-                <Button.Root 
-                    onclick={() => exportFile('rtd-json')}
-                    disabled={!canExport}
-                    variant="outline"
-                    size="sm"
-                    class="export-button"
-                >
-                    📊 Data
-                </Button.Root>
-            </div>
-
-            {#if exportProgress}
-                <div class="export-status {exportProgress.startsWith('Error') ? 'error' : 'success'}">
-                    {exportProgress}
-                </div>
-            {/if}
-
-            {#if !canExport}
-                <div class="export-help">
-                    {!dat || !rtd ? 'Processing data...' : 'Upload data to enable exports'}
-                </div>
-            {/if}
+        {#if showTooltip}
+        <div class="tooltip">
+            Browser PDF export has poor quality. Download SVG and convert with Inkscape/Illustrator for publication-quality PDFs.
         </div>
-    </Accordion.Content>
+        {/if}
+      </div>
+    </div>
+  </Accordion.Content>
 </Accordion.Item>
 
 <style>
-    .download-section {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
+  .section-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.75rem 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-fg);
+    font-family: var(--font-body);
+  }
 
-    .export-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 0.5rem;
-    }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
 
-    :global(.export-button) {
-        font-size: var(--12px) !important;
-        padding: 0.5rem 0.25rem !important;
-        font-family: var(--font-form) !important;
-        height: auto !important;
-    }
+  .icon {
+    font-size: 1.2em;
+  }
 
-    .export-status {
-        font-size: var(--14px);
-        padding: 0.75rem;
-        border-radius: var(--border-radius);
-        font-weight: var(--font-weight-normal);
-        font-family: var(--font-form);
-        text-align: center;
-    }
+  .section-content {
+    padding-bottom: 1rem;
+  }
 
-    .export-status.success {
-        color: var(--color-electric-green);
-        background-color: rgba(58, 230, 96, 0.1);
-        border: 1px solid var(--color-electric-green);
-    }
+  .download-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  button {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: var(--font-size-small);
+    color: var(--color-fg);
+    transition: all var(--transition-medium) ease;
+    width: 100%; /* Make button fill container */
+  }
+  
+  button:hover:not(:disabled) {
+    background: var(--color-gray-100);
+    border-color: var(--color-gray-300);
+  }
 
-    .export-status.error {
-        color: var(--color-red);
-        background-color: rgba(255, 83, 61, 0.1);
-        border: 1px solid var(--color-red);
-    }
+  button:disabled {
+    opacity: 0.5;
+    cursor: help; /* Change cursor to indicate hoverable */
+  }
 
-    .export-help {
-        font-size: var(--12px);
-        color: var(--color-secondary-gray);
-        text-align: center;
-        font-family: var(--font-form);
-        font-style: italic;
-    }
+  :global(.dark) button {
+    background: var(--color-gray-800);
+    border-color: var(--color-gray-600);
+  }
+
+  :global(.dark) button:hover:not(:disabled) {
+    background: var(--color-gray-700);
+    border-color: var(--color-gray-500);
+  }
+
+  .pdf-button-container {
+    position: relative;
+    cursor: help; /* Show help cursor on container */
+  }
+  
+  .tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    max-width: 250px;
+    white-space: normal;
+    z-index: 1000;
+    margin-bottom: 5px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  
+  .tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #333;
+  }
 </style>
