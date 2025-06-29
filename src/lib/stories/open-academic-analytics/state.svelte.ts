@@ -47,7 +47,6 @@ async function loadAvailableAuthors() {
         FROM coauthor 
         WHERE name IS NOT NULL 
         ORDER BY name
-        LIMIT 50
     `);
     
     return result.map(row => row.name);

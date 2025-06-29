@@ -1,7 +1,6 @@
 <script>
-  import * as d3 from 'd3';
-  import { processCoauthorData, getCombinedDateRange, getCoauthorColor, ageColorScale, acquaintanceColorScale } from '../utils/combinedChartUtils.js';
-  import Tooltip from './Tooltip.svelte';
+  import { processCoauthorData, getCoauthorColor, ageColorScale, acquaintanceColorScale } from '../utils/combinedChartUtils.js';
+  import TimelineChart from './TimelineChart.svelte';
 
   let { 
     coauthorData, 
@@ -11,57 +10,33 @@
     colorMode = 'age_diff',
     highlightedCoauthor = null
   } = $props();
-  
-  // Constants
-  const MARGIN_TOP = 50;
-  const MARGIN_BOTTOM = 50;
-  const MAX_CIRCLE_RADIUS = 12;
 
-  // Check if we have data
-  let hasData = $derived(coauthorData && coauthorData.length > 0);
-
-  // Time scale using COMBINED date range from both datasets
-  let timeScale = $derived.by(() => {
-    if (!hasData) return d3.scaleTime();
-    const dateRange = getCombinedDateRange(paperData, coauthorData);
-    return d3.scaleTime()
-      .domain(dateRange)
-      .range([MARGIN_TOP, height - MARGIN_BOTTOM - MAX_CIRCLE_RADIUS]);
-  });
-
-  // Year ticks for the timeline
-  let yearTicks = $derived.by(() => {
-    if (!hasData) return [];
-    const dateRange = getCombinedDateRange(paperData, coauthorData);
-    const [startYear, endYear] = d3.extent(dateRange, d => d.getFullYear());
-    const yearSpacing = Math.max(1, Math.floor((endYear - startYear) / 15));
-    return d3.range(startYear, endYear + 1, yearSpacing);
-  });
-
-  // Process coauthor data into plot points
-  let plotData = $derived.by(() => {
-    if (!hasData) return [];
-    return processCoauthorData(coauthorData, width, height, timeScale);
-  });
-
-  // Filter and style data for display
+  // Process and style data for display
   let displayData = $derived.by(() => {
-    if (!plotData.length) return [];
+    if (!coauthorData || coauthorData.length === 0) return [];
     
-    return plotData.map(point => {
+    return coauthorData.map(d => {
       let opacity = 1;
       
       // Apply coauthor highlight filter if provided
       if (highlightedCoauthor) {
-        const isHighlightedCoauthor = point.coauth_aid === highlightedCoauthor;
+        const isHighlightedCoauthor = d.coauth_aid === highlightedCoauthor;
         opacity *= isHighlightedCoauthor ? 1 : 0.2;
       }
-      
-      return {
-        ...point,
+
+      // Create a point object with color information
+      const point = {
+        ...d,
+        // Add age_category for color calculation
+        age_category: d.age_diff > 7 ? 'older' : d.age_diff < -7 ? 'younger' : 'same',
         opacity,
-        displayColor: getCoauthorColor(point, colorMode)
+        displayColor: getCoauthorColor({
+          age_category: d.age_diff > 7 ? 'older' : d.age_diff < -7 ? 'younger' : 'same',
+          all_times_collabo: d.all_times_collabo
+        }, colorMode)
       };
+      
+      return point;
     });
   });
 
@@ -75,115 +50,60 @@
       ];
     } else if (colorMode === 'acquaintance') {
       return [
-        { label: 'New collaboration', color: acquaintanceColorScale('new_collab') },
-        { label: 'Repeat collaboration', color: acquaintanceColorScale('repeat_collab') },
-        { label: 'Long-term collaboration', color: acquaintanceColorScale('long_term_collab') }
+        { label: 'New collaboration', color: ageColorScale('new_collab') },
+        { label: 'Repeat collaboration', color: ageColorScale('repeat_collab') },
+        { label: 'Long-term collaboration', color: ageColorScale('long_term_collab') }
       ];
     }
     return [];
   });
 
-  // Tooltip state
-  let showTooltip = $state(false);
-  let tooltipContent = $state('');
-  let mouseX = $state(0);
-  let mouseY = $state(0);
-
-  function showPointTooltip(event, point) {
-    mouseX = event.clientX;
-    mouseY = event.clientY;
-    
-    tooltipContent = `Coauthor: ${point.name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nYearly collaborations: ${point.yearly_collabo}\nAcquaintance: ${point.acquaintance}`;
-    
-    showTooltip = true;
+  function formatTooltip(point) {
+    return `Coauthor: ${point.coauth_name}\nYear: ${point.pub_year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nYearly collaborations: ${point.yearly_collabo}\nAcquaintance: ${point.acquaintance}`;
   }
-
-  function hideTooltip() {
-    showTooltip = false;
-  }
-
-  // Add this temporarily to debug
-  $inspect(displayData)
 </script>
 
-<div class="chart-wrapper">
-  <div class="viz-content">
-    <div class="plot-container">
-      <svg {width} {height} class="chart-svg">
-        
-        <!-- Grid lines and year labels -->
-        <g>
-          
-          {#each yearTicks as year}
-            {@const yearDate = new Date(year, 0, 1)}
-            {@const y = timeScale(yearDate)}
-            <line x1="0" x2={width} y1={y} y2={y} class="grid-line"/>
-            <text x="10" y={y - 5} text-anchor="start" class="year-label">{year}</text>
-          {/each}
-        </g>
-        
-        <!-- Coauthor points -->
-        {#each displayData as point}
-          <circle
-            cx={point.x}
-            cy={point.y}
-            r={point.r}
-            fill={point.displayColor}
-            stroke="black"
-            stroke-width="0.3"
-            fill-opacity={point.opacity}
-            class="data-point"
-            on:mouseenter={(e) => showPointTooltip(e, point)}
-            on:mouseleave={hideTooltip}
-          />
+<TimelineChart
+  {paperData}
+  {coauthorData}
+  {width}
+  {height}
+  processDataFn={processCoauthorData}
+  dataToDisplay={displayData}
+  tooltipFormatter={formatTooltip}
+>
+  {#snippet pointComponent(point, showTooltip, hideTooltip)}
+    <circle
+      cx={point.x}
+      cy={point.y}
+      r={point.r}
+      fill={point.displayColor}
+      stroke="black"
+      stroke-width="0.3"
+      fill-opacity={point.opacity}
+      class="data-point"
+      on:mouseenter={(e) => showTooltip(e, point)}
+      on:mouseleave={hideTooltip}
+    />
+  {/snippet}
+
+  {#snippet legendComponent()}
+    {#if legendData.length > 0}
+      <div class="legend">
+        <h4>Legend</h4>
+        {#each legendData as item}
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: {item.color}"></div>
+            <span class="legend-label">{item.label}</span>
+          </div>
         {/each}
-      </svg>
+      </div>
+    {/if}
+  {/snippet}
+</TimelineChart>
 
-      <!-- Legend -->
-      {#if legendData.length > 0}
-        <div class="legend">
-          <h4>Legend</h4>
-          {#each legendData as item}
-            <div class="legend-item">
-              <div class="legend-color" style="background-color: {item.color}"></div>
-              <span class="legend-label">{item.label}</span>
-            </div>
-          {/each}
-        </div>
-      {/if}
-    </div>
-  </div>
-</div>
-
-<Tooltip 
-  visible={showTooltip}
-  x={mouseX}
-  y={mouseY}
-  content={tooltipContent}
-/>
-
+<!-- Same styles as before -->
 <style>
-   .chart-wrapper {
-    --chart-grid-color: var(--color-border);
-    --chart-text-color: var(--color-secondary-gray);
-    width: 100%;
-    overflow: hidden; /* Add this */
-  }
-
-  .plot-container {
-    display: flex;
-    justify-content: center;
-    position: relative;
-    width: 100%;
-    overflow: hidden; /* Add this */
-  }
-
-  .chart-svg {
-    display: block;
-    overflow: visible; /* Keep SVG overflow visible for tooltips */
-    max-width: 100%; /* But constrain to container */
-  }
-
   .legend {
     position: absolute;
     top: 10px;
@@ -217,38 +137,9 @@
   }
 
   .legend-label {
-    color: var(--chart-text-color);
+    color: var(--color-secondary-gray);
   }
 
-  /* SVG element styling using design tokens */
-  .chart-wrapper :global(.chart-label) {
-    font-size: var(--font-size-xsmall);
-    font-weight: var(--font-weight-bold);
-    font-family: var(--sans);
-    fill: var(--chart-text-color);
-  }
-
-  .chart-wrapper :global(.year-label) {
-    font-size: var(--font-size-xsmall);
-    font-family: var(--mono);
-    fill: var(--chart-text-color);
-  }
-
-  .chart-wrapper :global(.grid-line) {
-    stroke: var(--chart-grid-color);
-    stroke-width: 1;
-  }
-
-  .chart-wrapper :global(.data-point) {
-    cursor: pointer;
-    transition: fill-opacity 0.3s ease;
-  }
-
-  .chart-wrapper :global(.data-point:hover) {
-    stroke-width: 1;
-  }
-
-  /* Dark mode support */
   :global(.dark) .legend {
     background: var(--color-bg);
     border-color: var(--color-border);
