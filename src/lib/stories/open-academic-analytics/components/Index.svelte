@@ -1,26 +1,69 @@
 <script>
     import Nav from './Nav.svelte';
     import Sidebar from './Sidebar.svelte';
-    import { uiState } from '../state.svelte.ts';
+    import Dashboard from './Dashboard.svelte';
+    import { 
+        uiState, 
+        dashboardState, 
+        dataState,
+        initializeApp,
+        loadSelectedAuthor
+    } from '../state.svelte.ts';
+    
+    // Initialize on component mount
+    initializeApp();
+    
+    // Auto-load data when selected author changes
+    $effect(() => {
+        if (dashboardState.selectedAuthor && !dataState.isInitializing) {
+            loadSelectedAuthor();
+        }
+    });
 </script>
 
-<div class="dashboard-app">
-    <Nav />
-    
+<div class="dashboard-app">    
     <div class="app-container">
         <div class="layout">
-            <aside class="sidebar-container {uiState.sidebarCollapsed ? 'collapsed' : ''}">
-                <Sidebar />
-            </aside>
-            
-            <main class="main-content {uiState.sidebarCollapsed ? 'collapsed-sidebar' : ''}">
-                <div>hello world</div>
-            </main>
+            {#if dataState.isInitializing}
+                <div class="loading-container">
+                    <p>Loading authors...</p>
+                </div>
+            {:else if dataState.error}
+                <div class="error-container">
+                    <p>Error: {dataState.error}</p>
+                    <button onclick={() => initializeApp()}>Retry</button>
+                </div>
+            {:else}
+                <aside class="sidebar-container {uiState.sidebarCollapsed ? 'collapsed' : ''}">
+                    <Sidebar 
+                        paperData={dataState.paperData} 
+                        coauthorData={dataState.coauthorData} 
+                        availableAuthors={dataState.availableAuthors}
+                    />
+                </aside>
+                
+                <main class="main-content {uiState.sidebarCollapsed ? 'collapsed-sidebar' : ''}">
+                    <Nav />
+                    
+                    {#if dataState.isLoadingAuthor}
+                        <div class="author-loading">
+                            <p>Loading data for {dashboardState.selectedAuthor}...</p>
+                        </div>
+                    {/if}
+                    
+                    <Dashboard 
+                        paperData={dataState.paperData} 
+                        coauthorData={dataState.coauthorData}
+                    />
+                </main>
+            {/if}
         </div>
     </div>
 </div>
 
+
 <style>
+
     /* Story-specific global reset */
     .dashboard-app * {
         margin: 0;
@@ -78,14 +121,32 @@
         background-color: var(--color-bg);
         max-width: none;
         margin: 0;
-        padding: 5.5rem 0 0 5.5rem; /* Added left and right padding */
+        padding: 2rem;
         transition: padding-left var(--transition-medium) ease;
     }
 
     .main-content.collapsed-sidebar {
-        padding-left: 0;
+        padding-left: 2rem;
     }
     
+    .loading-container, .error-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        width: 100vw;
+        gap: 1rem;
+    }
+
+    .error-container button {
+        padding: 0.5rem 1rem;
+        background: var(--color-button-bg);
+        color: var(--color-button-fg);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
 
     /* Responsive */
     @media (max-width: 768px) {
@@ -98,10 +159,18 @@
             height: auto;
             border-right: none;
             border-bottom: 1px solid var(--color-border);
+            max-height: none;
+            transition: max-height var(--transition-medium) ease;
         }
 
+        .sidebar-container.collapsed {
+            max-height: 80px; /* Just show the header */
+            overflow: hidden;
+        }
+
+        .main-content,
         .main-content.collapsed-sidebar {
-            padding-left: 0;
+            padding: 1rem;
         }
     }
 </style>

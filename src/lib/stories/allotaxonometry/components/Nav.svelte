@@ -13,7 +13,7 @@
     
     <div class="nav-controls">
         <ThemeToggle 
-            bind:isDarkMode={uiState.isDarkMode}
+            bind:isDark={uiState.isDarkMode}
             class="nav-theme-toggle"
         />
     </div>

@@ -1,7 +1,6 @@
 <script>
     import { base } from '$app/paths';
     import ThemeToggle from './ThemeToggle.svelte';
-    import { uiState } from '../state.svelte.ts';
 </script>
 
 <nav class="nav">
@@ -12,20 +11,15 @@
     </div>
     
     <div class="nav-controls">
-        <ThemeToggle 
-            bind:isDarkMode={uiState.isDarkMode}
-            class="nav-theme-toggle"
+        <ThemeToggle class="nav-theme-toggle"
         />
     </div>
 </nav>
 
 <style>
     .nav {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        z-index: 1001;
         display: flex;
+        justify-content: flex-end;  /* Pushes content to the right */
         align-items: center;
     }
 
@@ -76,14 +70,9 @@
     /* Responsive adjustments */
     @media (max-width: 768px) {
         .nav {
-            position: relative;
-            top: 0;
-            right: 0;
-            width: 100%;
-            justify-content: space-between;
-            padding: 1rem;
-            background-color: var(--bg-primary);
-            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;  /* Pushes content to the right */
+            align-items: center;
         }
 
         .logo {

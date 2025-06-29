@@ -1,34 +1,24 @@
 <script>
     import { Button } from "bits-ui";
     import { Sun, Moon } from "@lucide/svelte";
-    import { ModeWatcher, setMode } from "mode-watcher";
+    import { ModeWatcher, toggleMode, mode } from "mode-watcher";
 
     let { 
-        isDark = $bindable(false),
         class: className = "",
         hideOnMobile = true
     } = $props();
     
     // Build the class string inside the component
     let buttonClass = $derived(`theme-toggle ${className} ${hideOnMobile ? 'hide-mobile' : ''}`);
-    
-    $effect(() => {
-        isDark = document.documentElement.classList.contains('dark');
-    });
-    
-    function toggleTheme() {
-        isDark = !isDark;
-        setMode(isDark ? 'dark' : 'light');
-    }
 </script>
 
 <ModeWatcher />
 
 <Button.Root 
-    onclick={toggleTheme}  
+    onclick={toggleMode}  
     class={buttonClass}
 >
-    {#if isDark}
+    {#if mode.current === 'dark'}
         <Sun class="icon" />
     {:else}
         <Moon class="icon" />
@@ -51,7 +41,6 @@
         width: 2.5rem;
         height: 2.5rem;
     }
-
 
     :global(.theme-toggle:hover) {
         background: rgba(0, 0, 0, 0.05) !important;

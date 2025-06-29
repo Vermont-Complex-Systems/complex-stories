@@ -1,30 +1,33 @@
 """
-Database handling module for the coauthorship analysis pipeline
+database_adapter.py
+
+Adapter to make Dagster's DuckDBResource work with existing DatabaseExporter interface.
+This preserves all your existing business logic while using the official resource.
 """
 import logging
 from datetime import datetime
 
-import duckdb
-
 logger = logging.getLogger(__name__)
 
-class DatabaseExporter:
-    """Class to handle all database operations"""
+class DatabaseExporterAdapter:
+    """
+    Adapter that wraps DuckDB connection to provide the same interface as DatabaseExporter.
+    This allows us to use Dagster's official DuckDB resource without changing business logic.
+    """
     
-    def __init__(self, db_path):
+    def __init__(self, duckdb_connection):
         """
-        Initialize database connection.
+        Initialize with a DuckDB connection from Dagster's DuckDBResource.
         
         Args:
-            db_path (str or Path): Path to the database file
+            duckdb_connection: Connection from DuckDBResource.get_connection()
         """
-        self.db_path = str(db_path)
-        self.con = duckdb.connect(self.db_path)
+        self.con = duckdb_connection
         self._setup_tables()
     
     def _setup_tables(self):
         """Set up all required database tables if they don't exist"""
-        # Paper table
+        # Paper table (exact same as original DatabaseExporter)
         self.con.execute("""
             CREATE TABLE IF NOT EXISTS paper (
                 ego_aid VARCHAR,
@@ -44,7 +47,7 @@ class DatabaseExporter:
             )
         """)
         
-        # Coauthor table
+        # Coauthor table (exact same as original DatabaseExporter)
         self.con.execute("""
             CREATE TABLE IF NOT EXISTS coauthor2 (
                 ego_aid VARCHAR,
@@ -61,7 +64,7 @@ class DatabaseExporter:
             )
         """)
         
-        # Author info table
+        # Author info table (exact same as original DatabaseExporter)
         self.con.execute("""
             CREATE TABLE IF NOT EXISTS author (
                 aid VARCHAR,
@@ -78,6 +81,7 @@ class DatabaseExporter:
     def get_author_cache_by_name(self, author_name):
         """
         Get existing database records for a given author name.
+        EXACT SAME interface as original DatabaseExporter
         
         Args:
             author_name (str): OpenAlex display name
@@ -95,6 +99,7 @@ class DatabaseExporter:
     def get_author_cache(self, author_id):
         """
         Get existing database records for a given author ID.
+        EXACT SAME interface as original DatabaseExporter
         
         Args:
             author_id (str): OpenAlex author ID
@@ -117,6 +122,7 @@ class DatabaseExporter:
     def is_up_to_date(self, author_id, min_year, max_year):
         """
         Check if the database records for an author are up to date.
+        EXACT SAME interface as original DatabaseExporter
         
         Args:
             author_id (str): OpenAlex author ID
@@ -143,6 +149,7 @@ class DatabaseExporter:
     def save_papers(self, papers):
         """
         Save paper data to the database.
+        EXACT SAME interface as original DatabaseExporter
         
         Args:
             papers (list): List of paper tuples
@@ -169,6 +176,7 @@ class DatabaseExporter:
     def save_coauthors(self, coauthors):
         """
         Save coauthor data to the database.
+        EXACT SAME interface as original DatabaseExporter
         
         Args:
             coauthors (list): List of coauthor tuples
@@ -193,6 +201,7 @@ class DatabaseExporter:
     def save_authors(self, authors):
         """
         Save author data to the database.
+        EXACT SAME interface as original DatabaseExporter
         
         Args:
             authors (list): List of author tuples
@@ -218,6 +227,7 @@ class DatabaseExporter:
     def update_author_ages(self, author_id, first_pub_year):
         """
         Update author ages based on a known first publication year.
+        EXACT SAME interface as original DatabaseExporter
         
         Args:
             author_id (str): OpenAlex author ID
@@ -259,5 +269,10 @@ class DatabaseExporter:
             self.con.rollback()
     
     def close(self):
-        """Close database connection"""
-        self.con.close()
+        """
+        Close database connection.
+        NOTE: With Dagster's resource, this is handled automatically,
+        but we keep this method for interface compatibility.
+        """
+        # Connection is managed by Dagster resource, so we don't need to close manually
+        pass
