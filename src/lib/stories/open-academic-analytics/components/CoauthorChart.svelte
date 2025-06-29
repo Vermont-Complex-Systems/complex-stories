@@ -163,10 +163,11 @@
 />
 
 <style>
-  .chart-wrapper {
+   .chart-wrapper {
     --chart-grid-color: var(--color-border);
     --chart-text-color: var(--color-secondary-gray);
     width: 100%;
+    overflow: hidden; /* Add this */
   }
 
   .plot-container {
@@ -174,10 +175,13 @@
     justify-content: center;
     position: relative;
     width: 100%;
+    overflow: hidden; /* Add this */
   }
 
   .chart-svg {
     display: block;
+    overflow: visible; /* Keep SVG overflow visible for tooltips */
+    max-width: 100%; /* But constrain to container */
   }
 
   .legend {

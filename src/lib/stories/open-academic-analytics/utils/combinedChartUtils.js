@@ -14,42 +14,13 @@ export const collaborationColorScale = d3.scaleThreshold()
   .domain([2, 4, 9])  // 0-1: new, 2-3: repeat, 4+: long-term
   .range(['#FF6B35', '#4682B4', '#2E8B57', '#1F4E79']); // red, blue, green, dark blue
 
-// Paper point creation
-export function createPaperPoint(d, targetY) {
-  const citedBy = +d.cited_by_count || 0;
-  const nbCoauthors = +d.nb_coauthors || 1;
-  
-  const color = "#888888"; // Grey for all papers
 
-  const citationScale = d3.scaleSqrt()
-    .domain([0, 1000])
-    .range([3, 15])
-    .clamp(true);
-  
-  const radius = citationScale(citedBy);
 
-  return {
-    x: 0,
-    y: targetY,
-    r: radius,
-    color: color,
-    type: 'paper',
-    title: d.title,
-    year: d.pub_year,
-    date: d.pub_date,
-    cited_by_count: citedBy,
-    nb_coauthors: nbCoauthors,
-    work_type: d.work_type,
-    doi: d.doi,
-    authors: d.authors,
-    ego_aid: d.ego_aid
-  };
-}
 
-// Coauthor point creation
 export function createCoauthorPoint(d, targetY) {
   const ageDiff = +d.age_diff;
   const totalCollabs = +d.all_times_collabo || 1;
+  const yearlyCollabs = +d.yearly_collabo || 1;
   
   // Determine age category
   let ageCategory = 'same';
@@ -59,9 +30,11 @@ export function createCoauthorPoint(d, targetY) {
     ageCategory = 'younger';
   }
 
+  // More generous radius scaling with better minimum size
   const radiusScale = d3.scaleSqrt()
-    .domain([1, 20])
-    .range([3, 12]);
+    .domain([1, Math.max(10, d3.max([20, totalCollabs * 1.2]))]) // Ensure reasonable max domain
+    .range([3, 9]) // Increased minimum from 1 to 3
+    .clamp(true);
   
   const radius = radiusScale(totalCollabs);
 
@@ -87,13 +60,45 @@ export function createCoauthorPoint(d, targetY) {
   };
 }
 
-// Shared collision detection
-export function checkCollision(testX, testY, point, placedPoints, padding = 2) {
+export function createPaperPoint(d, targetY) {
+  const citedBy = +d.cited_by_count || 0;
+  const nbCoauthors = +d.nb_coauthors || 1;
+  
+  const color = "#888888"; // Grey for all papers
+
+  // More generous citation scaling with better minimum size
+  const citationScale = d3.scaleSqrt()
+    .domain([0, Math.max(100, d3.max([1000, citedBy * 1.2]))]) // Ensure reasonable max domain
+    .range([2, 12]) // Increased minimum from 1 to 2, max to 12
+    .clamp(true);
+  
+  const radius = citationScale(citedBy);
+
+  return {
+    x: 0,
+    y: targetY,
+    r: radius,
+    color: color,
+    type: 'paper',
+    title: d.title,
+    year: d.pub_year,
+    date: d.pub_date,
+    cited_by_count: citedBy,
+    nb_coauthors: nbCoauthors,
+    work_type: d.work_type,
+    doi: d.doi,
+    authors: d.authors,
+    ego_aid: d.ego_aid
+  };
+}
+
+// Improved collision detection with better spacing
+export function checkCollision(testX, testY, point, placedPoints, padding = 1) {
   for (const existing of placedPoints) {
     const dx = testX - existing.x;
     const dy = testY - existing.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    const minDistance = point.r + existing.r + padding;
+    const minDistance = point.r + existing.r + padding; // Reduced padding
     
     if (distance < minDistance) {
       return true;
@@ -102,12 +107,11 @@ export function checkCollision(testX, testY, point, placedPoints, padding = 2) {
   return false;
 }
 
-// Shared placement logic
-export function tryHorizontalPlacement(point, placedPoints, centerX, allPoints = null) {
-  // Use more of the available width - reduce margins from 20px to 5px
+// More aggressive horizontal placement like Plot's dodgeX
+export function tryHorizontalPlacement(point, placedPoints, centerX, effectiveWidth, allPoints = null) {
   const margin = 5;
-  const maxOffset = centerX - margin;
-  const step = 4;
+  const maxOffset = Math.min(centerX - margin, effectiveWidth - centerX - margin);
+  const step = 2; // Smaller step for denser packing
   const offsets = d3.range(0, maxOffset + 1, step);
   
   for (const offset of offsets) {
@@ -117,15 +121,14 @@ export function tryHorizontalPlacement(point, placedPoints, centerX, allPoints =
       const testX = centerX + xOffset;
       const testY = point.y;
       
-      // Be more permissive with center line usage
+      // More permissive center line usage
       if (xOffset === 0 && allPoints && !canUseCenterLine(point, allPoints)) {
         continue;
       }
       
-      // Use smaller margins to allow more space
-      if (testX < margin || testX > (centerX * 2) - margin) continue;
+      if (testX < margin || testX > effectiveWidth - margin) continue;
       
-      if (!checkCollision(testX, testY, point, placedPoints)) {
+      if (!checkCollision(testX, testY, point, placedPoints, 0.5)) { // Tighter collision
         point.x = testX;
         return true;
       }
@@ -134,13 +137,121 @@ export function tryHorizontalPlacement(point, placedPoints, centerX, allPoints =
   return false;
 }
 
-// Make center line usage more permissive
+// Much more permissive center line usage
 export function canUseCenterLine(point, allPoints) {
   const currentRank = allPoints.indexOf(point);
   const totalPoints = allPoints.length;
-  // Increase from 20% to 40% of points allowed on center line
-  return currentRank < totalPoints * 0.4 || point.r > 6; // Also lowered radius threshold
+  // Allow 60% of points on center line, prioritize larger points
+  return currentRank < totalPoints * 0.6 || point.r > 4;
 }
+
+// Add a multi-pass placement strategy
+export function placePointMultiPass(point, placedPoints, centerX, effectiveWidth, allPoints = null) {
+  // First pass: try horizontal placement with tight collision
+  if (tryHorizontalPlacement(point, placedPoints, centerX, effectiveWidth, allPoints)) {
+    return true;
+  }
+  
+  // Second pass: try vertical placement
+  if (tryVerticalPlacement(point, placedPoints, centerX, effectiveWidth)) {
+    return true;
+  }
+  
+  // Third pass: try horizontal with looser collision
+  const step = 1;
+  const maxOffset = Math.min(centerX - 5, effectiveWidth - centerX - 5);
+  const offsets = d3.range(0, maxOffset + 1, step);
+  
+  for (const offset of offsets) {
+    const positions = offset === 0 ? [0] : [offset, -offset];
+    
+    for (const xOffset of positions) {
+      const testX = centerX + xOffset;
+      const testY = point.y;
+      
+      if (testX < 5 || testX > effectiveWidth - 5) continue;
+      
+      if (!checkCollision(testX, testY, point, placedPoints, 0.2)) { // Very tight collision
+        point.x = testX;
+        return true;
+      }
+    }
+  }
+  
+  return false;
+}
+
+// Update the main processing functions to use the new placement
+export function processCoauthorData(coauthorData, width, height, timeScale) {
+  if (!coauthorData || coauthorData.length === 0) {
+    return [];
+  }
+
+  const MARGIN_LEFT = 40;
+  const MARGIN_RIGHT = 40;
+  const effectiveWidth = width - MARGIN_LEFT - MARGIN_RIGHT;
+  const centerX = effectiveWidth / 2;
+  
+  const coauthorPoints = coauthorData.map(d => {
+    const parsedDate = parseDate(d.pub_date);
+    const targetY = timeScale(parsedDate);
+    return createCoauthorPoint(d, targetY);
+  });
+
+  // Sort by collaboration count (descending) to place important points first
+  coauthorPoints.sort((a, b) => d3.descending(+a.all_times_collabo || 0, +b.all_times_collabo || 0));
+
+  const placedPoints = [];
+  
+  for (const point of coauthorPoints) {
+    if (placePointMultiPass(point, placedPoints, centerX, effectiveWidth, coauthorPoints)) {
+      placedPoints.push(point);
+    } else {
+      console.warn('Could not place coauthor point:', point.name);
+      point.x = centerX;
+      placedPoints.push(point);
+    }
+  }
+
+  return coauthorPoints;
+}
+
+export function processPaperData(paperData, width, height, timeScale) {
+  if (!paperData || paperData.length === 0) {
+    return [];
+  }
+
+  const MARGIN_LEFT = 40;
+  const MARGIN_RIGHT = 40;
+  const effectiveWidth = width - MARGIN_LEFT - MARGIN_RIGHT;
+  const centerX = effectiveWidth / 2;
+  
+  const paperPoints = paperData.map(d => {
+    const parsedDate = parseDate(d.pub_date);
+    const targetY = timeScale(parsedDate);
+    return createPaperPoint(d, targetY);
+  });
+
+  // Sort by citation count (descending) to place important points first
+  paperPoints.sort((a, b) => d3.descending(+a.cited_by_count || 0, +b.cited_by_count || 0));
+
+  const placedPoints = [];
+  
+  for (const point of paperPoints) {
+    if (placePointMultiPass(point, placedPoints, centerX, effectiveWidth)) {
+      placedPoints.push(point);
+    } else {
+      console.warn('Could not place paper point:', point.title);
+      point.x = centerX;
+      placedPoints.push(point);
+    }
+  }
+
+  return paperPoints;
+}
+
+
+
 
 // Also update vertical placement to use more space
 export function tryVerticalPlacement(point, placedPoints, centerX) {
@@ -224,6 +335,22 @@ export function parseDate(dateStr) {
   }
 }
 
+
+// Color helper for coauthors
+export function getCoauthorColor(point, colorMode) {
+  if (colorMode === 'age_diff') {
+    return ageColorScale(point.age_category);
+  } else if (colorMode === 'acquaintance') {
+    // Use collaboration count instead of acquaintance string
+    const collabCount = +point.all_times_collabo || 0;
+    return collaborationColorScale(collabCount);
+  }
+  return '#20A387FF';
+}
+
+
+
+
 // Get combined date range from both datasets
 export function getCombinedDateRange(paperData, coauthorData) {
   const allData = [];
@@ -246,78 +373,4 @@ export function getCombinedDateRange(paperData, coauthorData) {
   const paddedMaxDate = new Date(maxDate.getFullYear() + 1, 11, 31);
   
   return [paddedMinDate, paddedMaxDate];
-}
-
-// Process paper data
-export function processPaperData(paperData, width, height, timeScale) {
-  if (!paperData || paperData.length === 0) {
-    return [];
-  }
-
-  const centerX = width / 2;
-  
-  const paperPoints = paperData.map(d => {
-    const parsedDate = parseDate(d.pub_date);
-    const targetY = timeScale(parsedDate);
-    return createPaperPoint(d, targetY);
-  });
-
-  paperPoints.sort((a, b) => d3.descending(+a.cited_by_count || 0, +b.cited_by_count || 0));
-
-  const placedPoints = [];
-  
-  for (const point of paperPoints) {
-    if (placePoint(point, placedPoints, centerX)) {
-      placedPoints.push(point);
-    } else {
-      console.warn('Could not place paper point:', point.title);
-      point.x = centerX;
-      placedPoints.push(point);
-    }
-  }
-
-  return paperPoints;
-}
-
-// Process coauthor data
-export function processCoauthorData(coauthorData, width, height, timeScale) {
-  if (!coauthorData || coauthorData.length === 0) {
-    return [];
-  }
-
-  const centerX = width / 2;
-  
-  const coauthorPoints = coauthorData.map(d => {
-    const parsedDate = parseDate(d.pub_date);
-    const targetY = timeScale(parsedDate);
-    return createCoauthorPoint(d, targetY);
-  });
-
-  coauthorPoints.sort((a, b) => d3.descending(+a.all_times_collabo || 0, +b.all_times_collabo || 0));
-
-  const placedPoints = [];
-  
-  for (const point of coauthorPoints) {
-    if (placePoint(point, placedPoints, centerX, coauthorPoints)) {
-      placedPoints.push(point);
-    } else {
-      console.warn('Could not place coauthor point:', point.name);
-      point.x = centerX;
-      placedPoints.push(point);
-    }
-  }
-
-  return coauthorPoints;
-}
-
-// Color helper for coauthors
-export function getCoauthorColor(point, colorMode) {
-  if (colorMode === 'age_diff') {
-    return ageColorScale(point.age_category);
-  } else if (colorMode === 'acquaintance') {
-    // Use collaboration count instead of acquaintance string
-    const collabCount = +point.all_times_collabo || 0;
-    return collaborationColorScale(collabCount);
-  }
-  return '#20A387FF';
 }

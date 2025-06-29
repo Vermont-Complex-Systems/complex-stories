@@ -17,9 +17,9 @@
     // Calculate actual available space step by step
     const sidebarWidth = uiState.sidebarCollapsed ? 80 : 272; // 5rem or 17rem
     const mainContentPadding = 88; // 5.5rem left padding
-    const dashboardPadding = 40; // 20px on each side
+    const dashboardPadding = 20; // Reduced from 40
     const chartsGridGap = 20; // gap between the two charts
-    const chartPanelPadding = 40; // 20px padding on each side of each panel
+    const chartPanelPadding = 20; // Reduced from 40
     
     // Available width for the entire charts container
     const availableForChartsContainer = screenWidth - sidebarWidth - mainContentPadding - dashboardPadding;
@@ -27,8 +27,8 @@
     // Each chart gets half the container minus gap and panel padding
     const availablePerChart = (availableForChartsContainer - chartsGridGap) / 2 - chartPanelPadding;
     
-    // Ensure minimum and maximum sizes
-    const finalWidth = Math.max(300, Math.min(500, availablePerChart));
+    // Ensure minimum and maximum sizes - increased max
+    const finalWidth = Math.max(400, Math.min(700, availablePerChart)); // Increased from 300,500
     
     return finalWidth;
   });
