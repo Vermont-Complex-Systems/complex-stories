@@ -1,6 +1,6 @@
 // src/lib/stories/open-academic-analytics/state.svelte.ts
 import { registerParquetFile, query } from '$lib/utils/duckdb.js';
-import { getDataUrls } from './data/loader.js';
+import { paperUrl, coauthorUrl } from './data/loader.js';
 
 // UI State
 export const uiState = $state({
@@ -42,8 +42,6 @@ export function getAvailableCoauthors() {
 // Register parquet tables once
 async function registerTables() {
     if (tablesRegistered) return;
-    
-    const { paperUrl, coauthorUrl } = await getDataUrls();
     
     await registerParquetFile(paperUrl, 'paper');
     await registerParquetFile(coauthorUrl, 'coauthor');
