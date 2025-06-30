@@ -1,8 +1,8 @@
 """
 timeline_coauthor_assets.py
 
-UPDATED to use Dagster's official DuckDB resource with adapter.
-All business logic remains identical - only the database connection changed.
+Updated to use centralized configuration instead of hardcoded values.
+All business logic remains identical - only configuration management changed.
 """
 import calendar
 import random
@@ -17,51 +17,30 @@ from tqdm import tqdm
 import dagster as dg
 from dagster_duckdb import DuckDBResource
 
-# Import the database adapter and utilities
+# Import configuration and modules
+from config import PipelineConfig
 from modules.database_adapter import DatabaseExporterAdapter
 from modules.utils import shuffle_date_within_month
 
-# Configuration - matching original paths
-DATA_RAW = Path("data/raw")
-DATA_PROCESSED = Path("data/processed") 
-PAPER_FILE = DATA_PROCESSED / "paper.parquet"
 
-# Collaboration categories (exact same as original)
-COLLAB_TYPES = {
-    'NEW': 'new_collab',
-    'NEW_THROUGH_MUTUAL': 'new_collab_of_collab', 
-    'EXISTING': 'existing_collab'
-}
-
-# Processing settings (exact same as original)
-BATCH_SIZE = 1000
-PROGRESS_REPORT_INTERVAL = 10
-MIN_VALID_YEAR = 1950
-
-# Development configuration
-DEV_CONFIG = {
-    "target_researcher": "A5010744577",
-    "force_update": True,  # 🔄 Reprocess everything
-    "update_missing_only": False,  # (ignored when force_update=True)
-    "enable_debug": True,
-}
-
-def load_and_validate_data(db_exporter):
+def load_and_validate_data(db_exporter, config: PipelineConfig):
     """
     Load paper and author data, validate integrity.
-    UPDATED to take db_exporter as parameter instead of creating it
+    UPDATED to use config for file paths
     
     Args:
         db_exporter: DatabaseExporterAdapter instance from resource
+        config: PipelineConfig with file paths and settings
         
     Returns:
         tuple: (df_pap, df_auth) - dataframes only
     """
-    # Load processed papers (exact same as original)
-    print(f"Loading paper data from {PAPER_FILE}")
+    # Load processed papers using config path
+    paper_file = config.data_processed_path / config.paper_output_file
+    print(f"Loading paper data from {paper_file}")
     
     try:
-        df_pap = pd.read_parquet(PAPER_FILE)
+        df_pap = pd.read_parquet(paper_file)
         print(f"Loaded {len(df_pap):,} papers")
     except Exception as e:
         print(f"Error loading paper data: {e}")
@@ -125,10 +104,10 @@ def get_author_publication_years(df_pap, target_aid):
 
 def process_author_year(df_pap, target_aid, target_name, yr, target_info, 
                        coaut2info, set_all_collabs, all_time_collabo, 
-                       set_collabs_of_collabs_never_worked_with):
+                       set_collabs_of_collabs_never_worked_with, config: PipelineConfig):
     """
     Process coauthor relationships for a specific author and year.
-    EXACT REPRODUCTION of original process_author_year function (with date fix)
+    UPDATED to use config for collaboration types and settings
     """
     _, auth_age = target_info  # We'll determine target_institution via majority vote
     
@@ -235,20 +214,21 @@ def process_author_year(df_pap, target_aid, target_name, yr, target_info,
         for coauthor_name, coauthor_data in time_collabo.items():
             coauthor_aid = coauthName2aid[coauthor_name]
             
-            # Determine collaboration type (exact same as original)
+            # Determine collaboration type using config values
             if coauthor_name in (new_collabs_this_year - set_all_collabs):
                 if coauthor_name in set_collabs_of_collabs_never_worked_with:
-                    subtype = COLLAB_TYPES['NEW_THROUGH_MUTUAL']
+                    subtype = config.collab_types['NEW_THROUGH_MUTUAL']
                 else:
-                    subtype = COLLAB_TYPES['NEW']
+                    subtype = config.collab_types['NEW']
             else:
-                subtype = COLLAB_TYPES['EXISTING']
+                subtype = config.collab_types['EXISTING']
 
             # Assign publication date (exact same as original)
             author_date = random.choice(dates_in_year) if dates_in_year else f"{yr}-01-01"
             
-            # Create standardized age date for visualization (exact same as original)
-            shuffled_auth_age = "1" + author_date.replace(author_date.split("-")[0], str(auth_age).zfill(3))
+            # Create standardized age date for visualization using config
+            age_padding = str(auth_age).zfill(config.age_padding_width)
+            shuffled_auth_age = config.age_std_prefix + author_date.replace(author_date.split("-")[0], age_padding)
             # Handle leap year edge case
             shuffled_auth_age = shuffled_auth_age.replace("29", "28") if shuffled_auth_age.endswith("29") else shuffled_auth_age
 
@@ -275,10 +255,10 @@ def process_author_year(df_pap, target_aid, target_name, yr, target_info,
     return coauthors, dates_in_year, new_collabs_this_year, time_collabo
 
 
-def process_single_author(df_pap, target_aid, target_name, target2info, coaut2info, existing_records):
+def process_single_author(df_pap, target_aid, target_name, target2info, coaut2info, existing_records, config: PipelineConfig):
     """
     Process all coauthor relationships for a single target author across all years.
-    EXACT REPRODUCTION of original process_single_author function
+    UPDATED to use config for force_update setting
     """
     if pd.isna(target_name):
         print(f"Warning: Name is missing for author {target_aid}, using ID as name")
@@ -308,19 +288,18 @@ def process_single_author(df_pap, target_aid, target_name, target2info, coaut2in
             print(f"Missing info for {target_name} in {yr}")
             continue
         
-        # Process this year's collaborations
+        # Process this year's collaborations (now passing config)
         coauthors, dates_in_year, new_collabs_this_year, time_collabo = process_author_year(
             df_pap, target_aid, target_name, yr, target_info, 
             coaut2info, set_all_collabs, all_time_collabo, 
-            set_collabs_of_collabs_never_worked_with
+            set_collabs_of_collabs_never_worked_with, config
         )
         
-        # Filter out existing records (exact same as original)
+        # Filter out existing records using config setting
         new_coauthors = []
-        force_update = DEV_CONFIG.get("force_update", False)
         for coauthor in coauthors:
             coauthor_aid = coauthor[3]  # coauthor_aid is at index 3
-            if force_update or (target_aid, coauthor_aid, yr) not in existing_records:
+            if config.force_update or (target_aid, coauthor_aid, yr) not in existing_records:
                 new_coauthors.append(coauthor)
         
         all_coauthors.extend(new_coauthors)
@@ -332,9 +311,9 @@ def process_single_author(df_pap, target_aid, target_name, target2info, coaut2in
 
 
 @dg.asset(deps=["paper_preprocessing"])  # String dependency reference
-def timeline_coauthor_main(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB resource
+def timeline_coauthor_main(duckdb: DuckDBResource, config: PipelineConfig):
     """
-    UPDATED to use DuckDB resource, but all business logic remains identical
+    UPDATED to use centralized configuration for all settings and paths
     
     Main processing pipeline:
     1. Load paper and author data with validation
@@ -352,10 +331,10 @@ def timeline_coauthor_main(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB 
         db_exporter = DatabaseExporterAdapter(conn)
         print(f"✅ Connected to database via DuckDB resource")
         
-        # === ALL BUSINESS LOGIC BELOW IS IDENTICAL TO ORIGINAL ===
+        # === BUSINESS LOGIC NOW USES CONFIG VALUES ===
         
-        # Load and validate input data (updated to use resource)
-        df_pap, df_auth = load_and_validate_data(db_exporter)
+        # Load and validate input data (now passing config)
+        df_pap, df_auth = load_and_validate_data(db_exporter, config)
         
         # Create optimization lookups (exact same as original)
         target2info, coaut2info = create_optimization_lookups(df_auth)
@@ -363,25 +342,27 @@ def timeline_coauthor_main(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB 
         # Get list of target authors (exact same as original)
         targets = get_target_authors(df_pap)
 
-        # DEVELOPMENT MODE: Filter to specific researcher
-        target_researcher_id = DEV_CONFIG["target_researcher"]
-        force_update = DEV_CONFIG.get("force_update", False)
-        
-        if target_researcher_id:
-            # Filter to specific researcher
-            targets = targets[targets['ego_aid'] == target_researcher_id]
-            print(f"\n🎯 DEVELOPMENT MODE: Processing specific researcher {target_researcher_id}")
-            if len(targets) == 0:
-                print(f"❌ Target researcher {target_researcher_id} not found in data")
-                return f"Target researcher {target_researcher_id} not found"
+        # DEVELOPMENT MODE: Use config settings instead of hardcoded values
+        if config.development_mode:
+            if config.target_researcher:
+                # Filter to specific researcher from config
+                targets = targets[targets['ego_aid'] == config.target_researcher]
+                print(f"\n🎯 DEVELOPMENT MODE: Processing specific researcher {config.target_researcher}")
+                if len(targets) == 0:
+                    print(f"❌ Target researcher {config.target_researcher} not found in data")
+                    return f"Target researcher {config.target_researcher} not found"
+            elif config.max_researchers:
+                # Limit to max researchers from config
+                targets = targets.head(config.max_researchers)
+                print(f"\n🔧 DEVELOPMENT MODE: Processing first {config.max_researchers} researcher(s)")
         else:
-            # Process all researchers (remove this if you always want to specify one)
-            print(f"\n🔧 PROCESSING ALL {len(targets)} RESEARCHERS")
+            # Process all researchers in production mode
+            print(f"\n🏭 PRODUCTION MODE: Processing all {len(targets)} researchers")
         
         print(f"Selected {len(targets)} target authors for processing")
 
-        # 🆕 UPDATED FORCE UPDATE DELETION LOGIC - DuckDB compatible
-        if force_update:
+        # Force update deletion logic using config
+        if config.force_update:
             print(f"\n🔄 FORCE UPDATE MODE: Will clear existing coauthor records before processing")
             
             # Clear coauthor records for all target researchers
@@ -409,7 +390,7 @@ def timeline_coauthor_main(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB 
             db_exporter.con.commit()
             print(f"✅ Cleared {total_deleted} existing records for {len(target_aids)} researchers")
 
-        # Process each target author (exact same loop structure as original)
+        # Process each target author using config for progress reporting
         total_new_records = 0
         
         for i, row in tqdm(targets.iterrows(), total=len(targets), desc="Processing authors"):
@@ -420,23 +401,24 @@ def timeline_coauthor_main(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB 
             _, cache_coauthor = db_exporter.get_author_cache(target_aid)
             existing_records = set([(aid, caid, yr) for aid, caid, yr in cache_coauthor])
             
-            if i % PROGRESS_REPORT_INTERVAL == 0 or DEV_CONFIG["enable_debug"]:
+            # Use config for progress reporting interval and debug settings
+            if i % config.progress_report_interval == 0 or config.enable_debug:
                 print(f"\n--- Processing author {i+1}/{len(targets)}: {target_name} ---")
                 print(f"Found {len(existing_records):,} existing coauthor records")
             
-            # Process this author's coauthor relationships (exact same as original)
+            # Process this author's coauthor relationships (now passing config)
             coauthors = process_single_author(
-                df_pap, target_aid, target_name, target2info, coaut2info, existing_records
+                df_pap, target_aid, target_name, target2info, coaut2info, existing_records, config
             )
             
             # Save new records to database (exact same as original)
             if len(coauthors) > 0:
-                if i % PROGRESS_REPORT_INTERVAL == 0 or DEV_CONFIG["enable_debug"]:
+                if i % config.progress_report_interval == 0 or config.enable_debug:
                     print(f"Inserting {len(coauthors):,} new coauthor records for {target_name}")
                 db_exporter.save_coauthors(coauthors)
                 total_new_records += len(coauthors)
             else:
-                if i % PROGRESS_REPORT_INTERVAL == 0 or DEV_CONFIG["enable_debug"]:
+                if i % config.progress_report_interval == 0 or config.enable_debug:
                     print(f"No new coauthor records to insert for {target_name}")
 
         # Print final summary (exact same as original)

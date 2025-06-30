@@ -1,8 +1,8 @@
 """
 author_preprocessing_assets.py
 
-UPDATED to use Dagster's official DuckDB resource with adapter.
-All business logic remains identical - only the database connection changed.
+Updated to use centralized configuration instead of hardcoded values.
+All business logic remains identical - only configuration management changed.
 """
 
 import sys
@@ -13,29 +13,11 @@ import pandas as pd
 import dagster as dg
 from dagster_duckdb import DuckDBResource
 
-# Import the database adapter
+# Import configuration and modules
+from config import PipelineConfig
 from modules.database_adapter import DatabaseExporterAdapter
 
-# Configuration - matching original paths
-DATA_RAW = Path("data/raw")
-DATA_PROCESSED = Path("data/processed")
-
-# Ensure directories exist
-DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
-
-# Database configuration (exact same as original)
-OUTPUT_FILE = "author.parquet"
-
-# Age standardization settings (exact same as original)
-AGE_STD_PREFIX = "1"  # Prefix for age standardization
-AGE_PADDING_WIDTH = 3  # Zero-pad age to 3 digits
-MONTH_RANGE = (1, 12)  # Random month range
-DAY_RANGE = (1, 28)    # Random day range (avoid leap year issues)
-
-# Data validation (exact same as original)
-REQUIRED_COLUMNS = ['aid', 'author_age']
-
-# Age Standardization Format (exact same as original):
+# Age Standardization Format (from config):
 # age_std = "1{author_age:03d}-{random_month:02d}-{random_day:02d}"
 # 
 # Examples:
@@ -48,40 +30,42 @@ REQUIRED_COLUMNS = ['aid', 'author_age']
 # - Consistent format works with D3.js date parsing
 
 
-def generate_random_date_components(size):
+def generate_random_date_components(size, config: PipelineConfig):
     """
     Generate random month and day components for date standardization.
-    EXACT REPRODUCTION of original generate_random_date_components function
+    UPDATED to use config for month and day ranges
     
     Args:
         size (int): Number of random date components to generate
+        config (PipelineConfig): Configuration with month/day ranges
         
     Returns:
         tuple: (months, days) as zero-padded string arrays
     """
     months = np.char.zfill(
-        np.random.randint(MONTH_RANGE[0], MONTH_RANGE[1] + 1, size).astype(str), 
+        np.random.randint(config.month_range[0], config.month_range[1] + 1, size).astype(str), 
         2
     )
     days = np.char.zfill(
-        np.random.randint(DAY_RANGE[0], DAY_RANGE[1] + 1, size).astype(str), 
+        np.random.randint(config.day_range[0], config.day_range[1] + 1, size).astype(str), 
         2
     )
     return months, days
 
 
-def create_age_standardization(df):
+def create_age_standardization(df, config: PipelineConfig):
     """
     Create standardized age representation for timeline visualization.
-    EXACT REPRODUCTION of original create_age_standardization function
+    UPDATED to use config for age standardization settings
     
     The age_std format enables smooth temporal animations in frontend:
-    - Format: "1{age:03d}-{month:02d}-{day:02d}"
-    - Year component represents career stage (1000 + author_age)
+    - Format: "{prefix}{age:0{width}d}-{month:02d}-{day:02d}"
+    - Year component represents career stage (prefix + author_age)
     - Month/day provide random variation for animation smoothness
     
     Args:
         df (pd.DataFrame): DataFrame with author_age column
+        config (PipelineConfig): Configuration with age standardization settings
         
     Returns:
         pd.DataFrame: DataFrame with added age_std column
@@ -89,13 +73,13 @@ def create_age_standardization(df):
     print("Creating standardized age representation for visualization...")
     
     try:
-        # Generate random date components (exact same as original)
-        months, days = generate_random_date_components(len(df))
+        # Generate random date components using config
+        months, days = generate_random_date_components(len(df), config)
         
-        # Create age_std with consistent formatting (exact same as original)
+        # Create age_std with consistent formatting using config values
         df["age_std"] = (
-            AGE_STD_PREFIX + 
-            df.author_age.astype(str).str.replace(".0", "").map(lambda x: x.zfill(AGE_PADDING_WIDTH)) + 
+            config.age_std_prefix + 
+            df.author_age.astype(str).str.replace(".0", "").map(lambda x: x.zfill(config.age_padding_width)) + 
             "-" + months + "-" + days
         )
         
@@ -105,12 +89,12 @@ def create_age_standardization(df):
         print(f"Error in vectorized approach: {e}")
         print("Falling back to row-by-row processing...")
         
-        # Fallback approach with better error handling (exact same as original)
+        # Fallback approach with better error handling using config values
         df["age_std"] = df.apply(
             lambda row: (
-                f"{AGE_STD_PREFIX}{str(int(row.author_age)).zfill(AGE_PADDING_WIDTH)}-"
-                f"{np.random.randint(MONTH_RANGE[0], MONTH_RANGE[1] + 1):02d}-"
-                f"{np.random.randint(DAY_RANGE[0], DAY_RANGE[1] + 1):02d}"
+                f"{config.age_std_prefix}{str(int(row.author_age)).zfill(config.age_padding_width)}-"
+                f"{np.random.randint(config.month_range[0], config.month_range[1] + 1):02d}-"
+                f"{np.random.randint(config.day_range[0], config.day_range[1] + 1):02d}"
             ) if not pd.isna(row.author_age) else None, 
             axis=1
         )
@@ -125,24 +109,27 @@ def create_age_standardization(df):
     return df
 
 
-def validate_data_quality(df):
+def validate_data_quality(df, config: PipelineConfig):
     """
     Validate data quality and report issues.
-    EXACT REPRODUCTION of original validate_data_quality function
+    UPDATED to use config for required columns validation
     
     Args:
         df (pd.DataFrame): Author DataFrame to validate
+        config (PipelineConfig): Configuration with required columns list
         
     Returns:
         pd.DataFrame: Validated DataFrame
     """
     print("Validating data quality...")
     
-    # Check for required columns (exact same as original)
-    missing_cols = [col for col in REQUIRED_COLUMNS if col not in df.columns]
+    # Check for required columns using config
+    required_columns = config.required_author_columns
+    missing_cols = [col for col in required_columns if col not in df.columns]
     if missing_cols:
         print(f"Warning: Missing required columns: {missing_cols}")
         print(f"Available columns: {df.columns.tolist()}")
+        print(f"Required columns from config: {required_columns}")
         return df
     
     # Report data quality metrics (exact same as original)
@@ -158,30 +145,43 @@ def validate_data_quality(df):
     if missing_age > 0:
         print(f"  - Records with valid age: {total_records - missing_age:,}")
     
-    # Check age distribution (exact same as original)
+    # Check age distribution with config age thresholds
     if not df.author_age.isna().all():
-        print(f"  - Age range: {df.author_age.min():.0f} to {df.author_age.max():.0f} years")
-        print(f"  - Mean age: {df.author_age.mean():.1f} years")
+        age_min = df.author_age.min()
+        age_max = df.author_age.max()
+        age_mean = df.author_age.mean()
+        
+        print(f"  - Age range: {age_min:.0f} to {age_max:.0f} years")
+        print(f"  - Mean age: {age_mean:.1f} years")
+        
+        # Validate against config thresholds
+        if age_min < config.min_author_age:
+            print(f"  - Warning: Found ages below minimum threshold ({config.min_author_age})")
+        if age_max > config.max_author_age:
+            print(f"  - Warning: Found ages above maximum threshold ({config.max_author_age})")
     
     return df
 
 
 @dg.asset(deps=["timeline_paper_main"])  # String dependency reference
-def author_preprocessing(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB resource
+def author_preprocessing(duckdb: DuckDBResource, config: PipelineConfig):
     """
-    UPDATED to use DuckDB resource, but all business logic remains identical
+    UPDATED to use centralized configuration for all settings and paths
     
     Main processing pipeline:
     1. Load author data from database
-    2. Validate required columns exist
+    2. Validate required columns exist (using config)
     3. Create standardized age representation (age_std) for visualization:
-       - Format: "1{age:03d}-{month:02d}-{day:02d}"
+       - Format: "{prefix}{age:0{width}d}-{month:02d}-{day:02d}" (using config)
        - Enables smooth temporal animations in frontend
     4. Handle missing values and data type conversion
-    5. Export processed dataset to parquet format
+    5. Export processed dataset to parquet format (using config path)
     """
     
     print("🚀 Starting author preprocessing...")
+    
+    # Ensure output directory exists using config
+    config.data_processed_path.mkdir(parents=True, exist_ok=True)
     
     # 🆕 NEW: Use DuckDB resource with adapter
     with duckdb.get_connection() as conn:
@@ -189,38 +189,58 @@ def author_preprocessing(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB re
         db_exporter = DatabaseExporterAdapter(conn)
         print(f"✅ Connected to database via DuckDB resource")
         
-        # === ALL BUSINESS LOGIC BELOW IS IDENTICAL TO ORIGINAL ===
+        # === BUSINESS LOGIC NOW USES CONFIG VALUES ===
         
         # Load author data from database (exact same as original)
         print("Querying author data from database...")
         df = db_exporter.con.sql("SELECT * FROM author").fetchdf()
         print(f"Retrieved {len(df):,} author records")
         
-        # Validate data quality (exact same function call as original)
-        df = validate_data_quality(df)
+        # Validate data quality using config for validation rules
+        df = validate_data_quality(df, config)
         
-        # Create standardized age representation (exact same function call as original)
-        df = create_age_standardization(df)
+        # Create standardized age representation using config settings
+        df = create_age_standardization(df, config)
         
         # Validate age_std creation (exact same as original)
         valid_age_std = df.age_std.notna().sum()
         print(f"Successfully created age_std for {valid_age_std:,} records")
         
-        # Save processed data (exact same as original)
-        output_path = DATA_PROCESSED / OUTPUT_FILE
+        # Save processed data using config path and filename
+        output_path = config.data_processed_path / config.author_output_file
         print(f"Saving {len(df):,} processed author records to {output_path}")
         df.to_parquet(output_path)
         print("Author preprocessing completed successfully!")
         
-        # Print processing summary (exact same as original)
+        # Print processing summary with enhanced config-aware reporting
         print("\n=== Processing Summary ===")
         print(f"Total authors processed: {len(df):,}")
         print(f"Unique author IDs: {df.aid.nunique():,}")
+        
         if 'institution' in df.columns:
-            print(f"Unique institutions: {df.institution.nunique():,}")
+            unique_institutions = df.institution.nunique()
+            print(f"Unique institutions: {unique_institutions:,}")
+            
         if 'pub_year' in df.columns:
-            print(f"Year range: {df.pub_year.min()}-{df.pub_year.max()}")
+            year_min = df.pub_year.min()
+            year_max = df.pub_year.max()
+            print(f"Year range: {year_min}-{year_max}")
+            
+            # Check against config year validation
+            if year_min < config.min_valid_year:
+                print(f"  - Warning: Years below {config.min_valid_year} found")
+            if year_max > config.max_valid_year:
+                print(f"  - Warning: Years above {config.max_valid_year} found")
+        
         print(f"Records with age_std: {valid_age_std:,}")
+        
+        # Config-aware summary
+        print(f"\nConfiguration used:")
+        print(f"  - Age prefix: '{config.age_std_prefix}'")
+        print(f"  - Age padding width: {config.age_padding_width}")
+        print(f"  - Month range: {config.month_range}")
+        print(f"  - Day range: {config.day_range}")
+        print(f"  - Output file: {config.author_output_file}")
         
         # No manual close needed - context manager handles it
         print("🔐 Database connection closed automatically by DuckDB resource")

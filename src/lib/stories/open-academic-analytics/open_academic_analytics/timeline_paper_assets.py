@@ -15,28 +15,14 @@ import dagster as dg
 from dagster_duckdb import DuckDBResource
 
 # Import your existing modules (exactly as in original)
+from config import PipelineConfig
 from modules.database_adapter import DatabaseExporterAdapter  # 🆕 NEW: Use adapter
 from modules.data_fetcher import OpenAlexFetcher
 from modules.author_processor import AuthorProcessor
 from modules.utils import shuffle_date_within_month
 
-# Configuration - matching original paths
-DATA_RAW = Path("data/raw")
-
-# Ensure directories exist
-DATA_RAW.mkdir(parents=True, exist_ok=True)
-
-# Configuration for development (exact same as original)
-DEV_CONFIG = {
-    "max_researchers": 1,  # Process only 1 researcher for testing
-    "target_researcher": "A5010744577",  # Set to specific ID or None for first in list
-    "force_update": True,  # 🔄 Reprocess everything
-    "update_missing_only": False,  # (ignored when force_update=True)
-}
-
-
 @dg.asset
-def researchers_tsv_timeline_paper():
+def researchers_tsv_timeline_paper(config: PipelineConfig):
     """
     Step 1: Convert researchers parquet to TSV format
     Equivalent to: make researchers (from original Makefile)
@@ -44,8 +30,14 @@ def researchers_tsv_timeline_paper():
     This reproduces the exact logic from researchers.py
     UNCHANGED - no database interaction here
     """
+    input_file = config.data_raw_path / config.researchers_input_file
+    output_file = config.data_raw_path / config.researchers_tsv_file
+
+    # Ensure directories exist
+    config.data_raw_path.mkdir(parents=True, exist_ok=True)
+
     # Load data from parquet (exact same as original researchers.py)
-    d = pd.read_parquet(DATA_RAW / "uvm_profs_2023.parquet")
+    d = pd.read_parquet(input_file)
 
     # Note: Handle column name variations
     cols_mapping = {
@@ -63,15 +55,14 @@ def researchers_tsv_timeline_paper():
             'host_dept', 'has_research_group', 'oa_uid', 'group_url', 'first_pub_year']
     
     # Export to TSV (exact same as original)
-    output_path = DATA_RAW / "researchers.tsv"
-    d[cols].to_csv(output_path, sep="\t", index=False)
+    d[cols].to_csv(output_file, sep="\t", index=False)
     
-    print(f"✅ Created {output_path} with {len(d)} researchers")
+    print(f"✅ Created {output_file} with {len(d)} researchers")
     return f"Processed {len(d)} researchers to researchers.tsv"
 
 
 @dg.asset(deps=[researchers_tsv_timeline_paper])
-def timeline_paper_main(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB resource
+def timeline_paper_main(duckdb: DuckDBResource, config: PipelineConfig):  # 🆕 UPDATED: Use DuckDB resource
     """
     Step 2: Main timeline-paper.py logic
     
@@ -89,7 +80,7 @@ def timeline_paper_main(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB res
         # === ALL BUSINESS LOGIC BELOW IS IDENTICAL TO ORIGINAL ===
         
         # Load researchers annotations (lines 45-50 from original)
-        researchers_file = DATA_RAW / "researchers.tsv"
+        researchers_file = config.data_raw_path / config.researchers_tsv_file
         assert researchers_file.exists(), f"Input file {researchers_file} does not exist"
         
         print(f"Loading researcher data from {researchers_file}")
@@ -118,18 +109,16 @@ def timeline_paper_main(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB res
         author_processor.preload_publication_years()
         print(f"Preloaded {len(author_processor.publication_year_cache)} publication year ranges")
 
-        # DEVELOPMENT MODE: Limit to specified number of researchers
-        max_researchers = DEV_CONFIG["max_researchers"]
-        target_researcher_id = DEV_CONFIG["target_researcher"]
-        
-        if target_researcher_id:
-            # Filter to specific researcher
-            target_aids = target_aids[target_aids['oa_uid'] == target_researcher_id]
-            print(f"\n🎯 DEVELOPMENT MODE: Processing specific researcher {target_researcher_id}")
+        # DEVELOPMENT MODE: Use config settings instead of hardcoded values
+        if config.development_mode:
+            if config.target_researcher:
+                target_aids = target_aids[target_aids['oa_uid'] == config.target_researcher]
+                print(f"\n🎯 DEVELOPMENT MODE: Processing specific researcher {config.target_researcher}")
+            elif config.max_researchers:
+                target_aids = target_aids.head(config.max_researchers)
+                print(f"\n🔧 DEVELOPMENT MODE: Processing first {config.max_researchers} researcher(s)")
         else:
-            # Process first N researchers
-            target_aids = target_aids.head(max_researchers)
-            print(f"\n🔧 DEVELOPMENT MODE: Processing first {max_researchers} researcher(s)")
+            print(f"\n🏭 PRODUCTION MODE: Processing all {len(target_aids)} researchers")
         
         if len(target_aids) == 0:
             return "❌ No researchers found matching criteria"
@@ -179,9 +168,8 @@ def timeline_paper_main(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB res
             # Store in publication year cache (lines 121-122)
             author_processor.publication_year_cache[target_aid] = (min_yr, max_yr)
 
-            # Check if database is up to date (lines 124-127)
-            force_update = DEV_CONFIG["force_update"]
-            if not force_update and db_exporter.is_up_to_date(target_aid, min_yr, max_yr):
+            # Check if database is up to date (use config setting)
+            if not config.force_update and db_exporter.is_up_to_date(target_aid, min_yr, max_yr):
                 print(f"✅ {target_name} is up to date in database")
                 total_researchers_processed += 1
                 continue
@@ -225,8 +213,8 @@ def timeline_paper_main(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB res
                     # Extract work ID (lines 163-164)
                     wid = w['id'].split("/")[-1]
                     
-                    # Skip if already in database (enable for production)
-                    if not force_update and (target_aid, wid) in existing_papers:
+                    # Skip if already in database (use config setting)
+                    if not config.force_update and (target_aid, wid) in existing_papers:
                         continue
                     
                     # Add some noise within year for visualization purpose (lines 170-171)

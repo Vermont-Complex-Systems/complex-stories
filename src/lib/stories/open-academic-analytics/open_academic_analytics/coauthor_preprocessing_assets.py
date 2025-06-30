@@ -1,8 +1,7 @@
 """
 coauthor_preprocessing_assets.py
 
-UPDATED to use Dagster's official DuckDB resource with adapter.
-All business logic remains identical - only the database connection changed.
+Fixed version with proper config usage and import paths.
 """
 
 import sys
@@ -16,78 +15,26 @@ import pandas as pd
 import dagster as dg
 from dagster_duckdb import DuckDBResource
 
-# Import the database adapter
-from modules.database_adapter import DatabaseExporterAdapter
-
-# Configuration - matching original paths
-DATA_RAW = Path("data/raw")
-DATA_PROCESSED = Path("data/processed")
-
-# Ensure directories exist
-DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
-
-# Database configuration (exact same as original)
-OUTPUT_FILE = "coauthor.parquet"
-
-# Age bucket configuration (exact same as original)
-AGE_BUCKETS = {
-    'much_younger': (-float('inf'), -15),
-    'younger': (-15, -7),
-    'same_age': (-7, 7),
-    'older': (7, 15),
-    'much_older': (15, float('inf'))
-}
-
-# Data validation settings (exact same as original)
-MIN_VALID_YEAR = 1950
-MAX_VALID_YEAR = 2024
-
-# Age standardization settings (exact same as original)
-AGE_STD_PREFIX = "1"
-AGE_PADDING_WIDTH = 3
-
-# Required columns for validation (exact same as original)
-REQUIRED_COLUMNS = [
-    'aid', 'name', 'author_age', 'coauth_age', 
-    'age_diff', 'pub_date'
-]
-
-# Age Difference Categorization (exact same as original):
-# much_younger: < -15 years (significantly junior)
-# younger:      -15 to -7 years (junior)  
-# same_age:     -7 to +7 years (peer)
-# older:        +7 to +15 years (senior)
-# much_older:   > +15 years (significantly senior)
-#
-# Note: Negative values mean coauthor is younger than ego
-
-# Core SQL Query Structure (exact same as original):
-# SELECT: coauthor metadata + ego author data + coauthor author data
-# FROM: coauthor2 table (collaboration records)
-# LEFT JOIN: author table (twice - for ego and coauthor data)
-# WHERE: Filter to recent years (< 2024)
-# 
-# Key Fields Retrieved:
-# - Collaboration metadata: pub_year, yearly_collabo, acquaintance
-# - Ego data: aid, name, institution, author_age, career span
-# - Coauthor data: aid, name, age, first_pub_year
-# - Derived: age_diff = coauth_age - ego_age
+# Import configuration and database adapter
+from config import PipelineConfig
+from modules.database_adapter import DatabaseExporterAdapter  # Fixed import path
 
 
-def load_coauthor_data(db_exporter):
+def load_coauthor_data(db_exporter, config: PipelineConfig):
     """
     Load coauthor relationship data with author metadata via complex SQL join.
-    EXACT REPRODUCTION of original load_coauthor_data function
+    UPDATED to use config for max valid year
     
     Args:
         db_exporter: DatabaseExporterAdapter instance with active connection
+        config: PipelineConfig with settings
         
     Returns:
         pd.DataFrame: Coauthor relationships with metadata
     """
     print("Querying coauthor data with author metadata...")
     
-    # Complex SQL join query (exact same as original)
+    # Complex SQL join query using config for max year
     query = """
         SELECT 
             c.pub_year, c.pub_date::CHAR as pub_date,
@@ -108,32 +55,26 @@ def load_coauthor_data(db_exporter):
         ORDER BY c.pub_year
     """
     
-    df = db_exporter.con.sql(query, params=[MAX_VALID_YEAR]).fetchdf()
+    df = db_exporter.con.sql(query, params=[config.max_valid_year]).fetchdf()
     print(f"Retrieved {len(df):,} coauthor relationships")
     
     return df
 
 
-def validate_data_quality(df):
+def validate_data_quality(df, config: PipelineConfig):
     """
     Validate data quality and report missing information.
-    EXACT REPRODUCTION of original validate_data_quality function
-    
-    Args:
-        df (pd.DataFrame): Coauthor DataFrame to validate
-        
-    Returns:
-        pd.DataFrame: Validated DataFrame
+    UPDATED to use config for required columns
     """
     print("Validating data quality...")
     
-    # Check for required columns (exact same as original)
-    missing_cols = [col for col in REQUIRED_COLUMNS if col not in df.columns]
+    # Check for required columns using config
+    missing_cols = [col for col in config.required_coauthor_columns if col not in df.columns]
     if missing_cols:
         print(f"Warning: Missing required columns: {missing_cols}")
         print(f"Available columns: {df.columns.tolist()}")
     
-    # Report data quality metrics (exact same as original)
+    # Report data quality metrics
     total_records = len(df)
     missing_author_age = df.author_age.isna().sum()
     missing_coauth_age = df.coauth_age.isna().sum()
@@ -148,87 +89,67 @@ def validate_data_quality(df):
     return df
 
 
-def correct_publication_years(df):
+def correct_publication_years(df, config: PipelineConfig):
     """
     Correct OpenAlex publication year anomalies and recalculate ages.
-    EXACT REPRODUCTION of original correct_publication_years function
-    
-    OpenAlex often has incorrect early publication years (pre-1950) that skew
-    age calculations. This function filters and corrects these issues.
-    
-    Args:
-        df (pd.DataFrame): DataFrame with coauthor data
-        
-    Returns:
-        pd.DataFrame: DataFrame with corrected publication years and ages
+    UPDATED to use config for min valid year
     """
     print("Correcting coauthor publication year anomalies...")
     
-    # Track corrections (exact same as original)
-    initial_invalid = df.coauth_min_year.lt(MIN_VALID_YEAR).sum()
+    # Track corrections using config
+    initial_invalid = df.coauth_min_year.lt(config.min_valid_year).sum()
     
-    # Filter out unrealistic first publication years (exact same as original)
+    # Filter out unrealistic first publication years using config
     df['coauth_min_year'] = df['coauth_min_year'].where(
-        df['coauth_min_year'] >= MIN_VALID_YEAR
+        df['coauth_min_year'] >= config.min_valid_year
     )
     
-    # Recalculate coauthor age based on corrected years (exact same as original)
+    # Recalculate coauthor age based on corrected years
     df['coauth_age'] = df.pub_year - df.coauth_min_year
     
-    # Recalculate age difference (exact same as original)
+    # Recalculate age difference
     df['age_diff'] = df.coauth_age - df.author_age
     
     final_invalid = df.coauth_min_year.isna().sum()
     corrected = initial_invalid - final_invalid
     
-    print(f"  - Initial invalid years (< {MIN_VALID_YEAR}): {initial_invalid:,}")
+    print(f"  - Initial invalid years (< {config.min_valid_year}): {initial_invalid:,}")
     print(f"  - Final missing years after correction: {final_invalid:,}")
     print(f"  - Years successfully corrected: {corrected:,}")
     
     return df
 
 
-def create_age_buckets(df):
+def create_age_buckets(df, config: PipelineConfig):
     """
     Create age difference buckets for collaboration analysis.
-    EXACT REPRODUCTION of original create_age_buckets function
-    
-    Categorizes coauthor relationships based on career stage differences:
-    - much_younger/younger: Junior collaborators
-    - same_age: Peer collaborators
-    - older/much_older: Senior collaborators
-    
-    Args:
-        df (pd.DataFrame): DataFrame with age_diff column
-        
-    Returns:
-        pd.DataFrame: DataFrame with age_bucket column
+    UPDATED to use config for age bucket definitions
     """
     print("Creating age difference buckets...")
     
-    # Apply age bucket logic using numpy for efficiency (exact same as original)
+    # Apply age bucket logic using config values
     age_diff_values = df.age_diff.to_numpy()
     categories = np.empty(age_diff_values.shape, dtype=object)
     
-    # Apply age bucket logic (exact same as original)
-    categories[age_diff_values < AGE_BUCKETS['much_younger'][1]] = "much_younger"
+    # Apply age bucket logic using config
+    categories[age_diff_values < config.age_buckets['much_younger'][1]] = "much_younger"
     categories[
-        (age_diff_values >= AGE_BUCKETS['younger'][0]) & 
-        (age_diff_values < AGE_BUCKETS['younger'][1])
+        (age_diff_values >= config.age_buckets['younger'][0]) & 
+        (age_diff_values < config.age_buckets['younger'][1])
     ] = "younger"
     categories[
-        (age_diff_values >= AGE_BUCKETS['same_age'][0]) & 
-        (age_diff_values < AGE_BUCKETS['same_age'][1])
+        (age_diff_values >= config.age_buckets['same_age'][0]) & 
+        (age_diff_values < config.age_buckets['same_age'][1])
     ] = "same_age"
     categories[
-        (age_diff_values >= AGE_BUCKETS['older'][0]) & 
-        (age_diff_values < AGE_BUCKETS['older'][1])
+        (age_diff_values >= config.age_buckets['older'][0]) & 
+        (age_diff_values < config.age_buckets['older'][1])
     ] = "older"
-    categories[age_diff_values >= AGE_BUCKETS['much_older'][0]] = "much_older"
+    categories[age_diff_values >= config.age_buckets['much_older'][0]] = "much_older"
 
     df['age_bucket'] = categories
     
-    # Verify that missing age buckets match missing coauthor ages (exact same as original)
+    # Verify that missing age buckets match missing coauthor ages
     missing_buckets = df['age_bucket'].isna().sum()
     missing_coauth_ages = df['coauth_age'].isna().sum()
     
@@ -238,7 +159,7 @@ def create_age_buckets(df):
     if missing_buckets != missing_coauth_ages:
         print(f"  - Warning: Mismatch between missing buckets ({missing_buckets}) and missing ages ({missing_coauth_ages})")
     
-    # Report bucket distribution (exact same as original)
+    # Report bucket distribution
     bucket_counts = df['age_bucket'].value_counts()
     print("  - Age bucket distribution:")
     for bucket, count in bucket_counts.items():
@@ -247,29 +168,23 @@ def create_age_buckets(df):
     return df
 
 
-def create_age_standardization(df):
+def create_age_standardization(df, config: PipelineConfig):
     """
     Create standardized age representation for timeline visualization.
-    EXACT REPRODUCTION of original create_age_standardization function
-    
-    Args:
-        df (pd.DataFrame): DataFrame with author_age and pub_date columns
-        
-    Returns:
-        pd.DataFrame: DataFrame with age_std column
+    UPDATED to use config for age standardization settings
     """
     print("Creating standardized age representation...")
     
     try:
-        # Extract date components from pub_date and create age_std (exact same as original)
+        # Extract date components from pub_date and create age_std using config
         df["age_std"] = (
-            AGE_STD_PREFIX + 
-            df.author_age.astype(str).map(lambda x: x.zfill(AGE_PADDING_WIDTH)) + 
+            config.age_std_prefix + 
+            df.author_age.astype(str).map(lambda x: x.zfill(config.age_padding_width)) + 
             "-" + 
             df.pub_date.map(lambda x: "-".join(x.split("-")[-2:]) if isinstance(x, str) else "01-01")
         )
         
-        # Handle leap year edge case (Feb 29 -> Feb 28) (exact same as original)
+        # Handle leap year edge case (Feb 29 -> Feb 28)
         df["age_std"] = df.age_std.map(
             lambda x: x.replace("29", "28") if x and x.endswith("29") else x
         )
@@ -280,10 +195,10 @@ def create_age_standardization(df):
         print(f"Error creating age_std: {e}")
         print("Using fallback approach...")
         
-        # Fallback approach (exact same as original)
+        # Fallback approach using config
         df["age_std"] = df.apply(
             lambda row: (
-                f"{AGE_STD_PREFIX}{str(int(row.author_age)).zfill(AGE_PADDING_WIDTH)}-"
+                f"{config.age_std_prefix}{str(int(row.author_age)).zfill(config.age_padding_width)}-"
                 f"{row.pub_date.split('-')[1]}-{row.pub_date.split('-')[2]}"
             ) if (
                 not pd.isna(row.author_age) and 
@@ -293,7 +208,7 @@ def create_age_standardization(df):
             axis=1
         )
         
-        # Handle leap year edge case (exact same as original)
+        # Handle leap year edge case
         df["age_std"] = df.age_std.map(
             lambda x: x.replace("29", "28") if x and x.endswith("29") else x
         )
@@ -307,9 +222,9 @@ def create_age_standardization(df):
 
 
 @dg.asset(deps=["timeline_coauthor_main"])  # String dependency reference
-def coauthor_preprocessing(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB resource
+def coauthor_preprocessing(duckdb: DuckDBResource, config: PipelineConfig):
     """
-    UPDATED to use DuckDB resource, but all business logic remains identical
+    UPDATED to use config for all settings and paths
     
     Main processing pipeline:
     1. Load coauthor relationship data with author metadata via SQL join
@@ -322,21 +237,20 @@ def coauthor_preprocessing(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB 
     
     print("🚀 Starting coauthor preprocessing...")
     
-    # 🆕 NEW: Use DuckDB resource with adapter
+    # Ensure output directory exists
+    config.data_processed_path.mkdir(parents=True, exist_ok=True)
+    
     with duckdb.get_connection() as conn:
-        # Create adapter to maintain exact same interface
         db_exporter = DatabaseExporterAdapter(conn)
         print(f"✅ Connected to database via DuckDB resource")
         
-        # === ALL BUSINESS LOGIC BELOW IS IDENTICAL TO ORIGINAL ===
+        # Load coauthor data with complex joins (now passing config)
+        df = load_coauthor_data(db_exporter, config)
         
-        # Load coauthor data with complex joins (exact same as original)
-        df = load_coauthor_data(db_exporter)
+        # Validate data quality (now passing config)
+        df = validate_data_quality(df, config)
         
-        # Validate data quality (exact same function call as original)
-        df = validate_data_quality(df)
-        
-        # Filter records with valid author ages (required for analysis) (exact same as original)
+        # Filter records with valid author ages (required for analysis)
         print("Filtering records with valid author ages...")
         initial_count = len(df)
         df = df[~df.author_age.isna()].reset_index(drop=True)
@@ -345,22 +259,22 @@ def coauthor_preprocessing(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB 
         print(f"  - Removed {filtered_count:,} records without valid author age")
         print(f"  - Remaining records: {len(df):,}")
         
-        # Correct publication year anomalies (exact same function call as original)
-        df = correct_publication_years(df)
+        # Correct publication year anomalies (now passing config)
+        df = correct_publication_years(df, config)
         
-        # Create age buckets for analysis (exact same function call as original)
-        df = create_age_buckets(df)
+        # Create age buckets for analysis (now passing config)
+        df = create_age_buckets(df, config)
         
-        # Create standardized age representation (exact same function call as original)
-        df = create_age_standardization(df)
+        # Create standardized age representation (now passing config)
+        df = create_age_standardization(df, config)
         
-        # Save processed data (exact same as original)
-        output_path = DATA_PROCESSED / OUTPUT_FILE
+        # Save processed data using config for output path
+        output_path = config.data_processed_path / config.coauthor_output_file
         print(f"Saving {len(df):,} processed coauthor relationships to {output_path}")
         df.to_parquet(output_path)
         print("Coauthor preprocessing completed successfully!")
         
-        # Print comprehensive processing summary (exact same as original)
+        # Print comprehensive processing summary
         print("\n=== Processing Summary ===")
         print(f"Total relationships processed: {len(df):,}")
         print(f"Unique ego authors: {df.aid.nunique():,}")
@@ -369,13 +283,12 @@ def coauthor_preprocessing(duckdb: DuckDBResource):  # 🆕 UPDATED: Use DuckDB 
         print(f"Relationships with age buckets: {df.age_bucket.notna().sum():,}")
         print(f"Relationships with shared institutions: {df.shared_institutions.notna().sum():,}")
         
-        # Collaboration type distribution (exact same as original)
+        # Collaboration type distribution
         if 'acquaintance' in df.columns:
             print("Collaboration types:")
             for collab_type, count in df.acquaintance.value_counts().items():
                 print(f"  - {collab_type}: {count:,} ({count/len(df)*100:.1f}%)")
         
-        # No manual close needed - context manager handles it
         print("🔐 Database connection closed automatically by DuckDB resource")
         
         return f"Processed {len(df)} coauthor relationships, saved to {output_path}"
