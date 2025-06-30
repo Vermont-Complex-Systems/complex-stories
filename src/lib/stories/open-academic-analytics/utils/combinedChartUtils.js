@@ -198,6 +198,14 @@ export function processCoauthorData(coauthorData, width, height, timeScale) {
     return createCoauthorPoint(d, targetY);
   });
 
+  console.log('📄 Coauthor positioning:', {
+    totalWidth: width,
+    effectiveWidth,
+    centerX,
+    marginLeft: MARGIN_LEFT,
+    marginRight: MARGIN_RIGHT
+  });
+
   // Sort by collaboration count (descending) to place important points first
   coauthorPoints.sort((a, b) => d3.descending(+a.all_times_collabo || 0, +b.all_times_collabo || 0));
 
@@ -220,12 +228,19 @@ export function processPaperData(paperData, width, height, timeScale) {
   if (!paperData || paperData.length === 0) {
     return [];
   }
+  
 
   const MARGIN_LEFT = 40;
   const MARGIN_RIGHT = 40;
   const effectiveWidth = width - MARGIN_LEFT - MARGIN_RIGHT;
   const centerX = effectiveWidth / 2;
-  
+  console.log('📄 PaperData positioning:', {
+    totalWidth: width,
+    effectiveWidth,
+    centerX,
+    marginLeft: MARGIN_LEFT,
+    marginRight: MARGIN_RIGHT
+  });
   const paperPoints = paperData.map(d => {
     const parsedDate = parseDate(d.pub_date);
     const targetY = timeScale(parsedDate);
@@ -291,15 +306,6 @@ export function placePoint(point, placedPoints, centerX, allPoints = null) {
 // Consistent date parsing
 // In combinedChartUtils.js
 export function parseDate(dateStr) {
-  // DETAILED DEBUG - catch what's breaking
-  console.log('🔍 parseDate called with:', {
-    value: dateStr,
-    type: typeof dateStr,
-    isNull: dateStr === null,
-    isUndefined: dateStr === undefined,
-    constructor: dateStr?.constructor?.name,
-    stackTrace: new Error().stack.split('\n').slice(1, 4) // Show where it was called from
-  });
   
   if (!dateStr) return null;
   

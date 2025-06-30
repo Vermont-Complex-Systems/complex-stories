@@ -8,12 +8,11 @@ export const uiState = $state({
     isDarkMode: false
 });
 
-// Dashboard State
 export const dashboardState = $state({
-    colorMode: 'age_diff',
-    highlightedAuthor: null,
-    highlightedCoauthor: null,
-    selectedAuthor: 'Peter Sheridan Dodds'
+  selectedAuthor: 'Peter Sheridan Dodds',
+  colorMode: 'age_diff',
+  highlightedAuthor: null,
+  highlightedCoauthor: '' // Use empty string instead of null
 });
 
 // Data State
@@ -21,6 +20,7 @@ export const dataState = $state({
     paperData: [],
     coauthorData: [],
     availableAuthors: [],
+    availableCoauthors: [],
     isInitializing: true,
     isLoadingAuthor: false,
     error: null
@@ -28,6 +28,16 @@ export const dataState = $state({
 
 // Tables registration state
 let tablesRegistered = false;
+
+export function getAvailableCoauthors() {
+  if (!dataState.coauthorData || dataState.coauthorData.length === 0) {
+    return [];
+  }
+  
+  // Get unique coauthor names from the current dataset
+  const uniqueNames = [...new Set(dataState.coauthorData.map(d => d.coauth_name))];
+  return uniqueNames.sort();
+}
 
 // Register parquet tables once
 async function registerTables() {
@@ -129,20 +139,35 @@ export async function initializeApp() {
 export async function loadSelectedAuthor() {
     if (!dashboardState.selectedAuthor) return;
     
+    dataState.isLoadingAuthor = true;
+    dataState.error = null; // Clear any previous errors
+    
     try {
-        dataState.isLoadingAuthor = true;
-        
         const [paperData, coauthorData] = await loadAuthorData(dashboardState.selectedAuthor);
         
         dataState.paperData = paperData;
         dataState.coauthorData = coauthorData;
-        dataState.isLoadingAuthor = false;
+        
+        // Update available coauthors after setting the data
+        dataState.availableCoauthors = getAvailableCoauthors();
+        
+        // Reset highlighted coauthor if it's not in the new dataset
+        if (dashboardState.highlightedCoauthor && 
+            !dataState.availableCoauthors.includes(dashboardState.highlightedCoauthor)) {
+            dashboardState.highlightedCoauthor = null;
+        }
         
         console.log(`📊 Loaded ${paperData.length} papers and ${coauthorData.length} coauthor records for ${dashboardState.selectedAuthor}`);
+        console.log(`👥 Available coauthors: ${dataState.availableCoauthors.length}`);
         
     } catch (error) {
-        dataState.isLoadingAuthor = false;
+        dataState.error = error.message || 'Failed to load author data';
+        dataState.paperData = [];
+        dataState.coauthorData = [];
+        dataState.availableCoauthors = [];
         console.error('Failed to load author data:', error);
+    } finally {
+        dataState.isLoadingAuthor = false;
     }
 }
 

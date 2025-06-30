@@ -5,10 +5,21 @@
   let { coauthorData } = $props();
 
   // Available coauthors for highlighting
-  let availableCoauthors = $derived.by(() => {
+  let uniqueCoauthors = $derived.by(() => {
     if (!coauthorData || coauthorData.length === 0) return [];
-    const coauthors = [...new Set(coauthorData.map(c => c.coauth_aid).filter(Boolean))];
-    return coauthors.slice(0, 20); // Limit for UI
+    
+    const uniqueNames = [...new Set(coauthorData.map(d => d.coauth_name))];
+    console.log('🔍 Unique coauthors:', uniqueNames.slice(0, 5));
+    return uniqueNames.sort();
+  });
+
+  // Debug the state changes
+  $effect(() => {
+    console.log('🔍 Filter state:', {
+      currentHighlighted: dashboardState.highlightedCoauthor,
+      availableCoauthors: uniqueCoauthors.length,
+      sampleCoauthors: uniqueCoauthors.slice(0, 3)
+    });
   });
 </script>
 
@@ -23,15 +34,46 @@
       <label class="filter-label">
         Select Coauthor to Highlight:
       </label>
-      <select bind:value={dashboardState.highlightedCoauthor} class="filter-select">
-        <option value={null}>None</option>
-        {#each availableCoauthors as coauthor}
-          <option value={coauthor}>{coauthor}</option>
+      
+      <select 
+        class="filter-select"
+        bind:value={dashboardState.highlightedCoauthor}
+      >
+        <option value="">All coauthors</option>
+        {#each uniqueCoauthors as coauthorName}
+          <option value={coauthorName}>{coauthorName}</option>
         {/each}
       </select>
+      
+
+      <!-- Test buttons for debugging -->
+      <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+        <button 
+          style="padding: 0.25rem 0.5rem; font-size: 0.8em; border: 1px solid #ccc; background: white;"
+          onclick={() => {
+            if (uniqueCoauthors.length > 0) {
+              dashboardState.highlightedCoauthor = uniqueCoauthors[0];
+              console.log('🧪 Test set to first coauthor:', uniqueCoauthors[0]);
+            }
+          }}
+        >
+          Test: Select First
+        </button>
+        
+        <button 
+          style="padding: 0.25rem 0.5rem; font-size: 0.8em; border: 1px solid #ccc; background: white;"
+          onclick={() => {
+            dashboardState.highlightedCoauthor = '';
+            console.log('🧪 Test cleared');
+          }}
+        >
+          Clear
+        </button>
+      </div>
     </div>
   </Accordion.Content>
 </Accordion.Item>
+
 
 <style>
   :global(.accordion-trigger) {

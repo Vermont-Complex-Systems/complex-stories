@@ -2,20 +2,35 @@
     import { Accordion, Button, Separator } from "bits-ui";
     import { User, Palette, Users, RotateCcw, UserCheck } from "@lucide/svelte";
     import { dashboardState, uiState, toggleSidebar, resetDashboardFilters } from '../state.svelte.ts';
+    
+    import ColorModeFilter from './sidebar/ColorModeFilter.svelte';
+    import HighlightAuthorFilter from './sidebar/HighlightAuthorFilter.svelte';
+    import HighlightCoauthorFilter from './sidebar/HighlightCoauthorFilter.svelte';
 
     let { paperData = [], coauthorData = [], availableAuthors = [] } = $props();
     
     // Available options for filters (based on currently selected author's data)
     let availableHighlightAuthors = $derived.by(() => {
         if (!paperData || paperData.length === 0) return [];
-        const authors = [...new Set(paperData.map(p => p.ego_aid).filter(Boolean))];
+        // Get unique author names (not IDs) from paper data
+        const authors = [...new Set(paperData.map(p => p.name || p.ego_aid).filter(Boolean))];
         return authors.slice(0, 20);
     });
 
     let availableCoauthors = $derived.by(() => {
         if (!coauthorData || coauthorData.length === 0) return [];
-        const coauthors = [...new Set(coauthorData.map(c => c.coauth_aid).filter(Boolean))];
-        return coauthors.slice(0, 20);
+        // Get unique coauthor names (not IDs) from coauthor data
+        const coauthors = [...new Set(coauthorData.map(c => c.coauth_name).filter(Boolean))];
+        return coauthors.sort().slice(0, 50); // Increased limit and sorted
+    });
+
+    // Extract author names from availableAuthors array
+    let authorNames = $derived.by(() => {
+        if (!availableAuthors || availableAuthors.length === 0) return [];
+        // Handle both object format { name: "..." } and string format
+        return availableAuthors.map(author => 
+            typeof author === 'string' ? author : author.name || author["Faculty Name"] || author
+        );
     });
 </script>
 
@@ -58,8 +73,8 @@
                     <Accordion.Content class="accordion-content">
                         <div class="control-section">
                             <select bind:value={dashboardState.selectedAuthor} class="filter-select">
-                                {#each availableAuthors as author}
-                                    <option value={author}>{author}</option>
+                                {#each authorNames as authorName}
+                                    <option value={authorName}>{authorName}</option>
                                 {/each}
                             </select>
                             <p class="filter-info">This filters all data to show only this author's papers and collaborations.</p>
@@ -69,67 +84,11 @@
 
                 <Separator.Root />
                 
-                <!-- Highlight Author Filter -->
-                <Accordion.Item value="highlight-author">
-                    <Accordion.Header>
-                        <Accordion.Trigger class="accordion-trigger">
-                            <User size={16} />
-                            Highlight Author
-                        </Accordion.Trigger>
-                    </Accordion.Header>
-                    <Accordion.Content class="accordion-content">
-                        <div class="control-section">
-                            <select bind:value={dashboardState.highlightedAuthor} class="filter-select">
-                                <option value={null}>None</option>
-                                {#each availableHighlightAuthors as author}
-                                    <option value={author}>{author}</option>
-                                {/each}
-                            </select>
-                        </div>
-                    </Accordion.Content>
-                </Accordion.Item>
+                <HighlightAuthorFilter {paperData} />
 
-                <Separator.Root />
+                <ColorModeFilter />
 
-                <!-- Color Mode Filter -->
-                <Accordion.Item value="color-mode">
-                    <Accordion.Header>
-                        <Accordion.Trigger class="accordion-trigger">
-                            <Palette size={16} />
-                            Color Mode
-                        </Accordion.Trigger>
-                    </Accordion.Header>
-                    <Accordion.Content class="accordion-content">
-                        <div class="control-section">
-                            <select bind:value={dashboardState.colorMode} class="filter-select">
-                                <option value="age_diff">Age Difference</option>
-                                <option value="acquaintance">Acquaintance Type</option>
-                            </select>
-                        </div>
-                    </Accordion.Content>
-                </Accordion.Item>
-
-                <Separator.Root />
-
-                <!-- Highlight Coauthor Filter -->
-                <Accordion.Item value="highlight-coauthor">
-                    <Accordion.Header>
-                        <Accordion.Trigger class="accordion-trigger">
-                            <Users size={16} />
-                            Highlight Coauthor
-                        </Accordion.Trigger>
-                    </Accordion.Header>
-                    <Accordion.Content class="accordion-content">
-                        <div class="control-section">
-                            <select bind:value={dashboardState.highlightedCoauthor} class="filter-select">
-                                <option value={null}>None</option>
-                                {#each availableCoauthors as coauthor}
-                                    <option value={coauthor}>{coauthor}</option>
-                                {/each}
-                            </select>
-                        </div>
-                    </Accordion.Content>
-                </Accordion.Item>
+                <HighlightCoauthorFilter {coauthorData} />
 
                 <Separator.Root />
 
@@ -150,6 +109,10 @@
                                 <div class="stat-row">
                                     <span class="stat-label">Collaborations:</span>
                                     <span class="stat-value">{coauthorData?.length || 0}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Unique Coauthors:</span>
+                                    <span class="stat-value">{availableCoauthors.length}</span>
                                 </div>
                             </div>
                         </div>
@@ -185,7 +148,9 @@
     {/if}
 </div>
 
+<!-- Keep all existing styles -->
 <style>
+    /* ... all your existing styles stay the same ... */
     .sidebar-content {
         height: 100%;
         display: flex;
@@ -373,8 +338,8 @@
     }
 
     :global([data-separator-root]) {
-        margin-top: 1.2rem;
-        margin-bottom: 1.2rem;
+        /* margin-top: 1.2rem; */
+        /* margin-bottom: 1.2rem; */
         flex-shrink: 0;
         height: 1px;
         width: 100%;

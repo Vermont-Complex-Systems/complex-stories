@@ -8,8 +8,9 @@
     coauthorData,
     width, 
     height,
-    processDataFn, // Function to process the data for positioning
-    dataToDisplay, // The actual data to display (with colors, opacity, etc.)
+    processDataFn, // Function to process the RAW data for positioning
+    rawData, // Add this - the raw data for processing
+    displayData, // The styled data for display (colors, opacity, etc.)
     pointComponent, // Snippet for rendering individual points
     legendComponent = null, // Optional legend snippet
     tooltipFormatter // Function to format tooltip content
@@ -24,7 +25,7 @@
   // Check if we have data
   let hasData = $derived(dataToDisplay && dataToDisplay.length > 0);
 
-  // Time scale using COMBINED date range from both datasets
+   // Time scale using COMBINED date range from both datasets
   let timeScale = $derived.by(() => {
     if (!hasData) return d3.scaleTime();
     const dateRange = getCombinedDateRange(paperData, coauthorData);
@@ -32,6 +33,13 @@
       .domain(dateRange)
       .range([MARGIN_TOP, height - MARGIN_BOTTOM]);
   });
+
+  // Process RAW data for positioning only
+  let positionedData = $derived.by(() => {
+    if (!hasData) return [];
+    return processDataFn(rawData, width, height, timeScale); // Use raw data
+  });
+
 
   // Year ticks for the timeline
   let yearTicks = $derived.by(() => {

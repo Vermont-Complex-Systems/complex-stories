@@ -34,11 +34,9 @@
   });
 
   const chartHeight = 800;
-
 </script>
 
 <div class="dashboard">
-  <!-- Always show both charts -->
   <div class="charts-container">
     <div class="charts-grid">
       <div class="chart-panel">
@@ -62,7 +60,6 @@
           highlightedAuthor={dashboardState.highlightedAuthor}
         />
       </div>
-      
     </div>
   </div>
 </div>
