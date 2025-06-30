@@ -21,7 +21,13 @@ export default defineConfig({
 			$styles: path.resolve("./src/styles"),
 		}
 	},
+	optimizeDeps: {
+		exclude: ['@duckdb/duckdb-wasm'],
+	},
 	ssr: {
 		noExternal: ['d3-regression']
+	},
+	worker: {
+		format: 'es'
 	}
 });

@@ -6,6 +6,7 @@
     import StatusCard from './sidebar/StatusCard.svelte';
     import DownloadSection from './sidebar/DownloadSection.svelte';
     
+    
     import { 
         allotax,
         uiState,

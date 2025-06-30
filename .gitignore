@@ -22,5 +22,13 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+__pycache__/
+
 static/ecosystem_image.png
 static/assets/fonts/
+src/lib/stories/open-academic-analytics/venv/
+src/lib/stories/open-academic-analytics/.tmp_*
+.gitignore
+
+src/lib/stories/open-academic-analytics/data/processed/
+src/lib/stories/open-academic-analytics/data/raw/
