@@ -1,375 +1,224 @@
 """
-timeline_paper_assets.py
-
-UPDATED to use Dagster's official DuckDB resource with adapter.
-All business logic remains identical - only the database connection changed.
+Simplified timeline_paper_assets.py
 """
-
-import os
-import sys
-from pathlib import Path
 import pandas as pd
 from datetime import datetime
 from tqdm import tqdm
 import dagster as dg
 from dagster_duckdb import DuckDBResource
 
-# Import your existing modules (exactly as in original)
-from config import PipelineConfig
-from modules.database_adapter import DatabaseExporterAdapter  # 🆕 NEW: Use adapter
+from config import config
+from modules.database_adapter import DatabaseExporterAdapter
 from modules.data_fetcher import OpenAlexFetcher
 from modules.author_processor import AuthorProcessor
 from modules.utils import shuffle_date_within_month
 
 @dg.asset
-def researchers_tsv_timeline_paper(config: PipelineConfig):
-    """
-    Step 1: Convert researchers parquet to TSV format
-    Equivalent to: make researchers (from original Makefile)
-    
-    This reproduces the exact logic from researchers.py
-    UNCHANGED - no database interaction here
-    """
-    input_file = config.data_raw_path / config.researchers_input_file
-    output_file = config.data_raw_path / config.researchers_tsv_file
+def researchers_tsv_timeline_paper():
+    """Convert researchers parquet to TSV format"""
+    input_file = config.DATA_RAW_DIR / config.RESEARCHERS_INPUT_FILE
+    output_file = config.DATA_RAW_DIR / config.RESEARCHERS_TSV_FILE
 
-    # Ensure directories exist
-    config.data_raw_path.mkdir(parents=True, exist_ok=True)
-
-    # Load data from parquet (exact same as original researchers.py)
+    # Load and process
     d = pd.read_parquet(input_file)
-
-    # Note: Handle column name variations
-    cols_mapping = {
-        'host_dept (; delimited if more than one)': 'host_dept',
-        'host_dept': 'host_dept'  # In case it's already correct
-    }
     
-    # Rename column if needed
-    for old_name, new_name in cols_mapping.items():
-        if old_name in d.columns and old_name != new_name:
-            d = d.rename(columns={old_name: new_name})
+    # Handle column name variations
+    if 'host_dept (; delimited if more than one)' in d.columns:
+        d = d.rename(columns={'host_dept (; delimited if more than one)': 'host_dept'})
     
-    # Select columns (exact same as original)
+    # Select and save
     cols = ['oa_display_name', 'is_prof', 'group_size', 'perceived_as_male', 
             'host_dept', 'has_research_group', 'oa_uid', 'group_url', 'first_pub_year']
     
-    # Export to TSV (exact same as original)
     d[cols].to_csv(output_file, sep="\t", index=False)
     
     print(f"✅ Created {output_file} with {len(d)} researchers")
-    return f"Processed {len(d)} researchers to researchers.tsv"
-
+    return f"Processed {len(d)} researchers"
 
 @dg.asset(deps=[researchers_tsv_timeline_paper])
-def timeline_paper_main(duckdb: DuckDBResource, config: PipelineConfig):  # 🆕 UPDATED: Use DuckDB resource
-    """
-    Step 2: Main timeline-paper.py logic
+def timeline_paper_main(duckdb: DuckDBResource):
+    """Main timeline-paper processing"""
     
-    UPDATED to use DuckDB resource, but all business logic remains identical
-    """
+    print("🚀 Starting timeline-paper import...")
     
-    print("🚀 Starting timeline-paper import process...")
-    
-    # 🆕 NEW: Use DuckDB resource with adapter
     with duckdb.get_connection() as conn:
-        # Create adapter to maintain exact same interface
         db_exporter = DatabaseExporterAdapter(conn)
-        print(f"✅ Connected to database via DuckDB resource")
+        print(f"✅ Connected to database")
         
-        # === ALL BUSINESS LOGIC BELOW IS IDENTICAL TO ORIGINAL ===
-        
-        # Load researchers annotations (lines 45-50 from original)
-        researchers_file = config.data_raw_path / config.researchers_tsv_file
-        assert researchers_file.exists(), f"Input file {researchers_file} does not exist"
-        
-        print(f"Loading researcher data from {researchers_file}")
+        # Load researchers
+        researchers_file = config.DATA_RAW_DIR / config.RESEARCHERS_TSV_FILE
         target_aids = pd.read_csv(researchers_file, sep="\t")
-        print(f"Loaded {len(target_aids)} researcher records")
-        
-        # Get list of oa_uids for all authors of interest (lines 52-54)
         target_aids = target_aids[~target_aids['oa_uid'].isna()]
-        print(f"Found {len(target_aids)} researchers with OpenAlex IDs")
-        
-        # Extract known first publication years if available (lines 56-58)
-        known_years_df = target_aids[['oa_uid', 'first_pub_year']].dropna()
-        known_first_pub_years = {k.upper(): int(v) for k, v in known_years_df.values}
-        
-        # Process target_aids (line 60)
         target_aids['oa_uid'] = target_aids['oa_uid'].str.upper()
         
-        # Initialize modules (lines 62-70)
-        print("Initializing OpenAlex fetcher")
-        fetcher = OpenAlexFetcher()
+        print(f"Found {len(target_aids)} researchers with OpenAlex IDs")
         
-        print("Initializing AuthorProcessor")
-        author_processor = AuthorProcessor(db_exporter)
-
-        # Pre-load publication years from database (lines 72-74)
-        author_processor.preload_publication_years()
-        print(f"Preloaded {len(author_processor.publication_year_cache)} publication year ranges")
-
-        # DEVELOPMENT MODE: Use config settings instead of hardcoded values
-        if config.development_mode:
-            if config.target_researcher:
-                target_aids = target_aids[target_aids['oa_uid'] == config.target_researcher]
-                print(f"\n🎯 DEVELOPMENT MODE: Processing specific researcher {config.target_researcher}")
-            elif config.max_researchers:
-                target_aids = target_aids.head(config.max_researchers)
-                print(f"\n🔧 DEVELOPMENT MODE: Processing first {config.max_researchers} researcher(s)")
-        else:
-            print(f"\n🏭 PRODUCTION MODE: Processing all {len(target_aids)} researchers")
+        # Development mode: limit to specific researcher
+        if config.TARGET_RESEARCHER:
+            target_aids = target_aids[target_aids['oa_uid'] == config.TARGET_RESEARCHER]
+            print(f"🎯 DEV MODE: Processing {config.TARGET_RESEARCHER}")
+        elif config.MAX_RESEARCHERS:
+            target_aids = target_aids.head(config.MAX_RESEARCHERS)
+            print(f"🔧 DEV MODE: Processing first {config.MAX_RESEARCHERS} researchers")
         
         if len(target_aids) == 0:
-            return "❌ No researchers found matching criteria"
+            return "❌ No researchers found"
 
-        # Process each researcher (lines 76-77 - start of main loop)
+        # Initialize modules
+        fetcher = OpenAlexFetcher()
+        author_processor = AuthorProcessor(db_exporter)
+        author_processor.preload_publication_years()
+
         total_papers_saved = 0
         total_researchers_processed = 0
         
         for i, row in tqdm(target_aids.iterrows(), total=len(target_aids)):
-               
             target_aid = row['oa_uid']
             
-            # Fetch display name from OpenAlex (lines 79-86)
+            # Get display name
             try:
                 author_obj = fetcher.get_author_info(target_aid)
                 target_name = author_obj['display_name']
             except Exception as e:
-                print(f"Error fetching display name for {target_aid}: {e}")
-                # If we can't get the display name, use the ID as a fallback
+                print(f"Error getting name for {target_aid}: {e}")
                 target_name = target_aid
                 
             print(f"\n👤 Processing {target_name} ({target_aid})")
 
-            # Handle the update author age case (lines 88-96 - SKIPPED for now)
-            # We're focusing on the main import functionality
-            
-            # Get publication year range (lines 98-110)
-            min_yr = known_first_pub_years.get(target_aid)
-            if min_yr is None:
-                try:
-                    min_yr, _ = fetcher.get_publication_range(target_aid)
-                    print(f"First publication year for {target_name}: {min_yr}")
-                except Exception as e:
-                    print(f"Error getting first publication year for {target_name}: {e}")
-                    continue
-            
+            # Get publication year range
             try:
-                # Get the latest publication year (lines 112-119)
+                min_yr, _ = fetcher.get_publication_range(target_aid)
                 author_info = fetcher.get_author_info(target_aid)
                 max_yr = author_info['counts_by_year'][0]['year']
-                print(f"Latest publication year for {target_name}: {max_yr}")
+                print(f"Years: {min_yr}-{max_yr}")
             except Exception as e:
-                print(f"Error getting latest publication year for {target_name}: {e}")
-                # Fallback to current year if we can't get the latest pub year
-                max_yr = datetime.now().year
+                print(f"Error getting years for {target_name}: {e}")
+                continue
             
-            # Store in publication year cache (lines 121-122)
+            # Store in cache
             author_processor.publication_year_cache[target_aid] = (min_yr, max_yr)
 
-            # Check if database is up to date (use config setting)
-            if not config.force_update and db_exporter.is_up_to_date(target_aid, min_yr, max_yr):
-                print(f"✅ {target_name} is up to date in database")
+            # Check if up to date (skip if not forcing update)
+            if not config.FORCE_UPDATE and db_exporter.is_up_to_date(target_aid, min_yr, max_yr):
+                print(f"✅ {target_name} is up to date")
                 total_researchers_processed += 1
                 continue
             
-            # Get existing papers from database (lines 129-132)
+            # Get existing papers
             paper_cache, _ = db_exporter.get_author_cache(target_aid)
             existing_papers = set([(aid, wid) for aid, wid in paper_cache])
-            print(f"Found {len(existing_papers)} existing papers in database")
             
-            # Process papers for each year (lines 134-135)
+            # Process papers for each year
             papers = []
-
-            # Check if we have valid year range (lines 137-141)
-            if min_yr is None or max_yr is None:
-                print(f"Skipping {target_name} ({target_aid}) - cannot determine publication years")
-                continue  # Skip to the next author
-            
-            # Process each year (lines 143-144)
             for yr in range(min_yr, max_yr + 1):
-                    
-                print(f"  📅 Processing year {yr}...")
+                print(f"  📅 Processing {yr}...")
                 
-                # Get all publications for this year using fetcher (lines 146-152)
                 publications = fetcher.get_publications(target_aid, yr)
-                
                 if not publications:
-                    print(f"  No publications found for {target_name} in {yr}")
                     continue
                     
-                print(f"  Processing {len(publications)} publications for {yr}")
-                
-                # Track institutions for this year (lines 154-155)
+                print(f"  Found {len(publications)} publications")
                 ego_institutions_this_year = []
                 
-                # Process each publication (lines 157-158)
                 for w in publications:
-                    # Skip non-English works (lines 159-161)
                     if w.get('language') != 'en':
                         continue
                         
-                    # Extract work ID (lines 163-164)
                     wid = w['id'].split("/")[-1]
                     
-                    # Skip if already in database (use config setting)
-                    if not config.force_update and (target_aid, wid) in existing_papers:
+                    if not config.FORCE_UPDATE and (target_aid, wid) in existing_papers:
                         continue
                     
-                    # Add some noise within year for visualization purpose (lines 170-171)
+                    # Add date noise for visualization
                     shuffled_date = shuffle_date_within_month(w['publication_date'])
                     
-                    # Process authorships (lines 173-174)
+                    # Process authorships
                     author_position = None
-                    
                     for authorship in w['authorships']:
-                        coauthor_name = authorship['author']['display_name']
-                        
-                        # If this is the target author, collect institution and position (lines 177-182)
                         if authorship['author']['id'].split("/")[-1] == target_aid:
                             ego_institutions_this_year += [i['display_name'] for i in authorship['institutions']]
                             author_position = authorship['author_position']
                     
-                    # Determine target institution through majority vote (lines 184-187)
+                    # Determine institution
                     from collections import Counter
                     target_institution = None
                     if ego_institutions_this_year:
                         target_institution = Counter(ego_institutions_this_year).most_common(1)[0][0]
                     
-                    # Extract paper metadata (lines 189-193)
+                    # Extract metadata
                     doi = w['ids'].get('doi') if 'ids' in w else None
                     fos = w['primary_topic'].get('display_name') if w.get('primary_topic') else None
                     coauthors = ', '.join([a['author']['display_name'] for a in w['authorships']])
                     
-                    # Create paper record (lines 195-207)
+                    # Create paper record
                     papers.append((
                         target_aid, target_name, wid,
                         shuffled_date, int(w['publication_year']),
                         doi, w['title'], w['type'], fos,
-                        coauthors,
-                        w['cited_by_count'],
-                        author_position,
-                        target_institution
+                        coauthors, w['cited_by_count'],
+                        author_position, target_institution
                     ))
             
-            # Save papers to database (lines 209-214)
+            # Save papers
             if papers:
-                print(f"💾 Saving {len(papers)} papers for {target_name}")
+                print(f"💾 Saving {len(papers)} papers")
                 db_exporter.save_papers(papers)
                 total_papers_saved += len(papers)
-            else:
-                print(f"No new papers to save for {target_name}")
-            
-            # Process author information (lines 216-217 - MASSIVE BLOCK)
-            if papers:
-                print(f"👥 Processing author information for {target_name}")
                 
-                # Extract coauthor information from papers (lines 219-238)
+                # Process author information
+                print(f"👥 Processing author info")
                 coauthor_info = []
                 for paper in papers:
-                    pub_year = paper[4]  # paper year
-                    if paper[9]:  # paper[9] contains author list
-                        try:
-                            coauthor_names = paper[9].split(", ")
-                            for coauthor_name in coauthor_names:
-                                if coauthor_name != target_name:
-                                    # Add to coauthor_info
-                                    coauthor_info.append({
-                                        'name': coauthor_name,
-                                        'year': pub_year,
-                                        'institution': paper[12]  # Use paper's institution
-                                    })
-                        except Exception as e:
-                            print(f"    Error extracting coauthors from paper: {e}")
+                    pub_year = paper[4]
+                    if paper[9]:  # coauthors
+                        coauthor_names = paper[9].split(", ")
+                        for coauthor_name in coauthor_names:
+                            if coauthor_name != target_name:
+                                coauthor_info.append({
+                                    'name': coauthor_name,
+                                    'year': pub_year,
+                                    'institution': paper[12]
+                                })
                 
-                print(f"  Extracted {len(coauthor_info)} coauthor records from papers")
-                
-                # Check if we can find OpenAlex IDs for coauthors (lines 240-241)
+                # Get coauthor IDs
                 coauthors_with_ids = []
-
                 for info in coauthor_info:
                     try:
-                        # Skip if essential data is missing (lines 244-249)
                         if not info.get('name') or not info.get('year'):
-                            print(f"    Skipping coauthor due to missing name or year: {info}")
                             continue
                             
-                        # Check if author is already cached (lines 251-252)
+                        # Check cache first
                         result = db_exporter.get_author_cache_by_name(info['name'])
-                        
-                        # Use fetcher to get author by name if not cached (lines 254-256)
                         if result is None:
                             result = fetcher.get_author_info_by_name(info['name'])
                             
-                        # Process result if we found author data (lines 258-259)
                         if result and ('id' in result or 'aid' in result):
-                            # Extract coauthor ID (lines 261-263)
                             coauthor_id_raw = result.get('id') or result.get('aid')
                             coauthor_id = coauthor_id_raw.split('/')[-1] if isinstance(coauthor_id_raw, str) else str(coauthor_id_raw)
                             
-                            # Create coauthor tuple with consistent date formatting (lines 265-267)
                             pub_date = f"{info['year']}-01-01"
-                            
                             coauthor_tuple = (
-                                target_aid,                    # ego_aid
-                                pub_date,                      # pub_date
-                                info['year'],                  # pub_year
-                                coauthor_id,                   # coauthor_aid
-                                info['name'],                  # coauthor_name
-                                "from_paper",                  # acquaintance
-                                1,                             # yearly_collabo
-                                1,                             # all_times_collabo
-                                None,                          # shared_institutions
-                                info.get('institution')        # coauthor_institution (safe get)
+                                target_aid, pub_date, info['year'],
+                                coauthor_id, info['name'], "from_paper",
+                                1, 1, None, info.get('institution')
                             )
-                            
                             coauthors_with_ids.append(coauthor_tuple)
-                        else:
-                            print(f"    No valid ID found for coauthor: {info['name']}")
-                            
-                    except KeyError as e:
-                        print(f"    Missing required field for coauthor {info.get('name', 'Unknown')}: {e}")
-                    except AttributeError as e:
-                        print(f"    Invalid data format for coauthor {info.get('name', 'Unknown')}: {e}")
                     except Exception as e:
-                        print(f"    Unexpected error processing coauthor {info.get('name', 'Unknown')}: {e}")
+                        print(f"    Error processing coauthor {info.get('name', 'Unknown')}: {e}")
 
-                print(f"  Successfully processed {len(coauthors_with_ids)} coauthors with IDs")
-                print(f"  Found IDs for {len(coauthors_with_ids)} coauthors")
+                print(f"  Found {len(coauthors_with_ids)} coauthors with IDs")
 
-                # Process author records (lines 290-300)
+                # Process author records
                 author_records = author_processor.collect_author_info(
-                    target_aid,
-                    target_name,  # Pass the display name from API
-                    (min_yr, max_yr),
-                    papers,
-                    coauthors_with_ids,
-                    fetcher
+                    target_aid, target_name, (min_yr, max_yr),
+                    papers, coauthors_with_ids, fetcher
                 )
                 
-                # Save author records (lines 302-308)
                 if author_records:
-                    print(f"  💾 Saving {len(author_records)} author records for {target_name}")
+                    print(f"  💾 Saving {len(author_records)} author records")
                     db_exporter.save_authors(author_records)
-                else:
-                    print("  No author records to save")
 
             total_researchers_processed += 1
 
-        # Final summary (no manual db_exporter.close() - handled by context manager)
-        print(f"\n🎉 Timeline-paper import completed!")
-        print(f"  📊 Researchers processed: {total_researchers_processed}")
-        print(f"  📄 Papers saved: {total_papers_saved}")
-        print("🔐 Database connection closed automatically by DuckDB resource")
-        
-        return f"Successfully processed {total_researchers_processed} researchers, saved {total_papers_saved} papers"
-
-
-# Simple definitions - faithful to original script structure
-defs = dg.Definitions(
-    assets=[
-        researchers_tsv_timeline_paper,
-        timeline_paper_main
-    ]
-)
+        print(f"\n🎉 Complete! Processed {total_researchers_processed} researchers, saved {total_papers_saved} papers")
+        return f"Processed {total_researchers_processed} researchers, saved {total_papers_saved} papers"
