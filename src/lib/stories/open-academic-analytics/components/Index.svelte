@@ -2,6 +2,8 @@
     import Nav from './Nav.svelte';
     import Sidebar from './Sidebar.svelte';
     import Dashboard from './Dashboard.svelte';
+    import TutorialPopup from './TutorialPopup.svelte';
+    
     import { 
         uiState, 
         dashboardState, 
@@ -12,6 +14,7 @@
     
     // Initialize on component mount
     initializeApp();
+    let showTutorial = $state(true);
     
     // Auto-load data when selected author changes
     $effect(() => {
@@ -61,6 +64,7 @@
     </div>
 </div>
 
+<TutorialPopup bind:visible={showTutorial} />
 
 <style>
 
