@@ -11,7 +11,6 @@ This blog is intended to demonstrate how and when adopting best practices in res
 
 Consider the practice of writing [data orchestration](https://github.com/dagster-io/dagster) to handle messy, collaborative research projects. This approach to the data lifecycle exemplifies what we mean by "good practices"—an alternative to the common research habit of hacking together duct-tape software solutions that "just work".
 
+We will use the "opening academic analytics" (OAA) project as an example, as it captures some of the real world challenges of researchers are confronted. In this project, we are interested in characterizing the coevolution of collaborations and productivity. We "open" academic analytics in that this kind of work is typically done behind close doors, while being sold to university administrators to make strategic business decisions.
 
-<!-- Have you ever heard of [targets](https://github.com/ropensci/targets/), [principled data processing](https://github.com/samzhang111/pdp), [tango](https://github.com/allenai/tango), or [dagster](https://github.com/dagster-io/dagster)? -->
-
-
+The OAA project has some complexity associated with it, such as calling the openAlex API to get the data, and a messy data pipeline to wrangle the data in an original timeline plot.

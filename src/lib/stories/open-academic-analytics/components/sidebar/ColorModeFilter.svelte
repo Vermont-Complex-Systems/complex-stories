@@ -17,11 +17,17 @@
       <select bind:value={dashboardState.colorMode} class="filter-select">
         <option value="age_diff">Age Difference</option>
         <option value="acquaintance">Acquaintance Type</option>
+        <option value="institutions">Institutions</option>
+        <option value="shared_institutions">Shared Institutions</option>
       </select>
       
       <div class="color-info">
         {#if dashboardState.colorMode === 'age_diff'}
           <p class="info-text">Colors based on age relative to main author</p>
+        {:else if dashboardState.colorMode === 'institutions'} 
+          <p class="info-text">Colors based on institutions.</p>
+        {:else if dashboardState.colorMode === 'shared_institutions'} 
+          <p class="info-text">Colors based on shared institutions.</p>
         {:else}
           <p class="info-text">Colors based on collaboration history</p>
         {/if}

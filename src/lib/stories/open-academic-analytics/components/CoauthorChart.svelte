@@ -1,7 +1,8 @@
 <script>
   import * as d3 from 'd3';
-  import { processCoauthorData, getCombinedDateRange, getCoauthorColor, ageColorScale, acquaintanceColorScale } from '../utils/combinedChartUtils.js';
+  import { processCoauthorData, getCombinedDateRange, ageColorScale, acquaintanceColorScale, collaborationColorScale } from '../utils/combinedChartUtils.js';
   import Tooltip from './Tooltip.svelte';
+  import Legend from './Legend.svelte';
 
   let { 
     coauthorData, 
@@ -22,7 +23,15 @@
   // Check if we have data
   let hasData = $derived(coauthorData && coauthorData.length > 0);
 
-  // Time scale using COMBINED date range from both datasets
+  // Simple institution color scale - Observable Plot style
+  let institutionColorScale = $derived.by(() => {
+    if (!hasData) return null;
+    const uniqueInstitutions = [...new Set(coauthorData.map(d => d.shared_institutions))]
+      .filter(inst => inst != null);
+    return d3.scaleOrdinal(d3.schemeTableau10).domain(uniqueInstitutions);
+  });
+
+  // Time scale
   let timeScale = $derived.by(() => {
     if (!hasData) return d3.scaleTime();
     const dateRange = getCombinedDateRange(paperData, coauthorData);
@@ -31,7 +40,7 @@
       .range([MARGIN_TOP, height - MARGIN_BOTTOM - MAX_CIRCLE_RADIUS]);
   });
 
-  // Year ticks for the timeline
+  // Year ticks
   let yearTicks = $derived.by(() => {
     if (!hasData) return [];
     const dateRange = getCombinedDateRange(paperData, coauthorData);
@@ -40,20 +49,55 @@
     return d3.range(startYear, endYear + 1, yearSpacing);
   });
 
-  // Process coauthor data into plot points
+  // Process coauthor data
   let plotData = $derived.by(() => {
     if (!hasData) return [];
     return processCoauthorData(coauthorData, width, height, timeScale);
   });
 
-  // Filter and style data for display
+  // Simple Observable Plot-style display data
   let displayData = $derived.by(() => {
     if (!plotData.length) return [];
     
     return plotData.map(point => {
-      let opacity = 1;
+      // Get the value for coloring (like Observable Plot)
+      let colorValue;
+      if (colorMode === 'age_diff') {
+        colorValue = point.age_category;
+      } else if (colorMode === 'acquaintance') {
+        colorValue = point.acquaintance;
+      } else if (colorMode === 'institutions') {
+        // Use the institution column specifically
+        colorValue = point.institution;
+      } else if (colorMode === 'shared_institutions') {
+        // Use the shared_institutions column specifically  
+        colorValue = point.shared_institutions;
+      }
+
+      // Simple Observable Plot-style logic
+      const isNull = colorValue == null;
+      let displayColor, opacity, strokeWidth;
+
+      if (isNull) {
+        displayColor = "#888888";
+        opacity = 0.3;
+        strokeWidth = 0.1;
+      } else {
+        // Get color based on mode
+        if (colorMode === 'age_diff') {
+          displayColor = ageColorScale(colorValue);
+        } else if (colorMode === 'acquaintance') {
+          displayColor = acquaintanceColorScale(colorValue);
+        } else if (colorMode === 'institutions') {
+          displayColor = institutionColorScale(colorValue);
+        } else if (colorMode === 'shared_institutions') {
+          displayColor = institutionColorScale(colorValue);
+        }
+        opacity = 0.9;
+        strokeWidth = 0.3;
+      }
       
-      // Apply coauthor highlight filter if provided
+      // Apply highlight filter
       if (highlightedCoauthor) {
         const isHighlightedCoauthor = point.name === highlightedCoauthor;
         opacity *= isHighlightedCoauthor ? 1 : 0.2;
@@ -61,29 +105,14 @@
       
       return {
         ...point,
+        displayColor,
         opacity,
-        displayColor: getCoauthorColor(point, colorMode)
+        strokeWidth
       };
     });
   });
 
-  // Legend data
-  let legendData = $derived.by(() => {
-    if (colorMode === 'age_diff') {
-      return [
-        { label: 'Older (>7 years)', color: ageColorScale('older') },
-        { label: 'Same age (±7 years)', color: ageColorScale('same') },
-        { label: 'Younger (<-7 years)', color: ageColorScale('younger') }
-      ];
-    } else if (colorMode === 'acquaintance') {
-      return [
-        { label: 'New collaboration', color: acquaintanceColorScale('new_collab') },
-        { label: 'Repeat collaboration', color: acquaintanceColorScale('repeat_collab') },
-        { label: 'Long-term collaboration', color: acquaintanceColorScale('long_term_collab') }
-      ];
-    }
-    return [];
-  });
+  // Remove all the legend logic - it's now in the Legend component
 
   // Tooltip state
   let showTooltip = $state(false);
@@ -95,7 +124,7 @@
     mouseX = event.clientX;
     mouseY = event.clientY;
     
-    tooltipContent = `Coauthor: ${point.name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nYearly collaborations: ${point.yearly_collabo}\nAcquaintance: ${point.acquaintance}`;
+    tooltipContent = `Coauthor: ${point.name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nShared Institution: ${point.shared_institutions || 'Unknown'}`;
     
     showTooltip = true;
   }
@@ -103,7 +132,6 @@
   function hideTooltip() {
     showTooltip = false;
   }
-
 </script>
 
 <div class="chart-wrapper">
@@ -113,7 +141,6 @@
         
         <!-- Grid lines and year labels -->
         <g>
-          
           {#each yearTicks as year}
             {@const yearDate = new Date(year, 0, 1)}
             {@const y = timeScale(yearDate)}
@@ -131,7 +158,7 @@
               r={point.r}
               fill={point.displayColor}
               stroke="black"
-              stroke-width="0.3"
+              stroke-width={point.strokeWidth}
               fill-opacity={point.opacity}
               class="data-point"
               on:mouseenter={(e) => showPointTooltip(e, point)}
@@ -142,17 +169,11 @@
       </svg>
 
       <!-- Legend -->
-      {#if legendData.length > 0}
-        <div class="legend">
-          <h4>Legend</h4>
-          {#each legendData as item}
-            <div class="legend-item">
-              <div class="legend-color" style="background-color: {item.color}"></div>
-              <span class="legend-label">{item.label}</span>
-            </div>
-          {/each}
-        </div>
-      {/if}
+      <Legend 
+        {colorMode}
+        {coauthorData}
+        visible={hasData}
+      />
     </div>
   </div>
 </div>
@@ -184,42 +205,6 @@
     display: block;
     overflow: visible; /* Keep SVG overflow visible for tooltips */
     max-width: 100%; /* But constrain to container */
-  }
-
-  .legend {
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    padding: 12px;
-    font-size: var(--font-size-xsmall);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .legend h4 {
-    margin: 0 0 8px 0;
-    font-size: var(--font-size-small);
-    font-weight: var(--font-weight-bold);
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    margin: 4px 0;
-  }
-
-  .legend-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    margin-right: 8px;
-    border: 1px solid black;
-  }
-
-  .legend-label {
-    color: var(--chart-text-color);
   }
 
   /* SVG element styling using design tokens */

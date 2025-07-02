@@ -6,18 +6,58 @@ export const ageColorScale = d3.scaleOrdinal()
   .range(['#404788FF', '#20A387FF', '#FDE725FF']);
 
 export const acquaintanceColorScale = d3.scaleOrdinal()
-  .domain(['new_collab', 'repeat_collab', 'long_term_collab'])
-  .range(['#FF6B35', '#4682B4', '#2E8B57']);
+  .domain(['new_collab', 'existing_collab'])
+  .range(['#FF6B35', '#4682B4']);
 
-// New collaboration-based color scale
 export const collaborationColorScale = d3.scaleThreshold()
-  .domain([2, 4, 9])  // 0-1: new, 2-3: repeat, 4+: long-term
-  .range(['#FF6B35', '#4682B4', '#2E8B57', '#1F4E79']); // red, blue, green, dark blue
+  .domain([2, 4, 9])
+  .range(['#FF6B35', '#4682B4', '#2E8B57', '#1F4E79']);
 
+export function processCoauthorData(coauthorData, width, height, timeScale) {
+  if (!coauthorData || coauthorData.length === 0) {
+    return [];
+  }
 
+  const MARGIN_LEFT = 40;
+  const MARGIN_RIGHT = 40;
+  const effectiveWidth = width - MARGIN_LEFT - MARGIN_RIGHT;
+  const centerX = effectiveWidth / 2;
+  
+  // Get the actual collaboration range from your data
+  const collaborationCounts = coauthorData.map(d => +d.all_times_collabo || 1);
+  const [minCollabs, maxCollabs] = d3.extent(collaborationCounts);
+  
+  // Create a dynamic scale based on your actual data
+  const collaborationScale = d3.scaleSqrt()
+    .domain([minCollabs, maxCollabs])
+    .range([3, 12]) // Reasonable min/max sizes for coauthors
+    .clamp(true);
 
+  const coauthorPoints = coauthorData.map(d => {
+    const parsedDate = parseDate(d.pub_date);
+    const targetY = timeScale(parsedDate);
+    return createCoauthorPoint(d, targetY, collaborationScale); // Pass the scale
+  });
 
-export function createCoauthorPoint(d, targetY) {
+  // Sort by collaboration count (descending) to place important points first
+  coauthorPoints.sort((a, b) => d3.descending(+a.all_times_collabo || 0, +b.all_times_collabo || 0));
+
+  const placedPoints = [];
+  
+  for (const point of coauthorPoints) {
+    if (placePointMultiPass(point, placedPoints, centerX, effectiveWidth, coauthorPoints)) {
+      placedPoints.push(point);
+    } else {
+      console.warn('Could not place coauthor point:', point.name);
+      point.x = centerX;
+      placedPoints.push(point);
+    }
+  }
+
+  return coauthorPoints;
+}
+
+export function createCoauthorPoint(d, targetY, collaborationScale) {
   const ageDiff = +d.age_diff;
   const totalCollabs = +d.all_times_collabo || 1;
   const yearlyCollabs = +d.yearly_collabo || 1;
@@ -30,13 +70,8 @@ export function createCoauthorPoint(d, targetY) {
     ageCategory = 'younger';
   }
 
-  // More generous radius scaling with better minimum size
-  const radiusScale = d3.scaleSqrt()
-    .domain([1, Math.max(10, d3.max([20, totalCollabs * 1.2]))]) // Ensure reasonable max domain
-    .range([3, 9]) // Increased minimum from 1 to 3
-    .clamp(true);
-  
-  const radius = radiusScale(totalCollabs);
+  // Use the dynamic scale passed from processCoauthorData
+  const radius = collaborationScale ? collaborationScale(totalCollabs) : 5; // Fallback if no scale
 
   return {
     x: 0,
@@ -56,23 +91,20 @@ export function createCoauthorPoint(d, targetY) {
     author_name: d.name,
     author_age: d.author_age,
     coauth_age: d.coauth_age,
-    institution: d.institution
+    institution: d.institution,
+    shared_institutions: d.shared_institutions // Add this field
   };
 }
 
-export function createPaperPoint(d, targetY) {
+
+export function createPaperPoint(d, targetY, citationScale) {
   const citedBy = +d.cited_by_count || 0;
   const nbCoauthors = +d.nb_coauthors || 1;
   
   const color = "#888888"; // Grey for all papers
-
-  // More generous citation scaling with better minimum size
-  const citationScale = d3.scaleSqrt()
-    .domain([0, Math.max(100, d3.max([1000, citedBy * 1.2]))]) // Ensure reasonable max domain
-    .range([2, 12]) // Increased minimum from 1 to 2, max to 12
-    .clamp(true);
   
-  const radius = citationScale(citedBy);
+  // Use the dynamic scale passed from processPaperData
+  const radius = citationScale ? citationScale(citedBy) : 5; // Fallback if no scale
 
   return {
     x: 0,
@@ -182,69 +214,30 @@ export function placePointMultiPass(point, placedPoints, centerX, effectiveWidth
 }
 
 // Update the main processing functions to use the new placement
-export function processCoauthorData(coauthorData, width, height, timeScale) {
-  if (!coauthorData || coauthorData.length === 0) {
-    return [];
-  }
-
-  const MARGIN_LEFT = 40;
-  const MARGIN_RIGHT = 40;
-  const effectiveWidth = width - MARGIN_LEFT - MARGIN_RIGHT;
-  const centerX = effectiveWidth / 2;
-  
-  const coauthorPoints = coauthorData.map(d => {
-    const parsedDate = parseDate(d.pub_date);
-    const targetY = timeScale(parsedDate);
-    return createCoauthorPoint(d, targetY);
-  });
-
-  console.log('📄 Coauthor positioning:', {
-    totalWidth: width,
-    effectiveWidth,
-    centerX,
-    marginLeft: MARGIN_LEFT,
-    marginRight: MARGIN_RIGHT
-  });
-
-  // Sort by collaboration count (descending) to place important points first
-  coauthorPoints.sort((a, b) => d3.descending(+a.all_times_collabo || 0, +b.all_times_collabo || 0));
-
-  const placedPoints = [];
-  
-  for (const point of coauthorPoints) {
-    if (placePointMultiPass(point, placedPoints, centerX, effectiveWidth, coauthorPoints)) {
-      placedPoints.push(point);
-    } else {
-      console.warn('Could not place coauthor point:', point.name);
-      point.x = centerX;
-      placedPoints.push(point);
-    }
-  }
-
-  return coauthorPoints;
-}
-
 export function processPaperData(paperData, width, height, timeScale) {
   if (!paperData || paperData.length === 0) {
     return [];
   }
-  
 
   const MARGIN_LEFT = 40;
   const MARGIN_RIGHT = 40;
   const effectiveWidth = width - MARGIN_LEFT - MARGIN_RIGHT;
   const centerX = effectiveWidth / 2;
-  console.log('📄 PaperData positioning:', {
-    totalWidth: width,
-    effectiveWidth,
-    centerX,
-    marginLeft: MARGIN_LEFT,
-    marginRight: MARGIN_RIGHT
-  });
+
+  // Get the actual citation range from your data
+  const citationCounts = paperData.map(d => +d.cited_by_count || 0);
+  const [minCitations, maxCitations] = d3.extent(citationCounts);
+  
+  // Create a dynamic scale based on your actual data
+  const citationScale = d3.scaleSqrt()
+    .domain([minCitations, maxCitations])
+    .range([1, 12]) // Reasonable min/max sizes
+    .clamp(true);
+
   const paperPoints = paperData.map(d => {
     const parsedDate = parseDate(d.pub_date);
     const targetY = timeScale(parsedDate);
-    return createPaperPoint(d, targetY);
+    return createPaperPoint(d, targetY, citationScale); // Pass the scale
   });
 
   // Sort by citation count (descending) to place important points first
@@ -340,20 +333,6 @@ export function parseDate(dateStr) {
     return new Date(parseInt(dateStr), 0, 1);
   }
 }
-
-
-// Color helper for coauthors
-export function getCoauthorColor(point, colorMode) {
-  if (colorMode === 'age_diff') {
-    return ageColorScale(point.age_category);
-  } else if (colorMode === 'acquaintance') {
-    // Use collaboration count instead of acquaintance string
-    const collabCount = +point.all_times_collabo || 0;
-    return collaborationColorScale(collabCount);
-  }
-  return '#20A387FF';
-}
-
 
 
 
