@@ -96,7 +96,7 @@
     color: var(--color-fg);
     font-size: var(--font-size-smallish);
     width: 100%;
-    height: 320px; /* Fixed height to show multiple options */
+    height: 250px; /* Fixed height to show multiple options */
     font-family: var(--font-body);
   }
 

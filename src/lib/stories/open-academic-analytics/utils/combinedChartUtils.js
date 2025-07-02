@@ -30,7 +30,7 @@ export function processCoauthorData(coauthorData, width, height, timeScale) {
   // Create a dynamic scale based on your actual data
   const collaborationScale = d3.scaleSqrt()
     .domain([minCollabs, maxCollabs])
-    .range([3, 12]) // Reasonable min/max sizes for coauthors
+    .range([2.5, 12]) // Reasonable min/max sizes for coauthors
     .clamp(true);
 
   const coauthorPoints = coauthorData.map(d => {
@@ -95,7 +95,6 @@ export function createCoauthorPoint(d, targetY, collaborationScale) {
     shared_institutions: d.shared_institutions // Add this field
   };
 }
-
 
 export function createPaperPoint(d, targetY, citationScale) {
   const citedBy = +d.cited_by_count || 0;
@@ -258,9 +257,6 @@ export function processPaperData(paperData, width, height, timeScale) {
   return paperPoints;
 }
 
-
-
-
 // Also update vertical placement to use more space
 export function tryVerticalPlacement(point, placedPoints, centerX) {
   const step = 5;
@@ -297,7 +293,6 @@ export function placePoint(point, placedPoints, centerX, allPoints = null) {
 }
 
 // Consistent date parsing
-// In combinedChartUtils.js
 export function parseDate(dateStr) {
   
   if (!dateStr) return null;
@@ -333,8 +328,6 @@ export function parseDate(dateStr) {
     return new Date(parseInt(dateStr), 0, 1);
   }
 }
-
-
 
 // Get combined date range from both datasets
 export function getCombinedDateRange(paperData, coauthorData) {

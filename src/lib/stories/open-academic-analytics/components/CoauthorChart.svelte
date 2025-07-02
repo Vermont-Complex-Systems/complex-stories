@@ -113,8 +113,6 @@
     });
   });
 
-  // Remove all the legend logic - it's now in the Legend component
-
   // Tooltip state
   let showTooltip = $state(false);
   let tooltipContent = $state('');
@@ -125,7 +123,7 @@
     mouseX = event.clientX;
     mouseY = event.clientY;
     
-    tooltipContent = `Coauthor: ${point.name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nShared Institution: ${point.shared_institutions || 'Unknown'}`;
+    tooltipContent = `Coauthor: ${point.name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nShared Institution: ${point.shared_institutions || 'Unknown'}\n(click to see collaborations over time)`;
     
     showTooltip = true;
   }
