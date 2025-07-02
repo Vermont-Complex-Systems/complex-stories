@@ -16,6 +16,13 @@
     return d3.scaleOrdinal(d3.schemeTableau10).domain(uniqueInstitutions);
   });
 
+  // Create shared institution color scale when needed
+  let sharedInstitutionColorScale = $derived.by(() => {
+    if (colorMode !== 'shared_institutions' || !coauthorData.length) return null;
+    const uniqueSharedInstitutions = [...new Set(coauthorData.map(d => d.shared_institutions))]
+      .filter(inst => inst != null && inst !== '');
+    return d3.scaleOrdinal(d3.schemeTableau10).domain(uniqueSharedInstitutions);
+  });
 
   // Generate legend items based on color mode - Observable Plot style
   let legendItems = $derived.by(() => {
@@ -30,11 +37,12 @@
     } 
     
     if (colorMode === 'acquaintance') {
-      // Use collaboration-based legend like in Observable Plot
+      // Use collaboration-based legend that matches the threshold scale
       return [
-        { label: 'New (1-2 collaborations)', color: collaborationColorScale(1) },
-        { label: 'Repeat (3-4 collaborations)', color: collaborationColorScale(3) },
-        { label: 'Long-term (5+ collaborations)', color: collaborationColorScale(5) }
+        { label: 'New (1 collaboration)', color: collaborationColorScale(1) },
+        { label: 'Repeat (2-3 collaborations)', color: collaborationColorScale(2) },
+        { label: 'Regular (4-8 collaborations)', color: collaborationColorScale(4) },
+        { label: 'Long-term (9+ collaborations)', color: collaborationColorScale(9) }
       ];
     } 
     
@@ -48,10 +56,6 @@
         color: institutionColorScale(institution)
       }));
       
-      if (hasUnknown) {
-        items.push({ label: 'Unknown Institution', color: '#888888' });
-      }
-      
       return items;
     }
 
@@ -62,10 +66,10 @@
       
       const items = uniqueSharedInstitutions.map(institution => ({
         label: institution,
-        color: institutionColorScale(institution)
+        color: sharedInstitutionColorScale(institution)
       }));
       
-    
+      
       return items;
     }
     

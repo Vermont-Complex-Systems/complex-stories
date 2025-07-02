@@ -77,9 +77,7 @@
     {/if}
 </div>
 
-<!-- Keep all existing styles -->
 <style>
-    /* ... all your existing styles stay the same ... */
     .sidebar-content {
         height: 100%;
         display: flex;

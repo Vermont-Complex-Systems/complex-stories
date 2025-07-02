@@ -24,12 +24,20 @@
   // Check if we have data
   let hasData = $derived(coauthorData && coauthorData.length > 0);
 
-  // Simple institution color scale - Observable Plot style
+  // Institution color scale - for institution column only
   let institutionColorScale = $derived.by(() => {
-    if (!hasData) return null;
-    const uniqueInstitutions = [...new Set(coauthorData.map(d => d.shared_institutions))]
-      .filter(inst => inst != null);
-    return d3.scaleOrdinal(d3.schemeCategory10).domain(uniqueInstitutions);
+    if (!hasData || colorMode !== 'institutions') return null;
+    const uniqueInstitutions = [...new Set(coauthorData.map(d => d.institution))]
+      .filter(inst => inst != null && inst !== '');
+    return d3.scaleOrdinal(d3.schemeTableau10).domain(uniqueInstitutions);
+  });
+
+  // Shared institution color scale - for shared_institutions column only  
+  let sharedInstitutionColorScale = $derived.by(() => {
+    if (!hasData || colorMode !== 'shared_institutions') return null;
+    const uniqueSharedInstitutions = [...new Set(coauthorData.map(d => d.shared_institutions))]
+      .filter(inst => inst != null && inst !== '');
+    return d3.scaleOrdinal(d3.schemeTableau10).domain(uniqueSharedInstitutions);
   });
 
   // Time scale
@@ -88,11 +96,13 @@
         if (colorMode === 'age_diff') {
           displayColor = ageColorScale(colorValue);
         } else if (colorMode === 'acquaintance') {
-          displayColor = acquaintanceColorScale(colorValue);
+          // Use collaboration count like in Observable Plot, not acquaintance string
+          const collabCount = +point.all_times_collabo || 0;
+          displayColor = collaborationColorScale(collabCount);
         } else if (colorMode === 'institutions') {
           displayColor = institutionColorScale(colorValue);
         } else if (colorMode === 'shared_institutions') {
-          displayColor = institutionColorScale(colorValue);
+          displayColor = sharedInstitutionColorScale(colorValue);
         }
         opacity = 0.9;
         strokeWidth = 0.3;
@@ -113,6 +123,8 @@
     });
   });
 
+  // Remove all the legend logic - it's now in the Legend component
+
   // Tooltip state
   let showTooltip = $state(false);
   let tooltipContent = $state('');
@@ -123,7 +135,7 @@
     mouseX = event.clientX;
     mouseY = event.clientY;
     
-    tooltipContent = `Coauthor: ${point.name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nShared Institution: ${point.shared_institutions || 'Unknown'}\n(click to see collaborations over time)`;
+    tooltipContent = `Coauthor: ${point.name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nShared Institution: ${point.shared_institutions || 'Unknown'}`;
     
     showTooltip = true;
   }

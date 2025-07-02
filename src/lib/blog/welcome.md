@@ -9,8 +9,12 @@ This blog is intended to demonstrate how and when adopting best practices in res
 
 ### A first case study: data orchestration
 
+<div style="text-align: center; margin: 2rem 0;">
+  <img src="/Global_Asset_Lineage.svg" alt="data pipeline" style="max-width: 1200px; width: 100%;">
+</div>
+
 Consider the practice of writing [data orchestration](https://github.com/dagster-io/dagster) to handle messy, collaborative research projects. This approach to the data lifecycle exemplifies what we mean by "good practices"—an alternative to the common research habit of hacking together duct-tape software solutions that "just work".
 
-We will use the "opening academic analytics" (OAA) project as an example, as it captures some of the real world challenges of researchers are confronted. In this project, we are interested in characterizing the coevolution of collaborations and productivity. We "open" academic analytics in that this kind of work is typically done behind close doors, while being sold to university administrators to make strategic business decisions.
+We will use the [opening academic analytics](https://vermont-complex-systems.github.io/complex-stories/open-academic-analytics) (OAA) project as an example, as it captures some of the real world challenges of researchers are confronted. In this project, we are interested in characterizing the coevolution of collaborations and productivity. We "open" academic analytics in that this kind of work is typically done behind close doors, while being sold to university administrators to make strategic business decisions.
 
 The OAA project has some complexity associated with it, such as calling the openAlex API to get the data, and a messy data pipeline to wrangle the data in an original timeline plot.
