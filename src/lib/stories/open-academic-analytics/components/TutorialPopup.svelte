@@ -12,7 +12,7 @@
   }
   
   function goToTutorial() {
-    window.open(`${base}/complex-stories/uvm-research-groups`, '_blank');
+    window.open(`${base}/uvm-research-groups`, '_blank');
     closeTutorial();
   }
   
