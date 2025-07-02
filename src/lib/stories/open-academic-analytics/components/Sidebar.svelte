@@ -1,21 +1,13 @@
 <script>
     import { Accordion, Button, Separator } from "bits-ui";
     import { User, Palette, Users, RotateCcw, UserCheck } from "@lucide/svelte";
-    import { dashboardState, uiState, toggleSidebar, resetDashboardFilters } from '../state.svelte.ts';
+    import { uiState, toggleSidebar, resetDashboardFilters } from '../state.svelte.ts';
     
+    import SelectAuthors from './sidebar/SelectAuthors.svelte';
+    import DataInfo from './sidebar/DataInfo.svelte';
     import ColorModeFilter from './sidebar/ColorModeFilter.svelte';
-    import HighlightAuthorFilter from './sidebar/HighlightAuthorFilter.svelte';
-    import HighlightCoauthorFilter from './sidebar/HighlightCoauthorFilter.svelte';
-
-    let { paperData = [], coauthorData = [], availableAuthors = [] } = $props();
     
-    // Available options for filters (based on currently selected author's data)
-    let availableHighlightAuthors = $derived.by(() => {
-        if (!paperData || paperData.length === 0) return [];
-        // Get unique author names (not IDs) from paper data
-        const authors = [...new Set(paperData.map(p => p.name || p.ego_aid).filter(Boolean))];
-        return authors.slice(0, 20);
-    });
+    let { paperData = [], coauthorData = [], availableAuthors = [] } = $props();
 
     let availableCoauthors = $derived.by(() => {
         if (!coauthorData || coauthorData.length === 0) return [];
@@ -24,14 +16,6 @@
         return coauthors.sort().slice(0, 50); // Increased limit and sorted
     });
 
-    // Extract author names from availableAuthors array
-    let authorNames = $derived.by(() => {
-        if (!availableAuthors || availableAuthors.length === 0) return [];
-        // Handle both object format { name: "..." } and string format
-        return availableAuthors.map(author => 
-            typeof author === 'string' ? author : author.name || author["Faculty Name"] || author
-        );
-    });
 </script>
 
 <div class="sidebar-content">
@@ -61,64 +45,9 @@
     {#if !uiState.sidebarCollapsed}
         <div class="sidebar-body">
             <Accordion.Root type="multiple" value={["author-select", "filters", "data"]} class="accordion">
-                
-                <!-- Author Selection Filter -->
-                <Accordion.Item value="author-select">
-                    <Accordion.Header>
-                        <Accordion.Trigger class="accordion-trigger">
-                            <UserCheck size={16} />
-                            Select Author
-                        </Accordion.Trigger>
-                    </Accordion.Header>
-                    <Accordion.Content class="accordion-content">
-                        <div class="control-section">
-                            <select bind:value={dashboardState.selectedAuthor} class="filter-select">
-                                {#each authorNames as authorName}
-                                    <option value={authorName}>{authorName}</option>
-                                {/each}
-                            </select>
-                            <p class="filter-info">This filters all data to show only this author's papers and collaborations.</p>
-                        </div>
-                    </Accordion.Content>
-                </Accordion.Item>
-
-                <Separator.Root />
-                
-                <HighlightAuthorFilter {paperData} />
-
+                <SelectAuthors {availableAuthors} />
                 <ColorModeFilter />
-
-                <HighlightCoauthorFilter {coauthorData} />
-
-                <Separator.Root />
-
-                <!-- Dataset Info -->
-                <Accordion.Item value="data">
-                    <Accordion.Header>
-                        <Accordion.Trigger class="accordion-trigger">
-                            📈 Dataset Info
-                        </Accordion.Trigger>
-                    </Accordion.Header>
-                    <Accordion.Content class="accordion-content">
-                        <div class="control-section">
-                            <div class="data-stats">
-                                <div class="stat-row">
-                                    <span class="stat-label">Papers:</span>
-                                    <span class="stat-value">{paperData?.length || 0}</span>
-                                </div>
-                                <div class="stat-row">
-                                    <span class="stat-label">Collaborations:</span>
-                                    <span class="stat-value">{coauthorData?.length || 0}</span>
-                                </div>
-                                <div class="stat-row">
-                                    <span class="stat-label">Unique Coauthors:</span>
-                                    <span class="stat-value">{availableCoauthors.length}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </Accordion.Content>
-                </Accordion.Item>
-
+                <DataInfo {paperData} {coauthorData} {availableCoauthors} />
             </Accordion.Root>
 
             <!-- Reset Button -->
@@ -175,10 +104,6 @@
     }
 
     .sidebar-content:has(.sidebar-collapsed) .sidebar-header,
-    .sidebar-header:has(+ * .sidebar-collapsed) {
-        padding: 1rem;
-        justify-content: center;
-    }
 
     .sidebar-title {
         font-size: var(--font-size-small);
@@ -266,58 +191,6 @@
 
     :global(.accordion-content) {
         padding: 0 0.75rem 1rem 0.75rem;
-    }
-
-    .control-section {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .filter-select {
-        padding: 0.5rem;
-        border: 1px solid var(--color-border);
-        border-radius: var(--border-radius);
-        background: var(--color-bg);
-        color: var(--color-fg);
-        font-size: var(--font-size-small);
-        width: 100%;
-    }
-
-    .filter-select:focus {
-        outline: none;
-        border-color: var(--color-good-blue);
-    }
-
-    .filter-info {
-        font-size: var(--font-size-xsmall);
-        color: var(--color-secondary-gray);
-        margin: 0.5rem 0 0 0;
-        font-style: italic;
-        line-height: 1.3;
-    }
-
-    .data-stats {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .stat-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: var(--font-size-small);
-    }
-
-    .stat-label {
-        color: var(--color-secondary-gray);
-        font-weight: var(--font-weight-medium);
-    }
-
-    .stat-value {
-        color: var(--color-fg);
-        font-weight: var(--font-weight-bold);
     }
 
     .reset-section {

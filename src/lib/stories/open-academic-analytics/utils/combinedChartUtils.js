@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 // Color scales
 export const ageColorScale = d3.scaleOrdinal()
   .domain(['older', 'same', 'younger'])
-  .range(['#404788FF', '#20A387FF', '#FDE725FF']);
+  .range(['#8e6dfb', '#20A387FF', '#dacc55']);
 
 export const acquaintanceColorScale = d3.scaleOrdinal()
   .domain(['new_collab', 'existing_collab'])
@@ -231,7 +231,7 @@ export function processPaperData(paperData, width, height, timeScale) {
   // Create a dynamic scale based on your actual data
   const citationScale = d3.scaleSqrt()
     .domain([minCitations, maxCitations])
-    .range([1, 12]) // Reasonable min/max sizes
+    .range([2, 18]) // Reasonable min/max sizes
     .clamp(true);
 
   const paperPoints = paperData.map(d => {

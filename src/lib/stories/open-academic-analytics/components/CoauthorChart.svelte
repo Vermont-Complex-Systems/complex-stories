@@ -3,6 +3,7 @@
   import { processCoauthorData, getCombinedDateRange, ageColorScale, acquaintanceColorScale, collaborationColorScale } from '../utils/combinedChartUtils.js';
   import Tooltip from './Tooltip.svelte';
   import Legend from './Legend.svelte';
+  import { dashboardState } from '../state.svelte.ts';
 
   let { 
     coauthorData, 
@@ -28,7 +29,7 @@
     if (!hasData) return null;
     const uniqueInstitutions = [...new Set(coauthorData.map(d => d.shared_institutions))]
       .filter(inst => inst != null);
-    return d3.scaleOrdinal(d3.schemeTableau10).domain(uniqueInstitutions);
+    return d3.scaleOrdinal(d3.schemeCategory10).domain(uniqueInstitutions);
   });
 
   // Time scale
@@ -132,12 +133,24 @@
   function hideTooltip() {
     showTooltip = false;
   }
+
+  function handleChartClick(event) {
+    // Reset highlighted coauthor when clicking on chart background
+    dashboardState.highlightedCoauthor = null;
+  }
+
+  function handleCoauthorClick(event, point) {
+    // Stop event from bubbling to chart background
+    event.stopPropagation();
+    // Set highlighted coauthor
+    dashboardState.highlightedCoauthor = point.name;
+  }
 </script>
 
 <div class="chart-wrapper">
   <div class="viz-content">
     <div class="plot-container">
-      <svg {width} {height} class="chart-svg">
+      <svg {width} {height} class="chart-svg" onclick={handleChartClick} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && handleChartClick(e)}>
         
         <!-- Grid lines and year labels -->
         <g>
@@ -161,8 +174,12 @@
               stroke-width={point.strokeWidth}
               fill-opacity={point.opacity}
               class="data-point"
-              on:mouseenter={(e) => showPointTooltip(e, point)}
-              on:mouseleave={hideTooltip}
+              role="button"
+              tabindex="0"
+              onclick={(e) => handleCoauthorClick(e, point)}
+              onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && handleCoauthorClick(e, point)}
+              onmouseenter={(e) => showPointTooltip(e, point)}
+              onmouseleave={hideTooltip}
             />
           {/each}
         </g>

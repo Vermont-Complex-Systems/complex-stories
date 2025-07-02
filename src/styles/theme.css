@@ -24,6 +24,7 @@
     --font-size-large: clamp(1.5rem, 2.5vw, 2.5rem);
     --font-size-medium: clamp(1rem, 1.75vw, 1.5rem);
     --font-size-small: clamp(15px, 1.25vw, 1.2rem);
+    --font-size-smallish: clamp(14px, 1vw, 0.8rem);
     --font-size-xsmall: clamp(12px, 1vw, 0.8rem);
 
     /* Layout tokens */
