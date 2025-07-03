@@ -108,8 +108,8 @@
               stroke-width="0.8"
               fill-opacity={point.opacity}
               class="data-point"
-              on:mouseenter={(e) => showPointTooltip(e, point)}
-              on:mouseleave={hideTooltip}
+              onmouseenter={(e) => showPointTooltip(e, point)}
+              onmouseleave={hideTooltip}
             />
           {/each}
         </g>

@@ -13,6 +13,7 @@ export const dashboardState = $state({
   colorMode: 'age_diff',
   highlightedAuthor: null,
   authorAgeFilter: null, // [minAge, maxAge] or null
+  highlightedCoauthor: null,
 });
 
 // Data State

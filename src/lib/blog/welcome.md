@@ -17,4 +17,5 @@ Consider the practice of writing [data orchestration](https://github.com/dagster
 
 We will use the [opening academic analytics](https://vermont-complex-systems.github.io/complex-stories/open-academic-analytics) (OAA) project as an example, as it captures some of the real world challenges of researchers are confronted. In this project, we are interested in characterizing the coevolution of collaborations and productivity. We "open" academic analytics in that this kind of work is typically done behind close doors, while being sold to university administrators to make strategic business decisions.
 
-The OAA project has some complexity associated with it, such as calling the openAlex API to get the data, and a messy data pipeline to wrangle the data in an original timeline plot.
+The OAA project has some complexity associated with it, such as calling the openAlex API to get the data, and a messy data pipeline to wrangle the data in an original timeline plot. Here we show how to use a library called [dagster](https://github.com/dagster-io/dagster) to manage the pipeline. The core idea is that we will be interested in a given researcher (that we call "ego"), and we will build a timeline of its papers and collaborations, with respect to relevant metadata.
+
