@@ -12,7 +12,7 @@ export const dashboardState = $state({
   selectedAuthor: 'Peter Sheridan Dodds',
   colorMode: 'age_diff',
   highlightedAuthor: null,
-  highlightedCoauthor: '' // Use empty string instead of null
+  authorAgeFilter: null, // [minAge, maxAge] or null
 });
 
 // Data State
@@ -48,18 +48,23 @@ async function registerTables() {
     tablesRegistered = true;
 }
 
-// Load available authors
+// Load available authors WITH age data
 async function loadAvailableAuthors() {
     await registerTables();
     
+    // Get authors with their most recent age data
     const result = await query(`
-        SELECT DISTINCT name 
+        SELECT DISTINCT 
+            name,
+            LAST(author_age) as current_age,
+            LAST(pub_year) as last_pub_year
         FROM coauthor 
-        WHERE name IS NOT NULL 
+        WHERE name IS NOT NULL AND author_age IS NOT NULL
+        GROUP BY name
         ORDER BY name
     `);
     
-    return result.map(row => row.name);
+    return result;
 }
 
 // Load data for specific author
@@ -116,17 +121,16 @@ async function loadAuthorData(authorName) {
     return [paperData, coauthorData];
 }
 
-// Initialize app - load author list
 export async function initializeApp() {
     try {
         dataState.isInitializing = true;
         dataState.error = null;
         
-        const authors = await loadAvailableAuthors();
-        dataState.availableAuthors = authors;
+        const authorsWithAges = await loadAvailableAuthors();
+        dataState.availableAuthors = authorsWithAges;
         dataState.isInitializing = false;
         
-        console.log(`📋 Loaded ${authors.length} available authors`);
+        console.log(`📋 Loaded ${authorsWithAges.length} available authors with age data`);
         
     } catch (error) {
         dataState.error = error.message;
@@ -192,7 +196,7 @@ export function toggleSidebar() {
 
 export function resetDashboardFilters() {
     dashboardState.highlightedAuthor = null;
-    dashboardState.highlightedCoauthor = null;
+    dashboardState.authorAgeFilter = null;
     dashboardState.colorMode = 'age_diff';
 }
 

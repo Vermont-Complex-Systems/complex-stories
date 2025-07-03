@@ -4,14 +4,23 @@
   import { UserCheck } from "@lucide/svelte";
 
   let { availableAuthors } = $props();
+
+  // Filter authors by age if filter is active
+  let filteredAuthors = $derived.by(() => {
+    if (!dashboardState.authorAgeFilter) return availableAuthors;
     
-  // Extract author names from availableAuthors array
+    const [minAge, maxAge] = dashboardState.authorAgeFilter;
+    return availableAuthors.filter(author => {
+      // Now availableAuthors contains objects with current_age
+      const age = author.current_age || 0;
+      return age >= minAge && age <= maxAge;
+    });
+  });
+    
+  // Extract author names from filtered authors
   let authorNames = $derived.by(() => {
-    if (!availableAuthors || availableAuthors.length === 0) return [];
-    // Handle both object format { name: "..." } and string format
-    return availableAuthors.map(author => 
-      typeof author === 'string' ? author : author.name || author["Faculty Name"] || author
-    );
+    if (!filteredAuthors || filteredAuthors.length === 0) return [];
+    return filteredAuthors.map(author => author.name);
   });
 
   // Convert single selection to array for multiple select, and back
@@ -24,6 +33,14 @@
     // Only allow one selection - take the last one selected
     dashboardState.selectedAuthor = selected.length > 0 ? selected[selected.length - 1] : '';
   }
+
+  // Show filter status
+  let filterStatus = $derived.by(() => {
+    if (!dashboardState.authorAgeFilter) return '';
+    const total = availableAuthors.length;
+    const filtered = filteredAuthors.length;
+    return `(${filtered} of ${total} authors)`;
+  });
 </script>
 
 <!-- Author Selection Filter -->
@@ -31,7 +48,7 @@
   <Accordion.Header>
     <Accordion.Trigger class="accordion-trigger">
       <UserCheck size={16} />
-      Select Author
+      Select Author {filterStatus}
     </Accordion.Trigger>
   </Accordion.Header>
   <Accordion.Content class="accordion-content">
@@ -48,7 +65,12 @@
           </option>
         {/each}
       </select>
-      <p class="filter-info">Select an author to filter all data. Only one can be selected at a time.</p>
+      <p class="filter-info">
+        Select an author to filter all data. Only one can be selected at a time.
+        {#if dashboardState.authorAgeFilter}
+          <br><em>List filtered by age range.</em>
+        {/if}
+      </p>
     </div>
   </Accordion.Content>
 </Accordion.Item>

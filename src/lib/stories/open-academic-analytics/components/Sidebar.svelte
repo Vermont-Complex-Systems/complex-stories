@@ -1,9 +1,10 @@
 <script>
-    import { Accordion, Button, Separator } from "bits-ui";
+    import { Accordion, Button } from "bits-ui";
     import { User, Palette, Users, RotateCcw, UserCheck } from "@lucide/svelte";
     import { uiState, toggleSidebar, resetDashboardFilters } from '../state.svelte.ts';
     
     import SelectAuthors from './sidebar/SelectAuthors.svelte';
+    import AuthorAgeFilter from './sidebar/AuthorAgeFilter.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
     import ColorModeFilter from './sidebar/ColorModeFilter.svelte';
     
@@ -45,6 +46,7 @@
     {#if !uiState.sidebarCollapsed}
         <div class="sidebar-body">
             <Accordion.Root type="multiple" value={["author-select", "filters", "data"]} class="accordion">
+                <AuthorAgeFilter {availableAuthors} />
                 <SelectAuthors {availableAuthors} />
                 <ColorModeFilter />
                 <DataInfo {paperData} {coauthorData} {availableCoauthors} />

@@ -58,10 +58,9 @@
     return d3.range(startYear, endYear + 1, yearSpacing);
   });
 
-  // Process coauthor data
   let plotData = $derived.by(() => {
     if (!hasData) return [];
-    return processCoauthorData(coauthorData, width, height, timeScale);
+    return processCoauthorData(filteredCoauthorData, width, height, timeScale);
   });
 
   // Simple Observable Plot-style display data
@@ -155,6 +154,17 @@
     // Set highlighted coauthor
     dashboardState.highlightedCoauthor = point.name;
   }
+
+  // In CoauthorChart, filter the data based on age
+  let filteredCoauthorData = $derived.by(() => {
+    if (!coauthorData || !dashboardState.ageFilter) return coauthorData;
+    
+    const [minAge, maxAge] = dashboardState.ageFilter;
+    return coauthorData.filter(d => {
+      const age = +d.author_age || 0;
+      return age >= minAge && age <= maxAge;
+    });
+  });
 </script>
 
 <div class="chart-wrapper">

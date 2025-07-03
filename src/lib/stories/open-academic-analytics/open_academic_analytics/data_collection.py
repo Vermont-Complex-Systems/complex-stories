@@ -139,7 +139,21 @@ def academic_publications(duckdb: DuckDBResource):
                 total_researchers_processed += 1
                 continue
             
-            # Get existing papers to avoid duplicates
+            # If force_update=True, we skip the up-to-date check and always process
+            if config.force_update:
+                print(f"🔄 FORCE UPDATE: Will reprocess all papers for {target_name}")
+            
+            # If force_update=True, we skip the up-to-date check and always process
+            if config.force_update:
+                print(f"🔄 FORCE UPDATE: Clearing existing papers for {target_name}")
+                # Clear all existing papers for this researcher
+                db_exporter.con.execute("DELETE FROM paper WHERE ego_aid = ?", (target_aid,))
+                # Clear all existing author records for this researcher  
+                db_exporter.con.execute("DELETE FROM author WHERE aid = ?", (target_aid,))
+                db_exporter.con.commit()
+                print(f"  Cleared existing data for {target_name}")
+            
+            # Get existing papers to avoid duplicates (will be empty if force_update=True)
             paper_cache, _ = db_exporter.get_author_cache(target_aid)
             existing_papers = set([(aid, wid) for aid, wid in paper_cache])
             

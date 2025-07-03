@@ -33,7 +33,7 @@
     return finalWidth;
   });
 
-  const chartHeight = $derived(coauthorData?.length < 600 ? 800 : 1200);
+  const chartHeight = $derived(coauthorData?.length > 600 ? coauthorData?.length < 1500 ? 1200 : 2200 : 800);
 </script>
 
 <div class="dashboard">
