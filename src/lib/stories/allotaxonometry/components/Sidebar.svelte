@@ -4,7 +4,8 @@
     import AlphaControl from './sidebar/AlphaControl.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
     import StatusCard from './sidebar/StatusCard.svelte';
-    
+    import DownloadSection from './sidebar/DownloadSection.svelte';
+    import TruncationControl from './sidebar/TruncationControl.svelte';
     
     import { 
         allotax,
@@ -13,6 +14,8 @@
         toggleSidebar,
         handleFileUpload
     } from '../state.svelte.ts';
+
+    let alphaIndex = $state(7);
 </script>
 
 <div class="sidebar-content">
@@ -44,9 +47,11 @@
                         fileMetadata={uiState.fileMetadata}
                 />
                 <Separator.Root/>
+                <TruncationControl  bind:truncationSettings={uiState.truncationSettings}/>
+                <Separator.Root/>
                 <AlphaControl 
-                    alpha={allotax.alpha} 
-                    bind:alphaIndex={allotax.alphaIndex} 
+                    {allotax}
+                    bind:alphaIndex={alphaIndex}
                     {alphas} 
                 />
                 <Separator.Root/>
@@ -56,6 +61,7 @@
                     rtd={allotax.rtd} 
                     isDataReady={allotax.isDataReady} 
                 />
+                <DownloadSection isDataReady={allotax.isDataReady} />
             </Accordion.Root>
 
             <StatusCard isDataReady={allotax.isDataReady} />
