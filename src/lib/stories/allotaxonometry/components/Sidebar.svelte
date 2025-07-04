@@ -4,7 +4,6 @@
     import AlphaControl from './sidebar/AlphaControl.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
     import StatusCard from './sidebar/StatusCard.svelte';
-    import DownloadSection from './sidebar/DownloadSection.svelte';
     
     
     import { 
@@ -36,11 +35,13 @@
         <div class="sidebar-body">
             <Accordion.Root type="multiple" value={["upload", "alpha", "info"]} class="accordion">
                 <UploadSection 
-                    bind:sys1={allotax.sys1} 
-                    bind:sys2={allotax.sys2} 
-                    bind:title={allotax.title} 
-                    {handleFileUpload} 
-                    uploadStatus={uiState.uploadStatus} 
+                        bind:sys1={allotax.sys1}
+                        bind:sys2={allotax.sys2}
+                        bind:title={allotax.title}
+                        {handleFileUpload}
+                        uploadStatus={uiState.uploadStatus}
+                        uploadWarnings={uiState.uploadWarnings}
+                        fileMetadata={uiState.fileMetadata}
                 />
                 <Separator.Root/>
                 <AlphaControl 
@@ -55,8 +56,6 @@
                     rtd={allotax.rtd} 
                     isDataReady={allotax.isDataReady} 
                 />
-                <Separator.Root/>
-                <DownloadSection {...allotax} />
             </Accordion.Root>
 
             <StatusCard isDataReady={allotax.isDataReady} />
