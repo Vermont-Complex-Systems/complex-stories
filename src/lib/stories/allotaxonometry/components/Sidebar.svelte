@@ -1,11 +1,10 @@
+<!-- Sidebar.svelte -->
 <script>
     import { Accordion, Button, Separator } from "bits-ui";
-    import UploadSection from './sidebar/UploadSection.svelte';
+    import MultiFileUpload from './sidebar/MultiFileUpload.svelte';
     import AlphaControl from './sidebar/AlphaControl.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
     import StatusCard from './sidebar/StatusCard.svelte';
-    import DownloadSection from './sidebar/DownloadSection.svelte';
-    import TruncationControl from './sidebar/TruncationControl.svelte';
     
     import { 
         allotax,
@@ -37,37 +36,49 @@
     {#if !uiState.sidebarCollapsed}
         <div class="sidebar-body">
             <Accordion.Root type="multiple" value={["upload", "alpha", "info"]} class="accordion">
-                <UploadSection 
-                        bind:sys1={allotax.sys1}
-                        bind:sys2={allotax.sys2}
-                        bind:title={allotax.title}
-                        {handleFileUpload}
-                        uploadStatus={uiState.uploadStatus}
-                        uploadWarnings={uiState.uploadWarnings}
-                        fileMetadata={uiState.fileMetadata}
+                
+                <!-- Direct Click Upload -->
+                <MultiFileUpload 
+                    bind:sys1={allotax.sys1}
+                    bind:sys2={allotax.sys2}
+                    bind:title={allotax.title}
+                    {handleFileUpload}
+                    uploadStatus={uiState.uploadStatus}
+                    uploadWarnings={uiState.uploadWarnings}
                 />
+                
                 <Separator.Root/>
-                <TruncationControl  bind:truncationSettings={uiState.truncationSettings}/>
-                <Separator.Root/>
+                
+                <!-- Alpha Control -->
                 <AlphaControl 
                     {allotax}
                     bind:alphaIndex={alphaIndex}
                     {alphas} 
                 />
+                
                 <Separator.Root/>
+                
+                <!-- Data Info -->
                 <DataInfo 
                     title={allotax.title} 
                     me={allotax.me} 
                     rtd={allotax.rtd} 
                     isDataReady={allotax.isDataReady} 
                 />
-                <DownloadSection isDataReady={allotax.isDataReady} />
             </Accordion.Root>
 
             <StatusCard isDataReady={allotax.isDataReady} />
         </div>
     {:else}
         <div class="sidebar-collapsed">
+            <div class="collapsed-item" title="Current: {allotax.title[0]} vs {allotax.title[1]}">
+                <div class="comparison-mini">
+                    <span class="sys-indicator sys1">1</span>
+                    <span class="vs-mini">vs</span>
+                    <span class="sys-indicator sys2">2</span>
+                </div>
+            </div>
+            
             <div class="collapsed-item" title="Alpha: {allotax.alpha}">
                 <div class="alpha-icon">α</div>
                 <div class="alpha-mini">{allotax.alpha.toString().slice(0, 4)}</div>
@@ -76,9 +87,6 @@
             <div class="collapsed-item" title={allotax.isDataReady ? 'Ready' : 'Processing...'}>
                 <div class="status-dot {allotax.isDataReady ? 'ready' : 'processing'}"></div>
             </div>
-
-            <div class="collapsed-item" title="Upload Data">📁</div>
-            <div class="collapsed-item" title="Dataset Info">📊</div>
         </div>
     {/if}
 </div>
@@ -88,111 +96,115 @@
         height: 100%;
         display: flex;
         flex-direction: column;
-        min-width: 0;
-        overflow: hidden;
-        max-width: 100%;
+        background-color: var(--color-sidebar-bg);
+        border-right: 1px solid var(--color-border);
     }
 
     .sidebar-header {
-        padding: 1.5rem;
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        gap: 2rem;
-        border-bottom: 1px solid var(--color-border);
-        min-height: 80px;
-        flex-shrink: 0;
-        min-width: 0;
-        overflow: hidden;
-        max-width: 100%;
-    }
-
-    /* When collapsed, center the toggle button */
-    .sidebar-content:has(.sidebar-collapsed) .sidebar-header,
-    .sidebar-header:has(+ * .sidebar-collapsed) {
+        align-items: center;
         padding: 1rem;
-        justify-content: center;
+        border-bottom: 1px solid var(--color-border);
+        background-color: var(--color-sidebar-header-bg);
     }
 
     .sidebar-title {
-        font-size: var(--font-size-small);
+        font-size: var(--16px);
         font-weight: var(--font-weight-bold);
+        color: var(--color-text-primary);
         margin: 0;
-        color: var(--color-fg);
-        font-family: var(--font-body);
     }
 
     .sidebar-body {
-        padding: 1.5rem;
         flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
         overflow-y: auto;
-        overflow-x: hidden;
-        max-width: 100%;
+        padding: 0;
     }
 
+    /* Collapsed sidebar styles */
     .sidebar-collapsed {
-        padding: 1rem 0.5rem;
         display: flex;
         flex-direction: column;
+        gap: 0.5rem;
+        padding: 1rem 0.5rem;
         align-items: center;
-        gap: 1rem;
-        flex: 1;
     }
 
     .collapsed-item {
+        width: 100%;
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 0.25rem;
         padding: 0.5rem;
         border-radius: var(--border-radius);
-        transition: background-color var(--transition-medium) ease;
         cursor: pointer;
+        transition: background-color var(--transition-fast) ease;
     }
 
     .collapsed-item:hover {
-        background-color: var(--color-gray-200);
+        background-color: var(--color-input-bg);
     }
 
-    :global(.dark) .collapsed-item:hover {
-        background-color: var(--color-gray-700);
+    .comparison-mini {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
     }
 
-    .alpha-icon {
-        width: 2rem;
-        height: 2rem;
-        background-color: var(--color-good-blue);
-        border-radius: var(--border-radius);
+    .sys-indicator {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--color-white);
-        font-size: var(--14px);
+        font-size: var(--10px);
         font-weight: var(--font-weight-bold);
-        font-family: var(--font-form);
+        color: white;
+    }
+
+    .sys-indicator.sys1 {
+        background-color: var(--color-good-blue);
+    }
+
+    .sys-indicator.sys2 {
+        background-color: var(--color-electric-green);
+    }
+
+    .vs-mini {
+        font-size: var(--10px);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-text-secondary);
+    }
+
+    .alpha-icon {
+        font-size: 1.25rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--color-text-primary);
     }
 
     .alpha-mini {
-        font-size: var(--12px);
-        font-family: var(--font-form);
-        color: var(--color-secondary-gray);
+        font-size: var(--10px);
+        color: var(--color-text-secondary);
+        font-weight: var(--font-weight-medium);
     }
 
     .status-dot {
-        width: 8px;
-        height: 8px;
+        width: 0.75rem;
+        height: 0.75rem;
         border-radius: 50%;
+        transition: background-color var(--transition-medium) ease;
     }
 
     .status-dot.ready {
         background-color: var(--color-electric-green);
+        box-shadow: 0 0 0 2px rgba(58, 230, 96, 0.3);
     }
 
     .status-dot.processing {
-        background-color: var(--color-yellow);
+        background-color: var(--color-warning);
         animation: pulse 2s infinite;
     }
 
@@ -200,12 +212,32 @@
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
     }
-  
-  :global([data-separator-root]) {
-            margin-top: 1.2rem;   /* my-4 = 1rem top */
-            margin-bottom: 1.2rem;/* my-4 = 1rem bottom */
-            flex-shrink: 0;     /* shrink-0 */
-            height: 1px;        /* h-px */
-            width: 100%;        /* w-full */
-        }
+
+    /* Accordion styles */
+    :global(.accordion) {
+        width: 100%;
+    }
+
+    :global(.accordion-trigger) {
+        width: 100%;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: var(--font-weight-medium);
+        font-size: var(--14px);
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+        transition: background-color var(--transition-fast) ease;
+        color: var(--color-text-primary);
+    }
+
+    :global(.accordion-trigger:hover) {
+        background-color: var(--color-input-bg);
+    }
+
+    :global(.accordion-content) {
+        padding: 0 1rem 1rem 1rem;
+    }
 </style>
