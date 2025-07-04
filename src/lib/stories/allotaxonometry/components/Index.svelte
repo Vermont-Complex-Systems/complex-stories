@@ -1,46 +1,33 @@
 <script>
-    import Nav from './Nav.svelte';
     import Sidebar from './Sidebar.svelte';
-    import Allotaxonograph from './Allotaxonograph.svelte';
-    import { uiState } from '../state.svelte.ts';
+    import { Dashboard } from 'allotaxonometer-ui';
+    import { uiState, allotax } from '../state.svelte.ts';
+
+    
 </script>
 
-<div class="dashboard-app">
-    <Nav />
-    
-    <div class="app-container">
+<div class="app-container">
         <div class="layout">
             <aside class="sidebar-container {uiState.sidebarCollapsed ? 'collapsed' : ''}">
                 <Sidebar />
             </aside>
             
-            <main class="main-content {uiState.sidebarCollapsed ? 'collapsed-sidebar' : ''}">
-                <Allotaxonograph />
+            <main class="main-content {uiState.sidebarCollapsed ? 'collapsed-sidebar' : ''}">     
+                {#if allotax.isDataReady}
+                    <Dashboard {...allotax} />
+                {:else}
+                    <div class="loading-container">
+                        <div class="loading-content">
+                            <div class="spinner"></div>
+                            <p class="loading-text">Loading allotaxonograph...</p>
+                        </div>
+                    </div>
+                {/if}
             </main>
         </div>
-    </div>
 </div>
 
 <style>
-    /* Story-specific global reset */
-    .dashboard-app * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: "EB Garamond", serif;
-    }
-
-    .dashboard-app {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: var(--color-bg);
-        color: var(--color-fg);
-        z-index: 1000;
-        overflow: hidden;
-    }
 
     .app-container {
         position: fixed;
@@ -104,5 +91,39 @@
         .main-content.collapsed-sidebar {
             padding-left: 0;
         }
+    }
+
+    .loading-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        min-height: 400px;
+    }
+
+    .loading-content {
+        text-align: center;
+    }
+
+    .spinner {
+        width: 2rem;
+        height: 2rem;
+        border: 3px solid var(--color-border);
+        border-top: 3px solid var(--color-good-blue);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+        font-size: 1rem;
+        color: var(--color-fg);
+        margin: 0;
+        font-family: var(--font-body);
     }
 </style>
