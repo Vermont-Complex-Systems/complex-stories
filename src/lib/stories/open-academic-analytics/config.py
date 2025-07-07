@@ -16,11 +16,21 @@ class PipelineConfig(Config):
     # Paths
     base_dir: str = "."
     data_raw_dir: str = "data/raw"
+    data_clean_dir: str = "data/clean"
+    data_export_dir: str = "data/export"
     data_processed_dir: str = "../../../../static/data/open-academic-analytics"
     
     @property
     def data_raw_path(self) -> Path:
         return Path(self.base_dir) / self.data_raw_dir
+    
+    @property
+    def data_clean_path(self) -> Path:
+        return Path(self.base_dir) / self.data_clean_dir
+    
+    @property
+    def data_export_path(self) -> Path:
+        return Path(self.base_dir) / self.data_export_dir
     
     @property
     def data_processed_path(self) -> Path:
@@ -105,6 +115,8 @@ class PipelineConfig(Config):
     # File names
     researchers_input_file: str = "uvm_profs_2023.parquet"
     researchers_tsv_file: str = "researchers.tsv"
+    paper_raw: str = "researchers.tsv"    
+    
     paper_output_file: str = "paper.parquet"
     author_output_file: str = "author.parquet"
     coauthor_output_file: str = "coauthor.parquet"

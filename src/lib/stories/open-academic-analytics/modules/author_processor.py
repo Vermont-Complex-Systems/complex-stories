@@ -10,28 +10,37 @@ logger = logging.getLogger(__name__)
 class AuthorProcessor:
     """Class to process author information"""
     
-    def __init__(self, db_exporter):
-        """
-        Initialize with database exporter.
-        
-        Args:
-            db_exporter (DatabaseExporter): Database connection handler
-        """
-        self.db_exporter = db_exporter
-        self.publication_year_cache = {}  # Cache for storing publication years
+    def __init__(self):
+        self.publication_year_cache = {}  
     
-    def preload_publication_years(self):
-        """Load existing publication year data from the database"""
-        query = """
-            SELECT aid, first_pub_year, last_pub_year 
-            FROM author 
-            WHERE first_pub_year IS NOT NULL AND last_pub_year IS NOT NULL
-        """
-        results = self.db_exporter.con.execute(query).fetchall()
+    def load_cache_from_file(self, cache_file):
+        """Load persistent cache into memory at start of processing"""
+        if cache_file.exists():
+            cache_df = pd.read_parquet(cache_file)
+            for _, row in cache_df.iterrows():
+                if pd.notna(row['first_pub_year']) and pd.notna(row['last_pub_year']):
+                    self.publication_year_cache[row['aid']] = (
+                        int(row['first_pub_year']), 
+                        int(row['last_pub_year'])
+                    )
+            print(f"Loaded {len(self.publication_year_cache)} entries from cache")
+
+
+    def save_cache_to_file(self, cache_file):
+        """Save in-memory cache to persistent file at end of processing"""
+        cache_data = []
+        for aid, (first_year, last_year) in self.publication_year_cache.items():
+            cache_data.append({
+                'aid': aid,
+                'first_pub_year': first_year,
+                'last_pub_year': last_year
+            })
         
-        for result in results:
-            aid, min_year, max_year = result
-            self.publication_year_cache[aid] = (min_year, max_year)
+        if cache_data:
+            cache_df = pd.DataFrame(cache_data)
+            cache_file.parent.mkdir(exist_ok=True)
+            cache_df.to_parquet(cache_file)
+            print(f"Saved {len(cache_data)} entries to cache")
     
     def collect_author_info(self, target_id, target_name, year_range, papers, coauthors, openAlex_fetcher):
         """
@@ -126,7 +135,7 @@ class AuthorProcessor:
                 # Calculate author age
                 author_age = year - coauthor_min_yr if coauthor_min_yr is not None else None
                 
-                # Update cache
+                # Update in-memory cache (fast lookups during this run)
                 self.publication_year_cache[aid] = (coauthor_min_yr, coauthor_max_yr)
                 
                 # Add to authors dictionary
@@ -134,6 +143,7 @@ class AuthorProcessor:
                     aid, display_name, institution,
                     year, coauthor_min_yr, coauthor_max_yr, author_age
                 )
+                
             except Exception as e:
                 logger.warning(f"Failed to get publication range for {display_name} ({aid}): {str(e)}")
                 failed_authors.append(aid)
@@ -145,41 +155,3 @@ class AuthorProcessor:
                 )
         
         return list(authors.values())
-    
-    def update_author_ages(self, target_id, known_first_pub_year):
-        """
-        Update author ages based on a known first publication year.
-        
-        Args:
-            target_id (str): OpenAlex author ID
-            known_first_pub_year (int): Corrected first publication year
-        """
-        return self.db_exporter.update_author_ages(target_id, known_first_pub_year)
-    
-    def process(self, target_id, target_name, year_range, papers, coauthors, openAlex_fetcher):
-        """
-        Process and save all author information.
-        
-        Args:
-            target_id (str): OpenAlex author ID
-            target_name (str): Display name for target researcher
-            year_range (tuple): (min_year, max_year)
-            papers (list): Processed paper tuples
-            coauthors (list): Processed coauthor tuples
-            openAlex_fetcher (OpenAlexFetcher): API fetcher
-            
-        Returns:
-            list: Processed author info tuples
-        """
-        # Preload existing publication years
-        self.preload_publication_years()
-        
-        # Collect author information
-        authors = self.collect_author_info(
-            target_id, target_name, year_range, papers, coauthors, openAlex_fetcher
-        )
-        
-        # Save to database
-        self.db_exporter.save_authors(authors)
-        
-        return authors

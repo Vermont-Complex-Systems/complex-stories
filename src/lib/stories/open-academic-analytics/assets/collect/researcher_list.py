@@ -10,7 +10,7 @@ from dagster import MaterializeResult, MetadataValue
 from config import config
 
 @dg.asset(
-    group_name="data_collection",
+    group_name="import",
     description="📋 Load list of UVM researchers to analyze for collaboration patterns"
 )
 def researcher_list():
