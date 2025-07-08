@@ -10,6 +10,7 @@ from dagster import MaterializeResult, MetadataValue
 import duckdb
 
 from config import config
+from shared.utils.data_transforms import create_age_standardization
 
 def filter_valid_author_ages(df):
     """Filter records with valid author ages"""
@@ -49,29 +50,6 @@ def create_age_categories(df):
     df_with_categories['age_category'] = categories
     print(f"  - Added age_category column (same/older/younger)")
     return df_with_categories
-
-
-def create_age_standardization(df):
-    """Create age standardization for timeline visualization"""
-    print("Creating age standardization for timeline...")
-    df_with_std = df.copy()
-    
-    try:
-        df_with_std["age_std"] = (
-            "1" + 
-            df_with_std.author_age.astype(str).str.zfill(3) + 
-            "-" + 
-            df_with_std.pub_date.map(lambda x: "-".join(str(x).split("-")[-2:]) if isinstance(x, str) else "01-01")
-        )
-        # Handle leap year
-        df_with_std["age_std"] = df_with_std.age_std.map(
-            lambda x: x.replace("29", "28") if x and x.endswith("29") else x
-        )
-    except Exception as e:
-        print(f"Error creating age_std: {e}")
-        df_with_std["age_std"] = None
-    
-    return df_with_std
 
 def add_collaboration_intensity(df):
     """Add categorical collaboration levels for better frontend scaling"""

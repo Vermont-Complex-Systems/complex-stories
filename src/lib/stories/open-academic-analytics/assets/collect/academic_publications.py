@@ -31,8 +31,6 @@ def academic_publications(duckdb: DuckDBResource):
     output_file = config.data_raw_path / config.paper_output_file
 
     with duckdb.get_connection() as conn:
-        # import duckdb
-        # conn = duckdb.connect(":memory")
         if output_file.exists():
             df_pap = pd.read_parquet(output_file)
             conn.execute("""
@@ -129,9 +127,6 @@ def academic_publications(duckdb: DuckDBResource):
                 total_researchers_processed += 1
                 continue
             
-            # If force_update=True, we skip the up-to-date check and always process
-            if config.force_update:
-                print(f"🔄 FORCE UPDATE: Will reprocess all papers for {target_name}")
             
             # If force_update=True, we skip the up-to-date check and always process
             if config.force_update:
@@ -141,7 +136,6 @@ def academic_publications(duckdb: DuckDBResource):
                 # Clear all existing author records for this researcher  
                 db_exporter.con.execute("DELETE FROM author WHERE aid = ?", (target_aid,))
                 db_exporter.con.commit()
-                print(f"  Cleared existing data for {target_name}")
             
             # Get existing papers to avoid duplicates (will be empty if force_update=True)
             paper_cache, _ = db_exporter.get_author_cache(target_aid)
@@ -160,7 +154,6 @@ def academic_publications(duckdb: DuckDBResource):
                 # ego_institutions_this_year = []
                 
                 for w in publications:
-                    w=publications[0]
                     if w.get('language') != 'en':
                         continue
                         
@@ -177,15 +170,8 @@ def academic_publications(duckdb: DuckDBResource):
                     author_position = None
                     for authorship in w['authorships']:
                         if authorship['author']['id'].split("/")[-1] == target_aid:
-                            # ego_institutions_this_year += [i['display_name'] for i in authorship['institutions']]
                             author_institution =  authorship['institutions'][0]['display_name'] if authorship.get('institutions') else ''
                             author_position = authorship['author_position']
-                    
-                    # Determine most common institution for this year
-                    # from collections import Counter
-                    # target_institution = None
-                    # if ego_institutions_this_year:
-                    #     target_institution = Counter(ego_institutions_this_year).most_common(1)[0][0]
                     
                     # Extract paper metadata
                     doi = w['ids'].get('doi') if 'ids' in w else None

@@ -21,14 +21,9 @@ def researcher_list():
     # Load and process
     d = pd.read_parquet(input_file)
     
-    # Handle column name variations
-    if 'host_dept (; delimited if more than one)' in d.columns:
-        d = d.rename(columns={'host_dept (; delimited if more than one)': 'host_dept'})
-    
     # reorder 
-    cols = ['oa_display_name', 'is_prof', 'group_size', 'perceived_as_male', 
-            'host_dept', 'has_research_group', 'oa_uid', 'group_url', 'first_pub_year']
-    d = d[cols]
+    d = d[['oa_display_name', 'is_prof', 'group_size', 'perceived_as_male', 
+           'host_dept', 'has_research_group', 'oa_uid', 'group_url', 'first_pub_year']]
 
     # get rid of authors without OpenAlex user id, and make uppercase    
     d = d[~d['oa_uid'].isna()]
