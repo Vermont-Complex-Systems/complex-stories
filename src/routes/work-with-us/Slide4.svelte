@@ -35,10 +35,7 @@
 		<img src="{base}/community-69fc3b40333659ebf12e64e787bf03e4.jpg" alt="community" />
 		<div class="copyright" use:reveal={{ delay: 2100, preset: 'fade' }}>
 			<p>
-				<em>The Turing Way</em> community illustrated as a garden. 
-				<em>The Turing Way</em> project illustration by Scriberia. 
-				Used under a CC-BY 4.0 licence. 
-				DOI: The Turing Way Community & Scriberia (2024).
+				Project illustration by Scriberia.  Used under a CC-BY 4.0 licence. DOI: The Turing Way Community & Scriberia (2024).
 			</p>
 		</div>
 	</div>

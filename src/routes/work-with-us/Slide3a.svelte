@@ -22,9 +22,18 @@
 		</div>
 		
 		<div class="image-section" use:reveal={{ delay: 1200, preset: 'scale', scale: 0.9 }}>
-			<a href="{base}/networks-fast-and-slow" target="_blank" rel="noopener">
-				<img src="{base}/common/thumbnails/screenshots/networks-fast-and-slow.jpg" alt="Networks Fast and Slow Project">
-			</a>
+			<div class="image-stack">
+				<!-- Primary image (top/front) -->
+				<a href="{base}/networks-fast-and-slow" class="image-link primary">
+					<img src="{base}/common/thumbnails/screenshots/networks-fast-and-slow.jpg" alt="Networks Fast and Slow Project" />
+				</a>
+				
+				<!-- Secondary images (stacked behind) -->
+				<a href="{base}/allotax-scrolly" class="image-link secondary">
+					<img src="{base}/common/thumbnails/screenshots/allotax-scrolly.jpg" alt="Analytics Project" />
+				</a>
+				
+			</div>
 		</div>
 	</div>
 </div>
@@ -97,12 +106,56 @@
 		padding-top: 1rem;
 	}
 	
-	img {
-		width: 100%;
+	/* Image stacking with CSS Grid - WIDER CONTAINER */
+	.image-stack {
+		display: grid;
+		grid-template-areas: "stack";
 		max-width: 300px;
+		min-height: 280px;
+		perspective: 1000px; /* For 3D effect */
+	}
+	
+	.image-link {
+		grid-area: stack;
+		display: block;
+		transition: all 0.3s ease;
+		transform-style: preserve-3d;
+	}
+	
+	.image-link img {
+		width: 100%;
 		height: auto;
 		border-radius: 8px;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		display: block;
+	}
+	
+	/* Stacking order and positioning - MORE SPREAD */
+	.image-link.primary {
+		z-index: 2;
+		transform: translateX(70px) translateY(0) rotateY(0deg);
+	}
+	
+	.image-link.secondary {
+		z-index: 2;
+		transform: translateX(-70px) translateY(25px) rotateY(-12deg);
+	}
+	
+	/* Hover effects - MORE DRAMATIC */
+	.image-stack:hover .image-link.primary {
+		transform: translateX(20px) translateY(-10px) rotateY(8deg);
+	}
+	
+	.image-stack:hover .image-link.secondary {
+		transform: translateX(-20px) translateY(15px) rotateY(-5deg);
+	}
+	
+	
+	/* Individual image hover */
+	.image-link:hover {
+		z-index: 10 !important;
+		transform: translateX(0) translateY(-10px) rotateY(0deg) scale(1.05) !important;
+		opacity: 1 !important;
 	}
 	
 	/* Responsive design */
@@ -124,11 +177,24 @@
 		.content-section {
 			padding-right: 0;
 		}
+		
+		/* Simplify stack on smaller screens but keep spread */
+		.image-link.secondary {
+			transform: translateX(-25px) translateY(15px) rotateY(-8deg);
+		}
+		
+
 	}
 	
 	@media (max-width: 768px) {
-		img {
-			max-width: 250px;
+		.image-stack {
+			max-width: 280px;
 		}
+		
+		/* Keep some spread even on mobile */
+		.image-link.secondary {
+			transform: translateX(-15px) translateY(12px) rotateY(-5deg);
+		}
+		
 	}
 </style>
