@@ -24,6 +24,7 @@
 		"prettier-plugin-svelte": "^3.3.3",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
+		"svelte-reveal": "^1.1.0",
 		"typescript": "^5.0.0",
 		"vite": "^6.2.6"
 	},
@@ -49,6 +50,7 @@
 		"rehype-raw": "^7.0.0",
 		"remark-gfm": "^4.0.1",
 		"remark-math": "^6.0.0",
+		"reveal.js": "^5.2.1",
 		"sharp": "^0.34.2",
 		"svelte-exmarkdown": "^5.0.1",
 		"svelteplot": "^0.3.5",
