@@ -1,0 +1,12 @@
+## Open academic Analytics
+
+This project provide a micro-macro perspective on the coevolution of scientific productivity and collaborations.
+
+It is macro in that we deploy models to detect statistical patterns in career trajectories.
+
+It is micro in that we offer the possibility to users to investigate particular authors via our web interface.
+
+### Implementing principled data processing using dagster
+
+This project is also a dagster project, which implement a principled data processing pipeline. 
+

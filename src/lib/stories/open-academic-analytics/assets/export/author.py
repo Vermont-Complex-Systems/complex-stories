@@ -116,6 +116,26 @@ def print_final_summary(df):
     
     return df
 
+def normalize_author_institutions(df):
+    """Clean and normalize institution names for author data"""
+    print("Normalizing author institution names...")
+    df_normalized = df.copy()
+    
+    if 'institution' in df_normalized.columns:
+        df_normalized['institution_normalized'] = (
+            df_normalized['institution']
+            .fillna('Unknown')
+            .str.strip()
+            .str.replace(r'\s+', ' ', regex=True)
+            .str.replace(r'[^\w\s\-\.]', '', regex=True)
+            .str.title()
+        )
+        print(f"  - Added institution_normalized")
+    else:
+        print("  - No institution column found in author data")
+    
+    return df_normalized
+
 @dg.asset(
     deps=["coauthor"],
     group_name="export",
@@ -132,6 +152,7 @@ def author():
                     .pipe(validate_data_quality)
                     .pipe(create_age_standardization)
                     .pipe(handle_leap_year_edge_case)
+                    .pipe(normalize_author_institutions)  # NEW: If institution column exists
                     .pipe(print_final_summary)
                    )
     

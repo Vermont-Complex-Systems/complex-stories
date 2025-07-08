@@ -5,6 +5,7 @@ Stage 3: Prepare datasets for interactive dashboards and analysis
 """
 import pandas as pd
 import dagster as dg
+import numpy as np
 from dagster import MaterializeResult, MetadataValue
 import duckdb
 
@@ -58,6 +59,43 @@ def calculate_number_authors(df):
     )
     return df_with_coauthors
 
+def add_citation_percentiles(df):
+    """Add citation percentiles for better scaling"""
+    df_with_percentiles = df.copy()
+    
+    citations = df_with_percentiles['cited_by_count'].fillna(0)
+    df_with_percentiles['citation_percentile'] = citations.rank(pct=True) * 100
+    
+    # Also add categorical levels
+    conditions = [
+        citations == 0,
+        (citations > 0) & (citations <= citations.quantile(0.5)),
+        (citations > citations.quantile(0.5)) & (citations <= citations.quantile(0.8)),
+        (citations > citations.quantile(0.8)) & (citations <= citations.quantile(0.95)),
+        citations > citations.quantile(0.95)
+    ]
+    categories = ['uncited', 'low_impact', 'medium_impact', 'high_impact', 'very_high_impact']
+    
+    df_with_percentiles['citation_category'] = np.select(conditions, categories, default='uncited')
+    return df_with_percentiles
+
+def normalize_institutions(df, institution_col='institution'):
+    """Clean and normalize institution names"""
+    df_normalized = df.copy()
+    
+    # Basic cleaning
+    df_normalized[f'{institution_col}_normalized'] = (
+        df_normalized[institution_col]
+        .fillna('Unknown')
+        .str.strip()
+        .str.replace(r'\s+', ' ', regex=True)  # Multiple spaces to single
+        .str.replace(r'[^\w\s-]', '', regex=True)  # Remove special chars except hyphens
+        .str.title()  # Consistent capitalization
+    )
+    
+    return df_normalized
+
+
 def prepare_for_deduplication(df):
     """Sort by publication date and lowercase titles for deduplication"""
     return (df
@@ -85,7 +123,7 @@ def load_and_join_data():
     df = duckdb.sql("""
         SELECT p.ego_aid, a.display_name as name, p.pub_date, p.pub_year, p.title,
                p.cited_by_count, p.doi, p.wid, p.authors, p.work_type, 
-               a.author_age as ego_age
+               a.author_age as ego_age, 
         FROM df_papers p
         LEFT JOIN df_authors a ON p.ego_aid = a.aid AND p.pub_year = a.pub_year
     """).df()
@@ -112,6 +150,7 @@ def paper():
                     .pipe(filter_work_type)
                     .pipe(filter_mislabeled_title)
                     .pipe(calculate_number_authors)
+                    .pipe(add_citation_percentiles)      
                    )
     
     # Generate summary statistics

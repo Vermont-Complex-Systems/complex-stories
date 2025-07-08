@@ -24,19 +24,30 @@
   // Check if we have data
   let hasData = $derived(coauthorData && coauthorData.length > 0);
 
-  // Institution color scale - for institution column only
+  // Institution color scales - using normalized names when available
   let institutionColorScale = $derived.by(() => {
     if (!hasData || colorMode !== 'institutions') return null;
-    const uniqueInstitutions = [...new Set(coauthorData.map(d => d.institution))]
-      .filter(inst => inst != null && inst !== '');
+    
+    // Prefer normalized institution names
+    const institutionField = coauthorData.some(d => d.institution_normalized) 
+      ? 'institution_normalized' 
+      : 'institution';
+    
+    const uniqueInstitutions = [...new Set(coauthorData.map(d => d[institutionField]))]
+      .filter(inst => inst != null && inst !== '' && inst !== 'Unknown');
     return d3.scaleOrdinal(d3.schemeTableau10).domain(uniqueInstitutions);
   });
 
-  // Shared institution color scale - for shared_institutions column only  
   let sharedInstitutionColorScale = $derived.by(() => {
     if (!hasData || colorMode !== 'shared_institutions') return null;
-    const uniqueSharedInstitutions = [...new Set(coauthorData.map(d => d.shared_institutions))]
-      .filter(inst => inst != null && inst !== '');
+    
+    // Prefer normalized shared institution names
+    const sharedField = coauthorData.some(d => d.shared_institutions_normalized) 
+      ? 'shared_institutions_normalized' 
+      : 'shared_institutions';
+    
+    const uniqueSharedInstitutions = [...new Set(coauthorData.map(d => d[sharedField]))]
+      .filter(inst => inst != null && inst !== '' && inst !== 'Unknown');
     return d3.scaleOrdinal(d3.schemeTableau10).domain(uniqueSharedInstitutions);
   });
 
@@ -63,27 +74,28 @@
     return processCoauthorData(filteredCoauthorData, width, height, timeScale);
   });
 
-  // Simple Observable Plot-style display data
+  // Simplified display data using pre-computed fields
   let displayData = $derived.by(() => {
     if (!plotData.length) return [];
     
     return plotData.map(point => {
-      // Get the value for coloring (like Observable Plot)
+      // Get the value for coloring - now using pre-computed when available
       let colorValue;
       if (colorMode === 'age_diff') {
+        // Use pre-computed age_category directly
         colorValue = point.age_category;
       } else if (colorMode === 'acquaintance') {
         colorValue = point.acquaintance;
       } else if (colorMode === 'institutions') {
-        // Use the institution column specifically
-        colorValue = point.institution;
+        // Prefer normalized institution names
+        colorValue = point.institution_normalized || point.institution;
       } else if (colorMode === 'shared_institutions') {
-        // Use the shared_institutions column specifically  
-        colorValue = point.shared_institutions;
+        // Prefer normalized shared institution names
+        colorValue = point.shared_institutions_normalized || point.shared_institutions;
       }
 
-      // Simple Observable Plot-style logic
-      const isNull = colorValue == null;
+      // Simplified coloring logic
+      const isNull = colorValue == null || colorValue === '' || colorValue === 'Unknown';
       let displayColor, opacity, strokeWidth;
 
       if (isNull) {
@@ -95,7 +107,7 @@
         if (colorMode === 'age_diff') {
           displayColor = ageColorScale(colorValue);
         } else if (colorMode === 'acquaintance') {
-          // Use collaboration count like in Observable Plot, not acquaintance string
+          // Use collaboration count for acquaintance coloring
           const collabCount = +point.all_times_collabo || 0;
           displayColor = collaborationColorScale(collabCount);
         } else if (colorMode === 'institutions') {
@@ -122,8 +134,6 @@
     });
   });
 
-  // Remove all the legend logic - it's now in the Legend component
-
   // Tooltip state
   let showTooltip = $state(false);
   let tooltipContent = $state('');
@@ -134,7 +144,10 @@
     mouseX = event.clientX;
     mouseY = event.clientY;
     
-    tooltipContent = `Coauthor: ${point.name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nShared Institution: ${point.shared_institutions || 'Unknown'}`;
+    // Use normalized institution names in tooltip when available
+    const institutionName = point.shared_institutions_normalized || point.shared_institutions || 'Unknown';
+    
+    tooltipContent = `Coauthor: ${point.name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nShared Institution: ${institutionName}`;
     
     showTooltip = true;
   }
@@ -144,18 +157,15 @@
   }
 
   function handleChartClick(event) {
-    // Reset highlighted coauthor when clicking on chart background
     dashboardState.highlightedCoauthor = null;
   }
 
   function handleCoauthorClick(event, point) {
-    // Stop event from bubbling to chart background
     event.stopPropagation();
-    // Set highlighted coauthor
     dashboardState.highlightedCoauthor = point.name;
   }
 
-  // In CoauthorChart, filter the data based on age
+  // Filter data based on age
   let filteredCoauthorData = $derived.by(() => {
     if (!coauthorData || !dashboardState.ageFilter) return coauthorData;
     
@@ -227,7 +237,7 @@
     --chart-grid-color: var(--color-border);
     --chart-text-color: var(--color-secondary-gray);
     width: 100%;
-    overflow: hidden; /* Add this */
+    overflow: hidden;
   }
 
   .plot-container {
@@ -235,16 +245,15 @@
     justify-content: center;
     position: relative;
     width: 100%;
-    overflow: hidden; /* Add this */
+    overflow: hidden;
   }
 
   .chart-svg {
     display: block;
-    overflow: visible; /* Keep SVG overflow visible for tooltips */
-    max-width: 100%; /* But constrain to container */
+    overflow: visible;
+    max-width: 100%;
   }
 
-  /* SVG element styling using design tokens */
   .chart-wrapper :global(.chart-label) {
     font-size: var(--font-size-xsmall);
     font-weight: var(--font-weight-bold);
@@ -272,7 +281,6 @@
     stroke-width: 1;
   }
 
-  /* Dark mode support */
   :global(.dark) .legend {
     background: var(--color-bg);
     border-color: var(--color-border);

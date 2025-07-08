@@ -33,22 +33,23 @@ def correct_publication_years(df):
     print(f"  - Corrected {initial_invalid} invalid years, {final_invalid} remain missing")
     return df_corrected
 
-def create_age_buckets(df):
-    """Create age difference buckets for collaboration analysis"""
-    print("Creating age difference buckets...")
-    df_with_buckets = df.copy()
+def create_age_categories(df):
+    """Create age difference categories that match frontend expectations exactly"""
+    print("Creating age difference categories...")
+    df_with_categories = df.copy()
     
-    age_diff_values = df_with_buckets.age_diff.to_numpy()
+    age_diff_values = df_with_categories.age_diff.to_numpy()
     categories = np.empty(age_diff_values.shape, dtype=object)
     
-    categories[age_diff_values < -15] = "much_younger"
-    categories[(age_diff_values >= -15) & (age_diff_values < -7)] = "younger"
-    categories[(age_diff_values >= -7) & (age_diff_values < 7)] = "same_age"
-    categories[(age_diff_values >= 7) & (age_diff_values < 15)] = "older"
-    categories[age_diff_values >= 15] = "much_older"
+    # Match frontend logic exactly: default 'same', then check > 7 and < -7
+    categories[:] = 'same'  # Default all to 'same'
+    categories[age_diff_values > 7] = 'older'
+    categories[age_diff_values < -7] = 'younger'
     
-    df_with_buckets['age_bucket'] = categories
-    return df_with_buckets
+    df_with_categories['age_category'] = categories
+    print(f"  - Added age_category column (same/older/younger)")
+    return df_with_categories
+
 
 def create_age_standardization(df):
     """Create age standardization for timeline visualization"""
@@ -72,6 +73,41 @@ def create_age_standardization(df):
     
     return df_with_std
 
+def add_collaboration_intensity(df):
+    """Add categorical collaboration levels for better frontend scaling"""
+    df_with_intensity = df.copy()
+    
+    # Create quartile-based categories
+    collab_counts = df_with_intensity['all_times_collabo'].fillna(1)
+    quartiles = collab_counts.quantile([0.25, 0.5, 0.75])
+    
+    conditions = [
+        collab_counts <= quartiles[0.25],
+        (collab_counts > quartiles[0.25]) & (collab_counts <= quartiles[0.5]),
+        (collab_counts > quartiles[0.5]) & (collab_counts <= quartiles[0.75]),
+        collab_counts > quartiles[0.75]
+    ]
+    categories = ['low', 'medium', 'high', 'very_high']
+    
+    df_with_intensity['collaboration_intensity'] = np.select(conditions, categories, default='low')
+    return df_with_intensity
+
+def normalize_institutions(df, institution_col='institution'):
+    """Clean and normalize institution names"""
+    df_normalized = df.copy()
+    
+    # Basic cleaning
+    df_normalized[f'{institution_col}_normalized'] = (
+        df_normalized[institution_col]
+        .fillna('Unknown')
+        .str.strip()
+        .str.replace(r'\s+', ' ', regex=True)  # Multiple spaces to single
+        .str.replace(r'[^\w\s-]', '', regex=True)  # Remove special chars except hyphens
+        .str.title()  # Consistent capitalization
+    )
+    
+    return df_normalized
+
 def highlight_shared_institutions(df):
     """Add shared institutions indicator"""
     df_with_shared = df.copy()
@@ -81,6 +117,43 @@ def highlight_shared_institutions(df):
         None
     )
     return df_with_shared
+
+
+def normalize_coauthor_institutions(df):
+    """Clean and normalize institution names for coauthor data"""
+    print("Normalizing coauthor institution names...")
+    df_normalized = df.copy()
+    
+    # Normalize main institution
+    df_normalized['institution_normalized'] = (
+        df_normalized['institution']
+        .fillna('Unknown')
+        .str.strip()
+        .str.replace(r'\s+', ' ', regex=True)  # Multiple spaces to single
+        .str.replace(r'[^\w\s\-\.]', '', regex=True)  # Keep letters, numbers, spaces, hyphens, dots
+        .str.title()  # Consistent capitalization
+    )
+    
+    # Normalize coauthor institution
+    df_normalized['coauth_institution_normalized'] = (
+        df_normalized['coauth_institution']
+        .fillna('Unknown')
+        .str.strip()
+        .str.replace(r'\s+', ' ', regex=True)
+        .str.replace(r'[^\w\s\-\.]', '', regex=True)
+        .str.title()
+    )
+    
+    # Update shared_institutions with normalized names
+    df_normalized['shared_institutions_normalized'] = np.where(
+        df_normalized['institution_normalized'] == df_normalized['coauth_institution_normalized'],
+        df_normalized['institution_normalized'],
+        None
+    )
+    
+    print(f"  - Added institution_normalized, coauth_institution_normalized, shared_institutions_normalized")
+    return df_normalized
+
 
 def load_and_join_collaboration_data():
     """Load collaboration and author data and perform the join"""
@@ -121,8 +194,6 @@ def load_and_join_collaboration_data():
             df_authors coauth ON c.coauthor_aid = coauth.aid AND c.pub_year = coauth.pub_year
         LEFT JOIN 
             df_authors ego_a ON c.ego_aid = ego_a.aid AND c.pub_year = ego_a.pub_year
-        WHERE 
-            c.pub_year < 2024
         ORDER BY c.pub_year
     """).df()
     
@@ -152,15 +223,17 @@ def coauthor():
     
     # Apply all transformations using pipe
     df_processed = (df
-                    .pipe(filter_valid_author_ages)
-                    .pipe(correct_publication_years)
-                    .pipe(create_age_buckets)
-                    .pipe(create_age_standardization)
-                    .pipe(highlight_shared_institutions)
-                   )
+                .pipe(filter_valid_author_ages)
+                .pipe(correct_publication_years)
+                .pipe(create_age_categories)           # Creates 'age_category' column
+                .pipe(add_collaboration_intensity)     # Creates 'collaboration_intensity' column  
+                .pipe(normalize_coauthor_institutions) # Creates normalized institution columns
+                .pipe(create_age_standardization)
+                .pipe(highlight_shared_institutions)
+            )
     
     # Generate summary statistics
-    age_bucket_dist = df_processed['age_bucket'].value_counts().to_dict()
+    age_bucket_dist = df_processed['age_category'].value_counts().to_dict()
     collab_type_dist = df_processed['acquaintance'].value_counts().to_dict() if 'acquaintance' in df_processed.columns else {}
     year_range = f"{int(df_processed.pub_year.min())}-{int(df_processed.pub_year.max())}"
     unique_ego_authors = int(df_processed.aid.nunique())

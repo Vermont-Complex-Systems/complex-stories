@@ -87,6 +87,9 @@ async function loadAuthorData(authorName) {
                 work_type,
                 ego_age,
                 nb_coauthors
+                -- NEW: Pre-computed citation fields (add these after running updated pipeline)
+                -- citation_percentile,
+                -- citation_category
             FROM paper 
             WHERE name = '${authorName}'
             ORDER BY pub_year
@@ -112,7 +115,11 @@ async function loadAuthorData(authorName) {
                 coauth_age,
                 coauth_min_year,
                 age_diff,
-                age_bucket
+                age_category,
+                collaboration_intensity,
+                institution_normalized,
+                coauth_institution_normalized,
+                shared_institutions_normalized
             FROM coauthor 
             WHERE name = '${authorName}'
             ORDER BY pub_year
@@ -164,6 +171,20 @@ export async function loadSelectedAuthor() {
         
         console.log(`📊 Loaded ${paperData.length} papers and ${coauthorData.length} coauthor records for ${dashboardState.selectedAuthor}`);
         console.log(`👥 Available coauthors: ${dataState.availableCoauthors.length}`);
+        
+        // Log availability of new pre-computed fields for debugging
+        if (paperData.length > 0) {
+            const hasCitationPercentile = paperData.some(d => d.citation_percentile !== undefined);
+            const hasCitationCategory = paperData.some(d => d.citation_category !== undefined);
+            console.log(`📈 Citation fields available: percentile=${hasCitationPercentile}, category=${hasCitationCategory}`);
+        }
+        
+        if (coauthorData.length > 0) {
+            const hasAgeCategory = coauthorData.some(d => d.age_category !== undefined);
+            const hasCollabIntensity = coauthorData.some(d => d.collaboration_intensity !== undefined);
+            const hasNormalizedInstitutions = coauthorData.some(d => d.institution_normalized !== undefined);
+            console.log(`🤝 Coauthor fields available: age_category=${hasAgeCategory}, collaboration_intensity=${hasCollabIntensity}, normalized_institutions=${hasNormalizedInstitutions}`);
+        }
         
     } catch (error) {
         dataState.error = error.message || 'Failed to load author data';
