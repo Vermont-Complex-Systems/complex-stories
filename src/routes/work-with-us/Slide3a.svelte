@@ -21,7 +21,7 @@
 			<div class="vertical-line"></div>
 		</div>
 		
-		<div class="image-section" use:reveal={{ delay: 4000, preset: 'scale', scale: 0.9 }}>
+		<div class="image-section" use:reveal={{ delay: 1200, preset: 'scale', scale: 0.9 }}>
 			<a href="{base}/networks-fast-and-slow" target="_blank" rel="noopener">
 				<img src="{base}/common/thumbnails/screenshots/networks-fast-and-slow.jpg" alt="Networks Fast and Slow Project">
 			</a>
