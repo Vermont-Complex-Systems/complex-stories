@@ -73,10 +73,6 @@
 			order: -1; /* Put image on top on mobile */
 			padding-top: 0;
 		}
-		
-		.placeholder {
-			width: 150px;
-			height: 200px;
-		}
+
 	}
 </style>
