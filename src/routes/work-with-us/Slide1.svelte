@@ -1,5 +1,6 @@
 <script>
 	import { reveal } from 'svelte-reveal';
+	import { base } from "$app/paths";
 </script>
 
 <h1 use:reveal={{ delay: 50 }}>How to work with us!</h1>
