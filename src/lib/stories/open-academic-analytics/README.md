@@ -16,6 +16,11 @@ This project is also a dagster project, which implement a principled data proces
  - `Integrate back-end with front-end`. Each task, or asset, have a clear pathway to the front-end, and the front-end can be used to validate the data pipeline. It is modular through and through, such that even widgets on the dashboard can be tied to relevant dependencies in the backend.
  - `Dagster accomodate more sophisticated scenarios`. Dagster helps make our web app more fancy, such as by dealing with changing APIs or automation of data intake on a daily basis.
 
+Here's a snapshot of our pipeline, as of `2025-07-08`:
+
+<img width="1500" alt="Screenshot 2025-07-08 at 10 49 20 AM" src="https://github.com/user-attachments/assets/1ee84c3b-c244-490c-bb0e-438bab303167" />
+
+
 <details><summary>Dagster instruction!</summary>
 
 ## Getting started
