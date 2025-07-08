@@ -1,6 +1,7 @@
 <script>
 	import { reveal } from 'svelte-reveal';
 	import Label from './Label.svelte';
+	import { base } from "$app/paths";
 </script>
 
 <div class="container">
@@ -31,8 +32,8 @@
 	
 	<div class="image-container" use:reveal={{ delay: 2000, preset: 'scale', scale: 0.7 }}>
 	<div class="image-wrapper">
-		<img src="/community-69fc3b40333659ebf12e64e787bf03e4.jpg" alt="community" />
-		<div class="copyright" use:reveal={{ delay: 2300, preset: 'fade' }}>
+		<img src="{base}/community-69fc3b40333659ebf12e64e787bf03e4.jpg" alt="community" />
+		<div class="copyright" use:reveal={{ delay: 2100, preset: 'fade' }}>
 			<p>
 				<em>The Turing Way</em> community illustrated as a garden. 
 				<em>The Turing Way</em> project illustration by Scriberia. 
