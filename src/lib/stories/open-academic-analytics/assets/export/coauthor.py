@@ -50,7 +50,7 @@ def coauthor():
             ego_a.aid, ego_a.institution, ego_a.display_name as name, 
             ego_a.author_age, ego_a.first_pub_year, ego_a.last_pub_year,
             c.yearly_collabo, c.all_times_collabo, c.acquaintance, c.shared_institutions,
-            coauth.aid as coauth_aid, coauth.display_name as coauth_name, 
+            coauth.aid as coauth_aid, coauth.display_name as coauth_name, coauth.institution as coauth_institution, 
             coauth.author_age as coauth_age, coauth.first_pub_year as coauth_min_year,
             (coauth.author_age-ego_a.author_age) AS age_diff
         FROM 
@@ -117,6 +117,10 @@ def coauthor():
         print(f"Error creating age_std: {e}")
         df["age_std"] = None
     
+    # highlight shared institutions
+    df['shared_institutions'] = np.where(df.institution == df.coauth_institution, df.institution, None)
+    
+
     # Generate summary statistics
     age_bucket_dist = df['age_bucket'].value_counts().to_dict()
     collab_type_dist = df['acquaintance'].value_counts().to_dict() if 'acquaintance' in df.columns else {}

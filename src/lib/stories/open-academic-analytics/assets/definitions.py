@@ -31,6 +31,6 @@ all_assets = load_assets_from_modules([
 defs = Definitions(
     assets=all_assets,
     resources={
-        "duckdb": DuckDBResource(database=database_path)
+        "duckdb": DuckDBResource(database=":memory:")
     }
 )

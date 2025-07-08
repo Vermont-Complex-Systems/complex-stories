@@ -11,76 +11,13 @@ from dagster import MaterializeResult, MetadataValue
 from dagster_duckdb import DuckDBResource
 
 from config import config
-from modules.database_adapter import DatabaseExporterAdapter
-from modules.data_fetcher import OpenAlexFetcher
-from modules.utils import shuffle_date_within_month
-
-def get_researcher_name(target_aid, fetcher):
-    """Get display name for researcher, fallback to ID if API fails."""
-    try:
-        author_obj = fetcher.get_author_info(target_aid)
-        return author_obj['display_name']
-    except Exception as e:
-        print(f"Error getting name for {target_aid}: {e}")
-        return target_aid
-
-def load_researchers(input_file):
-    """Load and clean researcher data."""
-    target_aids = pd.read_csv(input_file, sep="\t")
-    target_aids = target_aids[~target_aids['oa_uid'].isna()]
-    target_aids['oa_uid'] = target_aids['oa_uid'].str.upper()
-    return target_aids
-
-def apply_dev_mode_filters(target_aids):
-    """Apply development mode filtering if configured."""
-    if config.target_researcher:
-        target_aids = target_aids[target_aids['oa_uid'] == config.target_researcher]
-        print(f"🎯 DEV MODE: Processing {config.target_researcher}")
-    elif config.max_researchers:
-        target_aids = target_aids.head(config.max_researchers)
-        print(f"🔧 DEV MODE: Processing first {config.max_researchers} researchers")
-    return target_aids
-
-def handle_force_update(target_aid, target_name, db_exporter):
-    """Clear existing data if force update is enabled."""
-    if config.force_update:
-        print(f"🔄 FORCE UPDATE: Clearing existing papers for {target_name}")
-        db_exporter.con.execute("DELETE FROM paper WHERE ego_aid = ?", (target_aid,))
-        db_exporter.con.execute("DELETE FROM author WHERE aid = ?", (target_aid,))
-        db_exporter.con.commit()
-        print(f"  Cleared existing data for {target_name}")
-
-def first_publication_year(target_aid, fetcher, known_first_pub_years):
-    """Get the first publication year for a researcher, checking cache first."""
-    min_yr = known_first_pub_years.get(target_aid)
-    if min_yr is None:
-        min_yr, _ = fetcher.get_publication_range(target_aid)
-        print(f"First publication year: {min_yr}")
-    return min_yr
-
-def latest_publication_year(target_aid, fetcher):
-    """Get the latest publication year for a researcher."""
-    author_info = fetcher.get_author_info(target_aid)
-    max_yr = author_info['counts_by_year'][0]['year']
-    print(f"Latest publication year: {max_yr}")
-    return max_yr
-
-def get_year_range(target_aid, fetcher, known_first_pub_years):
-    """Get the full publication year range (min, max) for a researcher."""
-    min_yr = first_publication_year(target_aid, fetcher, known_first_pub_years)
-    
-    try:
-        max_yr = latest_publication_year(target_aid, fetcher)
-    except Exception as e:
-        print(f"Error getting latest publication year: {e}")
-        max_yr = datetime.now().year
-    
-    return min_yr, max_yr
-
+from shared.database.database_adapter import DatabaseExporterAdapter
+from shared.clients.openalex_api_client import OpenAlexFetcher
+from shared.utils.utils import shuffle_date_within_month
 
 @dg.asset(
     deps=["researcher_list"],
-    group_name="collect",
+    group_name="import",
     description="📚 Fetch all academic papers for researchers from OpenAlex database"
 )
 def academic_publications(duckdb: DuckDBResource):
@@ -94,39 +31,96 @@ def academic_publications(duckdb: DuckDBResource):
     output_file = config.data_raw_path / config.paper_output_file
 
     with duckdb.get_connection() as conn:
+        # import duckdb
+        # conn = duckdb.connect(":memory")
+        if output_file.exists():
+            df_pap = pd.read_parquet(output_file)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS paper (
+                    ego_aid VARCHAR,
+                    ego_display_name VARCHAR,
+                    wid VARCHAR,
+                    pub_date DATE,
+                    pub_year INT,
+                    doi VARCHAR,
+                    title VARCHAR,
+                    work_type VARCHAR,
+                    primary_topic VARCHAR,
+                    authors VARCHAR,
+                    cited_by_count INT,
+                    ego_position VARCHAR,
+                    PRIMARY KEY(ego_aid, wid)
+                )
+            """)
+            conn.execute("INSERT INTO paper SELECT * FROM df_pap")
+
         db_exporter = DatabaseExporterAdapter(conn)
+        
         print(f"✅ Connected to database")
         
-        # Load and prepare researcher data
-        target_aids = load_researchers(input_file)
+        # Load researchers
+        target_aids = pd.read_csv(input_file, sep="\t")
+        target_aids = target_aids[~target_aids['oa_uid'].isna()]
+        target_aids['oa_uid'] = target_aids['oa_uid'].str.upper()
+        
         print(f"Found {len(target_aids)} researchers with OpenAlex IDs")
         
+        # Extract known first publication years if available
         known_years_df = target_aids[['oa_uid', 'first_pub_year']].dropna()
         known_first_pub_years = {k.upper(): int(v) for k, v in known_years_df.values}
         
-        target_aids = apply_dev_mode_filters(target_aids)
+        # Development mode filtering
+        if config.target_researcher:
+            target_aids = target_aids[target_aids['oa_uid'] == config.target_researcher]
+            print(f"🎯 DEV MODE: Processing {config.target_researcher}")
+        elif config.max_researchers:
+            target_aids = target_aids.head(config.max_researchers)
+            print(f"🔧 DEV MODE: Processing first {config.max_researchers} researchers")
         
+        if len(target_aids) == 0:
+            return MaterializeResult(
+                metadata={"status": MetadataValue.text("No researchers found matching criteria")}
+            )
+
+        # Initialize fetcher
         fetcher = OpenAlexFetcher()
         
         total_papers_saved = 0
         total_researchers_processed = 0
-        year_range = [float('inf'), 0]
+        year_range = [float('inf'), 0]  # Track min/max years
         
-        # Process each researcher
         for i, row in tqdm(target_aids.iterrows(), total=len(target_aids), desc="Fetching papers"):
             target_aid = row['oa_uid']
-            target_name = get_researcher_name(target_aid, fetcher)
             
+            # Get display name
+            try:
+                author_obj = fetcher.get_author_info(target_aid)
+                target_name = author_obj['display_name']
+            except Exception as e:
+                print(f"Error getting name for {target_aid}: {e}")
+                target_name = target_aid
+                
             print(f"\n👤 Fetching papers for {target_name} ({target_aid})")
 
             # Get publication year range
-            try:
-                min_yr, max_yr = get_year_range(target_aid, fetcher, known_first_pub_years)
-            except Exception as e:
-                print(f"Error getting publication year range: {e}")
-                continue
+            min_yr = known_first_pub_years.get(target_aid)
+            if min_yr is None:
+                try:
+                    min_yr, _ = fetcher.get_publication_range(target_aid)
+                    print(f"First publication year: {min_yr}")
+                except Exception as e:
+                    print(f"Error getting first publication year: {e}")
+                    continue
             
-            # Update overall year range tracking
+            try:
+                author_info = fetcher.get_author_info(target_aid)
+                max_yr = author_info['counts_by_year'][0]['year']
+                print(f"Latest publication year: {max_yr}")
+            except Exception as e:
+                print(f"Error getting latest publication year: {e}")
+                max_yr = datetime.now().year
+            
+            # Update year range tracking
             year_range[0] = min(year_range[0], min_yr)
             year_range[1] = max(year_range[1], max_yr)
             
@@ -136,10 +130,21 @@ def academic_publications(duckdb: DuckDBResource):
                 total_researchers_processed += 1
                 continue
             
-            # Handle force update cleanup
-            handle_force_update(target_aid, target_name, db_exporter)
+            # If force_update=True, we skip the up-to-date check and always process
+            if config.force_update:
+                print(f"🔄 FORCE UPDATE: Will reprocess all papers for {target_name}")
             
-            # Get existing papers to avoid duplicates
+            # If force_update=True, we skip the up-to-date check and always process
+            if config.force_update:
+                print(f"🔄 FORCE UPDATE: Clearing existing papers for {target_name}")
+                # Clear all existing papers for this researcher
+                db_exporter.con.execute("DELETE FROM paper WHERE ego_aid = ?", (target_aid,))
+                # Clear all existing author records for this researcher  
+                db_exporter.con.execute("DELETE FROM author WHERE aid = ?", (target_aid,))
+                db_exporter.con.commit()
+                print(f"  Cleared existing data for {target_name}")
+            
+            # Get existing papers to avoid duplicates (will be empty if force_update=True)
             paper_cache, _ = db_exporter.get_author_cache(target_aid)
             existing_papers = set([(aid, wid) for aid, wid in paper_cache])
             
@@ -175,10 +180,10 @@ def academic_publications(duckdb: DuckDBResource):
                             author_position = authorship['author_position']
                     
                     # Determine most common institution for this year
-                    from collections import Counter
-                    target_institution = None
-                    if ego_institutions_this_year:
-                        target_institution = Counter(ego_institutions_this_year).most_common(1)[0][0]
+                    # from collections import Counter
+                    # target_institution = None
+                    # if ego_institutions_this_year:
+                    #     target_institution = Counter(ego_institutions_this_year).most_common(1)[0][0]
                     
                     # Extract paper metadata
                     doi = w['ids'].get('doi') if 'ids' in w else None
@@ -191,7 +196,7 @@ def academic_publications(duckdb: DuckDBResource):
                         shuffled_date, int(w['publication_year']),
                         doi, w['title'], w['type'], fos,
                         coauthors, w['cited_by_count'],
-                        author_position, target_institution
+                        author_position
                     ))
             
             # Save papers to database
@@ -202,7 +207,6 @@ def academic_publications(duckdb: DuckDBResource):
             else:
                 print(f"No new papers to save for {target_name}")
 
-            # save intermediary file
             db_exporter.con.sql("SELECT * FROM paper").df().to_parquet(output_file)
 
             total_researchers_processed += 1
