@@ -9,13 +9,13 @@
 		<Label>Who am I?</Label>
 		<ul>
             <li use:reveal={{ delay: 3000, preset: 'slide', x: -20 }}>Ph.D. in Complex Systems and Data Science at the University of Vermont, but I come from the humanities. </li>
-			<li use:reveal={{ delay: 3200, preset: 'fly', y: -20 }}>As a research software engineer, I support groups in  <strong >best software practices</strong> in academia. This includes the following:</li>
+			<li use:reveal={{ delay: 3200, preset: 'fly', y: -20 }}>As a research software engineer, I support groups in adopting <strong >best software practices</strong> in academia. This includes the following:</li>
             <ul>
                     <li use:reveal={{ delay: 3000, preset: 'slide', x: -20 }}>Writing <strong>sustainable code</strong> that can outlive its original author, ensuring long-term viability.</li>
-                    <li use:reveal={{ delay: 3200, preset: 'fly', y: -20 }}>Packaging software such that it is <strong>adequately tested</strong>, ensuring  its epistemic validity.</li>
+                    <li use:reveal={{ delay: 3200, preset: 'fly', y: -20 }}>Packaging software that it is <strong>adequately tested</strong>, ensuring its epistemic validity.</li>
                     <li use:reveal={{ delay: 3200, preset: 'fly', y: -20 }}><strong>Promoting community practices</strong> that bridge industry insights with academic expertise in managing complex, computational projects</li>
             </ul>	
-			<li use:reveal={{ delay: 3400, preset: 'slide', x: -20 }}>As someone from the humanities, I am working towards  promoting software practices to diverse groups and individuals who do not see themselves as coders</li>
+			<li use:reveal={{ delay: 3400, preset: 'slide', x: -20 }}>As someone from the humanities, I am working towards promoting software practices to diverse groups and individuals who do not see themselves as coders</li>
 		</ul>	
 	</div>
 	
@@ -50,20 +50,6 @@
 		max-width: 100%;
 		height: auto;
 		border-radius: 8px;
-		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-	}
-	
-	/* Placeholder styling - remove when you add real image */
-	.placeholder {
-		width: 200px;
-		height: 250px;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		border-radius: 8px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: white;
-		font-weight: bold;
 		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 	}
 	
