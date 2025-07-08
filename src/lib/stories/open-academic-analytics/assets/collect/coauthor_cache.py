@@ -170,6 +170,9 @@ def coauthor_cache(duckdb: DuckDBResource):
                 "researchers_analyzed": MetadataValue.int(len(researchers_with_papers)),
                 "career_records_created": MetadataValue.int(total_author_records),
                 "coauthors_identified": MetadataValue.int(total_coauthors_identified),
+                "data_source": MetadataValue.url("https://openalex.org"),
+                "input_file": MetadataValue.path(str(paper_file)),
+                "output_file": MetadataValue.path(str(output_file)),
                 "analysis_approach": MetadataValue.md(
                     "**Career stage analysis** using publication timing to calculate researcher ages. "
                     "Enables age-based collaboration pattern analysis."

@@ -49,6 +49,7 @@ def academic_publications(duckdb: DuckDBResource):
                     authors VARCHAR,
                     cited_by_count INT,
                     ego_position VARCHAR,
+                    ego_institution VARCHAR,
                     PRIMARY KEY(ego_aid, wid)
                 )
             """)
@@ -158,9 +159,10 @@ def academic_publications(duckdb: DuckDBResource):
                     continue
                     
                 print(f"  Found {len(publications)} publications")
-                ego_institutions_this_year = []
+                # ego_institutions_this_year = []
                 
                 for w in publications:
+                    w=publications[0]
                     if w.get('language') != 'en':
                         continue
                         
@@ -173,10 +175,12 @@ def academic_publications(duckdb: DuckDBResource):
                     shuffled_date = shuffle_date_within_month(w['publication_date'])
                     
                     # Process authorships to get target author's institution and position
+                    author_institution = None
                     author_position = None
                     for authorship in w['authorships']:
                         if authorship['author']['id'].split("/")[-1] == target_aid:
-                            ego_institutions_this_year += [i['display_name'] for i in authorship['institutions']]
+                            # ego_institutions_this_year += [i['display_name'] for i in authorship['institutions']]
+                            author_institution =  authorship['institutions'][0]['display_name'] if authorship.get('institutions') else ''
                             author_position = authorship['author_position']
                     
                     # Determine most common institution for this year
@@ -192,11 +196,19 @@ def academic_publications(duckdb: DuckDBResource):
                     
                     # Create paper record
                     papers.append((
-                        target_aid, target_name, wid,
-                        shuffled_date, int(w['publication_year']),
-                        doi, w['title'], w['type'], fos,
-                        coauthors, w['cited_by_count'],
-                        author_position
+                        target_aid, 
+                        target_name, 
+                        wid,
+                        shuffled_date, 
+                        int(w['publication_year']),
+                        doi, 
+                        w['title'], 
+                        w['type'], 
+                        fos,
+                        coauthors, 
+                        w['cited_by_count'],
+                        author_position,
+                        author_institution
                     ))
             
             # Save papers to database
@@ -221,6 +233,8 @@ def academic_publications(duckdb: DuckDBResource):
                 "papers_collected": MetadataValue.int(total_papers_saved),
                 "years_covered": MetadataValue.text(f"{year_range[0]}-{year_range[1]}"),
                 "data_source": MetadataValue.url("https://openalex.org"),
+                "input_file": MetadataValue.path(str(input_file)),
+                "output_file": MetadataValue.path(str(output_file)),
                 "research_value": MetadataValue.md(
                     "**Core dataset** enabling analysis of academic collaboration patterns "
                     "across career stages, institutions, and time periods. Each paper contains "

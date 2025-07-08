@@ -262,6 +262,9 @@ def collaboration_network(duckdb: DuckDBResource):
                 "collaboration_relationships": MetadataValue.int(total_new_records),
                 "researchers_analyzed": MetadataValue.int(len(targets)),
                 "collaboration_types": MetadataValue.json(collaboration_types),
+                "input_file_1": MetadataValue.path(str(paper_file)),
+                "input_file_2": MetadataValue.path(str(author_file)),
+                "output_file": MetadataValue.path(str(output_file)),
                 "research_insight": MetadataValue.md(
                     "**Core research findings** on collaboration patterns. Reveals mentorship "
                     "relationships, career-stage effects, and institutional collaboration networks."
