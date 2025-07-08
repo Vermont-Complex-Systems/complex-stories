@@ -1,6 +1,7 @@
 <script>
 	import { reveal } from 'svelte-reveal';
 	import Label from './Label.svelte';
+	import { base } from "$app/paths";
 </script>
 
 <div class="container">
