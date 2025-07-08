@@ -136,8 +136,12 @@ def normalize_author_institutions(df):
     
     return df_normalized
 
+def calculate_age(df):
+    df['author_age'] = df.pub_year - df.first_pub_year
+    return df
+
 @dg.asset(
-    deps=["coauthor"],
+    deps=["coauthor_cache"],
     group_name="export",
     description="👩‍🎓 Prepare researcher career data for timeline and profile visualizations"
 )
@@ -149,6 +153,7 @@ def author():
     
     # Apply all transformations using pipe
     df_processed = (df
+                    .pipe(calculate_age)
                     .pipe(validate_data_quality)
                     .pipe(create_age_standardization)
                     .pipe(handle_leap_year_edge_case)

@@ -12,11 +12,10 @@ from dagster_duckdb import DuckDBResource
 from config import config
 from shared.database.database_adapter import DatabaseExporterAdapter
 from shared.clients.openalex_api_client import OpenAlexFetcher
-from shared.utils.author_processor import AuthorProcessor
-
+    
 
 @dg.asset(
-    deps=["academic_publications"],
+    deps=["researcher_list","academic_publications"],
     group_name="import",
     description="👩‍🎓 Build researcher career profiles: publication history, ages, institutional affiliations"
 )
@@ -29,7 +28,10 @@ def coauthor_cache(duckdb: DuckDBResource):
     
     paper_file = config.data_raw_path / config.paper_output_file
     author_file = config.data_raw_path / config.author_output_file
+    excel_file = config.data_raw_path / config.researchers_tsv_file
     output_file = config.data_raw_path / config.author_output_file
+
+    target_aids = pd.read_csv(excel_file, sep="\t")
 
     with duckdb.get_connection() as conn:
         # import duckdb
@@ -52,7 +54,6 @@ def coauthor_cache(duckdb: DuckDBResource):
                     pub_year INT,
                     first_pub_year INT,
                     last_pub_year INT,
-                    author_age INT,
                     PRIMARY KEY(aid, pub_year)
                 )
             """)
@@ -61,11 +62,22 @@ def coauthor_cache(duckdb: DuckDBResource):
         
         # instantiate db, author_processor, and OA client
         db_exporter = DatabaseExporterAdapter(conn)
-        author_processor = AuthorProcessor(db_exporter)
         fetcher = OpenAlexFetcher()
         
         # populate author with known publication_years
-        author_processor.preload_publication_years()        
+        """Load existing publication year data from the database"""
+        query = """
+            SELECT aid, first_pub_year, last_pub_year 
+            FROM author 
+            WHERE first_pub_year IS NOT NULL AND last_pub_year IS NOT NULL
+        """
+        results = db_exporter.con.execute(query).fetchall()
+        publication_year_cache = {}
+        
+        for result in results:
+            aid, min_year, max_year = result
+            publication_year_cache[aid] = (min_year, max_year) 
+          
         
         # Get researchers that have papers
         researchers_with_papers = db_exporter.con.execute("""
@@ -85,8 +97,12 @@ def coauthor_cache(duckdb: DuckDBResource):
         total_author_records = 0
         total_coauthors_identified = 0
         
+        target_aids = target_aids[~target_aids['oa_uid'].isna()]
+        known_years_df = target_aids[['oa_uid', 'first_pub_year']].dropna()
+        known_first_pub_years = {k.upper(): int(v) for k, v in known_years_df.values}
+        
+
         for target_aid, target_name, min_yr, max_yr in tqdm(researchers_with_papers, desc="Processing careers"):    
-            
             print(f"\n👥 Processing career data for {target_name} ({target_aid})")
             
             # Get papers for this researcher
@@ -146,11 +162,114 @@ def coauthor_cache(duckdb: DuckDBResource):
             print(f"  Found {len(coauthors_with_ids)} coauthors with OpenAlex IDs")
             total_coauthors_identified += len(coauthors_with_ids)
 
-            # Process author records using your sophisticated AuthorProcessor
-            author_records = author_processor.collect_author_info(
-                target_aid, target_name, (min_yr, max_yr),
-                papers, coauthors_with_ids, fetcher
-            )
+            # Process author records
+            authors = {}
+            
+            # Make sure we have the current author in the cache
+            publication_year_cache[target_aid] = (min_yr, max_yr)
+
+            if target_aid in known_first_pub_years:
+                first_pub_year = known_first_pub_years[target_aid]
+                print(f"Updating first publication year for {target_name} to {first_pub_year}")
+                
+                # Simple update - just fix the raw first_pub_year
+                db_exporter.con.execute("""
+                    UPDATE author 
+                    SET first_pub_year = ? 
+                    WHERE aid = ?
+                """, (first_pub_year, target_aid))
+
+            else:
+                print(f"No known first publication year for {target_name}, skipping update")
+                continue
+            
+            # Extract author info from papers
+            paper_authors = []
+            for paper in papers:
+                # Extract relevant fields from paper tuple
+                ego_aid = paper[0]
+                ego_display_name = paper[1]
+                pub_year = paper[4]
+                ego_institution = paper[12]
+                
+                paper_authors.append({
+                    'aid': ego_aid,
+                    'display_name': ego_display_name,
+                    'institution': ego_institution,
+                    'pub_year': pub_year
+                })
+            
+            # Extract author info from coauthors
+            coauth_authors = []
+            for coauthor in coauthors_with_ids:
+                # Extract relevant fields from coauthor tuple
+                # Structure: (ego_aid, pub_date, pub_year, coauthor_aid, coauthor_name, ...)
+                coauth_authors.append({
+                    'aid': coauthor[3],  # coauthor_aid
+                    'display_name': coauthor[4],  # coauthor_name
+                    'institution': coauthor[9],  # coauthor_institution
+                    'pub_year': coauthor[2]  # pub_year
+                })
+            
+            # Combine and deduplicate
+            all_authors_df = pd.DataFrame(paper_authors + coauth_authors).drop_duplicates()
+            
+            # Process each unique author
+            failed_authors = []
+            
+            for _, row in all_authors_df.iterrows():
+                aid = row['aid']
+                year = row['pub_year']
+                display_name = row['display_name']
+                institution = row['institution']
+                
+                # Skip if we already have this author-year combination
+                if (aid, year) in authors:
+                    continue
+                
+                # For the target author, we already know min_yr and max_yr
+                if aid == target_aid:
+                    authors[(aid, year)] = (
+                        aid, display_name, institution,
+                        year, min_yr, max_yr
+                    )
+                    continue
+
+                
+                # For other authors, try to get from cache first
+                if aid in publication_year_cache:
+                    coauthor_min_yr, coauthor_max_yr = publication_year_cache[aid]
+                    
+                    authors[(aid, year)] = (
+                        aid, display_name, institution,
+                        year, coauthor_min_yr, coauthor_max_yr
+                    )
+                    continue
+                
+                # If not in cache, try to fetch from OpenAlex
+                try:
+                    # Get publication range
+                    coauthor_min_yr, coauthor_max_yr = fetcher.get_publication_range(aid)
+                    
+                    # Update cache
+                    publication_year_cache[aid] = (coauthor_min_yr, coauthor_max_yr)
+                    
+                    # Add to authors dictionary
+                    authors[(aid, year)] = (
+                        aid, display_name, institution,
+                        year, coauthor_min_yr, coauthor_max_yr
+                    )
+                except Exception as e:
+                    # logger.warning(f"Failed to get publication range for {display_name} ({aid}): {str(e)}")
+                    failed_authors.append(aid)
+                    
+                    # Add with None values for min/max years and age
+                    authors[(aid, year)] = (
+                        aid, display_name, institution,
+                        year, None, None
+                    )
+            
+            author_records = list(authors.values())
             
             if author_records:
                 print(f"  💾 Saving {len(author_records)} author career records")

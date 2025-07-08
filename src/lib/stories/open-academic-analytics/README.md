@@ -14,6 +14,7 @@ This project is also a dagster project, which implement a principled data proces
  - `Atomizing tasks as sets of input-output scripts is up to the user.` Dagster only helps visualizing the dependencies, it does not constrain the user to adopt the PDP philosophy. As such, users must provide the dataflow such that each task takes a input, and return an output. 
  - `Duckdb working space within task`. Duckdb helps with managing complex data wrangling step, which can be reflected in the front-end. We use duckdb to manage our caching as well, using `primary keys` to avoid silly mistakes. 
  - `Integrate back-end with front-end`. Each task, or asset, have a clear pathway to the front-end, and the front-end can be used to validate the data pipeline. It is modular through and through, such that even widgets on the dashboard can be tied to relevant dependencies in the backend.
+
  - `Dagster accomodate more sophisticated scenarios`. Dagster helps make our web app more fancy, such as by dealing with changing APIs or automation of data intake on a daily basis.
 
 Here's a snapshot of our pipeline, as of `2025-07-08`:

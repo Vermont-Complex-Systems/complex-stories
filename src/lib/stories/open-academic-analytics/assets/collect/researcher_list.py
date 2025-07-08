@@ -25,11 +25,16 @@ def researcher_list():
     if 'host_dept (; delimited if more than one)' in d.columns:
         d = d.rename(columns={'host_dept (; delimited if more than one)': 'host_dept'})
     
-    # Select and save
+    # reorder 
     cols = ['oa_display_name', 'is_prof', 'group_size', 'perceived_as_male', 
             'host_dept', 'has_research_group', 'oa_uid', 'group_url', 'first_pub_year']
+    d = d[cols]
+
+    # get rid of authors without OpenAlex user id, and make uppercase    
+    d = d[~d['oa_uid'].isna()]
+    d['oa_uid'] = d['oa_uid'].str.upper()
     
-    d[cols].to_csv(output_file, sep="\t", index=False)
+    d.to_csv(output_file, sep="\t", index=False)
     
     print(f"✅ Created researcher list with {len(d)} researchers")
     

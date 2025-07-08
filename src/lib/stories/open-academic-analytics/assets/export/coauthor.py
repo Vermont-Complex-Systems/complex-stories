@@ -161,7 +161,7 @@ def load_and_join_collaboration_data():
     
     # HRDAG: Load from intermediary files
     collaborations_file = config.data_clean_path / config.coauthor_output_file
-    authors_file = config.data_raw_path / config.author_output_file
+    authors_file = config.data_processed_path / config.author_output_file
     
     print(f"📖 Loading collaboration data from {collaborations_file}")
     df_coauth = pd.read_parquet(collaborations_file)
@@ -206,7 +206,7 @@ def load_and_join_collaboration_data():
     return df
 
 @dg.asset(
-    deps=["collaboration_network", "coauthor_cache"],
+    deps=["collaboration_network", "coauthor_cache", "author"],
     group_name="export",
     description="🌐 Prepare collaboration data for interactive network visualization"  
 )

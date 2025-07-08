@@ -110,7 +110,7 @@ def load_and_join_data():
     
     # HRDAG: Load from intermediary files  
     papers_file = config.data_raw_path / config.paper_output_file
-    authors_file = config.data_raw_path / config.author_output_file
+    authors_file = config.data_processed_path / config.author_output_file
     
     print(f"📖 Loading papers from {papers_file}")
     df_papers = pd.read_parquet(papers_file)

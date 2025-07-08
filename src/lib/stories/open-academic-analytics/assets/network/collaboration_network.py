@@ -63,9 +63,9 @@ def collaboration_network(duckdb: DuckDBResource):
         db_exporter = DatabaseExporterAdapter(conn)
         print(f"✅ Connected to database")
         
-        # Create optimization lookups (your existing sophisticated logic)
+        # Create optimization lookups
         print("Creating lookup tables for collaboration analysis...")
-        target2info = df_auth[['aid', 'pub_year', 'institution', 'author_age']]\
+        target2info = df_auth[['aid', 'pub_year', 'institution']]\
                             .set_index(['aid', 'pub_year'])\
                             .apply(tuple, axis=1).to_dict()
         
@@ -141,7 +141,7 @@ def collaboration_network(duckdb: DuckDBResource):
                 
             print(f"Found publications in years: {years}")
 
-            # Process each year (simplified version of your complex logic)
+            # Process each year 
             all_coauthors = []
             set_all_collabs = set()
             all_time_collabo = {}
@@ -153,8 +153,6 @@ def collaboration_network(duckdb: DuckDBResource):
                 if target_info is None:
                     print(f"Missing info for {target_name} in {yr}")
                     continue
-                
-                _, auth_age = target_info
                 
                 # Get papers for this year
                 works = df_pap[(df_pap['ego_aid'] == target_aid) & (df_pap['pub_year'] == yr)]

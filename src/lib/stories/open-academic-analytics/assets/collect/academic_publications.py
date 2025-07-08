@@ -61,8 +61,6 @@ def academic_publications(duckdb: DuckDBResource):
         
         # Load researchers
         target_aids = pd.read_csv(input_file, sep="\t")
-        target_aids = target_aids[~target_aids['oa_uid'].isna()]
-        target_aids['oa_uid'] = target_aids['oa_uid'].str.upper()
         
         print(f"Found {len(target_aids)} researchers with OpenAlex IDs")
         
