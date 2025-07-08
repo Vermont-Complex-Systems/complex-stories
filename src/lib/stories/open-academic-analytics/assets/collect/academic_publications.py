@@ -31,8 +31,6 @@ def academic_publications(duckdb: DuckDBResource):
     output_file = config.data_raw_path / config.paper_output_file
 
     with duckdb.get_connection() as conn:
-        # import duckdb
-        # conn = duckdb.connect(":memory")
         if output_file.exists():
             df_pap = pd.read_parquet(output_file)
             conn.execute("""
@@ -49,6 +47,7 @@ def academic_publications(duckdb: DuckDBResource):
                     authors VARCHAR,
                     cited_by_count INT,
                     ego_position VARCHAR,
+                    ego_institution VARCHAR,
                     PRIMARY KEY(ego_aid, wid)
                 )
             """)
@@ -60,8 +59,6 @@ def academic_publications(duckdb: DuckDBResource):
         
         # Load researchers
         target_aids = pd.read_csv(input_file, sep="\t")
-        target_aids = target_aids[~target_aids['oa_uid'].isna()]
-        target_aids['oa_uid'] = target_aids['oa_uid'].str.upper()
         
         print(f"Found {len(target_aids)} researchers with OpenAlex IDs")
         
@@ -130,9 +127,6 @@ def academic_publications(duckdb: DuckDBResource):
                 total_researchers_processed += 1
                 continue
             
-            # If force_update=True, we skip the up-to-date check and always process
-            if config.force_update:
-                print(f"🔄 FORCE UPDATE: Will reprocess all papers for {target_name}")
             
             # If force_update=True, we skip the up-to-date check and always process
             if config.force_update:
@@ -142,7 +136,6 @@ def academic_publications(duckdb: DuckDBResource):
                 # Clear all existing author records for this researcher  
                 db_exporter.con.execute("DELETE FROM author WHERE aid = ?", (target_aid,))
                 db_exporter.con.commit()
-                print(f"  Cleared existing data for {target_name}")
             
             # Get existing papers to avoid duplicates (will be empty if force_update=True)
             paper_cache, _ = db_exporter.get_author_cache(target_aid)
@@ -158,7 +151,7 @@ def academic_publications(duckdb: DuckDBResource):
                     continue
                     
                 print(f"  Found {len(publications)} publications")
-                ego_institutions_this_year = []
+                # ego_institutions_this_year = []
                 
                 for w in publications:
                     if w.get('language') != 'en':
@@ -173,17 +166,12 @@ def academic_publications(duckdb: DuckDBResource):
                     shuffled_date = shuffle_date_within_month(w['publication_date'])
                     
                     # Process authorships to get target author's institution and position
+                    author_institution = None
                     author_position = None
                     for authorship in w['authorships']:
                         if authorship['author']['id'].split("/")[-1] == target_aid:
-                            ego_institutions_this_year += [i['display_name'] for i in authorship['institutions']]
+                            author_institution =  authorship['institutions'][0]['display_name'] if authorship.get('institutions') else ''
                             author_position = authorship['author_position']
-                    
-                    # Determine most common institution for this year
-                    # from collections import Counter
-                    # target_institution = None
-                    # if ego_institutions_this_year:
-                    #     target_institution = Counter(ego_institutions_this_year).most_common(1)[0][0]
                     
                     # Extract paper metadata
                     doi = w['ids'].get('doi') if 'ids' in w else None
@@ -192,11 +180,19 @@ def academic_publications(duckdb: DuckDBResource):
                     
                     # Create paper record
                     papers.append((
-                        target_aid, target_name, wid,
-                        shuffled_date, int(w['publication_year']),
-                        doi, w['title'], w['type'], fos,
-                        coauthors, w['cited_by_count'],
-                        author_position
+                        target_aid, 
+                        target_name, 
+                        wid,
+                        shuffled_date, 
+                        int(w['publication_year']),
+                        doi, 
+                        w['title'], 
+                        w['type'], 
+                        fos,
+                        coauthors, 
+                        w['cited_by_count'],
+                        author_position,
+                        author_institution
                     ))
             
             # Save papers to database
@@ -221,6 +217,8 @@ def academic_publications(duckdb: DuckDBResource):
                 "papers_collected": MetadataValue.int(total_papers_saved),
                 "years_covered": MetadataValue.text(f"{year_range[0]}-{year_range[1]}"),
                 "data_source": MetadataValue.url("https://openalex.org"),
+                "input_file": MetadataValue.path(str(input_file)),
+                "output_file": MetadataValue.path(str(output_file)),
                 "research_value": MetadataValue.md(
                     "**Core dataset** enabling analysis of academic collaboration patterns "
                     "across career stages, institutions, and time periods. Each paper contains "

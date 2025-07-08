@@ -9,6 +9,7 @@ import dagster as dg
 from dagster import MaterializeResult, MetadataValue
 
 from config import config
+from shared.utils.data_transforms import create_age_standardization
 
 def validate_data_quality(df):
     """Validate data quality and print quality report"""
@@ -31,57 +32,6 @@ def validate_data_quality(df):
     
     return df
 
-def create_age_standardization(df):
-    """Create standardized age representation for timeline visualization"""
-    print("Creating standardized age representation for timeline visualization...")
-    df_with_age_std = df.copy()
-    
-    try:
-        # Generate random month and day components for smooth animation
-        months = np.char.zfill(
-            np.random.randint(1, 13, len(df_with_age_std)).astype(str), 2
-        )
-        days = np.char.zfill(
-            np.random.randint(1, 29, len(df_with_age_std)).astype(str), 2  # Avoid leap year issues
-        )
-        
-        # Create age_std format: "1{age:03d}-{month:02d}-{day:02d}"
-        # This enables smooth timeline animations in the dashboard
-        df_with_age_std["age_std"] = (
-            "1" + 
-            df_with_age_std.author_age.astype(str).str.replace(".0", "").map(lambda x: x.zfill(3)) + 
-            "-" + months + "-" + days
-        )
-        
-        print("Successfully created age_std column using vectorized approach")
-        
-    except Exception as e:
-        print(f"Error in vectorized approach: {e}")
-        print("Falling back to row-by-row processing...")
-        # Fallback approach
-        df_with_age_std["age_std"] = df_with_age_std.apply(
-            lambda row: (
-                f"1{str(int(row.author_age)).zfill(3)}-"
-                f"{np.random.randint(1, 13):02d}-"
-                f"{np.random.randint(1, 29):02d}"
-            ) if not pd.isna(row.author_age) else None, 
-            axis=1
-        )
-        print("Created age_std column with fallback approach")
-    
-    return df_with_age_std
-
-def handle_leap_year_edge_case(df):
-    """Handle leap year edge case (Feb 29 -> Feb 28)"""
-    df_corrected = df.copy()
-    df_corrected["age_std"] = df_corrected.age_std.map(
-        lambda x: x.replace("29", "28") if x and x.endswith("29") else x
-    )
-    
-    valid_age_std = df_corrected.age_std.notna().sum()
-    print(f"Successfully created age_std for {valid_age_std} records")
-    
-    return df_corrected
 
 def load_author_data():
     """Load author data from the input file"""
@@ -136,8 +86,12 @@ def normalize_author_institutions(df):
     
     return df_normalized
 
+def calculate_age(df):
+    df['author_age'] = df.pub_year - df.first_pub_year
+    return df
+
 @dg.asset(
-    deps=["coauthor"],
+    deps=["coauthor_cache"],
     group_name="export",
     description="👩‍🎓 Prepare researcher career data for timeline and profile visualizations"
 )
@@ -149,9 +103,9 @@ def author():
     
     # Apply all transformations using pipe
     df_processed = (df
+                    .pipe(calculate_age)
                     .pipe(validate_data_quality)
                     .pipe(create_age_standardization)
-                    .pipe(handle_leap_year_edge_case)
                     .pipe(normalize_author_institutions)  # NEW: If institution column exists
                     .pipe(print_final_summary)
                    )

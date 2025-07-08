@@ -63,9 +63,9 @@ def collaboration_network(duckdb: DuckDBResource):
         db_exporter = DatabaseExporterAdapter(conn)
         print(f"✅ Connected to database")
         
-        # Create optimization lookups (your existing sophisticated logic)
+        # Create optimization lookups
         print("Creating lookup tables for collaboration analysis...")
-        target2info = df_auth[['aid', 'pub_year', 'institution', 'author_age']]\
+        target2info = df_auth[['aid', 'pub_year', 'institution']]\
                             .set_index(['aid', 'pub_year'])\
                             .apply(tuple, axis=1).to_dict()
         
@@ -141,7 +141,7 @@ def collaboration_network(duckdb: DuckDBResource):
                 
             print(f"Found publications in years: {years}")
 
-            # Process each year (simplified version of your complex logic)
+            # Process each year 
             all_coauthors = []
             set_all_collabs = set()
             all_time_collabo = {}
@@ -153,8 +153,6 @@ def collaboration_network(duckdb: DuckDBResource):
                 if target_info is None:
                     print(f"Missing info for {target_name} in {yr}")
                     continue
-                
-                _, auth_age = target_info
                 
                 # Get papers for this year
                 works = df_pap[(df_pap['ego_aid'] == target_aid) & (df_pap['pub_year'] == yr)]
@@ -262,6 +260,9 @@ def collaboration_network(duckdb: DuckDBResource):
                 "collaboration_relationships": MetadataValue.int(total_new_records),
                 "researchers_analyzed": MetadataValue.int(len(targets)),
                 "collaboration_types": MetadataValue.json(collaboration_types),
+                "input_file_1": MetadataValue.path(str(paper_file)),
+                "input_file_2": MetadataValue.path(str(author_file)),
+                "output_file": MetadataValue.path(str(output_file)),
                 "research_insight": MetadataValue.md(
                     "**Core research findings** on collaboration patterns. Reveals mentorship "
                     "relationships, career-stage effects, and institutional collaboration networks."

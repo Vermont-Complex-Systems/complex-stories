@@ -212,8 +212,8 @@ class DatabaseExporterAdapter:
         try:
             self.con.executemany("""
                 INSERT INTO author
-                (aid, display_name, institution, pub_year, first_pub_year, last_pub_year, author_age)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (aid, display_name, institution, pub_year, first_pub_year, last_pub_year)
+                VALUES (?, ?, ?, ?, ?, ?)
                 ON CONFLICT (aid, pub_year) 
                 DO UPDATE SET
                     institution = COALESCE(EXCLUDED.institution, author.institution),

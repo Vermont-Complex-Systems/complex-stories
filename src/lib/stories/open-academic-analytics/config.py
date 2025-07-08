@@ -36,10 +36,6 @@ class PipelineConfig(Config):
     def data_processed_path(self) -> Path:
         return Path(self.base_dir) / self.data_processed_dir
     
-    @property
-    def database_path(self) -> str:
-        return str(self.data_raw_path / "oa_data_raw.db")
-    
     # Backward compatibility properties for assets that expect uppercase names
     @property
     def DATA_RAW_DIR(self) -> Path:
@@ -154,11 +150,6 @@ class PipelineConfig(Config):
     # Validation columns (keeping what's actually used)
     required_author_columns: List[str] = ['aid', 'author_age']
     required_coauthor_columns: List[str] = ['aid', 'name', 'author_age', 'coauth_age', 'age_diff', 'pub_date']
-
-
-# Simple helper for database path
-def get_database_path() -> str:
-    return os.getenv("DATABASE_PATH", "data/raw/oa_data_raw.db")
 
 # Create default config instance (this is what your assets import)
 DEFAULT_CONFIG = PipelineConfig()
