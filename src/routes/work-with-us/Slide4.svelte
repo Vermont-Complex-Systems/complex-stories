@@ -29,9 +29,9 @@
 		</ul>	
 	</div>
 	
-	<div class="image-container" use:reveal={{ delay: 2000, preset: 'scale', scale: 0.8 }}>
+	<div class="image-container" use:reveal={{ delay: 2000, preset: 'scale', scale: 0.7 }}>
 	<div class="image-wrapper">
-		<img src="/community-69fc3b40333659ebf12e64e787bf03e4.svg" alt="community" />
+		<img src="/community-69fc3b40333659ebf12e64e787bf03e4.jpg" alt="community" />
 		<div class="copyright" use:reveal={{ delay: 2300, preset: 'fade' }}>
 			<p>
 				<em>The Turing Way</em> community illustrated as a garden. 
