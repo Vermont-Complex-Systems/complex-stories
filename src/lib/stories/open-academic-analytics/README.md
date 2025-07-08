@@ -1,10 +1,10 @@
 # Open academic Analytics
 
-This project provide a micro-macro perspective on the coevolution of scientific productivity and collaborations.
 
-It is macro in that we deploy models and statistics to detect statistical patterns in career trajectories.
+This project provide a micro-macro perspective on the coevolution of scientific productivity and collaborations. It is macro in that we deploy models and statistics to detect statistical patterns in career trajectories. It is micro in that we offer the possibility to users to investigate particular authors via our web interface. Here's a snapshot of the interface, you can find the live version [here](https://vermont-complex-systems.github.io/complex-stories/open-academic-analytics)
 
-It is micro in that we offer the possibility to users to investigate particular authors via our web interface.
+<img width="1500" alt="open-academic-dashboard" src="https://github.com/user-attachments/assets/068730b0-4273-48cb-ab29-602be5340f06" />
+
 
 ### Implementing principled data processing using dagster
 
