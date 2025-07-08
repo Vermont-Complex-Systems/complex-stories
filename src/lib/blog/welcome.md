@@ -7,7 +7,7 @@ We recognize that research groups operate under different constraints and may ho
 
 This blog is intended to demonstrate how and when adopting best practices in research software development creates value. We will showcase research projects we're involved in through scientific data essays, then use blog posts to explain which open source practices proved useful and why. 
 
-### A first case study: data orchestration
+### A first case study: principled data processing using dagster
 
 <div style="text-align: center; margin: 2rem 0;">
   <img src="/Global_Asset_Lineage.svg" alt="data pipeline" style="max-width: 1200px; width: 100%;">
