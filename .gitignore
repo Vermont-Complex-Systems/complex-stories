@@ -32,3 +32,4 @@ src/lib/stories/open-academic-analytics/.tmp_*
 
 src/lib/stories/open-academic-analytics/data/processed/
 src/lib/stories/open-academic-analytics/data/raw/
+src/lib/stories/open-academic-analytics/:memory*

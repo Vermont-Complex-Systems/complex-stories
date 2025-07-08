@@ -7,7 +7,9 @@ from dagster import Definitions, load_assets_from_modules
 from dagster_duckdb import DuckDBResource
 from pathlib import Path
 
-from open_academic_analytics import data_collection, research_analysis, visualization_prep
+from assets.collect import researcher_list, academic_publications, coauthor_cache
+from assets.network import collaboration_network
+from assets.export import  paper, author, coauthor
 from config import get_database_path
 
 # Ensure database directory exists
@@ -16,15 +18,19 @@ Path(database_path).parent.mkdir(parents=True, exist_ok=True)
 
 # Load all assets from the three pipeline stages
 all_assets = load_assets_from_modules([
-    data_collection,      # Stage 1: Collect raw academic data
-    research_analysis,    # Stage 2: Analyze collaboration patterns  
-    visualization_prep    # Stage 3: Prepare for dashboards
+    researcher_list,      # Stage 1: Collect raw academic data
+    academic_publications,
+    coauthor_cache,    # Stage 2: Analyze collaboration patterns  
+    collaboration_network,
+    paper,
+    author,
+    coauthor        # Stage 3: Prepare for dashboards
 ])
 
 # Simple, focused definitions
 defs = Definitions(
     assets=all_assets,
     resources={
-        "duckdb": DuckDBResource(database=database_path)
+        "duckdb": DuckDBResource(database=":memory:")
     }
 )

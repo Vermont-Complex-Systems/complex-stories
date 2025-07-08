@@ -21,7 +21,7 @@
     const dateRange = getCombinedDateRange(paperData, coauthorData);
     return d3.scaleTime()
       .domain(dateRange)
-      .range([MARGIN_TOP, height - MARGIN_BOTTOM]); // Remove MAX_CIRCLE_RADIUS subtraction
+      .range([MARGIN_TOP, height - MARGIN_BOTTOM]);
   });
 
   // Year ticks for the timeline
@@ -70,7 +70,16 @@
     mouseX = event.clientX;
     mouseY = event.clientY;
     
-    tooltipContent = `Title: ${point.title}\nYear: ${point.year}\nCitations: ${point.cited_by_count}\nCoauthors: ${point.nb_coauthors}\nType: ${point.work_type}`;
+    // Enhanced tooltip using pre-computed fields when available
+    const citationInfo = point.citation_percentile !== undefined 
+      ? `Citations: ${point.cited_by_count} (${Math.round(point.citation_percentile)}th percentile)`
+      : `Citations: ${point.cited_by_count}`;
+    
+    const impactInfo = point.citation_category 
+      ? `\nImpact: ${point.citation_category.replace('_', ' ')}`
+      : '';
+    
+    tooltipContent = `Title: ${point.title}\nYear: ${point.year}\n${citationInfo}${impactInfo}\nCoauthors: ${point.nb_coauthors}\nType: ${point.work_type}`;
     
     showTooltip = true;
   }

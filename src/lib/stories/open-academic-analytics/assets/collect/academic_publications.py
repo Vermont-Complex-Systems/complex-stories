@@ -11,48 +11,13 @@ from dagster import MaterializeResult, MetadataValue
 from dagster_duckdb import DuckDBResource
 
 from config import config
-from modules.database_adapter import DatabaseExporterAdapter
-from modules.data_fetcher import OpenAlexFetcher
-from modules.utils import shuffle_date_within_month
-
-@dg.asset(
-    group_name="data_collection",
-    description="📋 Load list of UVM researchers to analyze for collaboration patterns"
-)
-def researcher_list():
-    """Convert researchers parquet to TSV format for processing"""
-    input_file = config.data_raw_path / config.researchers_input_file
-    output_file = config.data_raw_path / config.researchers_tsv_file
-
-    # Load and process
-    d = pd.read_parquet(input_file)
-    
-    # Handle column name variations
-    if 'host_dept (; delimited if more than one)' in d.columns:
-        d = d.rename(columns={'host_dept (; delimited if more than one)': 'host_dept'})
-    
-    # Select and save
-    cols = ['oa_display_name', 'is_prof', 'group_size', 'perceived_as_male', 
-            'host_dept', 'has_research_group', 'oa_uid', 'group_url', 'first_pub_year']
-    
-    d[cols].to_csv(output_file, sep="\t", index=False)
-    
-    print(f"✅ Created researcher list with {len(d)} researchers")
-    
-    return MaterializeResult(
-        metadata={
-            "researchers_loaded": MetadataValue.int(len(d)),
-            "output_file": MetadataValue.path(str(output_file)),
-            "research_value": MetadataValue.md(
-                "**Foundation dataset** for academic collaboration analysis. "
-                "Contains UVM faculty with OpenAlex IDs for paper retrieval."
-            )
-        }
-    )
+from shared.database.database_adapter import DatabaseExporterAdapter
+from shared.clients.openalex_api_client import OpenAlexFetcher
+from shared.utils.utils import shuffle_date_within_month
 
 @dg.asset(
     deps=["researcher_list"],
-    group_name="data_collection",
+    group_name="import",
     description="📚 Fetch all academic papers for researchers from OpenAlex database"
 )
 def academic_publications(duckdb: DuckDBResource):
@@ -62,13 +27,39 @@ def academic_publications(duckdb: DuckDBResource):
     """
     print("🚀 Starting paper collection from OpenAlex...")
     
+    input_file = config.data_raw_path / config.researchers_tsv_file
+    output_file = config.data_raw_path / config.paper_output_file
+
     with duckdb.get_connection() as conn:
+        # import duckdb
+        # conn = duckdb.connect(":memory")
+        if output_file.exists():
+            df_pap = pd.read_parquet(output_file)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS paper (
+                    ego_aid VARCHAR,
+                    ego_display_name VARCHAR,
+                    wid VARCHAR,
+                    pub_date DATE,
+                    pub_year INT,
+                    doi VARCHAR,
+                    title VARCHAR,
+                    work_type VARCHAR,
+                    primary_topic VARCHAR,
+                    authors VARCHAR,
+                    cited_by_count INT,
+                    ego_position VARCHAR,
+                    PRIMARY KEY(ego_aid, wid)
+                )
+            """)
+            conn.execute("INSERT INTO paper SELECT * FROM df_pap")
+
         db_exporter = DatabaseExporterAdapter(conn)
+        
         print(f"✅ Connected to database")
         
         # Load researchers
-        researchers_file = config.data_raw_path / config.researchers_tsv_file
-        target_aids = pd.read_csv(researchers_file, sep="\t")
+        target_aids = pd.read_csv(input_file, sep="\t")
         target_aids = target_aids[~target_aids['oa_uid'].isna()]
         target_aids['oa_uid'] = target_aids['oa_uid'].str.upper()
         
@@ -189,10 +180,10 @@ def academic_publications(duckdb: DuckDBResource):
                             author_position = authorship['author_position']
                     
                     # Determine most common institution for this year
-                    from collections import Counter
-                    target_institution = None
-                    if ego_institutions_this_year:
-                        target_institution = Counter(ego_institutions_this_year).most_common(1)[0][0]
+                    # from collections import Counter
+                    # target_institution = None
+                    # if ego_institutions_this_year:
+                    #     target_institution = Counter(ego_institutions_this_year).most_common(1)[0][0]
                     
                     # Extract paper metadata
                     doi = w['ids'].get('doi') if 'ids' in w else None
@@ -205,7 +196,7 @@ def academic_publications(duckdb: DuckDBResource):
                         shuffled_date, int(w['publication_year']),
                         doi, w['title'], w['type'], fos,
                         coauthors, w['cited_by_count'],
-                        author_position, target_institution
+                        author_position
                     ))
             
             # Save papers to database
@@ -215,6 +206,8 @@ def academic_publications(duckdb: DuckDBResource):
                 total_papers_saved += len(papers)
             else:
                 print(f"No new papers to save for {target_name}")
+
+            db_exporter.con.sql("SELECT * FROM paper").df().to_parquet(output_file)
 
             total_researchers_processed += 1
 
