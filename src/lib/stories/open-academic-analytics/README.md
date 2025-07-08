@@ -1,10 +1,16 @@
 # Open academic Analytics
 
-
-This project provide a micro-macro perspective on the coevolution of scientific productivity and collaborations. It is macro in that we deploy models and statistics to detect statistical patterns in career trajectories. It is micro in that we offer the possibility to users to investigate particular authors via our web interface. Here's a snapshot of the interface, you can find the live version [here](https://vermont-complex-systems.github.io/complex-stories/open-academic-analytics)
+This project offers s micro-macro perspective on the coevolution of scientific productivity and collaborations. It is macro in that we deploy models and statistics to detect statistical patterns in career trajectories. It is micro in that we offer the possibility to users to investigate particular authors via our web interface. Here's a snapshot of the interface, you can find the live version [here](https://vermont-complex-systems.github.io/complex-stories/open-academic-analytics). We use faculties at University of Vermont as example.
 
 <img width="1500" alt="open-academic-dashboard" src="https://github.com/user-attachments/assets/068730b0-4273-48cb-ab29-602be5340f06" />
 
+### Missing 
+
+ - [ ] Add a departments/colleges brush filter
+ - [ ] Add a toggle to filter based on whether faculties have a research groups
+ - [ ] Missing bayesian switchpoint model to detect when faculties start collaborating more extensively with younger collaborators. Perhaps we could use that to predict from data the existence of research groups
+ - [ ] Maybe add macro plots where we can do some statistics.
+   - [ ] time series plot where horizontal axis is standardized age, vertical axis is number of collaborations, and color is (bucketized) relative academic age. That is, what is the proportion of all authors that start to collaborate more extensively with younger authors starting at, say, `academic_age = 10`? How is that different across colleges? Within college, how are faculties with research groups differ from non-PIs.
 
 ### Implementing principled data processing using dagster
 
@@ -19,8 +25,6 @@ This project is also a dagster project, which implement a principled data proces
 Here's a snapshot of our pipeline, as of `2025-07-08`:
 
 <img width="1500" alt="Screenshot 2025-07-08 at 10 49 20 AM" src="https://github.com/user-attachments/assets/1ee84c3b-c244-490c-bb0e-438bab303167" />
-
-
 
 <details><summary>Dagster instruction!</summary>
 
