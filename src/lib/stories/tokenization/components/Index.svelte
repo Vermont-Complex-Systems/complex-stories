@@ -5,6 +5,7 @@
 	import Hero from './Hero.svelte';
 	import StackedSlider from "./StackedSlider.svelte";
 	import Scatter from "./Scatter.svelte";
+	import { browser } from '$app/environment';
 	
 	let { story, data } = $props();
 	
@@ -18,17 +19,9 @@
 	const secondSectionSteps = data.secondSection;
 
 	let currentSection = $state(undefined);
-
-	// count how many objects in data 
-	const sectionNums = Object.keys(data).length;
-
 	let firstProgress = $state(0);
 	let secondProgress = $state(0);
 	let thirdProgress = $state(0);
-
-	let width = $state(innerWidth > 1200 ? 500 : 350);
-	let height = 600;
-	const padding = { top: 20, right: 40, bottom: 20, left: 60 };
 
 	let valueForSlider = $derived.by(() => {
 		console.log("secondScrollyIndex", secondScrollyIndex);
@@ -43,11 +36,22 @@
 		}
 	});
 
-	// Fix the modeForSlider variable (it was undefined)
 	let modeForSlider = $state("default");
+
+	// Safe window width check
+	let innerWidth = $state(browser ? window.innerWidth : 1200);
+	
+	if (browser) {
+		// Update innerWidth on resize
+		const updateWidth = () => {
+			innerWidth = window.innerWidth;
+		};
+		window.addEventListener('resize', updateWidth);
+	}
 </script>
 
-<div id="story">
+<!-- Story wrapper with parchment theme -->
+<div class="story-theme">
 	<Hero />
 	
 	<!-- First Section -->
@@ -60,9 +64,9 @@
 			{#each steps as text, i}
 				{@const active = firstScrollyIndex === i}
 				<div class="step" class:active>
-					<p> 
+					<div class="step-content">
 						<Md text={text.value}/>
-					</p>
+					</div>
 				</div>
 			{/each}
 		</Scrolly>
@@ -72,7 +76,7 @@
 	<div class="spacer"></div>
 	
 	<!-- Content Break -->
-	<div class="centered-max-width">
+	<div class="story-section-break">
 		<h2>What is a token?</h2>
 	</div>
 	
@@ -86,16 +90,16 @@
 			{#each secondSectionSteps as text, i}
 				{@const active = secondScrollyIndex === i}
 				<div class="step" class:active>
-					<p> 
+					<div class="step-content">
 						<Md text={text.value}/>
-					</p>
+					</div>
 				</div>
 			{/each}
 		</Scrolly>
 	</section>
 	
 	<!-- Content Break -->
-	<div class="centered-max-width">
+	<div class="story-section-break">
 		<h2>The Distributional Hypothesis</h2>
 		<p>The Distributional Hypothesis states that words that occur in the same contexts tend to have similar meanings. So how does an LLM group different words?</p>
 	</div>
@@ -110,9 +114,9 @@
 			{#each secondSectionSteps as text, i}
 				{@const active = thirdScrollyIndex === i}
 				<div class="step" class:active>
-					<p> 
+					<div class="step-content">
 						<Md text={text.value}/>
-					</p>
+					</div>
 				</div>
 			{/each}
 		</Scrolly>
@@ -120,61 +124,88 @@
 </div>
 
 <style>
-	/* Use :global() to override global styles */
-	:global(body) {
-		background-color: #f8ecd4 !important;
-		background-image:
-			url("data:image/svg+xml;utf8,<svg width='400' height='400' xmlns='http://www.w3.org/2000/svg'><filter id='noise'><feTurbulence type='fractalNoise' baseFrequency='0.055' numOctaves='2' seed='7'/><feColorMatrix type='saturate' values='0.1'/></filter><rect width='100%' height='100%' filter='url(%23noise)' opacity='0.22'/></svg>"),
-			radial-gradient(ellipse at center, rgba(0,0,0,0) 20%, rgba(80,60,30,0.40) 100%);
-		background-blend-mode: multiply, normal;
-		background-size: 100% 100%, 100% 100%;
-		background-repeat: repeat, no-repeat;
-		color: #3b2f1e;
-		font-family: 'Tiempos Text', 'Iowan Old Style', 'Times New Roman', Times, serif;
-	}
-
-	#story {
+	/* =============================================================================
+	   STORY THEME SCOPE
+	   
+	   Override design tokens for this specific story
+	   ============================================================================= */
+	
+	.story-theme {
+		/* Override semantic color tokens for parchment theme */
 		--color-bg: #f8ecd4;
+		--color-fg: #3b2f1e;
+		--color-secondary-gray: #8b7355;
+		--color-link: #5d4037;
+		--color-link-hover: #3e2723;
+		--color-border: rgba(59, 47, 30, 0.2);
+		--color-selection: rgba(139, 115, 85, 0.3);
+		
+		/* Override typography tokens */
+		--font-body: 'Tiempos Text', 'Iowan Old Style', 'Times New Roman', Times, serif;
+		
+		/* Story-specific tokens */
+		--story-texture-opacity: 0.22;
+		--story-vignette-strength: 0.4;
+		
+		/* Force full screen coverage */
+		position: relative;
+		width: 100vw;
+		margin-left: calc(-50vw + 50%);
+		padding: 0;
+		box-sizing: border-box;
+		
+		/* Apply the theme */
 		background-color: var(--color-bg);
 		background-image:
-			url("data:image/svg+xml;utf8,<svg width='400' height='400' xmlns='http://www.w3.org/2000/svg'><filter id='noise'><feTurbulence type='fractalNoise' baseFrequency='0.055' numOctaves='2' seed='7'/><feColorMatrix type='saturate' values='0.1'/></filter><rect width='100%' height='100%' filter='url(%23noise)' opacity='0.22'/></svg>"),
-			radial-gradient(ellipse at center, rgba(0,0,0,0) 20%, rgba(80,60,30,0.40) 100%);
+			url("data:image/svg+xml;utf8,<svg width='400' height='400' xmlns='http://www.w3.org/2000/svg'><filter id='parchment-noise'><feTurbulence type='fractalNoise' baseFrequency='0.055' numOctaves='2' seed='7'/><feColorMatrix type='saturate' values='0.1'/></filter><rect width='100%' height='100%' filter='url(%23parchment-noise)' opacity='0.22'/></svg>"),
+			radial-gradient(ellipse at center, rgba(0,0,0,0) 20%, rgba(80,60,30,0.4) 100%);
 		background-blend-mode: multiply, normal;
-		background-size: 100% 100%, 100% 100%;
+		background-size: 400px 400px, 100% 100%;
 		background-repeat: repeat, no-repeat;
-		color: #3b2f1e;
-		font-family: 'Tiempos Text', 'Iowan Old Style', 'Times New Roman', Times, serif;
+		background-attachment: fixed;
+		color: var(--color-fg);
+		font-family: var(--font-body);
 		min-height: 100vh;
 	}
-
-	/* Centered content sections */
-	.centered-max-width {
-		margin: 2rem auto;
-		max-width: 800px;
+	
+	/* =============================================================================
+	   STORY-SPECIFIC LAYOUT
+	   ============================================================================= */
+	
+	.story-section-break {
+		max-width: var(--width-column-wide);
+		margin: 4rem auto;
 		padding: 0 2rem;
 		text-align: center;
 	}
-
-	.centered-max-width h2 {
-		font-size: 36px;
+	
+	.story-section-break h2 {
+		font-size: var(--font-size-xlarge);
+		font-family: var(--sans);
+		font-weight: var(--font-weight-bold);
+		color: var(--color-fg);
 		margin-bottom: 1rem;
-		color: #3b2f1e;
 	}
-
-	.centered-max-width p {
-		font-size: 22px;
+	
+	.story-section-break p {
+		font-size: var(--font-size-medium);
 		line-height: 1.6;
-		color: #3b2f1e;
+		color: var(--color-secondary-gray);
+		max-width: 600px;
+		margin: 0 auto;
 	}
-
-	/* Scrolly sections */
+	
+	/* =============================================================================
+	   SCROLLYTELLING LAYOUT
+	   ============================================================================= */
+	
 	.scrolly-section {
+		position: relative;
 		margin: 2rem auto;
 		max-width: none;
 		padding: 0 1rem;
-		position: relative;
 	}
-
+	
 	.chart-container-scrolly {
 		width: 50%;
 		height: 750px;
@@ -182,81 +213,125 @@
 		top: calc(50vh - 375px);
 		right: 5%;
 		margin-left: auto;
-		z-index: 1;
+		z-index: var(--z-middle);
 	}
-
+	
 	.spacer {
 		height: 75vh;
 	}
-
+	
 	.step {
 		height: 80vh;
 		display: flex;
-		place-items: center;
+		align-items: center;
 		justify-content: flex-start;
 		position: relative;
-		z-index: 2;
+		z-index: var(--z-top);
 	}
-
-	.step p {
-		padding: 1.5rem 2rem;
-		background: rgba(248, 248, 255, 0.95);
-		color: #333;
-		border-radius: 8px;
-		font-size: 1.4rem;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		transition: all 500ms ease;
-		box-shadow: 2px 4px 20px rgba(0, 0, 0, 0.15);
+	
+	.step-content {
 		width: 40%;
 		max-width: 500px;
 		margin-left: 5%;
-		backdrop-filter: blur(5px);
-		border: 1px solid rgba(255, 255, 255, 0.2);
+		padding: 1.5rem 2rem;
+		
+		/* Parchment-themed step styling */
+		background: rgba(255, 255, 255, 0.9);
+		backdrop-filter: blur(8px);
+		border: 1px solid var(--color-border);
+		border-radius: var(--border-radius);
+		box-shadow: 
+			0 4px 20px rgba(59, 47, 30, 0.1),
+			0 1px 3px rgba(59, 47, 30, 0.2);
+		
+		/* Typography */
+		font-size: var(--font-size-small);
+		line-height: 1.6;
+		color: #333;
+		
+		/* Smooth transitions */
+		transition: all var(--transition-medium) ease;
+		transform: translateY(0);
+		opacity: 0.8;
 	}
-
-	.step.active p {
+	
+	.step.active .step-content {
 		background: rgba(255, 255, 255, 0.98);
-		box-shadow: 4px 8px 30px rgba(0, 0, 0, 0.25);
-		transform: scale(1.02);
+		box-shadow: 
+			0 8px 30px rgba(59, 47, 30, 0.15),
+			0 2px 6px rgba(59, 47, 30, 0.25);
+		transform: translateY(-4px) scale(1.02);
+		opacity: 1;
 	}
-
-	/* Responsive adjustments */
+	
+	/* =============================================================================
+	   RESPONSIVE DESIGN
+	   ============================================================================= */
+	
 	@media (max-width: 1200px) {
 		.chart-container-scrolly {
 			width: 60%;
 			height: 600px;
 		}
 		
-		.step p {
+		.step-content {
 			width: 50%;
-			font-size: 1.2rem;
-			padding: 1rem 1.5rem;
+			font-size: var(--font-size-smallish);
+			padding: 1.25rem 1.75rem;
 		}
 	}
-
+	
 	@media (max-width: 768px) {
+		.story-section-break {
+			margin: 3rem auto;
+			padding: 0 1rem;
+		}
+		
+		.story-section-break h2 {
+			font-size: var(--font-size-large);
+		}
+		
 		.chart-container-scrolly {
 			width: 100%;
 			height: 400px;
 			position: relative;
 			top: auto;
-			margin: 2rem 0;
+			margin: 2rem auto;
 		}
 		
 		.step {
 			height: 60vh;
+			justify-content: center;
 		}
 		
-		.step p {
+		.step-content {
 			width: 90%;
 			margin: 0 auto;
-			font-size: 1.1rem;
+			font-size: var(--font-size-smallish);
+			padding: 1rem 1.5rem;
+		}
+		
+		.step.active .step-content {
+			transform: translateY(-2px) scale(1.01);
 		}
 		
 		.scrolly-section {
 			padding: 0 0.5rem;
+		}
+	}
+	
+	@media (max-width: 480px) {
+		.step-content {
+			padding: 1rem;
+			font-size: var(--font-size-xsmall);
+		}
+		
+		.story-section-break h2 {
+			font-size: var(--font-size-medium);
+		}
+		
+		.story-section-break p {
+			font-size: var(--font-size-small);
 		}
 	}
 </style>
