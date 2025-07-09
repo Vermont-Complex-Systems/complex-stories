@@ -9,36 +9,41 @@ export const uiState = $state({
 });
 
 export const dashboardState = $state({
-  selectedAuthor: 'Peter Sheridan Dodds',
-  colorMode: 'age_diff',
-  highlightedAuthor: null,
-  authorAgeFilter: null, // [minAge, maxAge] or null
-  highlightedCoauthor: null,
+    selectedAuthor: 'Peter Sheridan Dodds',
+    colorMode: 'age_diff',
+    highlightedAuthor: null,
+    authorAgeFilter: null, // [minAge, maxAge] or null
+    highlightedCoauthor: null,
 });
 
 // Data State
 export const dataState = $state({
+    // App-level
+    availableAuthors: [],
+    isInitializing: true,
+    
+    // Author-specific  
     paperData: [],
     coauthorData: [],
-    availableAuthors: [],
-    availableCoauthors: [],
-    isInitializing: true,
     isLoadingAuthor: false,
+    
+    // Global analytics
+    AggData: null,
+    isLoadingGlobalData: false,
+    
     error: null
 });
 
+// Derived state
+export const derivedData = {
+    get availableCoauthors() {
+        if (!dataState.coauthorData?.length) return [];
+        return [...new Set(dataState.coauthorData.map(d => d.coauth_name).filter(Boolean))].sort();
+    }
+};
+
 // Tables registration state
 let tablesRegistered = false;
-
-export function getAvailableCoauthors() {
-  if (!dataState.coauthorData || dataState.coauthorData.length === 0) {
-    return [];
-  }
-  
-  // Get unique coauthor names from the current dataset
-  const uniqueNames = [...new Set(dataState.coauthorData.map(d => d.coauth_name))];
-  return uniqueNames.sort();
-}
 
 // Register parquet tables once
 async function registerTables() {
@@ -49,11 +54,35 @@ async function registerTables() {
     tablesRegistered = true;
 }
 
-// Load available authors WITH age data
+// Simple aggData function
+export async function aggData() {
+    await registerTables();
+    const result = await query(`
+        WITH tmp AS (
+                SELECT 
+                    COUNT(*) as collaboration_count, 
+                    age_category, 
+                    strftime(age_std::DATE, '%Y')::INT as age_std, 
+                    name
+                    FROM coauthor 
+                    GROUP BY age_category, strftime(age_std::DATE, '%Y') , name
+                    )
+            SELECT 
+                MEAN(collaboration_count) as mean_collabs,
+                STDDEV(collaboration_count) as std_collabs,
+                age_category, 
+                age_std
+            from tmp    
+            GROUP BY age_category, age_std
+            ORDER BY age_category, age_std
+        `);
+    return result;
+}
+
+// Load available authors
 async function loadAvailableAuthors() {
     await registerTables();
     
-    // Get authors with their most recent age data
     const result = await query(`
         SELECT DISTINCT 
             name,
@@ -87,9 +116,6 @@ async function loadAuthorData(authorName) {
                 work_type,
                 ego_age,
                 nb_coauthors
-                -- NEW: Pre-computed citation fields (add these after running updated pipeline)
-                -- citation_percentile,
-                -- citation_category
             FROM paper 
             WHERE name = '${authorName}'
             ORDER BY pub_year
@@ -129,72 +155,21 @@ async function loadAuthorData(authorName) {
     return [paperData, coauthorData];
 }
 
+// 1. App Init (once) - Global data everyone needs
 export async function initializeApp() {
-    try {
         dataState.isInitializing = true;
-        dataState.error = null;
-        
-        const authorsWithAges = await loadAvailableAuthors();
-        dataState.availableAuthors = authorsWithAges;
+        dataState.availableAuthors = await loadAvailableAuthors();
+        dataState.AggData = await aggData();
         dataState.isInitializing = false;
-        
-        console.log(`📋 Loaded ${authorsWithAges.length} available authors with age data`);
-        
-    } catch (error) {
-        dataState.error = error.message;
-        dataState.isInitializing = false;
-        console.error('Failed to initialize app:', error);
-    }
 }
 
-// Load data for selected author
+// 2. Author Selection - Specific author data
 export async function loadSelectedAuthor() {
-    if (!dashboardState.selectedAuthor) return;
-    
     dataState.isLoadingAuthor = true;
-    dataState.error = null; // Clear any previous errors
-    
-    try {
-        const [paperData, coauthorData] = await loadAuthorData(dashboardState.selectedAuthor);
-        
-        dataState.paperData = paperData;
-        dataState.coauthorData = coauthorData;
-        
-        // Update available coauthors after setting the data
-        dataState.availableCoauthors = getAvailableCoauthors();
-        
-        // Reset highlighted coauthor if it's not in the new dataset
-        if (dashboardState.highlightedCoauthor && 
-            !dataState.availableCoauthors.includes(dashboardState.highlightedCoauthor)) {
-            dashboardState.highlightedCoauthor = null;
-        }
-        
-        console.log(`📊 Loaded ${paperData.length} papers and ${coauthorData.length} coauthor records for ${dashboardState.selectedAuthor}`);
-        console.log(`👥 Available coauthors: ${dataState.availableCoauthors.length}`);
-        
-        // Log availability of new pre-computed fields for debugging
-        if (paperData.length > 0) {
-            const hasCitationPercentile = paperData.some(d => d.citation_percentile !== undefined);
-            const hasCitationCategory = paperData.some(d => d.citation_category !== undefined);
-            console.log(`📈 Citation fields available: percentile=${hasCitationPercentile}, category=${hasCitationCategory}`);
-        }
-        
-        if (coauthorData.length > 0) {
-            const hasAgeCategory = coauthorData.some(d => d.age_category !== undefined);
-            const hasCollabIntensity = coauthorData.some(d => d.collaboration_intensity !== undefined);
-            const hasNormalizedInstitutions = coauthorData.some(d => d.institution_normalized !== undefined);
-            console.log(`🤝 Coauthor fields available: age_category=${hasAgeCategory}, collaboration_intensity=${hasCollabIntensity}, normalized_institutions=${hasNormalizedInstitutions}`);
-        }
-        
-    } catch (error) {
-        dataState.error = error.message || 'Failed to load author data';
-        dataState.paperData = [];
-        dataState.coauthorData = [];
-        dataState.availableCoauthors = [];
-        console.error('Failed to load author data:', error);
-    } finally {
-        dataState.isLoadingAuthor = false;
-    }
+    const [papers, coauthors] = await loadAuthorData(dashboardState.selectedAuthor);
+    dataState.paperData = papers;
+    dataState.coauthorData = coauthors;
+    dataState.isLoadingAuthor = false;
 }
 
 // Auto-collapse sidebar on mobile

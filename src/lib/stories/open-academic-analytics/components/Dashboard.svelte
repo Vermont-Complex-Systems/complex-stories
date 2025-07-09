@@ -1,12 +1,16 @@
 <script>
+  import { Plot, AreaY, LineY, HTMLTooltip } from 'svelteplot';
+
   import PaperChart from './PaperChart.svelte';
   import CoauthorChart from './CoauthorChart.svelte';
+  import Toggle from './Toggle.svelte'
   import { dashboardState, uiState } from '../state.svelte.ts';
   import { innerWidth } from 'svelte/reactivity/window';
-
+  
   let { 
     paperData, 
-    coauthorData
+    coauthorData,
+    aggData
   } = $props();
 
   // Calculate available width for charts considering sidebar and layout
@@ -34,6 +38,12 @@
   });
 
   const chartHeight = $derived(coauthorData?.length > 600 ? coauthorData?.length < 1500 ? 1200 : 2200 : 800);
+
+  let isFacet = $state(false);
+  let showArea = $state(false); // Add this new toggle state
+  
+  $inspect(aggData)
+  
 </script>
 
 <div class="dashboard">
@@ -60,9 +70,42 @@
           highlightedAuthor={dashboardState.highlightedAuthor}
         />
       </div>
+      <div>
+        <h3>Collaboration patterns</h3>
+        <div class="toggle-controls">
+          <span>Facet by Age Category</span>
+          <Toggle bind:isTrue={isFacet}/>
+          
+          <span>Show Standard Deviation</span>
+          <Toggle bind:isTrue={showArea}/>
+        </div>
+          <Plot grid frame 
+              color={{legend: true, scheme: ["#404788FF", "#20A387FF", "#FDE725FF"]}}
+              >
+              <LineY data={aggData}  
+                x="age_std" 
+                y="mean_collabs" 
+                stroke="age_category" 
+                fx={isFacet ? "age_category" : null}/>
+              {#if showArea}
+                <AreaY 
+                  data={aggData} 
+                  x="age_std" 
+                  y1={(d) => d.mean_collabs - d.std_collabs}  
+                  y2={(d) => d.mean_collabs + d.std_collabs} 
+                  fillOpacity=0.2 
+                  fill="age_category"
+                  fx={isFacet ? "age_category" : null}
+                />
+              {/if}
+          </Plot>
+      </div>
     </div>
   </div>
 </div>
+
+
+
 
 <style>
   .dashboard {
@@ -98,6 +141,22 @@
     font-size: var(--font-size-xsmall);
     text-align: center;
     width: 100%;
+  }
+
+  .toggle-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .toggle-controls > span {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.75rem;
+    color: var(--color-fg);
+    margin-right: 0.5rem;
   }
 
   /* Responsive design */

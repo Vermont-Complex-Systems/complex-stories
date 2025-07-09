@@ -1,6 +1,6 @@
 <script>
   import * as d3 from 'd3';
-  import { processCoauthorData, getCombinedDateRange, ageColorScale, acquaintanceColorScale, collaborationColorScale } from '../utils/combinedChartUtils.js';
+  import { processCoauthorData, getCombinedDateRange, ageColorScale, collaborationColorScale } from '../utils/combinedChartUtils.js';
   import Tooltip from './Tooltip.svelte';
   import Legend from './Legend.svelte';
   import { dashboardState } from '../state.svelte.ts';

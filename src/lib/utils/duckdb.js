@@ -40,7 +40,7 @@ export async function registerParquetFile(url, tableName) {
   const buffer = await response.arrayBuffer();
   await db.registerFileBuffer(`${tableName}.parquet`, new Uint8Array(buffer));
   
-  await conn.query(`CREATE VIEW '${tableName}' AS SELECT * FROM parquet_scan('${tableName}.parquet')`);
+  await conn.query(`CREATE OR REPLACE VIEW '${tableName}' AS SELECT * FROM parquet_scan('${tableName}.parquet')`);
 }
 
 export async function query(sql) {
