@@ -22,7 +22,7 @@
 		display: flex;
 		color: white;
 		font-weight: bold;
-		margin-bottom: 0;
+		margin-bottom: 1rem;
 		width: fit-content;
 		border-radius: 0.25rem;
 		
@@ -66,7 +66,12 @@
 	
 	.label:where([data-size="large"]) {
 		--label-size: x-large;
-		--label-padding: 0.3rem 0.6rem;
+		--label-padding: 0.6rem 0.9rem;
+	}
+
+	.label:where([data-size="xlarge"]) {
+		--label-size: xx-large;
+		--label-padding: 0.8rem 1.2rem;
 	}
 	
 	/* Combination variants - you can mix and match! */
