@@ -1,7 +1,6 @@
 import storiesData from "$data/stories.js";
 
 export async function load() {
-  // Pass all the story data your Stories component needs
   const stories = storiesData.map(story => ({
     id: story.id,
     slug: story.slug,
@@ -9,8 +8,9 @@ export async function load() {
     tease: story.tease,
     month: story.month,
     bgColor: story.bgColor,
-    href: `/${story.slug}`, // Local links to your story pages
-    filters: story.filters
+    href: story.external ? story.href : `/${story.slug}`,
+    isExternal: story.external,
+    filters: Array.isArray(story.filters) ? story.filters : [story.filters].filter(Boolean) // Ensure it's an array and remove empty values
   }));
 
   return {

@@ -1,132 +1,62 @@
-@import "variables.css";
-@import "normalize.css";
-@import "font.css";
-@import "reset.css";
+/* =============================================================================
+   MAIN APPLICATION STYLES
+   
+   Layer order is important - each builds on the previous
+   ============================================================================= */
 
-/* colors defined in variables.css */
-:root {
-	/* font */
-	--sans: "Atlas Grotesk", -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
-	--serif: "Tiempos Text", Iowan Old Style, Times New Roman, Times, serif;
-	--mono: "Atlas Typewriter", Menlo, Consolas, Monaco, monospace;
+@import "variables.css";   /* Color/size primitives */
+@import "theme.css";       /* Semantic mappings */
+@import "font.css";        /* Load custom fonts */
+@import "reset.css";       /* Josh's reset */
+@import "base.css";        /* Base component styles */
 
-	/* z-index */
-	--z-bottom: -100;
-	--z-middle: 0;
-	--z-top: 100;
-	--z-overlay: 1000;
+/* =============================================================================
+   BASE ELEMENT STYLES (builds on tokens + reset)
+   ============================================================================= */
 
-	/* presets (used in reset.css) */
-	--border-radius: 3px;
-	--font-body: var(--serif);
-	--font-form: var(--mono);
-	--color-bg: var(--color-white);
-	--color-fg: var(--color-gray-900);
-	--color-primary: var(--color-black);
-	--color-link: var(--color-black);
-	--color-secondary-gray: var(--color-gray-600);
-	--color-link-hover: var(--color-gray-600);
-	--color-focus: var(--color-electric-green);
-	--color-mark: var(--color-yellow);
-	--color-selection: var(--color-gray-300);
-	--color-border: var(--color-gray-300);
-	--color-button-bg: var(--color-gray-900);
-	--color-button-fg: var(--color-gray-100);
-	--color-button-hover: var(--color-gray-700);
-	--color-input-bg: var(--color-gray-50);
-	--color-input-fg: var(--color-gray-900);
-	--color-placeholder: var(--color-gray-500);
-	--color-default-story-bg: var(--color-gray-100);
-
-	--font-size-giant: clamp(3rem, 4vw, 5rem);
-	--font-size-large: clamp(1.5rem, 2.5vw, 2.5rem);
-	--font-size-medium: clamp(1rem, 1.75vw, 1.5rem);
-	--font-size-small: clamp(15px, 1.25vw, 1rem);
-	--font-size-xsmall: clamp(12px, 1vw, 0.8rem);
-
-	--font-weight-bold: 900;
-	--font-weight-normal: 400;
-	--font-weight-thin: 100;
-
-	--margin: 16px;
-	--width-column-wide: 1280px;
-	--width-column-regular: 720px;
-	--width-padded: 80vw;
-	--margin-left: 10vw;
-	--width-padded-mobile: 90vw;
-	--margin-left-mobile: 5vw;
-
-	--left-tilt: -2deg;
-	--right-tilt: 2deg;
-	--left-tilt-double: -4deg;
-	--right-tilt-double: 4deg;
-
-	--transition-fast: 100ms;
-	--transition-medium: 200ms;
-	--transition-slow: 500ms;
-	--transition-ease: ease-in;
-	--fade: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.8) 30%, rgba(255, 255, 255, 1) 50%);
-
-	/* "1" second duration */
-	--1s: 1ms;
+body {
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-body);
+    transition: background-color 0.2s, color 0.2s;
 }
 
-/* dark theme */
-/* this is a starting place for dark mode - test before deploying */
+/* Typography hierarchy */
+h1 { font-size: var(--font-size-giant); }
+h2 { font-size: var(--font-size-large); }
+h3 { font-size: var(--font-size-medium); }
+h4 { font-size: var(--font-size-small); }
+h5 { font-size: var(--font-size-small); }
+h6 { font-size: var(--font-size-small); }
 
-@media screen and (prefers-color-scheme:dark) {
-	:root {
-		--color-bg: var(--color-gray-1000);
-		--color-fg: var(--color-gray-100);
-		--color-primary: var(--color-gray-1000);
-		--color-secondary-gray: var(--color-gray-400);
-		--color-link: var(--color-gray-100);
-		--color-link-hover: var(--color-gray-400);
-		--color-focus: var(--color-electric-green);
-		--color-mark: var(--color-yellow);
-		--color-selection: var(--color-gray-300);
-		--color-border: var(--color-gray-700);
-		--color-button-bg: var(--color-gray-100);
-		--color-button-fg: var(--color-gray-900);
-		--color-button-hover: var(--color-gray-300);
-		--color-input-bg: var(--color-gray-900);
-		--color-input-fg: var(--color-gray-50);
-		--color-placeholder: var(--color-gray-400);
-		--color-default-story-bg: var(--color-gray-800);
-		--fade: linear-gradient(180deg, rgba(25, 25, 25, 0) 0%, rgba(25, 25, 25, 0.8) 30%, rgba(25, 25, 25, 1) 50%);
-	}
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--sans);
+    font-weight: var(--font-weight-bold);
 }
 
-@media screen and (prefers-reduced-motion: no-preference) {
-	:root {
-		--1s: 1s;
-	}
+/* Links */
+a {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-decoration-color: var(--color-link);
 }
 
-h1 {
-	font-size: var(--48px, 48px);
+a:hover {
+    color: var(--color-link-hover);
+    text-decoration-color: var(--color-link-hover);
 }
 
-h2 {
-	font-size: var(--36px, 36px);
+/* Focus styles */
+:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
 }
 
-h3 {
-	font-size: var(--28px, 28px);
-}
+/* =============================================================================
+   LAYOUT UTILITIES
+   ============================================================================= */
 
-h4 {
-	font-size: var(--24px, 24px);
-}
-
-h5 {
-	font-size: var(--22px, 22px);
-}
-
-h6 {
-	font-size: var(--20px, 20px);
-}
-
+<<<<<<< HEAD
 .centered-max-width {
 	max-width: var(--width-column-wide);
 	margin: 0 auto;
@@ -137,50 +67,63 @@ svg {
 	display: block;
 	width: 100%;
 	height: auto;
+=======
+main {
+    max-width: var(--width-column-wide);
+    margin: 0 auto;
+    padding: 0;
+>>>>>>> 09f94f2c38dd9f7005a437a97c2a0ab98fa76b17
 }
 
 .column-wide {
-	max-width: var(--width-column-wide);
-	padding: 0 16px;
+    max-width: var(--width-column-wide);
+    padding: 0 1rem;
+    margin: 0 auto;
 }
-
 
 .column-regular {
-	max-width: var(--width-column-regular);
-	padding: 0 16px;
+    max-width: var(--width-column-regular);
+    padding: 0 1rem;
+    margin: 0 auto;
 }
 
-.column-regular a:hover {
-	color: var(--color-link-hover);
-	text-decoration: underline 2px var(--color-link-hover); 
-}
+/* =============================================================================
+   ACCESSIBILITY UTILITIES
+   ============================================================================= */
 
-.column-regular h2 {
-	font-family: var(--sans);
-	font-weight: var(--font-weight-bold);
-	margin-top: 64px;
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .upper {
-	text-transform: uppercase;
+    text-transform: uppercase;
 }
 
-.inner strong, li strong {
-	font-family: var(--sans);
-	-webkit-font-smoothing: antialiased;
+/* =============================================================================
+   CONTENT-SPECIFIC OVERRIDES (TODO: move to content components)
+   ============================================================================= */
+
+.column-regular h2 {
+    margin-top: 4rem;
 }
 
+.inner strong, 
+li strong {
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Prevent zoom on iOS */
 input[type="search"], 
 input[type="text"], 
 textarea {
-  font-size: 16px;
-}
-
-button, input[type="submit"] {
-	 text-transform: uppercase;
-    background: var(--color-fg);
-    color: var(--color-bg);
-    border-radius: 2px;
-    padding: 12px;
-    font-size: var(--font-size-xsmall);
+    font-size: 16px;
 }

@@ -1,41 +1,79 @@
 {
-  "title": "Networks Fast and Slow",
-  "description": "Understanding how networks transform over time through interactive visualization.",
-  "steps": [
+  "title": "Featuring UVM Research Groups",
+  "description": "Group-based perspective on UVM research.",
+  "introSection": [
     {
-      "data": {
-        "year": "2000",
-        "event": "Initial Network Formation"
-      },
-      "text": "The network begins with scattered nodes, each representing individual entities in their original positions."
+      "type": "markdown",
+      "value": "Each dot is a person, square is a paper."
     },
     {
+      "type": "markdown",
+      "value": "We focus on the trajectory of a single person."
+    }
+  ],
+  "zoomingIn": [
+    {
+      "type": "markdown",
+      "value": "**Setup**: We first color co-author nodes by author age difference (as shown in the legend), while node size is proportional to the number of collaborations. For the papers, we use the square root scaling nodes with citation count, binding node size between a radius 3 and 15 pixels. Note that we use total citation as of 2024, while collaboration is cumulative collaboration count. A cool viz could be to look at relative growth of paper node size, in terms of citation, while exploring the timeline",
       "data": {
-        "year": "2005", 
-        "event": "Lateral Expansion"
-      },
-      "text": "As connections form, the entire network shifts eastward, representing the geographic spread of influence."
+        "year": "2023",
+        "event": "",
+        "focus": ""
+      }
     },
     {
+      "type": "markdown",
+      "value": "**Early Career Foundation (1999-2006)**: Peter Sheridan Dodds's first 8 years show the initial formation of his research network. Notice the sparse but foundational collaborations that would shape his academic trajectory. We can see here that the first few papers he collaborated we older coauthors, as one would expect, but also  many collaborators of the same age.",
       "data": {
-        "year": "2010",
-        "event": "Horizontal Scaling"
-      },
-      "text": "The network stretches horizontally as new nodes join, creating wider connectivity patterns."
+        "year": "1999-2006",
+        "event": "Early Career",
+        "focus": "Foundation building"
+      }
     },
     {
+      "type": "html",
+      "value": "<b>Hiring</b>: If we look at shared affiliation with coauthors, we can see a typical patterns for early career researchers. We can see that he started out at <span style='color:#FF6B35; font-weight:bold;'>MIT</span>, before moving on to <span style='color:#4682B4; font-weight:bold;'>Columbia</span>. He briefly collaborated with people at the <span style='color:#B59410; font-weight:bold;'>Santa Fe Institute</span>, perhaps for a Post-doctoral fellowship, then did the rest of his career at <span style='color:#2E8B57; font-weight:bold;'>University of Vermont</span>. We can corroborate this information by looking up his CV, which indicate that his PHD was indeed at <span style='color:#FF6B35; font-weight:bold;'>MIT</span>, while he did a postdoc at <span style='color:#4682B4; font-weight:bold;'>Columbia</span>, but not the <span style='color:#B59410; font-weight:bold;'>Santa Fe Institute</span>. He started out at <span style='color:#2E8B57; font-weight:bold;'>UVM</span> as assistant professor earlier than we thought, in 2006.",
       "data": {
-        "year": "2015",
-        "event": "Network Inversion"
-      },
-      "text": "A major disruption causes the network to flip and compress, representing a paradigm shift in connections."
+        "year": "1999-2007",
+        "event": "Early Career",
+        "focus": "Foundation building"
+      }
     },
     {
+      "type": "markdown",
+      "value": "**Faculty first years**: The hallmark of having a research group is that you collaborate much more extensively with younger collaborators, as you become a mentor. Across domains, it happens in different ways. In this case, we can also see something different.",
       "data": {
-        "year": "2020",
-        "event": "Stabilized Growth"
-      },
-      "text": "The network returns to center but grows larger, showing maturity and expanded influence."
+        "year": "2008-2015", 
+        "event": "Complete Overview",
+        "focus": "Full network expansion"
+      }
+    },
+    {
+      "type": "markdown",
+      "value": "**Power of two**: The size of each circle represents the total number of collaborations with that person. The complete picture reveals recurrent collaborations, here with professor Danforth. The size of each circle represents the total number of collaborations with that person. The complete picture reveals the dramatic growth in collaboration density over time. The size of each circle represents the total number of collaborations with that person. The complete picture reveals the dramatic growth in collaboration density over time.",
+      "data": {
+        "year": "2008-2015", 
+        "event": "Complete Overview",
+        "focus": "Full network expansion"
+      }
+    },
+    {
+      "type": "markdown",
+      "value": "**Power of two**: Also we can look at repeated collaboration over time we presumable grad students.",
+      "data": {
+        "year": "2008-2015", 
+        "event": "Complete Overview",
+        "focus": "Full network expansion"
+      }
+    },
+    {
+      "type": "markdown",
+      "value": "**Full Career Timeline (1999-2023)**: The complete picture reveals the dramatic growth in collaboration density over time. Not all researchers are like that. It varies dramatically by domain, and even within a domain. Some researchers collaborate extensively outside of their home institutions",
+      "data": {
+        "year": "1999-2023", 
+        "event": "Complete Overview",
+        "focus": "Full network expansion"
+      }
     }
   ]
 }

@@ -1,0 +1,122 @@
+{
+    "title": "About Us",
+    "description": "Learn more about the Vermont Complex System Institute.",
+    "sections": [
+        {
+            "id": "background"
+        },
+        {
+            "id": "etymology"
+        },
+        {
+            "id": "team",
+            "hed": "The Team"
+        },
+        {
+            "id": "officeHours"
+        },
+        {
+            "id": "work"
+        },
+        {
+            "id": "speaking"
+        },
+        {
+            "id": "positions",
+            "hed": "Open Positions"
+        },
+        {
+            "id": "contact",
+            "hed": "Get in Touch"
+        }
+    ],
+    "dek": "Describe, Explain, Create, Share. Our ethos: Serious Play.",
+    "background": {
+        "detailsSummary": "How and why Complex Systems exists",
+        "detailsText": [
+            {
+                "type": "text",
+                "value": "Visual essays are an emerging form of journalism. But they are also finding a new place in science, helping to disseminate key scientific results to broader audiences."
+            },
+            {
+                "type": "text",
+                "value": "We believe that scientific results must be brought to the public in a way that is accessible and engaging. We cannot wait until scientific facts to spread by themselves."
+            },
+            {
+                "type": "text",
+                "value": "We draw extensively form The Pudding Philosophy, sharing with them their ideals. We seek to do something similar with them in our own ways."
+            },
+            {
+                "type": "text",
+                "value": "We are committed to rigorous research and analysis that help societies to become better."
+            },
+            {
+                "type": "text",
+                "value": "We're an institute that operates as a collective rather than hierarchical team."
+            },
+            {
+                "type": "text",
+                "value": "Much of our work is done autonomously, with individuals choosing their essays and owning the whole story, from research to code. Each team member can do every step: research and reporting, data analysis, design, writing, and code."
+            },
+            {
+                "type": "text",
+                "value": "One luxury that separates us from traditional scientific publications is our approach to publishing urgency. With traditional papers, it's difficult to gamble on weird, ambitious ideas if they <em>must</em> be helping you to advance your career. No one will take on risky, creative projects when they're staring at obligatory publications."
+            },
+            {
+                "type": "text",
+                "value": "We're also trying to combine science with the data journalism craft. Take for example survey data. One traditional way has been to collect data through surveys, but it is hard to reach people who don't want to waste time filling up boring surveys. We can use interactive data visualizations to collect data in an ethical way while motivating people to share their experiences."
+            }
+        ]
+    },
+    "etymology": {
+        "detailsSummary": "But what are complex systems?",
+        "detailsText": [
+            {
+                "type": "text",
+                "value": "See <a href=https://vermontcomplexsystems.org/research/manifesto/>manifesto</a>."
+            }
+        ]
+    },
+    "team": {
+        "detailsSummary": "Our team’s background",
+        "detailsText": "Our team’s backgrounds are pretty varied. There is certainly more than one way to enter this field! Here’s the short version of each of our stories:",
+        "detailsList": [
+            {
+                "lead": "Jonathan",
+                "description": "Drawing from the Pudding to do his stuff, but work at the Vermont Complex Systems Institute."
+            }
+        ]
+    },
+    "contributors": {
+        "detailsSummary": "See who else we’ve collaborated with"
+    },
+    "officeHours": {
+        "detailsSummary": "Sign up for office hours with us",
+        "detailsText": "We want to share what we’ve learned, and empower people to make great stuff of their own. So whether you’re a seasoned vet or just starting out, come <a href=https://discord.gg/BrMuxRaM>chat with us on Discord</a>!"
+    },
+    "work": {
+        "detailsSummary": "Work with us",
+        "detailsText": "We are taking requests for proposals (RFPs). Our services can be funded through grants or fee-for-service mechanisms. See <a href=https://uvmoffice.sharepoint.com/:w:/r/sites/VERSOUVMOSPO/Shared%20Documents/Working%20with%20the%20VERSO%20RSE.docx?d=w3d3444af47364b0a985532196a5ebd9c&csf=1&web=1&e=bWe1kz>here</a> for details."
+    },
+    "positions": {
+        "text": [
+            {
+                "type": "text",
+                "value": "If you’d like to be notified when we are looking for new students, sign up for our <a href=https://docs.google.com/forms/d/e/1FAIpQLSfRCOfDq3FCQwQqzN87y6LjtEqkEK80fZbGLMdLX6SqU_k2Tg/viewform target=_blank>mailing list</a>. See <a href=https://www.uvm.edu/graduate/prospective_student_resources>here</a> for more details on being a prospective student at University of Vermont."
+            }
+        ],
+        "detailsSummary": "What it’s like to study/work here",
+        "detailsList": [
+            {
+                "lead": "We seek to be transdisciplinary while being mindful of boundaries.",
+                "description": "It is tricky to collaborate in university settings, as departments are often siloed. But having an institute like we have help us draw bridges across departments. While we combine insights from different fields, we also appreciate the differences."
+            }
+        ]
+    },
+    "contact": [
+        {
+            "type": "text",
+            "value": "For enquiries about this website, get in touch at jonathan.st-onge@uvm.edu. For all other inquiries or comments, drop us a line at Charlie.Brooks@uvm.edu."
+        }
+    ]
+}

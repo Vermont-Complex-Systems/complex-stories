@@ -21,7 +21,7 @@
 	const postIntro = data.postIntro;
 
 
-	let width = $state(innerWidth.current > 1200 ? 500 : 350);
+	let width = $state(innerWidth.current > 1200 ? 450 : 350);
 	let height = 600;
 	const padding = { top: 20, right: 40, bottom: 20, left: 60 };
 
@@ -46,10 +46,9 @@
             {#each steps as text, i}
                 {@const active = scrollyIndex === i}
                 <div class="step" class:active>
-					<p> 
-						<Md text={text.value}/>
-                        <!-- {@html text.value} -->
-                    </p>
+					      <p> 
+						      <Md text={text.value}/>
+                </p>
                 </div>
             {/each}
     </Scrolly>
@@ -110,7 +109,7 @@
 	section p {
 	font-size: 22px;
 	max-width: 800px;
-	line-height: 1.6;
+	line-height: 1.3;
 	}
 
 
