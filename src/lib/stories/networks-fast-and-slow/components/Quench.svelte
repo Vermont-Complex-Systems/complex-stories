@@ -130,7 +130,7 @@
 			<ScatterCorr {nodes} {nodes_xy} {Manylinks} {mainNode} {targetNode} {scrollyIndex}/>
 		</div>
 	{:else}
-		<svg {width} {height}>
+		<svg {width} {height} style="overflow: visible;">
 			<g class="inner-chart">
 				<Edges links={renderedLinks} nodes={nodes_xy} />
 				<Nodes nodes={nodes_xy} />
