@@ -2,8 +2,6 @@
     import Sidebar from './Sidebar.svelte';
     import { Dashboard } from 'allotaxonometer-ui';
     import { uiState, allotax } from '../state.svelte.ts';
-
-    
 </script>
 
 <div class="app-container">
@@ -14,7 +12,9 @@
             
             <main class="main-content {uiState.sidebarCollapsed ? 'collapsed-sidebar' : ''}">     
                 {#if allotax.isDataReady}
-                    <Dashboard {...allotax} />
+                    <Dashboard 
+                        {...allotax} WordshiftWidth={400}
+                        />
                 {:else}
                     <div class="loading-container">
                         <div class="loading-content">
@@ -66,15 +66,14 @@
         background-color: var(--color-bg);
         max-width: none;
         margin: 0;
-        padding: 5.5rem 0 0 5.5rem; /* Added left and right padding */
+        padding: 5.5rem 0 0 0; 
         transition: padding-left var(--transition-medium) ease;
     }
-
+    
     .main-content.collapsed-sidebar {
-        padding-left: 0;
+        padding: 5.5rem 0 0 8.5rem; 
     }
     
-
     /* Responsive */
     @media (max-width: 768px) {
         .layout {
