@@ -9,60 +9,137 @@
 	
 	let { story, data } = $props();
 	
-	// Separate scroll indices for each section
-	let firstScrollyIndex = $state(0);
-	let secondScrollyIndex = $state(0);
-	let thirdScrollyIndex = $state(0);
+	// Global state for which section is currently active
+	let activeSection = $state('none');
+	let activeSectionData = $state({});
 	
-	const intro = data.intro;
-	const steps = data.firstSection;
+	// Individual section states
+	let firstSectionIndex = $state(undefined);
+	let firstSectionProgress = $state(0);
+	
+	let secondSectionIndex = $state(undefined);
+	let secondSectionProgress = $state(0);
+	
+	let thirdSectionIndex = $state(undefined);
+	let thirdSectionProgress = $state(0);
+	
+	const firstSectionSteps = data.firstSection;
 	const secondSectionSteps = data.secondSection;
-
-	let currentSection = $state(undefined);
-	let firstProgress = $state(0);
-	let secondProgress = $state(0);
-	let thirdProgress = $state(0);
-
-	let valueForSlider = $derived.by(() => {
-		console.log("secondScrollyIndex", secondScrollyIndex);
-		if (secondScrollyIndex < 2) {
-			return 1
-		} else if (secondScrollyIndex == 2) {
-			return 5
-		} else if (secondScrollyIndex == 3) {
-			return 1
-		} else {
-			return 7
-		}
-	});
-
-	let modeForSlider = $state("default");
-
+	const thirdSectionSteps = data.secondSection; // Reusing for now
+	
 	// Safe window width check
 	let innerWidth = $state(browser ? window.innerWidth : 1200);
 	
 	if (browser) {
-		// Update innerWidth on resize
+		let resizeTimeout;
 		const updateWidth = () => {
-			innerWidth = window.innerWidth;
+			clearTimeout(resizeTimeout);
+			resizeTimeout = setTimeout(() => {
+				innerWidth = window.innerWidth;
+			}, 100);
 		};
 		window.addEventListener('resize', updateWidth);
 	}
+
+	// Dynamic offset calculation
+	let scrollyOffset = $derived(() => {
+		if (innerWidth > 1200) return '50vh';
+		if (innerWidth > 768) return '40vh';
+		return '30vh';
+	});
+	
+	// Update active section based on which section has an active step
+	$effect(() => {
+		if (firstSectionIndex !== undefined) {
+			activeSection = 'first';
+			activeSectionData = {
+				index: firstSectionIndex,
+				progress: firstSectionProgress
+			};
+		} else if (secondSectionIndex !== undefined) {
+			activeSection = 'second';
+			activeSectionData = {
+				index: secondSectionIndex,
+				progress: secondSectionProgress
+			};
+		} else if (thirdSectionIndex !== undefined) {
+			activeSection = 'third';
+			activeSectionData = {
+				index: thirdSectionIndex,
+				progress: thirdSectionProgress
+			};
+		} else {
+			activeSection = 'none';
+			activeSectionData = {};
+		}
+	});
+	
+	// Derived values for second section
+	let valueForSlider = $derived.by(() => {
+		if (activeSection !== 'second') return 1;
+		const index = activeSectionData.index ?? 0;
+		
+		switch (index) {
+			case 0:
+			case 1:
+				return 1;
+			case 2:
+				return 5;
+			case 3:
+				return 1;
+			default:
+				return 7;
+		}
+	});
+
+	let modeForSlider = $derived.by(() => {
+		if (activeSection !== 'second') return "words";
+		const index = activeSectionData.index ?? 0;
+		return index <= 2 ? "words" : "chars";
+	});
 </script>
 
 <!-- Story wrapper with parchment theme -->
 <div class="story-theme">
 	<Hero />
 	
+	<!-- Global sticky chart container -->
+	<div class="global-chart-container">
+		{#if activeSection === 'first'}
+			<div class="chart-content" key="first">
+				<TextInterpolator 
+					progress={activeSectionData.progress ?? 0} 
+					currentStep={activeSectionData.index ?? 0} 
+				/>
+			</div>
+		{:else if activeSection === 'second'}
+			<div class="chart-content" key="second">
+				<StackedSlider 
+					bind:sliderValue={valueForSlider} 
+					renderMode={modeForSlider} 
+					scrollyIndex={activeSectionData.index ?? 0}
+				/>
+			</div>
+		{:else if activeSection === 'third'}
+			<div class="chart-content" key="third">
+				<Scatter 
+					value={activeSectionData.index ?? 0} 
+					steps={thirdSectionSteps} 
+				/>
+			</div>
+		{/if}
+	</div>
+	
 	<!-- First Section -->
-	<section class="scrolly-section">
-		<div class="chart-container-scrolly">
-			<TextInterpolator progress={firstProgress} currentStep={firstScrollyIndex} />
-		</div>
+	<section class="story-section" id="first-section">
 		<div class="spacer"></div>
-		<Scrolly bind:value={firstScrollyIndex} bind:scrollProgress={firstProgress} offset={innerWidth > 1200 ? '50vh' : '20vh'}>
-			{#each steps as text, i}
-				{@const active = firstScrollyIndex === i}
+		<Scrolly 
+			bind:value={firstSectionIndex} 
+			bind:scrollProgress={firstSectionProgress} 
+			offset={scrollyOffset}
+		>
+			{#each firstSectionSteps as text, i}
+				{@const active = firstSectionIndex === i}
 				<div class="step" class:active>
 					<div class="step-content">
 						<Md text={text.value}/>
@@ -71,24 +148,24 @@
 			{/each}
 		</Scrolly>
 		<div class="spacer"></div>
-	</section>	
+	</section>
 	
-	<div class="spacer"></div>
-	
-	<!-- Content Break -->
+	<!-- Section Break -->
 	<div class="story-section-break">
 		<h2>What is a token?</h2>
+		<p>Let's explore how language models break down text into manageable pieces.</p>
 	</div>
 	
 	<!-- Second Section -->
-	<section class="scrolly-section">
-		<div class="chart-container-scrolly" style="display: {secondScrollyIndex > 0 ? 'block' : 'none'};">
-			<StackedSlider bind:sliderValue={valueForSlider} renderMode={modeForSlider} scrollyIndex={secondScrollyIndex}></StackedSlider>
-		</div>
-		
-		<Scrolly bind:value={secondScrollyIndex} bind:scrollProgress={secondProgress} offset={innerWidth > 1200 ? '50vh' : '20vh'}>
+	<section class="story-section" id="second-section">
+		<div class="spacer"></div>
+		<Scrolly 
+			bind:value={secondSectionIndex} 
+			bind:scrollProgress={secondSectionProgress} 
+			offset={scrollyOffset}
+		>
 			{#each secondSectionSteps as text, i}
-				{@const active = secondScrollyIndex === i}
+				{@const active = secondSectionIndex === i}
 				<div class="step" class:active>
 					<div class="step-content">
 						<Md text={text.value}/>
@@ -96,23 +173,25 @@
 				</div>
 			{/each}
 		</Scrolly>
+		<div class="spacer"></div>
 	</section>
 	
-	<!-- Content Break -->
+	<!-- Section Break -->
 	<div class="story-section-break">
 		<h2>The Distributional Hypothesis</h2>
 		<p>The Distributional Hypothesis states that words that occur in the same contexts tend to have similar meanings. So how does an LLM group different words?</p>
 	</div>
 	
 	<!-- Third Section -->
-	<section class="scrolly-section">
-		<div class="chart-container-scrolly" style="display: {thirdScrollyIndex > 0 ? 'block' : 'none'};">
-			<Scatter value={thirdScrollyIndex} steps={steps} />
-		</div>
-		
-		<Scrolly bind:value={thirdScrollyIndex} bind:scrollProgress={thirdProgress} offset={innerWidth > 1200 ? '50vh' : '20vh'}>
-			{#each secondSectionSteps as text, i}
-				{@const active = thirdScrollyIndex === i}
+	<section class="story-section" id="third-section">
+		<div class="spacer"></div>
+		<Scrolly 
+			bind:value={thirdSectionIndex} 
+			bind:scrollProgress={thirdSectionProgress} 
+			offset={scrollyOffset}
+		>
+			{#each thirdSectionSteps as text, i}
+				{@const active = thirdSectionIndex === i}
 				<div class="step" class:active>
 					<div class="step-content">
 						<Md text={text.value}/>
@@ -120,14 +199,13 @@
 				</div>
 			{/each}
 		</Scrolly>
+		<div class="spacer"></div>
 	</section>
 </div>
 
 <style>
 	/* =============================================================================
 	   STORY THEME SCOPE
-	   
-	   Override design tokens for this specific story
 	   ============================================================================= */
 	
 	.story-theme {
@@ -169,14 +247,61 @@
 	}
 	
 	/* =============================================================================
-	   STORY-SPECIFIC LAYOUT
+	   GLOBAL CHART CONTAINER
 	   ============================================================================= */
+	
+	.global-chart-container {
+		position: fixed;
+		top: calc(50vh - 375px);
+		right: 5%;
+		width: 45%;
+		height: 750px;
+		z-index: var(--z-middle);
+		pointer-events: none; /* Allow scrolling through it */
+	}
+	
+	.chart-content {
+		width: 100%;
+		height: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: auto; /* Re-enable for chart interactions */
+		
+		/* Smooth transitions when switching between charts */
+		animation: fadeIn 0.6s ease-in-out;
+	}
+	
+	@keyframes fadeIn {
+		from { opacity: 0; transform: translateY(20px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+	
+	/* =============================================================================
+	   STORY SECTIONS
+	   ============================================================================= */
+	
+	.story-section {
+		position: relative;
+		margin: 0;
+		padding: 0 1rem;
+		min-height: 100vh; /* Ensure each section takes full viewport */
+	}
 	
 	.story-section-break {
 		max-width: var(--width-column-wide);
-		margin: 4rem auto;
-		padding: 0 2rem;
+		margin: 6rem auto;
+		padding: 3rem 2rem;
 		text-align: center;
+		
+		/* Parchment-themed styling */
+		background: rgba(255, 255, 255, 0.95);
+		backdrop-filter: blur(8px);
+		border: 2px solid var(--color-border);
+		border-radius: var(--border-radius);
+		box-shadow: 
+			0 8px 30px rgba(59, 47, 30, 0.15),
+			0 2px 6px rgba(59, 47, 30, 0.25);
 	}
 	
 	.story-section-break h2 {
@@ -193,27 +318,6 @@
 		color: var(--color-secondary-gray);
 		max-width: 600px;
 		margin: 0 auto;
-	}
-	
-	/* =============================================================================
-	   SCROLLYTELLING LAYOUT
-	   ============================================================================= */
-	
-	.scrolly-section {
-		position: relative;
-		margin: 2rem auto;
-		max-width: none;
-		padding: 0 1rem;
-	}
-	
-	.chart-container-scrolly {
-		width: 50%;
-		height: 750px;
-		position: sticky;
-		top: calc(50vh - 375px);
-		right: 5%;
-		margin-left: auto;
-		z-index: var(--z-middle);
 	}
 	
 	.spacer {
@@ -252,7 +356,7 @@
 		/* Smooth transitions */
 		transition: all var(--transition-medium) ease;
 		transform: translateY(0);
-		opacity: 0.8;
+		opacity: 0.7;
 	}
 	
 	.step.active .step-content {
@@ -269,8 +373,8 @@
 	   ============================================================================= */
 	
 	@media (max-width: 1200px) {
-		.chart-container-scrolly {
-			width: 60%;
+		.global-chart-container {
+			width: 55%;
 			height: 600px;
 		}
 		
@@ -282,21 +386,17 @@
 	}
 	
 	@media (max-width: 768px) {
-		.story-section-break {
-			margin: 3rem auto;
-			padding: 0 1rem;
-		}
-		
-		.story-section-break h2 {
-			font-size: var(--font-size-large);
-		}
-		
-		.chart-container-scrolly {
-			width: 100%;
-			height: 400px;
+		.global-chart-container {
 			position: relative;
 			top: auto;
+			right: auto;
+			width: 100%;
+			height: 400px;
 			margin: 2rem auto;
+		}
+		
+		.story-section {
+			min-height: auto;
 		}
 		
 		.step {
@@ -315,8 +415,13 @@
 			transform: translateY(-2px) scale(1.01);
 		}
 		
-		.scrolly-section {
-			padding: 0 0.5rem;
+		.story-section-break {
+			margin: 4rem auto;
+			padding: 2rem 1rem;
+		}
+		
+		.story-section-break h2 {
+			font-size: var(--font-size-large);
 		}
 	}
 	
