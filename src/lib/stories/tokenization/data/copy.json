@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "intro": [
     {
       "type": "markdown",
@@ -46,9 +45,5 @@
       "type": "markdown",
       "value": "How does a model make connections between words? How does it understand something?"
     }
-=======
-  "steps": [
-    {}
->>>>>>> 09f94f2c38dd9f7005a437a97c2a0ab98fa76b17
   ]
 }
