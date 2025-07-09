@@ -82,6 +82,18 @@
         }
     }
     
+    // Handle option keyboard events
+    function handleOptionKeyDown(e, index, system) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (system === 'sys1') {
+                selectSys1File(index);
+            } else {
+                selectSys2File(index);
+            }
+        }
+    }
+    
     // Handle click selection
     function selectSys1File(index) {
         selectedSys1Index = index;
@@ -118,6 +130,14 @@
             handleFiles(files);
         }
     }
+
+    // Handle drop zone keyboard events
+    function handleDropZoneKeyDown(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            fileInput.click();
+        }
+    }
 </script>
 
 <Accordion.Item value="upload" class="accordion-item">
@@ -131,12 +151,17 @@
     </Accordion.Header>
     <Accordion.Content class="accordion-content">
         <div class="upload-section">
-            <!-- Drop Zone -->
+            <!-- Drop Zone with proper accessibility -->
             <div 
                 class="drop-zone {dragOver ? 'drag-over' : ''}"
                 ondragover={handleDragOver}
                 ondragleave={handleDragLeave}
                 ondrop={handleDrop}
+                onkeydown={handleDropZoneKeyDown}
+                onclick={() => fileInput.click()}
+                role="button"
+                tabindex="0"
+                aria-label="Upload files by dragging and dropping or clicking to browse"
             >
                 <input
                     type="file"
@@ -181,7 +206,9 @@
                                 <div 
                                     class="select-option {selectedSys1Index === index ? 'selected' : ''} {index === 0 ? 'auto-selected' : ''}"
                                     onclick={() => selectSys1File(index)}
+                                    onkeydown={(e) => handleOptionKeyDown(e, index, 'sys1')}
                                     role="option"
+                                    tabindex="0"
                                     aria-selected={selectedSys1Index === index}
                                 >
                                     {file.name}.{file.fileType}
@@ -207,7 +234,9 @@
                                 <div 
                                     class="select-option {selectedSys2Index === index ? 'selected' : ''} {index === 1 ? 'auto-selected' : ''}"
                                     onclick={() => selectSys2File(index)}
+                                    onkeydown={(e) => handleOptionKeyDown(e, index, 'sys2')}
                                     role="option"
+                                    tabindex="0"
                                     aria-selected={selectedSys2Index === index}
                                 >
                                     {file.name}.{file.fileType}
@@ -283,6 +312,12 @@
     .drop-zone.drag-over {
         border-color: var(--color-good-blue);
         background-color: rgba(0, 123, 255, 0.05);
+    }
+
+    .drop-zone:focus {
+        outline: 2px solid var(--color-focus, #3b82f6);
+        outline-offset: 2px;
+        border-color: var(--color-good-blue);
     }
 
     .file-input-hidden {
@@ -391,8 +426,10 @@
         flex-shrink: 0;
     }
 
-    .select-option:hover {
+    .select-option:hover,
+    .select-option:focus {
         background-color: rgba(0, 123, 255, 0.1);
+        outline: none;
     }
 
     .select-option.selected {
@@ -409,7 +446,6 @@
         background-color: var(--color-good-blue);
         color: white;
     }
-
 
     /* Clear Section */
     .clear-section {

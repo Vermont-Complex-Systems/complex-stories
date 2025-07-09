@@ -124,7 +124,6 @@
   });
 
   // Tooltip 
-
   let showTooltip = $state(false);
   let tooltipContent = $state('');
   let mouseX = $state(0);
@@ -145,6 +144,16 @@
 
   function hideTooltip() {
     showTooltip = false;
+  }
+
+  // Keyboard event handler for data points
+  function handlePointKeydown(event, point) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      showPointTooltip(event, point);
+    } else if (event.key === 'Escape') {
+      hideTooltip();
+    }
   }
 </script>
 
@@ -167,8 +176,8 @@
           {/each}
         </g>
         
-        <!-- Data points -->
-        {#each displayData as point}
+        <!-- Data points with proper accessibility -->
+        {#each displayData as point, index}
           <circle
             cx={point.x}
             cy={point.y}
@@ -178,8 +187,16 @@
             stroke-width={point.type === 'paper' ? "0.8" : "0.3"}
             fill-opacity={point.opacity}
             class="data-point"
-            on:mouseenter={(e) => showPointTooltip(e, point)}
-            on:mouseleave={hideTooltip}
+            role="button"
+            tabindex="0"
+            aria-label={point.type === 'paper' ? 
+              `Paper: ${point.title}, Year: ${point.year}` : 
+              `Coauthor: ${point.name}, Year: ${point.year}`}
+            onmouseenter={(e) => showPointTooltip(e, point)}
+            onmouseleave={hideTooltip}
+            onkeydown={(e) => handlePointKeydown(e, point)}
+            onfocus={(e) => showPointTooltip(e, point)}
+            onblur={hideTooltip}
           />
         {/each}
       </svg>
@@ -234,8 +251,8 @@
     transition: fill 0.6s ease, fill-opacity 0.7s ease;
   }
 
-  /* Dark mode support */
-  :global(.dark) .tooltip {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  .chart-wrapper :global(.data-point:focus) {
+    outline: 2px solid var(--color-focus, #3b82f6);
+    outline-offset: 2px;
   }
 </style>

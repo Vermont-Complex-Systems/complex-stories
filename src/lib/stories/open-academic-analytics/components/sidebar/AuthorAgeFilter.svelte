@@ -105,6 +105,17 @@
     }
   }
 
+  // Handle keyboard events for bins
+  function handleBinKeydown(event, binIndex) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleBinClick(binIndex, event);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      clearFilter();
+    }
+  }
+
   // Clear selection
   function clearFilter() {
     selectedBins = new Set();
@@ -143,11 +154,13 @@
       <svg {width} {height} class="age-chart">
         <g transform="translate({margin.left}, {margin.top})">
           
-          <!-- Histogram bars -->
+          <!-- Histogram bars with accessibility -->
           {#each histogram as bin, i}
             {@const barHeight = chartHeight - yScale(bin.length)}
             {@const barWidth = Math.max(1, xScale(bin.x1) - xScale(bin.x0) - 1)}
             {@const isSelected = selectedBins.has(i)}
+            {@const ageRangeText = `${Math.round(bin.x0)} to ${Math.round(bin.x1)} years`}
+            {@const countText = `${bin.length} author${bin.length !== 1 ? 's' : ''}`}
             <rect
               x={xScale(bin.x0)}
               y={yScale(bin.length)}
@@ -158,6 +171,11 @@
               stroke-width={isSelected ? "2" : "0.5"}
               style="cursor: pointer;"
               onclick={(e) => handleBinClick(i, e)}
+              onkeydown={(e) => handleBinKeydown(e, i)}
+              tabindex="0"
+              role="button"
+              aria-label={`Age range ${ageRangeText}, ${countText}. ${isSelected ? 'Selected' : 'Not selected'}`}
+              aria-pressed={isSelected}
               class="histogram-bar"
             />
           {/each}
@@ -177,7 +195,8 @@
       <p class="filter-info">
         <strong>Click</strong> a bar to select that age range • 
         <strong>Ctrl+Click</strong> to select multiple • 
-        <strong>Shift+Click</strong> to select range
+        <strong>Shift+Click</strong> to select range •
+        <strong>Escape</strong> to clear selection
       </p>
     </div>
     
@@ -266,9 +285,16 @@
     transition: all 0.2s ease;
   }
 
-  .histogram-bar:hover {
+  .histogram-bar:hover,
+  .histogram-bar:focus {
     fill-opacity: 0.8;
     stroke-width: 2;
+    outline: none;
+  }
+
+  .histogram-bar:focus {
+    stroke: var(--color-focus, #3b82f6);
+    stroke-width: 3;
   }
 
   :global(.age-chart .axis-label) {

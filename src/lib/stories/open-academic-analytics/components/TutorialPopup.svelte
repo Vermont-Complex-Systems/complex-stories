@@ -16,6 +16,13 @@
     closeTutorial();
   }
   
+  // Handle keyboard events for backdrop
+  function handleBackdropKeydown(event) {
+    if (event.key === 'Escape') {
+      closeTutorial();
+    }
+  }
+  
   // Check if user has already dismissed this
   let shouldShow = $derived.by(() => {
     if (typeof window === 'undefined') return false;
@@ -24,17 +31,24 @@
 </script>
 
 {#if shouldShow}
-  <!-- Backdrop -->
-  <div class="popup-backdrop" onclick={closeTutorial}></div>
+  <!-- Backdrop with proper accessibility -->
+  <div 
+    class="popup-backdrop" 
+    onclick={closeTutorial}
+    onkeydown={handleBackdropKeydown}
+    role="button"
+    tabindex="0"
+    aria-label="Close tutorial popup"
+  ></div>
   
   <!-- Popup Modal -->
-  <div class="popup-modal" role="dialog" aria-labelledby="tutorial-title" aria-describedby="tutorial-description">
+  <div class="popup-modal" role="dialog" aria-labelledby="tutorial-title" aria-describedby="tutorial-description" aria-modal="true">
     <div class="popup-header">
       <div class="popup-title-section">
         <BookOpen size={20} />
         <h2 id="tutorial-title">Welcome to Open Academic Analytics!</h2>
       </div>
-      <Button.Root onclick={closeTutorial} variant="ghost" size="sm" class="close-button">
+      <Button.Root onclick={closeTutorial} variant="ghost" size="sm" class="close-button" aria-label="Close tutorial">
         <X size={16} />
       </Button.Root>
     </div>
@@ -71,6 +85,12 @@
     background: rgba(0, 0, 0, 0.5);
     z-index: 1000;
     backdrop-filter: blur(2px);
+    cursor: pointer;
+  }
+  
+  .popup-backdrop:focus {
+    outline: 2px solid var(--color-focus, #3b82f6);
+    outline-offset: -2px;
   }
   
   .popup-modal {
