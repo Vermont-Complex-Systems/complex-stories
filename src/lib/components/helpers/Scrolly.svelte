@@ -18,6 +18,8 @@
 		bottom = 0,
 		increments = 100,
 		value = $bindable(undefined),
+		// add scrollProgress as prop
+		scrollProgress = $bindable(undefined),
 		children
 	} = $props();
 
@@ -27,19 +29,36 @@
 	let intersectionObservers = [];
 	let container = undefined;
 
-	function mostInView () {
-		let maxRatio = 0;
-		let maxIndex = 0;
-		for (let i = 0; i < steps.length; i++) {
-			if (steps[i] > maxRatio) {
-				maxRatio = steps[i];
-				maxIndex = i;
-			}
+function mostInView () {
+	let maxRatio = 0;
+	let maxIndex = 0;
+	for (let i = 0; i < steps.length; i++) {
+		if (steps[i] > maxRatio) {
+			maxRatio = steps[i];
+			maxIndex = i;
 		}
+	}
 
-		if (maxRatio > 0) value = maxIndex;
-		else value = undefined;
-	};
+	if (maxRatio > 0) {
+		value = maxIndex;
+		
+		// Calculate scroll progress for the current step
+		if (nodes && nodes[maxIndex]) {
+			const rect = nodes[maxIndex].getBoundingClientRect();
+			const viewportHeight = window.innerHeight;
+			let prog = (viewportHeight / 2 - rect.top) / rect.height;
+			prog = Math.min(1, Math.max(0, prog));
+			scrollProgress = prog;
+		} else {
+			scrollProgress = 0;
+		}
+		
+	} else {
+		value = undefined;
+		scrollProgress = 0;
+	}
+	
+}
 
 	function createObserver(node, index) {
 		const handleIntersect = (e) => {
@@ -79,6 +98,8 @@
 		bottom;
 		update();
 	});
+
+
 
 </script>
 
