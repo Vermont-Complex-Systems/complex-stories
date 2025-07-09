@@ -12,13 +12,13 @@ This project offers s micro-macro perspective on the coevolution of scientific p
  - [ ] Maybe add macro plots where we can do some statistics.
    - [ ] time series plot where horizontal axis is standardized age, vertical axis is number of collaborations, and color is (bucketized) relative academic age. That is, what is the proportion of all authors that start to collaborate more extensively with younger authors starting at, say, `academic_age = 10`? How is that different across colleges? Within college, how are faculties with research groups differ from non-PIs.
 
-### Implementing principled data processing using dagster
+### Back-end: Implementing principled data processing using dagster
 
-This project is also a dagster project, which implement a principled data processing pipeline. Here's a whirlwind tour of the approach, addressing reccurent concerns with messy, collaborative projects.
+We use [dagster](https://dagster.io/) as modern data orchestration tool to implement [principled data processing](https://www.youtube.com/watch?v=ZSunU9GQdcI). Here's a whirlwind tour of the approach, addressing reccurent concerns with messy, collaborative projects.
 
  - `Dagster offers a useful visual representation of code dependencies.` Looking at makefiles is annoying, who doesn't like to look at a shiny directed acyclic graph. 
  - `Atomizing tasks as sets of input-output scripts is up to the user.` Dagster only helps visualizing the dependencies, it does not constrain the user to adopt the PDP philosophy. As such, users must provide the dataflow such that each task takes a input, and return an output. 
- - `Duckdb working space within task and components`. Duckdb helps with managing complex data wrangling step, which can be reflected in the front-end. We use duckdb to manage our caching as well, using `primary keys` to avoid silly mistakes. By isomg duckdb to manage data wrangling on the fly in our web interface, we can transform large chunk of data seamlessly.
+ - `Duckdb working space within task and components`. [Duckdb](https://duckdb.org/) helps with managing complex data wrangling step, which can be reflected in the front-end. We use duckdb to manage our caching as well, using `primary keys` to avoid silly mistakes. By isomg duckdb to manage data wrangling on the fly in our web interface, we can transform large chunk of data seamlessly.
  - `Integrate back-end with front-end`. Each task, or asset, have a clear pathway to the front-end, and the front-end can be used to validate the data pipeline. It is modular through and through, such that even widgets on the dashboard can be tied to relevant dependencies in the backend.
  - `Dagster accomodate more sophisticated scenarios`. Dagster helps make our web app more fancy, such as by dealing with changing APIs or automation of data intake on a daily basis.
 
@@ -73,3 +73,9 @@ The easiest way to deploy your Dagster project is to use Dagster+.
 Check out the [Dagster+ documentation](https://docs.dagster.io/dagster-plus/) to learn more.
 </details>
 
+
+### Front-end: A very svelte dashboard
+
+ - `Fully customizable dashboard`: Integrates seamlessly with the front-end ecosystems, using [bits-ui](https://bits-ui.com/) for creating all kinds of components (sidebar, toggle, filters, etc). 
+ - `High-level abstraction`: Making use of [svelte-plot](https://svelteplot.dev/) for high-level charting.
+ - `Data transformation powered by duckdb`: As with our back-end, we use duckdb to wrangle data on the fly. Using duckdb both for back-end and fron-end as tremendous advantage, helping with maintainability.

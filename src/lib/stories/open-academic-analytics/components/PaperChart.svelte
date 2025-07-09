@@ -79,7 +79,7 @@
       ? `\nImpact: ${point.citation_category.replace('_', ' ')}`
       : '';
     
-    tooltipContent = `Title: ${point.title}\nYear: ${point.year}\n${citationInfo}${impactInfo}\nCoauthors: ${point.nb_coauthors}\nType: ${point.work_type}`;
+    tooltipContent = `Title: ${point.title}\nYear: ${point.year}\n${citationInfo}${impactInfo}\nCoauthors: ${point.authors}\nType: ${point.work_type}\nDOI: ${point.doi}`;
     
     showTooltip = true;
   }

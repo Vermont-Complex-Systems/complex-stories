@@ -25,7 +25,7 @@
     border: 1px solid var(--color-border);
     padding: 0.75rem 1rem; /* More generous padding */
     border-radius: var(--border-radius);
-    font-size: var(--font-size-small);
+    font-size: var(--font-size-xsmall);
     font-family: var(--sans);
     white-space: pre-line;
     line-height: 1.4;
