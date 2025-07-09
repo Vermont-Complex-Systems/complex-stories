@@ -4,8 +4,7 @@
   import Stories from "$lib/components/Stories.svelte";
   import FilterBar from "$lib/components/FilterBar.svelte";
   import { ChevronDown } from "@lucide/svelte";
-  import ConstructionBanner from "$lib/components/helpers/ConstructionBanner.svelte";
-
+  
   const initMax = 6;
   const { stories } = getContext("Home");
 
@@ -47,8 +46,6 @@
   });
 </script>
 
-<ConstructionBanner />
-
 <div class="content">
   <FilterBar bind:activeFilter filters={allFilters} />
   
@@ -67,6 +64,11 @@
 </div>
 
 <style>
+  /* Or be more specific to avoid affecting other pages */
+  :global(main:has(.content)) {
+    max-width: none;
+  }
+
   .content {
     position: relative;
   }

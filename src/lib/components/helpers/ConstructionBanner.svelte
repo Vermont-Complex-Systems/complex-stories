@@ -57,7 +57,7 @@
   "
 >
   {#if showIcon}
-    <AlertTriangle size={18} />
+    <AlertTriangle size={78} />
   {/if}
   <span>{message}</span>
 </div>
@@ -65,7 +65,7 @@
 <style>
   .construction-banner {
     position: fixed;
-    z-index: calc(var(--z-overlay) + 100);
+    z-index: calc(var(--z-overlay));
     
     display: flex;
     align-items: center;
