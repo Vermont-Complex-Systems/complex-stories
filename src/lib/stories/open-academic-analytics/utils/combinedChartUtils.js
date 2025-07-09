@@ -87,7 +87,6 @@ export function createCoauthorPoint(d, targetY, collaborationScale) {
     coauth_age: d.coauth_age,
     institution: d.institution,
     shared_institutions: d.shared_institutions,
-    // Add new pre-computed fields
     collaboration_intensity: d.collaboration_intensity,
     institution_normalized: d.institution_normalized,
     coauth_institution_normalized: d.coauth_institution_normalized,

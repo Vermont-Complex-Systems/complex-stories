@@ -23,7 +23,7 @@ async function initDuckDB() {
 
   const bundle = await duckdb.selectBundle(MANUAL_BUNDLES);
   const worker = new Worker(bundle.mainWorker);
-  const logger = new duckdb.ConsoleLogger();
+  const logger = new duckdb.VoidLogger();
 
   db = new duckdb.AsyncDuckDB(logger, worker);
   await db.instantiate(bundle.mainModule);

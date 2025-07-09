@@ -59,22 +59,23 @@ export async function aggData() {
     await registerTables();
     const result = await query(`
         WITH tmp AS (
-                SELECT 
-                    COUNT(*) as collaboration_count, 
-                    age_category, 
-                    strftime(age_std::DATE, '%Y')::INT as age_std, 
-                    name
-                    FROM coauthor 
-                    GROUP BY age_category, strftime(age_std::DATE, '%Y') , name
-                    )
             SELECT 
-                MEAN(collaboration_count) as mean_collabs,
-                STDDEV(collaboration_count) as std_collabs,
+                COUNT(*) as collaboration_count, 
                 age_category, 
-                age_std
-            from tmp    
-            GROUP BY age_category, age_std
-            ORDER BY age_category, age_std
+                substr(strftime(age_std::DATE, '%Y'), -2) as year_short,
+                name
+            FROM coauthor 
+            GROUP BY age_category, substr(strftime(age_std::DATE, '%Y'), -2), name
+        )
+        SELECT 
+            AVG(collaboration_count) as mean_collabs,
+            QUANTILE_CONT(collaboration_count, 0.5) as median_collabs,
+            STDDEV(collaboration_count) as std_collabs,
+            age_category, 
+            year_short::INT as age_std
+        FROM tmp    
+        GROUP BY age_category, age_std
+        ORDER BY age_category, age_std
         `);
     return result;
 }

@@ -4,6 +4,7 @@
   import PaperChart from './PaperChart.svelte';
   import CoauthorChart from './CoauthorChart.svelte';
   import Toggle from './Toggle.svelte'
+  import RangeFilter from './RangeFilter.svelte'
   import { dashboardState, uiState } from '../state.svelte.ts';
   import { innerWidth } from 'svelte/reactivity/window';
   
@@ -39,9 +40,15 @@
 
   const chartHeight = $derived(coauthorData?.length > 600 ? coauthorData?.length < 1500 ? 1200 : 2200 : 800);
 
+  let maxAge = $state(40);
   let isFacet = $state(false);
+  let showMed = $state(false);
   let showArea = $state(false); // Add this new toggle state
   
+  let filteredAggData = $derived(
+    aggData?.filter(d => d.age_std <= maxAge) || []
+  );
+
   $inspect(aggData)
   
 </script>
@@ -76,20 +83,46 @@
           <span>Facet by Age Category</span>
           <Toggle bind:isTrue={isFacet}/>
           
+          <span>Show median</span>
+          <Toggle bind:isTrue={showMed}/>
+          
           <span>Show Standard Deviation</span>
           <Toggle bind:isTrue={showArea}/>
+
+          <RangeFilter 
+            bind:value={maxAge}
+            label="Max academic age: {maxAge} "
+          />
         </div>
           <Plot grid frame 
+              x={{label: "Academic age →"}}
+              y={{label: "↑ Mean # of collaborations"}}
               color={{legend: true, scheme: ["#404788FF", "#20A387FF", "#FDE725FF"]}}
               >
-              <LineY data={aggData}  
-                x="age_std" 
-                y="mean_collabs" 
-                stroke="age_category" 
-                fx={isFacet ? "age_category" : null}/>
+              {#if showMed}
+                <LineY data={filteredAggData}  
+                  x="age_std" 
+                  y="mean_collabs"
+                  stroke="age_category" 
+                  strokeOpacity=0.4
+                  fx={isFacet ? "age_category" : null}/>
+                  <LineY data={filteredAggData}  
+                    x="age_std" 
+                    y="median_collabs"
+                    strokeDasharray=5
+                    strokeWidth=3
+                    stroke="age_category" 
+                    fx={isFacet ? "age_category" : null}/>
+              {:else}
+                  <LineY data={filteredAggData}  
+                    x="age_std" 
+                    y="mean_collabs"
+                    stroke="age_category" 
+                    fx={isFacet ? "age_category" : null}/>
+              {/if}
               {#if showArea}
                 <AreaY 
-                  data={aggData} 
+                  data={filteredAggData} 
                   x="age_std" 
                   y1={(d) => d.mean_collabs - d.std_collabs}  
                   y2={(d) => d.mean_collabs + d.std_collabs} 
