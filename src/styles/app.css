@@ -56,23 +56,10 @@ a:hover {
    LAYOUT UTILITIES
    ============================================================================= */
 
-<<<<<<< HEAD
-.centered-max-width {
-	max-width: var(--width-column-wide);
-	margin: 0 auto;
-	padding: 0;
-}
-
-svg {
-	display: block;
-	width: 100%;
-	height: auto;
-=======
 main {
     max-width: var(--width-column-wide);
     margin: 0 auto;
     padding: 0;
->>>>>>> 09f94f2c38dd9f7005a437a97c2a0ab98fa76b17
 }
 
 .column-wide {
