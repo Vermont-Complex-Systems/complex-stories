@@ -280,10 +280,4 @@
   .chart-wrapper :global(.data-point:hover) {
     stroke-width: 1;
   }
-
-  :global(.dark) .legend {
-    background: var(--color-bg);
-    border-color: var(--color-border);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
 </style>

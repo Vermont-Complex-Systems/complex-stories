@@ -155,11 +155,3 @@
 </script>
 
 <P5 {sketch} />
-
-<style>
-  :global(canvas) {
-    display: block;
-    max-width: 100%;
-    max-height: 100%;
-  }
-</style>

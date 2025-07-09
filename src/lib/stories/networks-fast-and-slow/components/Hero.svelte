@@ -23,11 +23,15 @@
 		<div class="centered-layout">
 			<div class="text-side">
 				<h1>Networks, Fast and Slow</h1>
+				<div class="article-meta">
+					<p class="author">By <a href="{base}/author/jonathan-st-onge">Jonathan St-Onge</a> and <a href="https://www.uvm.edu/socks/node/38?rnd=0.8126330183365708#giulioburgio">Giulio Burgio</a></p>
+					<p class="date">May 16, 2025</p>
+				</div>
 				<div class="text-block">
-					<p>
+					<!-- <p>
 						By <a href="https://jstonge.vercel.app/about">Jonathan St-Onge</a> and
 						<a href="https://www.uvm.edu/socks/node/38?rnd=0.8126330183365708#giulioburgio">Giulio Burgio</a>.
-					</p>
+					</p> -->
 					<p>
 						During Covid-19, the Washington Post published the
 						<a href="https://www.washingtonpost.com/graphics/2020/world/corona-simulator/">
@@ -77,6 +81,25 @@
 		background-color: var(--color-bg);
 	}
 
+	.article-meta {
+        margin: -1rem 0 2rem 0; /* Negative margin to pull closer to title */
+        font-family: var(--sans);
+    }
+
+    .article-meta .author {
+        font-size: var(--font-size-medium);
+        color: var(--color-secondary-gray);
+        margin: 0 0 0.25rem 0;
+        font-weight: 500;
+    }
+
+    .article-meta .date {
+        font-size: var(--font-size-small);
+        color: var(--color-tertiary-gray);
+        margin: 0;
+        font-weight: 400;
+    }
+
 	.top-nav {
 		position: absolute;
 		top: 1rem;
@@ -109,7 +132,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-start;
-		gap: 2rem;
+		gap: 3rem;
 	}
 
 	.text-side {
@@ -118,36 +141,21 @@
 	}
 
 	.hero-content h1 {
-		font-size: 3rem;
-		font-weight: bold;
-<<<<<<< HEAD
-=======
 		color: var(--color-fg);
-		font-family: var(--sans);
->>>>>>> 09f94f2c38dd9f7005a437a97c2a0ab98fa76b17
+		font-size: var(--font-size-xlarge);
+		margin: 2rem 0 3rem 0;
+		text-align: left;
+		font-family: var(--serif);
 	}
 
 	.text-block {
 		margin-top: 3rem;
-<<<<<<< HEAD
-		
-=======
 		color: var(--color-fg);
->>>>>>> 09f94f2c38dd9f7005a437a97c2a0ab98fa76b17
 		font-size: 1.3rem;
-		line-height: 1.3;
-	}
-
-	.text-block p {
-		margin-top: 1rem;
 	}
 
 	.text-block a {
-<<<<<<< HEAD
-		
-=======
 		color: var(--color-link);
->>>>>>> 09f94f2c38dd9f7005a437a97c2a0ab98fa76b17
 		text-decoration: underline;
 		transition: color var(--transition-medium);
 	}
@@ -157,7 +165,7 @@
 	}
 
 	.plot-side {
-		transform: translateY(150px);
+		transform: translateY(200px);
 	}
 
 	.ball-count {
@@ -181,9 +189,8 @@
 		border: 2px solid var(--color-border);
 		border-radius: 6px;
 		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-		max-height: 450px;
-		max-width: 350px;
 		background-color: var(--color-bg);
+		display: inline-block; /* Shrinks to content size */
 	}
 
 	/* Dark mode shadow adjustment */
