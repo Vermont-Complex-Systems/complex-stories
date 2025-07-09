@@ -1,315 +1,185 @@
-<script lang="ts">
-  import Scrolly from "$lib/components/helpers/Scrolly.svelte";
+<script>
+  import Scrolly from '$lib/components/helpers/Scrolly.svelte';
+  import MorphingChart from './MorphingChart.svelte';
+  import Nav from './Nav.svelte';
+  import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
+  import coauthorData from "../data/uvm_2023_or_dodds.csv";
+  import paperData from "../data/papers_uvm_2023_or_dodds.csv"
+  import embeddings from '../data/umap_results.csv'
   import { Plot, Dot } from 'svelteplot';
-  import { Tween } from 'svelte/motion';
-  import { cubicOut } from 'svelte/easing';
 
-  // story = metadata from CSV (title, author, etc.)
-  // data = content from copy.json (steps, text content, etc.)
   let { story, data } = $props();
-  let value = $state();
-  let currentStep = $derived(data.steps[value]);
-
-  // Create simple, fixed data points
-  const baseData = [
-    { id: 1, baseX: 0, baseY: 0 },
-    { id: 2, baseX: 1, baseY: 1 },
-    { id: 3, baseX: 2, baseY: 0.5 },
-    { id: 4, baseX: -1, baseY: -1 },
-    { id: 5, baseX: -0.5, baseY: 1.5 },
-    { id: 6, baseX: 1.5, baseY: -0.5 },
-    { id: 7, baseX: 0.5, baseY: 2 },
-    { id: 8, baseX: -1.5, baseY: 0.5 }
-  ];
-
-  // Tweened transform parameters
-  const offsetX = new Tween(0, { duration: 800, easing: cubicOut });
-  const offsetY = new Tween(0, { duration: 800, easing: cubicOut });
-  const scaleX = new Tween(1, { duration: 600, easing: cubicOut });
-  const scaleY = new Tween(1, { duration: 600, easing: cubicOut });
-
-// Transform the data based on tweened values
-  let plotData = $derived(
-    baseData.map(point => ({
-      id: point.id,
-      x: point.baseX * scaleX.current + offsetX.current,
-      y: point.baseY * scaleY.current + offsetY.current
-    }))
-  );
-
-  // Watch for scroll changes
-  $effect(() => {
-    if (value === undefined) {
-      offsetX.target = 0;
-      offsetY.target = 0;
-      scaleX.target = 1;
-      scaleY.target = 1;
-      return;
-    }
-
-    switch (value) {
-      case 0:
-        offsetX.target = 0;
-        offsetY.target = 0;
-        scaleX.target = 1;
-        scaleY.target = 1;
-        break;
-      case 1:
-        offsetX.target = 1.8;
-        offsetY.target = 0;
-        scaleX.target = 1;
-        scaleY.target = 1;
-        break;
-      case 2:
-        offsetX.target = 0;
-        offsetY.target = 0;
-        scaleX.target = 1.8;
-        scaleY.target = 1;
-        break;
-      case 3:
-        offsetX.target = 0;
-        offsetY.target = 1;
-        scaleX.target = -1;
-        scaleY.target = 0.5;
-        break;
-      case 4:
-        offsetX.target = 0;
-        offsetY.target = 0;
-        scaleX.target = 1.5;
-        scaleY.target = 1.5;
-        break;
-      default:
-        offsetX.target = 0;
-        offsetY.target = 0;
-        scaleX.target = 1;
-        scaleY.target = 1;
-    }
-  });
+  
+  const doddsSection = data.zoomingIn;
+  
+  let isDark = $state(false);
+  let width = $state(900);
+  let height = 1800;
+  let scrollyIndex = $state();
 </script>
 
-<section id="scrolly">
-  <div class="scrolly-container">
-    <!-- Scrolling text on the left -->
-    <div class="text-container">
-      <Scrolly bind:value>
-        {#each data.steps as step, i}
-          {@const active = value === i}
-          <div class="step" class:active>
-            <div class="step-content">
-              <div class="step-number">Step {i + 1}</div>
-              <h3>{step.data.event || `Step ${i + 1}`}</h3>
-              <p class="step-text">{step.text}</p>
-              <div class="step-meta">
-                <span class="year">{step.data.year}</span>
-              </div>
+<Nav bind:isDark />
+
+<section id="story" class="story">
+    <h1>How does scientific productivity coevolves with coauthorships?</h1>
+    <p>We explore a simple timeline plot showing how scientific productivity and social collaborations changes over time. As a given researcher advance in his career, call him Peter, it is expected that his patterns of collaborations will change. In particular, we are interested in using a few relevant features to determine from the data when Peter started his lab.</p>
+    
+    <div class="scrolly-container">
+      <div class="scrolly-content">
+        <div class="spacer"></div>
+        <Scrolly bind:value={scrollyIndex}>
+          {#each doddsSection as text, i}
+            {@const active = scrollyIndex === i}
+            <div class="step" class:active>
+              {#if text.type === 'markdown'}
+                <p><Md text={text.value}/></p>
+              {:else}
+                <p>{@html text.value}</p>
+              {/if}
             </div>
-          </div>
-        {/each}
-      </Scrolly>
-    </div>
-
-    <!-- Fixed visualization on the right -->
-    <div class="viz-container">
-      <div class="viz-content">
-        <h2>Data Transform: <span>{currentStep?.data.year || "Start"}</span></h2>
-        
-        <div class="plot-container">
-          <Plot grid maxWidth={500} height={400} 
-                x={{ domain: [-4, 4] }} 
-                y={{ domain: [-2, 4] }}>
-            <Dot data={plotData} 
-                 x="x" 
-                 y="y" 
-                 fill="#667eea" 
-                 opacity={0.8} 
-                 r={6} />
-          </Plot>
-        </div>
-        
-        <div class="stats">
-          <div class="stat">
-            <span class="label">Offset X:</span> 
-            <span class="value">{offsetX.current.toFixed(1)}</span>
-          </div>
-          <div class="stat">
-            <span class="label">Offset Y:</span> 
-            <span class="value">{offsetY.current.toFixed(1)}</span>
-          </div>
-          <div class="stat">
-            <span class="label">Scale X:</span> 
-            <span class="value">{scaleX.current.toFixed(1)}</span>
-          </div>
-          <div class="stat">
-            <span class="label">Scale Y:</span> 
-            <span class="value">{scaleY.current.toFixed(1)}</span>
-          </div>
-        </div>
-
-        {#if !currentStep}
-          <p class="start-message">Scroll down to see the transformation</p>
-        {/if}
+          {/each}
+        </Scrolly>
+        <div class="spacer"></div>
+      </div>
+      
+      <div class="scrolly-chart">
+        <MorphingChart {scrollyIndex} {coauthorData} {paperData} {width} {height} />
       </div>
     </div>
-  </div>
+  </section>
+
+<section id="embeddings" class="story">
+  <h3>Embeddings</h3>
+  <p>Instead of using time to position paper, we can also use embeddings. (WIP)</p>
+
+  <Plot width={1200} height={800} 
+    x={{ domain: [-6, 18], grid: true }}
+    y={{ domain: [-5, 13], grid: true }}
+    caption="UMAP embeddings of Peter's papers and a sample of UVM faculties."> 
+      <Dot
+          data={embeddings}
+          x="umap_1"
+          y="umap_2"
+          stroke="black"
+          fill="white" />
+  </Plot>
+  <p>(show same plot than before, but just the coauthor side that is rotated on the side. It would be nice to make it brushable, so that we highlight the paper positions for chosen coauthors. Doing so could help visualize changes in coauthors correlate with changes in how ego explore the embedding space. Or not.)</p>
 </section>
 
 <style>
-  #scrolly {
-    min-height: 100vh;
-  }
-
-  .scrolly-container {
-    display: flex;
-    min-height: 100vh;
+  /* Story-wide settings */
+  :global(#story) {
     max-width: 1200px;
     margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  :global(#story h1) {
+    font-size: var(--font-size-xlarge);
+    margin: 2rem 0 3rem 0;
+    text-align: left;
+    font-family: var(--serif);
+  }
+
+  section p {
+      font-size: 22px;
+      max-width: 800px;
+      line-height: 1.3;
+  }
+
+  section p {
+      font-size: 22px;
+      max-width: 800px;
+      line-height: 1.3;
+  }
+
+  /* Scrolly layout */
+  
+  .scrolly-container {
+    display: grid;
+    margin-top: 3rem; 
+    grid-template-columns: 3fr 7fr; /* Text gets 3/10, chart gets 7/10 */
     gap: 2rem;
-  }
-
-  .text-container {
-    flex: 1;
-    min-width: 0; /* Allow flex shrinking */
-  }
-
-  .viz-container {
-    flex: 1;
-    position: sticky;
-    top: 2rem;
-    height: 90vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .viz-content {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-    border: 1px solid #e2e8f0;
-    padding: 2rem;
-    width: 100%;
-    max-width: 600px;
-    text-align: center;
-  }
-
-  .viz-content h2 {
-    margin: 0 0 1.5rem 0;
-    font-size: 1.5rem;
-    color: #2d3748;
-  }
-
-  .viz-content h2 span {
-    color: #667eea;
-    font-weight: bold;
-  }
-
-  .plot-container {
-    margin-bottom: 1.5rem;
-  }
-
-  .stats {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    font-family: monospace;
-    font-size: 0.8rem;
-  }
-
-  .stat {
-    background: #f7fafc;
-    padding: 0.5rem;
-    border-radius: 4px;
-    min-width: 80px;
-  }
-
-  .label {
-    color: #4a5568;
-  }
-
-  .value {
-    color: #667eea;
-    font-weight: bold;
-  }
-
-  .start-message {
-    color: #718096;
-    font-size: 1.1rem;
-    margin-top: 1rem;
-  }
-
-  /* Text container styles */
-  .step {
     min-height: 100vh;
+  }
+
+  .scrolly-chart {
+    position: sticky;
+    top: calc(50vh - 350px);
+    height: fit-content;
+    overflow: visible; 
+  }
+
+  .scrolly-content {
+    width: 400px; /* Control the text width */
+  }
+  
+
+  .spacer {
+    height: 75vh;
+  }
+
+  .step {
+    height: 80vh;
     display: flex;
     align-items: center;
-    padding: 2rem;
-    opacity: 0.3;
-    transition: opacity 0.3s ease;
   }
 
-  .step.active {
-    opacity: 1;
+  .step p {
+    padding: 1rem;
+    background: #f5f5f5;
+    color: #ccc;
+    border-radius: 5px;
+    transform: translateX(-4rem);  /* Magic number to push text on the left */
+    box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+    transition: all 500ms ease;
   }
 
-  .step-content {
-    max-width: 500px;
+  .step.active p {
+    background: white;
+    color: black;
   }
 
-  .step-number {
-    font-family: monospace;
-    font-size: 0.9rem;
-    color: #667eea;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
+  /* Dark mode */
+  :global(.dark) .step p {
+    background: #2a2a2a;
+    color: #888;
   }
 
-  .step h3 {
-    font-size: 1.8rem;
-    margin: 0 0 1rem 0;
-    color: #2d3748;
-    line-height: 1.2;
+  :global(.dark) .step.active p {
+    background: #383838;
+    color: #fff;
   }
 
-  .step-text {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: #4a5568;
-    margin: 0 0 1rem 0;
-  }
+  /* Mobile */
+  @media (max-width: 1200px) {
+    :global(#story) {
+      padding: 0 1rem;
+    }
 
-  .step-meta {
-    font-family: monospace;
-    font-size: 0.9rem;
-    color: #718096;
-  }
+    :global(#story p) {
+      font-size: 18px;
+      max-width: none;
+    }
 
-  .year {
-    background: #edf2f7;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-weight: bold;
-  }
-
-  /* Responsive design */
-  @media (max-width: 768px) {
     .scrolly-container {
-      flex-direction: column;
+      grid-template-columns: 1fr;
+      gap: 1rem;
     }
 
-    .viz-container {
-      position: relative;
-      height: auto;
-      order: -1; /* Put viz on top on mobile */
+    .scrolly-chart {
+      position: sticky;
+      top: calc(50vh - 200px);
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
     }
 
-    .viz-content {
-      margin-bottom: 2rem;
-    }
-
-    .step {
-      min-height: 60vh;
-      padding: 1rem;
+    .step p {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
     }
   }
 </style>

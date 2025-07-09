@@ -6,11 +6,6 @@
 
   const { stories, author } = data;
 
-  const copy = {
-    title: author.name,
-    description: "Author bio and published stories"
-  };
-
   const preloadFont = [
     "https://vermont-complex-systems.github.io/VSCI-cool-website/assets/fonts/tiempos/TiemposTextWeb-Regular.woff2",
     "https://vermont-complex-systems.github.io/VSCI-cool-website/assets/fonts/tiempos/TiemposTextWeb-Bold.woff2",
@@ -20,5 +15,10 @@
   ];
 </script>
 
-<Meta {copy} {preloadFont} />
+<Meta 
+  title={author.name}
+  description="Author bio and published stories"
+  {preloadFont}
+/>
+
 <Author {stories} {author} />

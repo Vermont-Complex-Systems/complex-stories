@@ -10,6 +10,11 @@
         "text": "#000"
     },
     {
+        "slug": "allotax-scrolly",
+        "bg": "hsl(170, 100%, 35%)",
+        "text": "#000"
+    },
+    {
         "slug": "tokenization",
         "bg": "hsl(343, 56%, 61%)",
         "text": "#000"
@@ -21,11 +26,21 @@
     },
     {
         "slug": "uvm-research-groups",
-        "bg": "hsl(170, 100%, 35%)",
+        "bg": "hsl(343, 56%, 61%)",
         "text": "#000"
     },
     {
         "slug": "allotaxonometry",
+        "bg": "hsl(52, 100%, 45%)",
+        "text": "#000"
+    },
+    {
+        "slug": "open-academic-analytics",
+        "bg": "hsl(52, 100%, 45%)",
+        "text": "#000"
+    },
+    {
+        "slug": "explore-timeline",
         "bg": "hsl(52, 100%, 45%)",
         "text": "#000"
     }

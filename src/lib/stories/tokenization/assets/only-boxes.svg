@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 800 600" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+    <g id="boxes">
+        <rect x="221.713" y="256.731" width="38.031" height="20.33" style="fill:rgb(242,240,161);stroke:rgb(251,245,155);stroke-width:1px;"/>
+        <rect x="262.261" y="256.731" width="70.752" height="20.33" style="fill:rgb(252,174,187);stroke:rgb(251,245,155);stroke-width:1px;"/>
+        <rect x="336.823" y="256.731" width="70.752" height="20.33" style="fill:rgb(116,209,234);stroke:rgb(251,245,155);stroke-width:1px;"/>
+        <rect x="413.93" y="256.731" width="48.354" height="20.33" style="fill:rgb(157,231,215);stroke:rgb(251,245,155);stroke-width:1px;"/>
+        <rect x="466.986" y="256.731" width="78.405" height="20.33" style="fill:rgb(250,201,209);stroke:rgb(251,245,155);stroke-width:1px;"/>
+        <rect x="367.265" y="295.937" width="52.433" height="20.33" style="fill:rgb(242,240,161);stroke:rgb(251,245,155);stroke-width:1px;"/>
+        <rect x="317.61" y="295.937" width="46.956" height="20.33" style="fill:rgb(252,174,187);stroke:rgb(251,245,155);stroke-width:1px;"/>
+        <rect x="275.154" y="295.937" width="39.583" height="20.33" style="fill:rgb(159,221,237);stroke:rgb(251,245,155);stroke-width:1px;"/>
+        <rect x="225.608" y="295.937" width="46.809" height="20.33" style="fill:rgb(209,182,228);stroke:rgb(251,245,155);stroke-width:1px;"/>
+    </g>
+</svg>

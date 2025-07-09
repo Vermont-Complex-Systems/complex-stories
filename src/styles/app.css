@@ -1,191 +1,186 @@
-@import "variables.css";
-@import "normalize.css";
-@import "font.css";
-@import "reset.css";
+/* =============================================================================
+   MAIN APPLICATION STYLES
+   
+   Layer order is important - each builds on the previous
+   ============================================================================= */
 
-/* colors defined in variables.css */
-:root {
-    /* font */
-    --sans: "Atlas Grotesk", -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
-    --serif: "Tiempos Text", Iowan Old Style, Times New Roman, Times, serif;
-    --mono: "Atlas Typewriter", Menlo, Consolas, Monaco, monospace;
+@import "variables.css";   /* Color/size primitives */
+@import "theme.css";       /* Semantic mappings */
+@import "font.css";        /* Load custom fonts */
+@import "reset.css";       /* Josh's reset */
+@import "base.css";        /* Base component styles */
 
-    /* z-index */
-    --z-bottom: -100;
-    --z-middle: 0;
-    --z-top: 100;
-    --z-overlay: 1000;
+/* =============================================================================
+   BASE ELEMENT STYLES (builds on tokens + reset)
+   ============================================================================= */
 
-    /* presets (used in reset.css) */
-    --border-radius: 3px;
-    --font-body: var(--serif);
-    --font-form: var(--mono);
-    
-    /* LIGHT MODE COLORS (default) */
-    --color-bg: var(--color-white);
-    --color-fg: var(--color-gray-900);
-    --color-primary: var(--color-black);
-    --color-link: var(--color-black);
-    --color-secondary-gray: var(--color-gray-600);
-    --color-link-hover: var(--color-gray-600);
-    --color-focus: var(--color-electric-green);
-    --color-mark: var(--color-yellow);
-    --color-selection: var(--color-gray-300);
-    --color-border: var(--color-gray-300);
-    --color-button-bg: var(--color-gray-900);
-    --color-button-fg: var(--color-gray-100);
-    --color-button-hover: var(--color-gray-700);
-    --color-input-bg: var(--color-gray-50);
-    --color-input-fg: var(--color-gray-900);
-    --color-placeholder: var(--color-gray-500);
-    --color-default-story-bg: var(--color-gray-100);
-    --fade: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.8) 30%, rgba(255, 255, 255, 1) 50%);
-
-    --font-size-giant: clamp(3rem, 4vw, 5rem);
-    --font-size-large: clamp(1.5rem, 2.5vw, 2.5rem);
-    --font-size-medium: clamp(1rem, 1.75vw, 1.5rem);
-    --font-size-small: clamp(15px, 1.25vw, 1rem);
-    --font-size-xsmall: clamp(12px, 1vw, 0.8rem);
-
-    --font-weight-bold: 900;
-    --font-weight-normal: 400;
-    --font-weight-thin: 100;
-
-    --margin: 16px;
-    --width-column-wide: 1280px;
-    --width-column-regular: 720px;
-    --width-padded: 80vw;
-    --margin-left: 10vw;
-    --width-padded-mobile: 90vw;
-    --margin-left-mobile: 5vw;
-
-    --left-tilt: -2deg;
-    --right-tilt: 2deg;
-    --left-tilt-double: -4deg;
-    --right-tilt-double: 4deg;
-
-    --transition-fast: 100ms;
-    --transition-medium: 200ms;
-    --transition-slow: 500ms;
-    --transition-ease: ease-in;
-
-    /* "1" second duration */
-    --1s: 1ms;
-}
-
-/* DARK MODE - only when .dark class is present (mode-watcher controlled) */
-.dark {
-    --color-bg: var(--color-gray-1000);
-    --color-fg: var(--color-gray-100);
-    --color-primary: var(--color-gray-1000);
-    --color-secondary-gray: var(--color-gray-400);
-    --color-link: var(--color-gray-100);
-    --color-link-hover: var(--color-gray-400);
-    --color-focus: var(--color-electric-green);
-    --color-mark: var(--color-yellow);
-    --color-selection: var(--color-gray-300);
-    --color-border: var(--color-gray-700);
-    --color-button-bg: var(--color-gray-100);
-    --color-button-fg: var(--color-gray-900);
-    --color-button-hover: var(--color-gray-300);
-    --color-input-bg: var(--color-gray-900);
-    --color-input-fg: var(--color-gray-50);
-    --color-placeholder: var(--color-gray-400);
-    --color-default-story-bg: var(--color-gray-800);
-    --fade: linear-gradient(180deg, rgba(25, 25, 25, 0) 0%, rgba(25, 25, 25, 0.8) 30%, rgba(25, 25, 25, 1) 50%);
-}
-
-@media screen and (prefers-reduced-motion: no-preference) {
-    :root {
-        --1s: 1s;
-    }
-}
-
-/* Apply background color to body */
 body {
     background-color: var(--color-bg);
     color: var(--color-fg);
+    font-family: var(--font-body);
     transition: background-color 0.2s, color 0.2s;
+    line-height: 1.5;
 }
 
-/* Rest of your existing CSS... */
-h1 {
-    font-size: var(--48px, 48px);
+/* Typography hierarchy using semantic tokens */
+h1 { 
+    font-size: var(--font-size-giant); 
+    font-family: var(--sans);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.1;
+    margin: 1rem 0;
 }
 
-h2 {
-    font-size: var(--36px, 36px);
+h2 { 
+    font-size: var(--font-size-xlarge); 
+    font-family: var(--sans);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.2;
+    margin: 1rem 0;
 }
 
-h3 {
-    font-size: var(--28px, 28px);
+h3 { 
+    font-size: var(--font-size-large); 
+    font-family: var(--sans);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.3;
+    margin: 1rem 0;
 }
 
-h4 {
-    font-size: var(--24px, 24px);
+h4, h5, h6 { 
+    font-size: var(--font-size-medium); 
+    font-family: var(--sans);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.4;
+    margin: 1rem 0;
 }
 
-h5 {
-    font-size: var(--22px, 22px);
+p {
+    margin: 1rem 0;
+    line-height: 1.6;
 }
 
-h6 {
-    font-size: var(--20px, 20px);
+/* Links */
+a {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-decoration-color: var(--color-link);
+    transition: all var(--transition-fast);
 }
+
+a:hover {
+    color: var(--color-link-hover);
+    text-decoration-color: var(--color-link-hover);
+}
+
+/* Focus styles */
+:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+    background-color: var(--color-selection);
+    color: var(--color-fg);
+}
+
+/* =============================================================================
+   LAYOUT UTILITIES
+   ============================================================================= */
 
 main {
     max-width: var(--width-column-wide);
     margin: 0 auto;
-    padding: 0;
-}
-
-svg {
-    display: block;
-    width: 100%;
-    height: auto;
+    padding: 0 1rem;
 }
 
 .column-wide {
     max-width: var(--width-column-wide);
-    padding: 0 16px;
+    padding: 0 1rem;
+    margin: 0 auto;
 }
 
 .column-regular {
     max-width: var(--width-column-regular);
-    padding: 0 16px;
+    padding: 0 1rem;
+    margin: 0 auto;
 }
 
-.column-regular a:hover {
-    color: var(--color-link-hover);
-    text-decoration: underline 2px var(--color-link-hover); 
+.centered-max-width {
+    max-width: var(--width-column-wide);
+    margin: 0 auto;
+    padding: 0 1rem;
+    text-align: center;
 }
 
-.column-regular h2 {
-    font-family: var(--sans);
-    font-weight: var(--font-weight-bold);
-    margin-top: 64px;
+/* =============================================================================
+   ACCESSIBILITY UTILITIES
+   ============================================================================= */
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
+
+.skip-to-main {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: var(--color-fg);
+    color: var(--color-bg);
+    padding: 8px;
+    text-decoration: none;
+    z-index: var(--z-overlay);
+    border-radius: var(--border-radius);
+}
+
+.skip-to-main:focus {
+    top: 6px;
+}
+
+/* =============================================================================
+   UTILITY CLASSES
+   ============================================================================= */
 
 .upper {
     text-transform: uppercase;
 }
 
-.inner strong, li strong {
-    font-family: var(--sans);
-    -webkit-font-smoothing: antialiased;
+.text-center {
+    text-align: center;
 }
 
+.text-left {
+    text-align: left;
+}
+
+.text-right {
+    text-align: right;
+}
+
+/* =============================================================================
+   RESPONSIVE TYPOGRAPHY
+   ============================================================================= */
+
+/* Prevent zoom on iOS */
 input[type="search"], 
 input[type="text"], 
 textarea {
-  font-size: 16px;
+    font-size: 16px;
 }
 
-button, input[type="submit"] {
-     text-transform: uppercase;
-    background: var(--color-fg);
-    color: var(--color-bg);
-    border-radius: 2px;
-    padding: 12px;
-    font-size: var(--font-size-xsmall);
+/* Better text rendering */
+.inner strong, 
+li strong {
+    font-family: var(--sans);
+    font-weight: var(--font-weight-bold);
+    -webkit-font-smoothing: antialiased;
 }

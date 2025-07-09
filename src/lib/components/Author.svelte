@@ -38,6 +38,7 @@
   const first = name.split(" ")[0].toLowerCase();
 </script>
 
+<!-- Keep original column-wide as intended -->
 <section id="intro" class="column-wide">
   <HeroText>
     <h1>{name}</h1>

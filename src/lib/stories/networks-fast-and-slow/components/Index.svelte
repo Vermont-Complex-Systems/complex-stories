@@ -29,6 +29,7 @@
 
 <Hero />
 
+<div class="centered-max-width">
 <section id="mean-field">
     <h2>Part I: Annealing</h2>
     <p>But doing math on exact networks can get… messy. It’s often unwieldy to carry full structure through the equations. So instead, people often model the average effect of the dynamics — smoothing over the specific network in favor of general trends.</p>
@@ -81,6 +82,8 @@
     
 	<p>You should now have a better idea what physicists mean when they say that annealed networks are thought to be reshuffled constantly, leading to the system the relax faster than the dynamics. In contrast, quench changes slowly compared to the dynamics, meaning that local structures can strongly influence the dynamics.</p>
 </section>
+</div>
+
 
 
 

@@ -16,6 +16,9 @@
             "id": "officeHours"
         },
         {
+            "id": "work"
+        },
+        {
             "id": "speaking"
         },
         {
@@ -90,6 +93,10 @@
     "officeHours": {
         "detailsSummary": "Sign up for office hours with us",
         "detailsText": "We want to share what we’ve learned, and empower people to make great stuff of their own. So whether you’re a seasoned vet or just starting out, come <a href=https://discord.gg/BrMuxRaM>chat with us on Discord</a>!"
+    },
+    "work": {
+        "detailsSummary": "Work with us",
+        "detailsText": "We are taking requests for proposals (RFPs). Our services can be funded through grants or fee-for-service mechanisms. See <a href=https://uvmoffice.sharepoint.com/:w:/r/sites/VERSOUVMOSPO/Shared%20Documents/Working%20with%20the%20VERSO%20RSE.docx?d=w3d3444af47364b0a985532196a5ebd9c&csf=1&web=1&e=bWe1kz>here</a> for details."
     },
     "positions": {
         "text": [

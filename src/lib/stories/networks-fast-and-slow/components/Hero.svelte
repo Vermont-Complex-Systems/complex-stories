@@ -120,13 +120,20 @@
 	.hero-content h1 {
 		font-size: 3rem;
 		font-weight: bold;
+<<<<<<< HEAD
+=======
 		color: var(--color-fg);
 		font-family: var(--sans);
+>>>>>>> 09f94f2c38dd9f7005a437a97c2a0ab98fa76b17
 	}
 
 	.text-block {
 		margin-top: 3rem;
+<<<<<<< HEAD
+		
+=======
 		color: var(--color-fg);
+>>>>>>> 09f94f2c38dd9f7005a437a97c2a0ab98fa76b17
 		font-size: 1.3rem;
 		line-height: 1.3;
 	}
@@ -136,7 +143,11 @@
 	}
 
 	.text-block a {
+<<<<<<< HEAD
+		
+=======
 		color: var(--color-link);
+>>>>>>> 09f94f2c38dd9f7005a437a97c2a0ab98fa76b17
 		text-decoration: underline;
 		transition: color var(--transition-medium);
 	}
