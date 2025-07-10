@@ -95,7 +95,6 @@ def normalize_institutions(df, institution_col='institution'):
     
     return df_normalized
 
-
 def prepare_for_deduplication(df):
     """Sort by publication date and lowercase titles for deduplication"""
     return (df
@@ -104,32 +103,6 @@ def prepare_for_deduplication(df):
             .assign(title=lambda x: x.title.str.lower())
            )
 
-def load_and_join_data():
-    """Load papers and authors data and perform the join"""
-    print("🚀 Starting publication dataset preparation...")
-    
-    # HRDAG: Load from intermediary files  
-    papers_file = config.data_raw_path / config.paper_output_file
-    authors_file = config.data_processed_path / config.author_output_file
-    
-    print(f"📖 Loading papers from {papers_file}")
-    df_papers = pd.read_parquet(papers_file)
-    
-    print(f"📚 Loading author profiles from {authors_file}")
-    df_authors = pd.read_parquet(authors_file)
-    
-    # Use DuckDB to do the JOIN - exactly like the original SQL
-    print("Querying papers with author metadata...")
-    df = duckdb.sql("""
-        SELECT p.ego_aid, a.display_name as name, p.pub_date, p.pub_year, p.title,
-               p.cited_by_count, p.doi, p.wid, p.authors, p.work_type, 
-               a.author_age as ego_age, 
-        FROM df_papers p
-        LEFT JOIN df_authors a ON p.ego_aid = a.aid AND p.pub_year = a.pub_year
-    """).df()
-    
-    print(f"Retrieved {len(df)} papers")
-    return df
 
 @dg.asset(
     deps=["academic_publications", "author"],
@@ -140,7 +113,27 @@ def paper():
     """Process papers for visualization - filtering, deduplication, and enrichment"""
     
     # Load and join data
-    df = load_and_join_data()
+    papers_file = config.data_raw_path / config.paper_output_file
+    authors_file = config.data_export_path / config.author_output_file
+    
+    print(f"📖 Loading papers from {papers_file}")
+    df_papers = pd.read_parquet(papers_file)
+    
+    print(f"📚 Loading author profiles from {authors_file}")
+    df_authors = pd.read_parquet(authors_file)
+    
+    # Use DuckDB to do the JOIN
+    # We use author schema to adument with author_age 
+    print("Querying papers with author metadata...")
+    df = duckdb.sql("""
+        SELECT p.ego_aid, a.display_name as name, p.pub_date, p.pub_year, p.title,
+               p.cited_by_count, p.doi, p.wid, p.authors, p.work_type, 
+               a.author_age as ego_age, 
+        FROM df_papers p
+        LEFT JOIN df_authors a ON p.ego_aid = a.aid AND p.pub_year = a.pub_year
+    """).df()
+    
+    print(f"Retrieved {len(df)} papers")
     
     # Apply all transformations using pipe
     df_processed = (df
@@ -160,7 +153,7 @@ def paper():
     unique_authors = int(df_processed.ego_aid.nunique())
     
     # HRDAG: Save processed data
-    output_file = config.data_processed_path / config.paper_output_file
+    output_file = config.data_export_path / config.paper_output_file
     print(f"💾 Saving {len(df_processed)} processed papers to {output_file}")
     output_file.parent.mkdir(parents=True, exist_ok=True)
     df_processed.to_parquet(output_file)

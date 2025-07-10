@@ -139,7 +139,7 @@ def load_and_join_collaboration_data():
     
     # HRDAG: Load from intermediary files
     collaborations_file = config.data_clean_path / config.coauthor_output_file
-    authors_file = config.data_processed_path / config.author_output_file
+    authors_file = config.data_export_path / config.author_output_file
     
     print(f"📖 Loading collaboration data from {collaborations_file}")
     df_coauth = pd.read_parquet(collaborations_file)
@@ -218,7 +218,7 @@ def coauthor():
     unique_coauthors = int(df_processed.coauth_aid.nunique())
     
     # HRDAG: Save processed data
-    output_file = config.data_processed_path / config.coauthor_output_file
+    output_file = config.data_export_path / config.coauthor_output_file
     print(f"💾 Saving {len(df_processed)} collaboration records to {output_file}")
     output_file.parent.mkdir(parents=True, exist_ok=True)
     df_processed.to_parquet(output_file)

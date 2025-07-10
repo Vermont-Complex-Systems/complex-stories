@@ -10,7 +10,7 @@ This blog is intended to demonstrate how and when adopting best practices in res
 ### A first case study: principled data processing using dagster
 
 <div style="text-align: center; margin: 2rem 0;">
-  <img src="/Global_Asset_Lineage.svg" alt="data pipeline" style="max-width: 1200px; width: 100%;">
+  <img src="/Global_Asset_Lineage.jpg" alt="data pipeline" style="max-width: 1200px; width: 100%;">
 </div>
 
 Consider the practice of writing [data orchestration](https://github.com/dagster-io/dagster) to handle messy, collaborative research projects. This approach to the data lifecycle exemplifies what we mean by "good practices"—an alternative to the common research habit of hacking together duct-tape software solutions that "just work".

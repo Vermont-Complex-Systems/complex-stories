@@ -17,8 +17,10 @@ class PipelineConfig(Config):
     base_dir: str = "."
     data_raw_dir: str = "data/raw"
     data_clean_dir: str = "data/clean"
-    data_export_dir: str = "data/export"
-    data_processed_dir: str = "../../../../static/data/open-academic-analytics"
+    data_processed_dir: str = "data/processed"
+    data_export_dir: str = "../../../../static/data/open-academic-analytics"
+    
+    stan_model_dir: Path = "assets/fit/stan"
     
     @property
     def data_raw_path(self) -> Path:
@@ -27,6 +29,10 @@ class PipelineConfig(Config):
     @property
     def data_clean_path(self) -> Path:
         return Path(self.base_dir) / self.data_clean_dir
+    
+    @property
+    def data_processed_path(self) -> Path:
+        return Path(self.base_dir) / self.data_processed_dir
     
     @property
     def data_export_path(self) -> Path:
@@ -52,6 +58,10 @@ class PipelineConfig(Config):
     @property
     def RESEARCHERS_TSV_FILE(self) -> str:
         return self.researchers_tsv_file
+    
+    @property
+    def TRAINING_DATA_OUTPUT_FILE(self) -> str:
+        return self.training_data_file
     
     @property
     def PAPER_OUTPUT_FILE(self) -> str:
@@ -110,12 +120,14 @@ class PipelineConfig(Config):
     
     # File names
     researchers_input_file: str = "uvm_profs_2023.parquet"
-    researchers_tsv_file: str = "researchers.tsv"
+    uvm_profs_2023_file: str = "researchers.tsv"
+    departments_file: str = "uvm_departments.csv"
     paper_raw: str = "researchers.tsv"    
     
     paper_output_file: str = "paper.parquet"
     author_output_file: str = "author.parquet"
     coauthor_output_file: str = "coauthor.parquet"
+    training_data_file: str = 'training_data.parquet'
     
     # Data filtering
     accepted_work_types: List[str] = ['article', 'preprint', 'book-chapter', 'book', 'report']

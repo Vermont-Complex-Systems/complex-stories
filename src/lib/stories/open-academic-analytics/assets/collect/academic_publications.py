@@ -16,7 +16,7 @@ from shared.clients.openalex_api_client import OpenAlexFetcher
 from shared.utils.utils import shuffle_date_within_month
 
 @dg.asset(
-    deps=["researcher_list"],
+    deps=["uvm_profs_2023"],
     group_name="import",
     description="📚 Fetch all academic papers for researchers from OpenAlex database"
 )
@@ -27,7 +27,7 @@ def academic_publications(duckdb: DuckDBResource):
     """
     print("🚀 Starting paper collection from OpenAlex...")
     
-    input_file = config.data_raw_path / config.researchers_tsv_file
+    input_file = config.data_raw_path / config.uvm_profs_2023_file
     output_file = config.data_raw_path / config.paper_output_file
 
     with duckdb.get_connection() as conn:

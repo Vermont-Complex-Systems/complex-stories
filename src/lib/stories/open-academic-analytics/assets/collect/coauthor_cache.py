@@ -1,8 +1,3 @@
-"""
-research_analysis.py
-
-Stage 2: Core research analysis - career profiles and collaboration networks
-"""
 import pandas as pd
 from tqdm import tqdm
 import dagster as dg
@@ -15,7 +10,7 @@ from shared.clients.openalex_api_client import OpenAlexFetcher
 
 
 @dg.asset(
-    deps=["researcher_list","academic_publications"],
+    deps=["uvm_profs_2023","academic_publications"],
     group_name="import",
     description="👩‍🎓 Build researcher career profiles: publication history, ages, institutional affiliations"
 )
@@ -27,12 +22,11 @@ def coauthor_cache(duckdb: DuckDBResource):
     print("🚀 Starting researcher career analysis...")
     
     paper_file = config.data_raw_path / config.paper_output_file
-    author_file = config.data_raw_path / config.author_output_file
-    excel_file = config.data_raw_path / config.researchers_tsv_file
+    uvm_profs_2023 = config.data_raw_path / config.uvm_profs_2023_file
     output_file = config.data_raw_path / config.author_output_file
 
     # Load known corrections
-    target_aids = pd.read_csv(excel_file, sep="\t")
+    target_aids = pd.read_csv(uvm_profs_2023, sep="\t")
     target_aids = target_aids[~target_aids['oa_uid'].isna()]
     known_years_df = target_aids[['oa_uid', 'first_pub_year']].dropna()
     known_first_pub_years = {k.upper(): int(v) for k, v in known_years_df.values}
@@ -40,14 +34,14 @@ def coauthor_cache(duckdb: DuckDBResource):
 
     with duckdb.get_connection() as conn:
         print(f"✅ Connected to database")
-        
+
         # Load papers from target authors
         df_pap = pd.read_parquet(paper_file)
         conn.execute("CREATE TABLE paper AS SELECT * FROM df_pap")
 
         # Load cached author information if exists
-        if author_file.exists():
-            df_author = pd.read_parquet(author_file)
+        if output_file.exists():
+            df_author = pd.read_parquet(output_file)
                         
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS author (

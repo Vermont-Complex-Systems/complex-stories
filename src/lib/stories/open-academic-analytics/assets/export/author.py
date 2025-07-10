@@ -115,7 +115,7 @@ def author():
     unique_institutions = df_processed.institution.nunique() if 'institution' in df_processed.columns else 0
     
     # HRDAG: Save processed data to export directory
-    output_file = config.data_processed_path / config.author_output_file
+    output_file = config.data_export_path / config.author_output_file
     print(f"💾 Saving {len(df_processed)} processed author records to {output_file}")
     output_file.parent.mkdir(parents=True, exist_ok=True)
     df_processed.to_parquet(output_file)
