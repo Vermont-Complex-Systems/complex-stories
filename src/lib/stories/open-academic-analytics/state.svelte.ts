@@ -20,6 +20,7 @@ export const dashboardState = $state({
 export const dataState = $state({
     // App-level
     availableAuthors: [],
+    availableColleges: [],
     isInitializing: true,
     
     // Author-specific  
@@ -29,7 +30,7 @@ export const dataState = $state({
     isLoadingAuthor: false,
     
     // Global analytics
-    AggData: null,
+    TrainingAggData: null,
     isLoadingGlobalData: false,
     
     error: null
@@ -57,35 +58,53 @@ async function registerTables() {
 }
 
 // Simple aggData function
-export async function aggData() {
-    await registerTables();
-    const result = await query(`
-        WITH tmp AS (
-            SELECT 
-                COUNT(*) as collaboration_count, 
-                age_category, 
-                substr(strftime(age_std::DATE, '%Y'), -2) as year_short,
-                name
-            FROM coauthor 
-            GROUP BY age_category, substr(strftime(age_std::DATE, '%Y'), -2), name
-        )
-        SELECT 
-            AVG(collaboration_count) as mean_collabs,
-            QUANTILE_CONT(collaboration_count, 0.5) as median_collabs,
-            STDDEV(collaboration_count) as std_collabs,
-            age_category, 
-            year_short::INT as age_std
-        FROM tmp    
-        GROUP BY age_category, age_std
-        ORDER BY age_category, age_std
-        `);
-    return result;
-}
+// export async function aggData() {
+//     await registerTables();
+//     const result = await query(`
+//         WITH tmp AS (
+//             SELECT 
+//                 COUNT(*) as collaboration_count, 
+//                 age_category, 
+//                 substr(strftime(age_std::DATE, '%Y'), -2) as year_short,
+//                 name
+//             FROM coauthor 
+//             GROUP BY age_category, substr(strftime(age_std::DATE, '%Y'), -2), name
+//         )
+//         SELECT 
+//             AVG(collaboration_count) as mean_collabs,
+//             QUANTILE_CONT(collaboration_count, 0.5) as median_collabs,
+//             STDDEV(collaboration_count) as std_collabs,
+//             age_category, 
+//             year_short::INT as age_std
+//         FROM tmp    
+//         GROUP BY age_category, age_std
+//         ORDER BY age_category, age_std
+//         `);
+//     return result;
+// }
 
 // model output
 export async function trainingData(authorName) {
     await registerTables();
     const result = await query(`SELECT * FROM training WHERE name = '${authorName}'`);
+    return result;
+}
+
+// model output
+export async function trainingAggData(authorName) {
+    await registerTables();
+    const result = await query(`
+        SELECT 
+            AVG(younger) as younger, 
+            QUANTILE_CONT(younger, 0.5) as median_collabs,
+            QUANTILE_CONT(younger, 0.25) as q25_collabs,
+            QUANTILE_CONT(younger, 0.75) as q75_collabs,
+            STDDEV(younger) as std_collabs,
+            author_age, has_research_group, college 
+        FROM training 
+        GROUP BY has_research_group, author_age, college
+        ORDER BY has_research_group, author_age, college
+        `);
     return result;
 }
 
@@ -105,6 +124,17 @@ async function loadAvailableAuthors() {
     `);
     
     return result;
+}
+
+async function loadAvailableColleges() {
+    await registerTables();
+    
+    const result = await query(`
+        SELECT DISTINCT  college FROM training 
+        WHERE college IS NOT NULL
+    `);
+    
+    return result.map(d=>d.college);
 }
 
 // Load data for specific author
@@ -169,7 +199,8 @@ async function loadAuthorData(authorName) {
 export async function initializeApp() {
         dataState.isInitializing = true;
         dataState.availableAuthors = await loadAvailableAuthors();
-        dataState.AggData = await aggData();
+        dataState.availableColleges = await loadAvailableColleges();
+        dataState.trainingAggData = await trainingAggData();
         dataState.isInitializing = false;
 }
 

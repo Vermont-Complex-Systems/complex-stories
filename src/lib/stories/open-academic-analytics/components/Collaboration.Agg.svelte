@@ -1,48 +1,42 @@
   <script>
-    import { Plot, AreaY, LineY, HTMLTooltip } from 'svelteplot';
+    import { Plot, Dot, LineY, AreaY, HTMLTooltip } from 'svelteplot';
     import Toggle from './Toggle.svelte'
     import RangeFilter from './RangeFilter.svelte'
     
-    let { data, isFacet, showMed, showArea, maxAge } = $props();
+    let { data, maxAge } = $props();
   </script>
 
 <div>
-      <Plot grid frame 
-          x={{label: "Academic age →"}}
-          y={{label: "↑ Mean # of collaborations"}}
-          color={{legend: true, scheme: ["#404788FF", "#20A387FF", "#FDE725FF"]}}
-          >
-          {#if showMed}
-            <LineY {data}  
-              x="age_std" 
-              y="mean_collabs"
-              stroke="age_category" 
-              strokeOpacity=0.4
-              fx={isFacet ? "age_category" : null}/>
-              <LineY {data}  
-                x="age_std" 
-                y="median_collabs"
-                strokeDasharray=5
-                strokeWidth=3
-                stroke="age_category" 
-                fx={isFacet ? "age_category" : null}/>
-          {:else}
-              <LineY {data}  
-                x="age_std" 
-                y="mean_collabs"
-                stroke="age_category" 
-                fx={isFacet ? "age_category" : null}/>
-          {/if}
-          {#if showArea}
-            <AreaY 
-              {data} 
-              x="age_std" 
-              y1={(d) => d.mean_collabs - d.std_collabs}  
-              y2={(d) => d.mean_collabs + d.std_collabs} 
-              fillOpacity=0.2 
-              fill="age_category"
-              fx={isFacet ? "age_category" : null}
+<Plot grid frame 
+            x={{label: "Academic age →"}}
+            y={{label: "↑ # collaborations with younger coauthors"}}
+            color={{legend: true, type: 'ordinal'}}
+            >
+          <AreaY 
+              {data}
+              x="author_age" 
+              y1={(d) => d.younger - d.q25_collabs}  
+              y2={(d) => d.younger + d.q25_collabs} 
+              fillOpacity=0.50 
+              fill={(d) => d.has_research_group === 0 ? 'No research group' : 'Has research group'}
+              fx="college"
             />
-          {/if}
-      </Plot>
+          <AreaY 
+              {data}
+              x="author_age" 
+              y1={(d) => d.younger - d.median_collabs}  
+              y2={(d) => d.younger + d.median_collabs} 
+              fillOpacity=0.30 
+              fill={(d) => d.has_research_group === 0 ? 'No research group' : 'Has research group'}
+              fx="college"
+            />
+              <Dot 
+              {data}
+              x="author_age" 
+              y="younger"
+              fill={(d) => d.has_research_group === 0 ? 'No research group' : 'Has research group'}
+              r={3}
+              fx="college"
+          />
+  </Plot>
 </div>
