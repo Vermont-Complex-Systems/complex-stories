@@ -11,6 +11,8 @@ dependencies = [
     "pyarrow",
     "tqdm",
     "dagster-cloud",
+    "arviz",
+    "cmdstanpy"
 ]
 
 [project.optional-dependencies]

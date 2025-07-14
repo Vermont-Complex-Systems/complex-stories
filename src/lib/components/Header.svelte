@@ -22,10 +22,6 @@
 		isMenuOpen = false;
 		if (!skipFocus) menuButtonRef?.focus();
 	}
-
-	function openMenu() {
-		isMenuOpen = true;
-	}
 </script>
 
 <ModeWatcher />
@@ -45,7 +41,25 @@
 	</div>
 
 	<div class="header-right">
-		<button onclick={toggleTheme} class="theme-toggle">
+		<a href="{base}/blog" class="text-button">
+			Blog
+		</a>
+
+		<a href="https://vermont-complex-systems.github.io/datasets/" class="text-button" target="_blank" rel="noopener noreferrer">
+			Datasets
+		</a>
+
+    <a 
+			href="https://github.com/Vermont-Complex-Systems/complex-stories" 
+			class="icon-button"
+			target="_blank"
+		>
+			<svg fill="currentColor" viewBox="0 0 24 24">
+				<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+			</svg>
+		</a>
+
+		<button onclick={toggleTheme} class="icon-button">
 			{#if isDark}
 				<Sun class="icon" size={20} />
 			{:else}
@@ -54,15 +68,6 @@
 			<span class="sr-only">Toggle theme</span>
 		</button>
 
-		<button 
-			bind:this={menuButtonRef}
-			onclick={openMenu} 
-			class="menu-toggle"
-			aria-label="Open menu"
-		>
-			<MenuIcon class="icon" size={20} />
-			<span class="sr-only">Open menu</span>
-		</button>
 	</div>
 </header>
 
@@ -99,7 +104,7 @@
   }
   
   .title-link:hover {
-    transform: translateY(-0.125rem); /* Convert -2px to rem */
+    transform: translateY(-0.125rem);
   }
   
   .site-title {
@@ -117,11 +122,11 @@
     margin: 0.25rem 0 0 0;
     color: var(--color-secondary-gray);
     text-transform: uppercase;
-    letter-spacing: 0.03em; /* Convert 0.5px to em for better scaling */
+    letter-spacing: 0.03em;
   }
   
   .logo-container {
-    max-width: 15.625rem; /* Convert 250px to rem */
+    max-width: 15.625rem;
     transition: transform var(--transition-medium) ease;
   }
   
@@ -151,77 +156,72 @@
     gap: 0.5rem;
   }
 
-  /* Clean button styles */
-  .theme-toggle,
-  .menu-toggle {
-    /* Reset any browser defaults */
-    border: none;
-    background: none;
-    padding: 0;
+  /* Text buttons (Blog and Datasets) */
+  .text-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.5rem;
+    padding: 0 0.75rem;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: var(--color-fg);
+    text-decoration: none;
+    font-family: var(--sans);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-small);
+    letter-spacing: 0.05em;
+    transition: all var(--transition-medium);
     cursor: pointer;
-    font-family: inherit;
-    
-    /* Our component styling */
+  }
+
+  .text-button:hover {
+    transform: rotate(var(--right-tilt)) scale(1.05);
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  /* Button styles */
+  .icon-button {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 0.5rem;
-    transition: all var(--transition-medium);
-  }
-  
-  .theme-toggle {
     background: transparent;
     color: var(--color-fg);
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-medium);
   }
-  
-  .menu-toggle {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    color: #4a5568;
-    backdrop-filter: blur(12px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  .icon-button svg {
+    width: 1.25rem;  /* w-5 = 20px */
+    height: 1.25rem; /* h-5 = 20px */
+    fill: currentColor;
   }
-  
-  .theme-toggle:hover {
+
+  .icon-button:hover {
     transform: rotate(var(--right-tilt)) scale(1.05);
     background: rgba(0, 0, 0, 0.05);
   }
   
-  .menu-toggle:hover {
-    background: rgba(247, 250, 252, 0.95);
-    border-color: rgba(0, 0, 0, 0.15);
-    transform: rotate(var(--right-tilt)) scale(1.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-  
   /* Dark mode */
-  :global(.dark) .theme-toggle {
+  :global(.dark) .text-button,
+  :global(.dark) .icon-button {
     color: var(--color-fg);
   }
-  
-  :global(.dark) .menu-toggle {
-    background: rgba(74, 85, 104, 0.9);
-    border-color: rgba(255, 255, 255, 0.1);
-    color: #e2e8f0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
-  
-  :global(.dark) .theme-toggle:hover {
+
+  :global(.dark) .text-button:hover,
+  :global(.dark) .icon-button:hover {
     background: rgba(255, 255, 255, 0.1);
   }
   
-  :global(.dark) .menu-toggle:hover {
-    background: rgba(74, 85, 104, 0.95);
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  }
-
-
   /* Mobile styles */
   @media (max-width: 768px) {
-    .theme-toggle {
+    .icon-button,
+    .text-button {
       display: none;
     }
 
@@ -244,7 +244,7 @@
     }
     
     .logo-container {
-      max-width: 9.375rem; /* Convert 150px to rem */
+      max-width: 9.375rem;
       margin-left: 3.5rem;
     }
     
@@ -260,7 +260,19 @@
   
   :global(.dark) .logo {
     filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
-    padding: 0.25rem; /* Convert 4px to rem */
+    padding: 0.25rem;
     border-radius: var(--border-radius);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 </style>

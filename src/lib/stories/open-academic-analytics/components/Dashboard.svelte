@@ -1,17 +1,19 @@
 <script>
-  import { Plot, AreaY, LineY, HTMLTooltip } from 'svelteplot';
+  import { Plot, Dot, LineY, AreaY, HTMLTooltip } from 'svelteplot';
 
   import PaperChart from './PaperChart.svelte';
   import CoauthorChart from './CoauthorChart.svelte';
   import Toggle from './Toggle.svelte'
   import RangeFilter from './RangeFilter.svelte'
-  import { dashboardState, uiState } from '../state.svelte.ts';
+  import CollabChart from './Collaboration.Agg.svelte'
+  import { dashboardState, dataState, uiState } from '../state.svelte.ts';
   import { innerWidth } from 'svelte/reactivity/window';
   
   let { 
     paperData, 
     coauthorData,
-    aggData
+    trainingAggData,
+    trainingData
   } = $props();
 
   // Calculate available width for charts considering sidebar and layout
@@ -40,17 +42,19 @@
 
   const chartHeight = $derived(coauthorData?.length > 600 ? coauthorData?.length < 1500 ? 1200 : 2200 : 800);
 
-  let maxAge = $state(40);
+  let maxAge = $state(30);
   let isFacet = $state(false);
   let showMed = $state(false);
-  let showArea = $state(false); // Add this new toggle state
+  let showArea = $state(false);
   
   let filteredAggData = $derived(
-    aggData?.filter(d => d.age_std <= maxAge) || []
+    trainingAggData?.filter(d=>dataState.availableColleges.slice(0,4).includes(d.college) && d.author_age < maxAge) || []
+  );
+  let filteredAggData2 = $derived(
+    trainingAggData?.filter(d=>dataState.availableColleges.slice(4,8).includes(d.college) && d.author_age < maxAge) || []
   );
 
-  $inspect(aggData)
-  
+  $inspect(filteredAggData2.map(d=>d.author_age))
 </script>
 
 <div class="dashboard">
@@ -61,6 +65,7 @@
         <CoauthorChart 
           {coauthorData}
           {paperData}
+          {trainingData}
           width={chartWidth}
           height={chartHeight}
           colorMode={dashboardState.colorMode}
@@ -78,65 +83,18 @@
         />
       </div>
       <div>
-        <h3>Collaboration patterns</h3>
-        <div class="toggle-controls">
-          <span>Facet by Age Category</span>
-          <Toggle bind:isTrue={isFacet}/>
-          
-          <span>Show median</span>
-          <Toggle bind:isTrue={showMed}/>
-          
-          <span>Show Standard Deviation</span>
-          <Toggle bind:isTrue={showArea}/>
-
+      </div>
+    </div>
+    <h3>Aggregated patterns</h3>
+    <div class="toggle-controls">
           <RangeFilter 
             bind:value={maxAge}
             label="Max academic age: {maxAge} "
           />
-        </div>
-          <Plot grid frame 
-              x={{label: "Academic age →"}}
-              y={{label: "↑ Mean # of collaborations"}}
-              color={{legend: true, scheme: ["#404788FF", "#20A387FF", "#FDE725FF"]}}
-              >
-              {#if showMed}
-                <LineY data={filteredAggData}  
-                  x="age_std" 
-                  y="mean_collabs"
-                  stroke="age_category" 
-                  strokeOpacity=0.4
-                  fx={isFacet ? "age_category" : null}/>
-                  <LineY data={filteredAggData}  
-                    x="age_std" 
-                    y="median_collabs"
-                    strokeDasharray=5
-                    strokeWidth=3
-                    stroke="age_category" 
-                    fx={isFacet ? "age_category" : null}/>
-              {:else}
-                  <LineY data={filteredAggData}  
-                    x="age_std" 
-                    y="mean_collabs"
-                    stroke="age_category" 
-                    fx={isFacet ? "age_category" : null}/>
-              {/if}
-              {#if showArea}
-                <AreaY 
-                  data={filteredAggData} 
-                  x="age_std" 
-                  y1={(d) => d.mean_collabs - d.std_collabs}  
-                  y2={(d) => d.mean_collabs + d.std_collabs} 
-                  fillOpacity=0.2 
-                  fill="age_category"
-                  fx={isFacet ? "age_category" : null}
-                />
-              {/if}
-          </Plot>
-      </div>
     </div>
+    <CollabChart data={filteredAggData} {maxAge}/>
   </div>
 </div>
-
 
 
 
@@ -178,6 +136,7 @@
 
   .toggle-controls {
     display: flex;
+    max-width: 200px;
     align-items: center;
     gap: 1rem;
     margin-bottom: 1rem;

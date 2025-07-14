@@ -5,11 +5,7 @@ import { base } from '$app/paths';
 export const paperUrl = `${base}/data/open-academic-analytics/paper.parquet`;
 export const authorUrl = `${base}/data/open-academic-analytics/author.parquet`;
 export const coauthorUrl = `${base}/data/open-academic-analytics/coauthor.parquet`;
-
-// Debug: log the URLs to see what we're getting
-console.log('Paper URL:', paperUrl);
-console.log('Author URL:', authorUrl);
-console.log('Coauthor URL:', coauthorUrl);
+export const trainingUrl = `${base}/data/open-academic-analytics/training_data.parquet`;
 
 export const datasets = {
   paper: {
@@ -23,5 +19,9 @@ export const datasets = {
   coauthor: {
     url: coauthorUrl,
     description: 'Coauthor relationships'
+  },
+  training: {
+    url: trainingUrl,
+    description: 'Model output'
   }
 };

@@ -1,13 +1,15 @@
 <script>
   import * as d3 from 'd3';
-  import { processCoauthorData, getCombinedDateRange, ageColorScale, collaborationColorScale } from '../utils/combinedChartUtils.js';
+  import { processCoauthorData, getCombinedDateRange, ageColorScale, acquaintanceColorScale } from '../utils/combinedChartUtils.js';
   import Tooltip from './Tooltip.svelte';
+  import ChangePointChart from './ChangePointChart.svelte';
   import Legend from './Legend.svelte';
   import { dashboardState } from '../state.svelte.ts';
 
   let { 
     coauthorData, 
     paperData,
+    trainingData,
     width, 
     height, 
     colorMode = 'age_diff',
@@ -23,6 +25,7 @@
 
   // Check if we have data
   let hasData = $derived(coauthorData && coauthorData.length > 0);
+  let hasTrainingData = $derived(trainingData && trainingData.length > 0);
 
   // Institution color scales - using normalized names when available
   let institutionColorScale = $derived.by(() => {
@@ -69,6 +72,17 @@
     return d3.range(startYear, endYear + 1, yearSpacing);
   });
 
+  // Filter data based on age
+  let filteredCoauthorData = $derived.by(() => {
+    if (!coauthorData || !dashboardState.ageFilter) return coauthorData;
+    
+    const [minAge, maxAge] = dashboardState.ageFilter;
+    return coauthorData.filter(d => {
+      const age = +d.author_age || 0;
+      return age >= minAge && age <= maxAge;
+    });
+  });
+  
   let plotData = $derived.by(() => {
     if (!hasData) return [];
     return processCoauthorData(filteredCoauthorData, width, height, timeScale);
@@ -109,7 +123,7 @@
         } else if (colorMode === 'acquaintance') {
           // Use collaboration count for acquaintance coloring
           const collabCount = +point.all_times_collabo || 0;
-          displayColor = collaborationColorScale(collabCount);
+          displayColor = acquaintanceColorScale(collabCount);
         } else if (colorMode === 'institutions') {
           displayColor = institutionColorScale(colorValue);
         } else if (colorMode === 'shared_institutions') {
@@ -164,63 +178,67 @@
     event.stopPropagation();
     dashboardState.highlightedCoauthor = point.name;
   }
-
-  // Filter data based on age
-  let filteredCoauthorData = $derived.by(() => {
-    if (!coauthorData || !dashboardState.ageFilter) return coauthorData;
-    
-    const [minAge, maxAge] = dashboardState.ageFilter;
-    return coauthorData.filter(d => {
-      const age = +d.author_age || 0;
-      return age >= minAge && age <= maxAge;
-    });
-  });
 </script>
 
 <div class="chart-wrapper">
   <div class="viz-content">
     <div class="plot-container">
-      <svg {width} {height} class="chart-svg" onclick={handleChartClick} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && handleChartClick(e)}>
-        
-        <!-- Grid lines and year labels -->
-        <g>
-          {#each yearTicks as year}
-            {@const yearDate = new Date(year, 0, 1)}
-            {@const y = timeScale(yearDate)}
-            <line x1="0" x2={width} y1={y} y2={y} class="grid-line"/>
-            <text x="10" y={y - 5} text-anchor="start" class="year-label">{year}</text>
-          {/each}
-        </g>
-        
-        <!-- Coauthor points -->
-        <g transform="translate({MARGIN_LEFT}, 0)">
-          {#each displayData as point}
-            <circle
-              cx={point.x}
-              cy={point.y}
-              r={point.r}
-              fill={point.displayColor}
-              stroke="black"
-              stroke-width={point.strokeWidth}
-              fill-opacity={point.opacity}
-              class="data-point"
-              role="button"
-              tabindex="0"
-              onclick={(e) => handleCoauthorClick(e, point)}
-              onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && handleCoauthorClick(e, point)}
-              onmouseenter={(e) => showPointTooltip(e, point)}
-              onmouseleave={hideTooltip}
-            />
-          {/each}
-        </g>
-      </svg>
+      <div class="chart-area">
+        <!-- Main coauthor network visualization -->
+        <svg {width} {height} class="chart-svg" onclick={handleChartClick} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && handleChartClick(e)}>
+          
+          <!-- Grid lines and year labels -->
+          <g>
+            {#each yearTicks as year}
+              {@const yearDate = new Date(year, 0, 1)}
+              {@const y = timeScale(yearDate)}
+              <line x1="0" x2={width} y1={y} y2={y} class="grid-line"/>
+              <text x="10" y={y - 5} text-anchor="start" class="year-label">{year}</text>
+            {/each}
+          </g>
+          
+          <!-- Coauthor points -->
+          <g transform="translate({MARGIN_LEFT}, 0)">
+            {#each displayData as point}
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r={point.r}
+                fill={point.displayColor}
+                stroke="black"
+                stroke-width={point.strokeWidth}
+                fill-opacity={point.opacity}
+                class="data-point"
+                role="button"
+                tabindex="0"
+                onclick={(e) => handleCoauthorClick(e, point)}
+                onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && handleCoauthorClick(e, point)}
+                onmouseenter={(e) => showPointTooltip(e, point)}
+                onmouseleave={hideTooltip}
+              />
+            {/each}
+          </g>
+        </svg>
 
-      <!-- Legend -->
-      <Legend 
-        {colorMode}
-        {coauthorData}
-        visible={hasData}
-      />
+        <!-- Right side overlay container for Legend and ChangePoint Chart -->
+        <div class="right-overlay-container">
+          <!-- Legend positioned on the right -->
+          <div class="legend-container">
+            <Legend 
+              {colorMode}
+              {coauthorData}
+              visible={hasData}
+            />
+          </div>
+          
+          <!-- ChangePoint Chart positioned underneath legend -->
+          {#if hasTrainingData && colorMode === 'age_diff'}
+            <div class="changepoint-container">
+              <ChangePointChart data={trainingData} visible={hasTrainingData && colorMode === 'age_diff'} />
+            </div>
+          {/if}
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -233,11 +251,15 @@
 />
 
 <style>
-   .chart-wrapper {
+  .chart-wrapper {
     --chart-grid-color: var(--color-border);
     --chart-text-color: var(--color-secondary-gray);
     width: 100%;
     overflow: hidden;
+  }
+
+  .viz-content {
+    width: 100%;
   }
 
   .plot-container {
@@ -248,12 +270,45 @@
     overflow: hidden;
   }
 
+  .chart-area {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+  }
+
   .chart-svg {
     display: block;
     overflow: visible;
     max-width: 100%;
   }
 
+  /* Right side overlay container */
+  .right-overlay-container {
+    position: absolute;
+    top: 2rem;
+    right: 1rem;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+  }
+
+  /* Legend positioning - now relative within container */
+  .legend-container {
+    pointer-events: none;
+  }
+
+  .legend-container :global(.legend) {
+    pointer-events: auto;
+  }
+
+  /* ChangePoint Chart positioning - now relative within container */
+  .changepoint-container {
+    /* No positioning needed - handled by flex container */
+  }
+
+  /* Chart styling */
   .chart-wrapper :global(.chart-label) {
     font-size: var(--font-size-xsmall);
     font-weight: var(--font-weight-bold);
@@ -279,5 +334,41 @@
 
   .chart-wrapper :global(.data-point:hover) {
     stroke-width: 1;
+  }
+
+  /* Responsive design */
+  @media (max-width: 1024px) {
+    .right-overlay-container {
+      top: 1.5rem;
+      right: 0.5rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .right-overlay-container {
+      top: 1rem;
+      right: 0.25rem;
+    }
+    
+    .legend-container :global(.legend) {
+      font-size: 10px;
+      padding: 8px;
+      min-width: 150px;
+      max-width: 180px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .plot-container {
+      flex-direction: column;
+    }
+
+    .right-overlay-container {
+      position: relative;
+      top: 0;
+      right: auto;
+      margin-top: 1rem;
+      align-items: center;
+    }
   }
 </style>
