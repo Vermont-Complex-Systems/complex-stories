@@ -20,7 +20,7 @@
 </script>
 
 <Meta 
-  title="Scrollytelling Stories"
+  title="Complex Stories"
   description="Scientific data essays that uncover the challenges of computational science."
   {preloadFont}
 />

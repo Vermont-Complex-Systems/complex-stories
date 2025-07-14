@@ -1,150 +1,175 @@
+<!-- Legend.svelte -->
 <script>
   import * as d3 from 'd3';
-  import { ageColorScale, collaborationColorScale } from '../utils/combinedChartUtils.js';
-
+  import { collaborationColorScale, acquaintanceColorScale, ageColorScale } from '../utils/combinedChartUtils.js';
+  
   let { 
-    colorMode = 'age_diff',
+    colorMode, 
     coauthorData = [],
-    visible = true
+    visible = true 
   } = $props();
 
-  // Create institution color scale when needed
-  let institutionColorScale = $derived.by(() => {
-    if (colorMode !== 'institutions' || !coauthorData.length) return null;
-    const uniqueInstitutions = [...new Set(coauthorData.map(d => d.institution))]
-      .filter(inst => inst != null && inst !== '');
-    return d3.scaleOrdinal(d3.schemeTableau10).domain(uniqueInstitutions);
-  });
-
-  // Create shared institution color scale when needed
-  let sharedInstitutionColorScale = $derived.by(() => {
-    if (colorMode !== 'shared_institutions' || !coauthorData.length) return null;
-    const uniqueSharedInstitutions = [...new Set(coauthorData.map(d => d.shared_institutions))]
-      .filter(inst => inst != null && inst !== '');
-    return d3.scaleOrdinal(d3.schemeTableau10).domain(uniqueSharedInstitutions);
-  });
-
-  // Generate legend items based on color mode - Observable Plot style
+  // Generate dynamic legend items based on actual data
   let legendItems = $derived.by(() => {
-    if (!visible) return [];
-    
     if (colorMode === 'age_diff') {
       return [
-        { label: 'Older (>7 years)', color: ageColorScale('older') },
-        { label: 'Same age (±7 years)', color: ageColorScale('same') },
-        { label: 'Younger (<-7 years)', color: ageColorScale('younger') }
+        { color: ageColorScale('older'), label: 'Older coauthor (+7 years)' },
+        { color: ageColorScale('same'), label: 'Similar age (±7 years)' },
+        { color: ageColorScale('younger'), label: 'Younger coauthor (-7 years)' }
       ];
-    } 
-    
-    if (colorMode === 'acquaintance') {
-      // Use collaboration-based legend that matches the threshold scale
+    } else if (colorMode === 'acquaintance') {
+      // Use acquaintanceColorScale for collaboration counts
       return [
-        { label: 'New (1 collaboration)', color: collaborationColorScale(1) },
-        { label: 'Repeat (2-3 collaborations)', color: collaborationColorScale(2) },
-        { label: 'Regular (4-8 collaborations)', color: collaborationColorScale(4) },
-        { label: 'Long-term (9+ collaborations)', color: collaborationColorScale(9) }
+        { color: acquaintanceColorScale(1), label: 'Few collaborations (1)' },
+        { color: acquaintanceColorScale(3), label: 'Some collaborations (2-4)' },
+        { color: acquaintanceColorScale(5), label: 'Many collaborations (5+)' }
       ];
-    } 
-    
-    if (colorMode === 'institutions' && coauthorData.length > 0) {
-      const uniqueInstitutions = [...new Set(coauthorData.map(d => d.institution))]
-        .filter(inst => inst != null && inst !== '');
-      const hasUnknown = coauthorData.some(d => d.institution == null || d.institution === '');
+    } else if (colorMode === 'institutions' && coauthorData.length > 0) {
+      // Get unique institutions from data
+      const institutionField = coauthorData.some(d => d.institution_normalized) 
+        ? 'institution_normalized' 
+        : 'institution';
       
-      const items = uniqueInstitutions.map(institution => ({
-        label: institution,
-        color: institutionColorScale(institution)
+      const uniqueInstitutions = [...new Set(coauthorData.map(d => d[institutionField]))]
+        .filter(inst => inst != null && inst !== '' && inst !== 'Unknown')
+        .slice(0, 8); // Limit to prevent overflow
+      
+      const colorScale = d3.scaleOrdinal(d3.schemeTableau10).domain(uniqueInstitutions);
+      
+      return uniqueInstitutions.map(inst => ({
+        color: colorScale(inst),
+        label: inst
       }));
+    } else if (colorMode === 'shared_institutions' && coauthorData.length > 0) {
+      // Get unique shared institutions from data
+      const sharedField = coauthorData.some(d => d.shared_institutions_normalized) 
+        ? 'shared_institutions_normalized' 
+        : 'shared_institutions';
       
-      return items;
-    }
-
-    if (colorMode === 'shared_institutions' && coauthorData.length > 0) {
-      const uniqueSharedInstitutions = [...new Set(coauthorData.map(d => d.shared_institutions))]
-        .filter(inst => inst != null && inst !== '');
-      const hasUnknown = coauthorData.some(d => d.shared_institutions == null || d.shared_institutions === '');
+      const uniqueSharedInstitutions = [...new Set(coauthorData.map(d => d[sharedField]))]
+        .filter(inst => inst != null && inst !== '' && inst !== 'Unknown')
+        .slice(0, 8); // Limit to prevent overflow
       
-      const items = uniqueSharedInstitutions.map(institution => ({
-        label: institution,
-        color: sharedInstitutionColorScale(institution)
+      const colorScale = d3.scaleOrdinal(d3.schemeTableau10).domain(uniqueSharedInstitutions);
+      
+      return uniqueSharedInstitutions.map(inst => ({
+        color: colorScale(inst),
+        label: inst
       }));
-      
-      
-      return items;
-    }
-    
-    return [];
-  });
-
-  // Legend title based on mode
-  let legendTitle = $derived.by(() => {
-    switch (colorMode) {
-      case 'age_diff': return 'Age Difference';
-      case 'acquaintance': return 'Collaboration Type';
-      case 'institutions': return 'Institutions';
-      case 'shared_institutions': return 'Shared Institutions';
-      default: return 'Legend';
+    } else {
+      return [
+        { color: 'black', label: 'Coauthors' }
+      ];
     }
   });
 </script>
 
-{#if legendItems.length > 0}
-  <div class="legend">
-    <h4>{legendTitle}</h4>
-    {#each legendItems as item}
-      <div class="legend-item">
-        <div class="legend-color" style="background-color: {item.color}"></div>
-        <span class="legend-label">{item.label}</span>
+<div class="legend" class:visible>
+  <div class="legend-content">
+    <div class="legend-title">Legend</div>
+    
+    {#key colorMode}
+      <div class="legend-items">
+        {#each legendItems as item, i}
+          <div 
+            class="legend-item" 
+            style="animation-delay: {i * 0.1}s"
+          >
+            <div 
+              class="legend-dot" 
+              style="background: {item.color};"
+            ></div>
+            <span>{item.label}</span>
+          </div>
+        {/each}
+        
+        <!-- Always show unknown/null data indicator -->
+        <div class="legend-item" style="animation-delay: {legendItems.length * 0.1}s">
+          <div class="legend-dot" style="background: #888888; opacity: 0.3;"></div>
+          <span>Unknown/No data</span>
+        </div>
       </div>
-    {/each}
+    {/key}
   </div>
-{/if}
+</div>
 
 <style>
   .legend {
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
+    background: var(--step-bg);
+    border: 1px solid var(--color-border, #ddd);
     border-radius: 8px;
     padding: 12px;
-    font-size: var(--font-size-xsmall);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    max-width: 200px;
+    font-size: 11px;
+    backdrop-filter: blur(10px);
+    min-width: 180px;
+    max-width: 220px;
+    
+    /* Transition properties */
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
   }
 
-  .legend h4 {
-    margin: 0 0 8px 0;
-    font-size: var(--font-size-small);
-    font-weight: var(--font-weight-bold);
+  .legend.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .legend-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .legend-title {
+    font-weight: bold;
+    font-size: 12px;
+    color: var(--color-text, var(--step-bg));
+    margin-bottom: 4px;
+    text-align: center;
+    border-bottom: 1px solid var(--color-border, #eee);
+    padding-bottom: 4px;
+  }
+
+  .legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 300px;
+    overflow-y: auto;
   }
 
   .legend-item {
     display: flex;
     align-items: center;
-    margin: 4px 0;
+    gap: 8px;
+    margin-bottom: 4px;
+    opacity: 0;
+    transform: translateX(10px);
+    animation: slideIn 0.4s ease forwards;
   }
 
-  .legend-color {
+  .legend-dot {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    margin-right: 8px;
-    border: 1px solid black;
+    border: 1px solid rgba(0, 0, 0, 0.3);
     flex-shrink: 0;
+    transition: background-color 0.4s ease;
   }
 
-  .legend-label {
-    color: var(--chart-text-color, var(--color-fg));
+  .legend-item span {
+    font-size: 10px;
+    color: var(--color-text, var(--step-bg));
     line-height: 1.2;
-    font-size: var(--font-size-xsmall);
+    word-break: break-word;
   }
 
-  /* Dark mode support */
-  :global(.dark) .legend {
-    background: var(--color-bg);
-    border-color: var(--color-border);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  @keyframes slideIn {
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 </style>

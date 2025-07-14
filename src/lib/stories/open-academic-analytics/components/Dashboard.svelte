@@ -1,17 +1,17 @@
 <script>
-  import { Plot, AreaY, LineY, HTMLTooltip } from 'svelteplot';
-
   import PaperChart from './PaperChart.svelte';
   import CoauthorChart from './CoauthorChart.svelte';
   import Toggle from './Toggle.svelte'
   import RangeFilter from './RangeFilter.svelte'
+  import CollabChart from './Collaboration.Agg.svelte'
   import { dashboardState, uiState } from '../state.svelte.ts';
   import { innerWidth } from 'svelte/reactivity/window';
   
   let { 
     paperData, 
     coauthorData,
-    aggData
+    aggData,
+    trainingData
   } = $props();
 
   // Calculate available width for charts considering sidebar and layout
@@ -43,14 +43,13 @@
   let maxAge = $state(40);
   let isFacet = $state(false);
   let showMed = $state(false);
-  let showArea = $state(false); // Add this new toggle state
+  let showArea = $state(false);
   
   let filteredAggData = $derived(
     aggData?.filter(d => d.age_std <= maxAge) || []
   );
 
-  $inspect(aggData)
-  
+  $inspect(trainingData)
 </script>
 
 <div class="dashboard">
@@ -61,6 +60,7 @@
         <CoauthorChart 
           {coauthorData}
           {paperData}
+          {trainingData}
           width={chartWidth}
           height={chartHeight}
           colorMode={dashboardState.colorMode}
@@ -80,63 +80,25 @@
       <div>
         <h3>Collaboration patterns</h3>
         <div class="toggle-controls">
-          <span>Facet by Age Category</span>
-          <Toggle bind:isTrue={isFacet}/>
-          
-          <span>Show median</span>
-          <Toggle bind:isTrue={showMed}/>
-          
-          <span>Show Standard Deviation</span>
-          <Toggle bind:isTrue={showArea}/>
+              <span>Facet by Age Category</span>
+              <Toggle bind:isTrue={isFacet}/>
+              
+              <span>Show median</span>
+              <Toggle bind:isTrue={showMed}/>
+              
+              <span>Show Standard Deviation</span>
+              <Toggle bind:isTrue={showArea}/>
 
-          <RangeFilter 
-            bind:value={maxAge}
-            label="Max academic age: {maxAge} "
-          />
+              <RangeFilter 
+                bind:value={maxAge}
+                label="Max academic age: {maxAge} "
+              />
         </div>
-          <Plot grid frame 
-              x={{label: "Academic age →"}}
-              y={{label: "↑ Mean # of collaborations"}}
-              color={{legend: true, scheme: ["#404788FF", "#20A387FF", "#FDE725FF"]}}
-              >
-              {#if showMed}
-                <LineY data={filteredAggData}  
-                  x="age_std" 
-                  y="mean_collabs"
-                  stroke="age_category" 
-                  strokeOpacity=0.4
-                  fx={isFacet ? "age_category" : null}/>
-                  <LineY data={filteredAggData}  
-                    x="age_std" 
-                    y="median_collabs"
-                    strokeDasharray=5
-                    strokeWidth=3
-                    stroke="age_category" 
-                    fx={isFacet ? "age_category" : null}/>
-              {:else}
-                  <LineY data={filteredAggData}  
-                    x="age_std" 
-                    y="mean_collabs"
-                    stroke="age_category" 
-                    fx={isFacet ? "age_category" : null}/>
-              {/if}
-              {#if showArea}
-                <AreaY 
-                  data={filteredAggData} 
-                  x="age_std" 
-                  y1={(d) => d.mean_collabs - d.std_collabs}  
-                  y2={(d) => d.mean_collabs + d.std_collabs} 
-                  fillOpacity=0.2 
-                  fill="age_category"
-                  fx={isFacet ? "age_category" : null}
-                />
-              {/if}
-          </Plot>
-      </div>
+        <CollabChart data={filteredAggData} {showMed} {showArea} {isFacet} {maxAge}/>
     </div>
-  </div>
 </div>
-
+</div>
+</div>
 
 
 

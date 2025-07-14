@@ -16,7 +16,6 @@ def uvm_departments():
     """
     logger = get_dagster_logger()
     
-    # Fix the URL to match your actual file
     csv_url = "https://vermont-complex-systems.github.io/datasets/data/uvm_departments.csv"
     output_file = config.data_raw_path / config.departments_file
 

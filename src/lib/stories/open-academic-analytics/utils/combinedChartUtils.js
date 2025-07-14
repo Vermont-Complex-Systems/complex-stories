@@ -5,10 +5,12 @@ export const ageColorScale = d3.scaleOrdinal()
   .domain(['older', 'same', 'younger'])
   .range(['#8e6dfb', '#20A387FF', '#dacc55']);
 
-export const acquaintanceColorScale = d3.scaleOrdinal()
-  .domain(['new_collab', 'existing_collab'])
-  .range(['#FF6B35', '#4682B4']);
+// Updated acquaintance scale for collaboration counts
+export const acquaintanceColorScale = d3.scaleThreshold()
+  .domain([2, 5]) // 1, 2-4, 5+
+  .range(['#35B779FF', '#31688EFF', '#440154FF']); // Few -> Some -> Many
 
+// Keep the original collaboration scale for other uses
 export const collaborationColorScale = d3.scaleThreshold()
   .domain([2, 4, 9])
   .range(['#FF6B35', '#4682B4', '#2E8B57', '#1F4E79']);

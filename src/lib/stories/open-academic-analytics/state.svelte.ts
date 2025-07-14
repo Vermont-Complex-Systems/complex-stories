@@ -1,6 +1,6 @@
 // src/lib/stories/open-academic-analytics/state.svelte.ts
 import { registerParquetFile, query } from '$lib/utils/duckdb.js';
-import { paperUrl, coauthorUrl } from './data/loader.js';
+import { paperUrl, coauthorUrl, trainingUrl } from './data/loader.js';
 
 // UI State
 export const uiState = $state({
@@ -25,6 +25,7 @@ export const dataState = $state({
     // Author-specific  
     paperData: [],
     coauthorData: [],
+    trainingData: null,
     isLoadingAuthor: false,
     
     // Global analytics
@@ -51,6 +52,7 @@ async function registerTables() {
     
     await registerParquetFile(paperUrl, 'paper');
     await registerParquetFile(coauthorUrl, 'coauthor');
+    await registerParquetFile(trainingUrl, 'training');
     tablesRegistered = true;
 }
 
@@ -77,6 +79,13 @@ export async function aggData() {
         GROUP BY age_category, age_std
         ORDER BY age_category, age_std
         `);
+    return result;
+}
+
+// model output
+export async function trainingData(authorName) {
+    await registerTables();
+    const result = await query(`SELECT * FROM training WHERE name = '${authorName}'`);
     return result;
 }
 
@@ -170,6 +179,7 @@ export async function loadSelectedAuthor() {
     const [papers, coauthors] = await loadAuthorData(dashboardState.selectedAuthor);
     dataState.paperData = papers;
     dataState.coauthorData = coauthors;
+    dataState.trainingData = await trainingData(dashboardState.selectedAuthor);
     dataState.isLoadingAuthor = false;
 }
 

@@ -22,7 +22,6 @@
             loadSelectedAuthor();
         }
     });
-
 </script>
 
 <div class="dashboard-app">    
@@ -59,6 +58,7 @@
                         paperData={dataState.paperData} 
                         coauthorData={dataState.coauthorData}
                         aggData={dataState.AggData}
+                        trainingData={dataState.trainingData}
                     />
                 </main>
             {/if}
