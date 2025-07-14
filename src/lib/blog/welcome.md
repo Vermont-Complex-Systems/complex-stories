@@ -9,13 +9,19 @@ This blog is intended to demonstrate how and when adopting best practices in res
 
 ### A first case study: principled data processing using dagster
 
-<div style="text-align: center; margin: 2rem 0;">
-  <img src="/Global_Asset_Lineage.jpg" alt="data pipeline" style="max-width: 1200px; width: 100%;">
+Researchers have developed [principled data processing](https://www.youtube.com/watch?v=ZSunU9GQdcI) (PDP) to address the messiness of collaborative, data-driven projects. It is an approach to the data life cycle where researchers adopt a modular workflow; they write scripts that take some input, do some atomic tasks, and spit out single output. This logic is encoded in the project structure, and subsequently serve as documentations for reproducibility and maintainability ("the code is the documentation"). PDP exemplifies what we mean by "good practices" in research software engineering—an alternative to the common research habit of hacking together duct-tape software solutions that "just work". 
+
+We show how we implemented PDP for the [open academic analytics](https://vermont-complex-systems.github.io/complex-stories/open-academic-analytics) (OAA) project using the data orchestration tool [dagster](https://github.com/dagster-io/dagster). The short-term contribution of this project is to web interface where we show how scientific productivity coevolve with collaborations. One research question we have while building this interface is the following:
+
+> How does diversity in collaboration in terms of age and institutions impact the research of selected authors (whom we call "ego"). 
+
+The OAA project is messy; we need to call openAlex API to get the data (which is noisy and imperfect), we need to wrangle the data to build relevant features, which we use in a Stan probabilistic model. We use [dagster](https://github.com/dagster-io/dagster) to manage and visualize our dependency graphs between our tasks. 
+
+
+<div>
+  <img src="/Global_Asset_Lineage.svg" alt="data pipeline">
 </div>
 
-Consider the practice of writing [data orchestration](https://github.com/dagster-io/dagster) to handle messy, collaborative research projects. This approach to the data lifecycle exemplifies what we mean by "good practices"—an alternative to the common research habit of hacking together duct-tape software solutions that "just work".
+Here we will on the subset of the problem of going from raw data to the paper timeline chart, where node size is proportional to number of citations. 
 
-We will use the [opening academic analytics](https://vermont-complex-systems.github.io/complex-stories/open-academic-analytics) (OAA) project as an example, as it captures some of the real world challenges of researchers are confronted. In this project, we are interested in characterizing the coevolution of collaborations and productivity. We "open" academic analytics in that this kind of work is typically done behind close doors, while being sold to university administrators to make strategic business decisions.
-
-The OAA project has some complexity associated with it, such as calling the openAlex API to get the data, and a messy data pipeline to wrangle the data in an original timeline plot. Here we show how to use a library called [dagster](https://github.com/dagster-io/dagster) to manage the pipeline. The core idea is that we will be interested in a given researcher (that we call "ego"), and we will build a timeline of its papers and collaborations, with respect to relevant metadata.
 

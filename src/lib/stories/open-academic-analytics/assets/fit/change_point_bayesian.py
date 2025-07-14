@@ -10,7 +10,7 @@ from config import config
 
 @dg.asset(
     deps=["training_dataset"],
-    group_name="fit",
+    group_name="model",
     description="🌐 Model fitting",
     # This will only run when upstream dependencies are updated
     automation_condition=dg.AutomationCondition.eager()

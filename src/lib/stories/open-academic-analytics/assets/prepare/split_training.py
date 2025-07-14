@@ -126,7 +126,7 @@ def add_network_features(df_wide, df_coauthor_clean, df_papers):
     
 @dg.asset(
     deps=["coauthor", "paper", "author", "uvm_profs_2023"],
-    group_name="prepare",
+    group_name="model",
     description="🌐 Prepare collaboration data for model fitting"  
 )
 def training_dataset():

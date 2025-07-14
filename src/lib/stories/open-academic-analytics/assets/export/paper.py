@@ -105,7 +105,7 @@ def prepare_for_deduplication(df):
 
 
 @dg.asset(
-    deps=["academic_publications", "author"],
+    deps=["academic_publications"],
     group_name="export",
     description="📊 Clean and prepare publication data for analysis dashboard"
 )
