@@ -5,6 +5,7 @@
 </script>
 
 <div class="switchpoint" class:visible>
+    <div class="legend-title">Bayesian Change Point model</div>
     <Plot 
         grid 
         frame 
@@ -50,7 +51,7 @@
         
         /* Compact dimensions */
         width: 210px;
-        height: 230px;
+        height: 260px;
         
         /* Transition properties */
         opacity: 0;
@@ -69,4 +70,15 @@
         max-width: 100%;
         height: auto;
     }
+
+    .legend-title {
+    font-weight: bold;
+    font-size: 12px;
+    color: var(--step-bg);
+    margin-bottom: 4px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 4px;
+  }
+
 </style>
