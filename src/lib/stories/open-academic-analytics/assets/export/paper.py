@@ -129,7 +129,8 @@ def paper():
         SELECT p.ego_aid, a.display_name as name, p.pub_date, p.pub_year, p.title,
                p.cited_by_count, p.doi, p.wid, p.authors, p.work_type, 
                a.author_age as ego_age, 
-        FROM df_papers
+        FROM df_papers p
+        LEFT JOIN df_authors a ON p.ego_aid = a.aid AND p.pub_year = a.pub_year
     """).df()
     
     print(f"Retrieved {len(df)} papers")
