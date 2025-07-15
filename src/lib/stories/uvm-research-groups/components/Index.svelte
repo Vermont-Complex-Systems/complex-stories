@@ -21,7 +21,11 @@
 <Nav bind:isDark />
 
 <section id="story" class="story">
-    <h1>How does scientific productivity coevolves with coauthorships?</h1>
+    <h1>How does scientific productivity coevolve with coauthorships?</h1>
+
+    simple plot showing uvm faculty.
+
+    <h2>Zooming in</h2>
     <p>We explore a simple timeline plot showing how scientific productivity and social collaborations changes over time. As a given researcher advance in his career, call him Peter, it is expected that his patterns of collaborations will change. In particular, we are interested in using a few relevant features to determine from the data when Peter started his lab.</p>
     
     <div class="scrolly-container">
