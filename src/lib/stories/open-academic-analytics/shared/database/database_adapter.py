@@ -5,7 +5,7 @@ Adapter to make Dagster's DuckDBResource work with existing DatabaseExporter int
 This preserves all your existing business logic while using the official resource.
 """
 import logging
-from datetime import datetime
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +77,19 @@ class DatabaseExporterAdapter:
                 PRIMARY KEY(aid, pub_year)
             )
         """)
+    
+    def load_existing_data(self, output_file):
+        """
+        Load existing data from parquet file into database if it exists.
+        
+        Args:
+            output_file (Path): Path to the parquet file containing existing data
+        """
+        if output_file.exists():
+            df_pap = pd.read_parquet(output_file)
+            # Insert existing data, ignoring conflicts since table might already have data
+            self.con.execute("INSERT INTO paper SELECT * FROM df_pap ON CONFLICT DO NOTHING")
+            logger.info(f"Loaded {len(df_pap)} existing papers from {output_file}")
     
     def get_author_cache_by_name(self, author_name):
         """
