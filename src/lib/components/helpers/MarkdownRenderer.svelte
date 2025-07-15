@@ -6,6 +6,7 @@
     import remarkMath from 'remark-math';
     import rehypeRaw from 'rehype-raw';
     import rehypeHighlight from 'rehype-highlight';
+    import rehypeHighlightCodeLines from 'rehype-highlight-code-lines';
     import 'highlight.js/styles/github.css';
     import { base } from '$app/paths';
     
@@ -14,6 +15,7 @@
     import typescript from 'highlight.js/lib/languages/typescript';
     import css from 'highlight.js/lib/languages/css';
     import xml from 'highlight.js/lib/languages/xml';
+    import python from 'highlight.js/lib/languages/python';
 
     let { text } = $props();
 
@@ -33,6 +35,7 @@
                     ignoreMissing: true, 
                     languages: { 
                         javascript,
+                        python,
                         js: javascript,
                         typescript,
                         ts: typescript,
@@ -43,6 +46,9 @@
                     }
                 }
             ]
+        },
+        {
+            rehypePlugin: [rehypeHighlightCodeLines]
         }
     ];
 
@@ -131,9 +137,9 @@
         padding: 1rem;
         margin: 1.5rem 0;
         overflow-x: auto;
-        font-family: var(--mono);
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         font-size: 0.7em;
-        line-height: 1.4;
+        line-height: 1.3;
         white-space: pre;
     }
 
@@ -220,12 +226,31 @@
         font-weight: 500;
     }
 
+    .markdown-content :global(div.margin-right) {
+        float: right;
+        margin: -300px -370px 1rem 2rem;
+        max-width: 300px;
+        clear: right;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+
+
     /* Mobile styles */
     @media (max-width: 768px) {
         .markdown-content :global(.image-grid) {
             flex-direction: column;
             align-items: center;
         }
+
+        .markdown-content :global(div.margin-right){
+            float: none;
+            margin: 1rem auto;
+            display: block;
+            width: 90%;
+            max-width: none;
+        }
+
         
         .markdown-content :global(.image-item) {
             max-width: 90%;
@@ -235,4 +260,5 @@
             height: 250px;
         }
     }
+    
 </style>

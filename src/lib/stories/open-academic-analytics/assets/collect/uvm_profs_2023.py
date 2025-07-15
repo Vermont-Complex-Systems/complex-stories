@@ -1,13 +1,12 @@
-# assets/collect/uvm_profs_2023.py
 import requests
 import pandas as pd
 from datetime import timedelta
+
 from dagster import asset, get_dagster_logger
-from config import config
 from dagster.preview.freshness import FreshnessPolicy
-from config import config
 from dagster import MaterializeResult, MetadataValue
 
+from config import config
 
 @asset(
     group_name="import",
@@ -25,12 +24,12 @@ def uvm_profs_2023():
     """
     logger = get_dagster_logger()
     
-    csv_url = "https://vermont-complex-systems.github.io/datasets/data/uvm_profs_2023.csv"
+    dataset_url = "https://vermont-complex-systems.github.io/datasets/data/academic-research-groups.csv"
     
     try:
         # Check availability and get metadata
-        logger.info(f"Checking availability: {csv_url}")
-        head_response = requests.head(csv_url, timeout=10)
+        logger.info(f"Checking availability: {dataset_url}")
+        head_response = requests.head(dataset_url, timeout=10)
         
         if head_response.status_code == 200:
             file_size = head_response.headers.get('content-length', 'Unknown')
@@ -55,10 +54,13 @@ def uvm_profs_2023():
         input_file = config.data_raw_path / config.departments_file
         output_file = config.data_raw_path / config.uvm_profs_2023_file
 
-        df = pd.read_csv(csv_url)
+        df = pd.read_csv(dataset_url)
         logger.info(f"✓ Successfully loaded {len(df)} records")
+
+        # Filter just 2023 and UVM
+        df = df[(df.payroll_year == 2023) & (df.inst_ipeds_id == 231174)]
         
-        # Data processing - reorder columns for pipeline consistency
+        # Reorder columns for pipeline consistency
         column_order = [
             'oa_display_name', 'is_prof', 'group_size', 'perceived_as_male', 
             'host_dept', 'has_research_group', 'oa_uid', 'group_url', 'first_pub_year',
@@ -86,8 +88,8 @@ def uvm_profs_2023():
 
         return MaterializeResult(
             metadata={
-                "external_file": MetadataValue.path(str(csv_url)), 
-                "input_file": MetadataValue.path(str(csv_url)), 
+                "external_file": MetadataValue.path(str(dataset_url)), 
+                "input_file": MetadataValue.path(str(input_file)), 
                 "output_file": MetadataValue.path(str(output_file))
             }
         )

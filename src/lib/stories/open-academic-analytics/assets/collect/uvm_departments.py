@@ -16,13 +16,13 @@ def uvm_departments():
     """
     logger = get_dagster_logger()
     
-    csv_url = "https://vermont-complex-systems.github.io/datasets/data/uvm_departments.csv"
+    dataset_url = "https://vermont-complex-systems.github.io/datasets/data/academic-department.csv"
     output_file = config.data_raw_path / config.departments_file
 
     try:
         # Check availability
-        logger.info(f"Checking availability: {csv_url}")
-        head_response = requests.head(csv_url, timeout=10)
+        logger.info(f"Checking availability: {dataset_url}")
+        head_response = requests.head(dataset_url, timeout=10)
         
         if head_response.status_code == 200:
             file_size = head_response.headers.get('content-length', 'Unknown')
@@ -40,14 +40,16 @@ def uvm_departments():
     
     # Download and process
     try:
-        df = pd.read_csv(csv_url)
+        df = pd.read_csv(dataset_url)
         logger.info(f"✓ Successfully loaded {len(df)} department mappings")
         
-        # Validate expected structure (adjust based on your actual columns)
-        expected_columns = ['department', 'college']
+        expected_columns = ['department', 'college', 'inst_ipeds_id', 'year']
         if not all(col in df.columns for col in expected_columns):
             raise Exception(f"Missing expected columns. Found: {list(df.columns)}")
         
+        # Select year and UVM
+        df = df[(df.inst_ipeds_id == 231174) & (df.year == 2023)]
+
         # Remove any empty rows
         initial_count = len(df)
         df = df.dropna(subset=['department', 'college'])
@@ -77,7 +79,7 @@ def uvm_departments():
 
         return MaterializeResult(
             metadata={
-                "external_file": MetadataValue.path(str(csv_url)), 
+                "external_file": MetadataValue.path(str(dataset_url)), 
                 "output_file": MetadataValue.path(str(output_file))
             }
         )
