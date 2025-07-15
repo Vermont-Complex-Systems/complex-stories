@@ -1,14 +1,24 @@
 <script>
   import Scrolly from '$lib/components/helpers/Scrolly.svelte';
   import MorphingChart from './MorphingChart.svelte';
+  import WaffleChart from './Waffle.svelte';
   import Nav from './Nav.svelte';
   import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
   import coauthorData from "../data/uvm_2023_or_dodds.csv";
   import paperData from "../data/papers_uvm_2023_or_dodds.csv"
   import embeddings from '../data/umap_results.csv'
+  import { group } from 'd3-array'
+	
   import { Plot, Dot } from 'svelteplot';
 
+  import { dataState, initializeApp } from '../state.svelte.ts';
+
+
   let { story, data } = $props();
+
+    
+  // Initialize on component mount
+  initializeApp();
   
   const doddsSection = data.zoomingIn;
   
@@ -16,19 +26,59 @@
   let width = $state(900);
   let height = 1800;
   let scrollyIndex = $state();
+
+  let groupedData = $derived(() => {
+    if (!dataState.trainingAggData?.length) return new Map();
+    
+    // Flatten the data - create multiple entries for people with multiple departments
+    const flattenedData = dataState.trainingAggData.flatMap(person => {
+      const depts = (person.college || 'Unknown').split(';').map(d => d.trim());
+      return depts.map(dept => ({
+        ...person,
+        college: dept
+      }));
+    });
+    
+    return group(flattenedData, d => d.college);
+  });
+
+  $inspect(dataState.trainingAggData)
+
 </script>
 
 <Nav bind:isDark />
 
+
+{#if dataState.isInitializing}
+  <div class="loading-container">
+    <p>Loading authors...</p>
+  </div>
+{:else}
 <section id="story" class="story">
-    <h1>How does scientific productivity coevolve with coauthorships?</h1>
-
-    simple plot showing uvm faculty.
-
-    <h2>Zooming in</h2>
-    <p>We explore a simple timeline plot showing how scientific productivity and social collaborations changes over time. As a given researcher advance in his career, call him Peter, it is expected that his patterns of collaborations will change. In particular, we are interested in using a few relevant features to determine from the data when Peter started his lab.</p>
+  <h1>How does scientific productivity coevolve with coauthorships?</h1>
+   
+  <p>Here's the {dataState.trainingAggData.length} UVM faculty annotated with research group:</p>
     
-    <div class="scrolly-container">
+        <WaffleChart data={ dataState.trainingAggData } groupBy="college"/>
+
+  <p>We can also look by college</p>
+
+  <div class="waffle-grid">
+      {#each groupedData() as [collegeName, collegeData]}
+         <WaffleChart 
+          data={collegeData} 
+          title="{collegeName} ({collegeData.length})"
+          cellSize={30}
+          rows={4}
+        />
+      {/each}
+  </div>
+
+  <p>Interesting. But now, we zoom in on a particular faculty to try to understand better what it feels like to have a research group.</p>
+  <h2>Zooming in</h2>
+  <p>We explore a simple timeline plot showing how scientific productivity and social collaborations changes over time. As a given researcher advance in his career, call him Peter, it is expected that his patterns of collaborations will change. In particular, we are interested in using a few relevant features to determine from the data when Peter started his lab.</p>
+    
+  <div class="scrolly-container">
       <div class="scrolly-content">
         <div class="spacer"></div>
         <Scrolly bind:value={scrollyIndex}>
@@ -69,8 +119,27 @@
   </Plot>
   <p>(show same plot than before, but just the coauthor side that is rotated on the side. It would be nice to make it brushable, so that we highlight the paper positions for chosen coauthors. Doing so could help visualize changes in coauthors correlate with changes in how ego explore the embedding space. Or not.)</p>
 </section>
+{/if}
 
 <style>
+
+  .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        gap: 1rem;
+    }
+
+  .waffle-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+
+
   /* Story-wide settings */
   :global(#story) {
     max-width: 1200px;
