@@ -7,7 +7,7 @@
   import Embeddings from './Embeddings.svelte'
   import Spinner from '$lib/components/helpers/Spinner.svelte'
   import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
-  import embeddings from '../data/umap_results.csv'
+  // import embeddings from '../data/umap_results.csv'
 
 
   import { dataState, initializeApp } from '../state.svelte.ts';
@@ -24,7 +24,6 @@
   let height = 1800;
   let scrollyIndex = $state();
   
-  $inspect(dataState.trainingAggData)
 </script>
 
 <Nav bind:isDark />
@@ -70,7 +69,7 @@
       </div>
     </section> -->
 
-  <Embeddings embeddingData={embeddings} coauthorData={dataState.DoddsCoauthorData}/>
+  <Embeddings embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
 
 {/if}
 

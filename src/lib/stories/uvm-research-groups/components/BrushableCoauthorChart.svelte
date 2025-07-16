@@ -128,17 +128,6 @@
     </div>
   </div>
   
-  <!-- Brush controls -->
-  <div class="brush-controls">
-    <button onclick={clearBrush} class="clear-brush-btn">
-      Clear Selection
-    </button>
-    {#if brushSelection}
-      <span class="selection-info">
-        {enhancedDisplayData.filter(d => d.isBrushed).length} points selected
-      </span>
-    {/if}
-  </div>
 </div>
 
 <style>
@@ -162,7 +151,7 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: rotate(270deg) translate(-40%, -50.7%);
+    transform: rotate(270deg) translate(-45%, -49%);
     transform-origin: 0 0;
     border: 2px solid rgb(237, 237, 237);
     width: var(--chart-width);

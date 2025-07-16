@@ -3,9 +3,10 @@
   
   let { 
     embeddingData = [], 
-    width = 1200, 
+    width = 800, 
     height = 600,
-    margin = { top: 20, right: 100, bottom: 40, left: 0 }
+    margin = { top: 20, right: 20, bottom: 20, left: 20 },
+    highlightedIds = [] // Array of ego_aid values to highlight
   } = $props();
 
   // Calculate inner dimensions
@@ -44,10 +45,14 @@
   let mouseY = $state(0);
 
   function handleMouseEnter(event, point) {
-    mouseX = event.clientX;
-    mouseY = event.clientY;
-    tooltipContent = `UMAP 1: ${(+point.umap_1).toFixed(3)}\nUMAP 2: ${(+point.umap_2).toFixed(3)}`;
-    showTooltip = true;
+    // Only show tooltip if point is highlighted (or if no selection is active)
+    const isHighlighted = highlightedIds.includes(point.ego_aid);
+    if (highlightedIds.length === 0 || isHighlighted) {
+      mouseX = event.clientX;
+      mouseY = event.clientY;
+      tooltipContent = `title: ${point.title}\nauthors: ${point.authors}\ndoi: ${point.doi}\npub_year: ${point.pub_year}`;
+      showTooltip = true;
+    }
   }
 
   function handleMouseLeave() {
@@ -90,14 +95,15 @@
       
       <!-- Data points -->
       {#each embeddingData as point, i}
+        {@const isHighlighted = highlightedIds.includes(point.ego_aid)}
         <circle
           cx={xScale(+point.umap_1)}
           cy={yScale(+point.umap_2)}
-          r="4"
-          fill="black"
-          stroke="white"
-          stroke-width="0.5"
-          opacity="0.4"
+          r={isHighlighted ? "6" : "4"}
+          fill={isHighlighted ? "#FF5722" : "#4CAF50"}
+          stroke="#333"
+          stroke-width="1"
+          opacity={highlightedIds.length > 0 ? (isHighlighted ? 1 : 0.3) : 0.7}
           class="data-point"
           onmouseenter={(e) => handleMouseEnter(e, point)}
           onmouseleave={handleMouseLeave}

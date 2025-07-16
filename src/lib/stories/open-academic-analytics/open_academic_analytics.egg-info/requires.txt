@@ -1,0 +1,13 @@
+dagster
+pandas
+fastparquet
+pyarrow
+tqdm
+dagster-cloud
+arviz
+cmdstanpy
+umap-learn
+
+[dev]
+dagster-webserver
+pytest

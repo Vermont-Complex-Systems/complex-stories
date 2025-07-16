@@ -16,6 +16,7 @@ class PipelineConfig(Config):
     # Paths
     base_dir: str = "."
     data_raw_dir: str = "data/raw"
+    embedding_dir: str = "data/raw/embeddings"
     data_clean_dir: str = "data/clean"
     data_processed_dir: str = "data/processed"
     data_export_dir: str = "../../../../static/data/open-academic-analytics"
@@ -25,6 +26,10 @@ class PipelineConfig(Config):
     @property
     def data_raw_path(self) -> Path:
         return Path(self.base_dir) / self.data_raw_dir
+    
+    @property
+    def embeddings_path(self) -> Path:
+        return Path(self.base_dir) / self.embedding_dir
     
     @property
     def data_clean_path(self) -> Path:
@@ -103,6 +108,10 @@ class PipelineConfig(Config):
     def AGE_BUCKETS(self) -> Dict[str, List[float]]:
         return self.age_buckets
     
+    @property
+    def UMAP_CONFIG(self) -> Dict[str, float]:
+        return self.umap_config
+    
     # Development settings (reading from .env)
     development_mode: bool = True
     max_researchers: Optional[int] = int(os.getenv("MAX_RESEARCHERS", "1")) if os.getenv("MAX_RESEARCHERS") else None
@@ -121,6 +130,7 @@ class PipelineConfig(Config):
     # File names
     uvm_profs_2023_file: str = "uvm_profs_2023.parquet"
     departments_file: str = "uvm_departments.parquet"
+    embeddings_file: str = 'embeddings.parquet'
     
     paper_output_file: str = "paper.parquet"
     author_output_file: str = "author.parquet"
@@ -160,6 +170,16 @@ class PipelineConfig(Config):
     # Validation columns (keeping what's actually used)
     required_author_columns: List[str] = ['aid', 'author_age']
     required_coauthor_columns: List[str] = ['aid', 'name', 'author_age', 'coauth_age', 'age_diff', 'pub_date']
+
+    # umap config
+    umap_config:  Dict[str, float]  = {
+        'n_components': 2,
+        'n_neighbors': 15,
+        'min_dist': 0.1,
+        'random_state': 42,
+        'individual': True,
+        'metric': 'euclidean' #["euclidean", "manhattan", "chebyshev", "minkowski", "cosine", "correlation"],
+    }
 
 # Create default config instance (this is what your assets import)
 DEFAULT_CONFIG = PipelineConfig()

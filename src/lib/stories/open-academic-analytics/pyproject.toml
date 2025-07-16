@@ -12,7 +12,8 @@ dependencies = [
     "tqdm",
     "dagster-cloud",
     "arviz",
-    "cmdstanpy"
+    "cmdstanpy",
+    "umap-learn",
 ]
 
 [project.optional-dependencies]

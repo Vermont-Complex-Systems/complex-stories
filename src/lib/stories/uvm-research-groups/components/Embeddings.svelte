@@ -9,7 +9,7 @@
     import { ageColorScale, processCoauthorData, getCombinedDateRange, parseDate } from '../utils/combinedChartUtils2'
 
     let { embeddingData, coauthorData } = $props();
-$inspect(embeddingData)
+
     // Process coauthor data into positioned points
   let processedCoauthorData = $derived.by(() => {
     if (!filteredCoauthorData || filteredCoauthorData.length === 0) return [];
@@ -32,8 +32,7 @@ $inspect(embeddingData)
   let chartWidth = 250
   const chartHeight = 1105
 
-
-let styledCoauthorData = $derived.by(() => {
+  let styledCoauthorData = $derived.by(() => {
     if (!processedCoauthorData.length) return [];
     
     return processedCoauthorData.map(point => {
@@ -91,43 +90,44 @@ let styledCoauthorData = $derived.by(() => {
 
   let filteredCoauthorData = coauthorData;
 
-//   let filteredCoauthorData = $derived.by(() => {
-//     if (!coauthorData || !dashboardState.ageFilter) return coauthorData;
-    
-//     const [minAge, maxAge] = dashboardState.ageFilter;
-//     return coauthorData.filter(d => {
-//       const age = +d.author_age || 0;
-//       return age >= minAge && age <= maxAge;
-//     });
-//   });
 
   let selectedCoauthors = $state([]);
+  
+  // Extract ego_aid values from selected coauthors
+  let highlightedIds = $derived(
+    selectedCoauthors.map(coauthor => coauthor.coauth_aid).filter(Boolean)
+  );
   
   function handleBrushSelection(brushedPoints) {
     selectedCoauthors = brushedPoints;
     console.log('Selected coauthors:', brushedPoints);
-
   }
 
+  
 </script>
 
 <section id="embeddings" class="story">
   <h3>Embeddings</h3>
   <p>Instead of using time to position paper, we can also use embeddings. (WIP)</p>
 
-   <EmbeddingDotPlot 
-        {embeddingData}
-        width={1200} 
-        height={700} 
+
+  <div class="charts-container">
+    <EmbeddingDotPlot 
+      {embeddingData}
+      width={1200} 
+      height={800}
+      highlightedIds={highlightedIds}
     />
 
-  <BrushableCoauthorChart 
-    displayData={styledCoauthorData}
-    {timeScale}
-    width={chartWidth}
-    height={chartHeight}
-    onBrushSelection={handleBrushSelection}
-    />
+    <BrushableCoauthorChart 
+        displayData={styledCoauthorData}
+        width={chartWidth}
+        height={chartHeight}
+        {timeScale}
+        onBrushSelection={handleBrushSelection}
+    />    
+  </div>
+
   <p>(show same plot than before, but just the coauthor side that is rotated on the side. It would be nice to make it brushable, so that we highlight the paper positions for chosen coauthors. Doing so could help visualize changes in coauthors correlate with changes in how ego explore the embedding space. Or not.)</p>
 
   {#if selectedCoauthors.length > 0}

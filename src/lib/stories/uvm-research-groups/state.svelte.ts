@@ -44,7 +44,34 @@ export async function DoddsCoauthorData(authorName) {
     const result = await query(`
         SELECT *, strftime(pub_date::DATE, '%Y-%m-%d') as pub_date 
         FROM coauthor
-        WHERE aid = 'A5040821463'`);
+        WHERE aid = 'A5040821463'
+        `);
+    return result;
+}
+
+export async function EmbeddingsData() {
+    await registerTables();
+    const result = await query(`
+        SELECT *, strftime(pub_date::DATE, '%Y-%m-%d') as pub_date 
+        FROM (
+            -- Keep ALL papers from ego author
+            SELECT * FROM paper WHERE ego_aid = 'A5040821463'
+            
+            UNION ALL
+            
+            -- 10% sample from other distinct DOIs
+            SELECT * FROM (
+                SELECT DISTINCT ON (doi) *
+                FROM paper 
+                WHERE ego_aid != 'A5040821463' 
+                AND doi IS NOT NULL 
+                AND doi != ''
+                ORDER BY doi, RANDOM()
+            )
+            TABLESAMPLE BERNOULLI(30 PERCENT)  -- 10% sample
+        )
+        ORDER BY pub_date
+        `);
     return result;
 }
 
@@ -81,6 +108,7 @@ export async function initializeApp() {
         dataState.isInitializing = true;
         dataState.trainingAggData = await trainingAggData();
         dataState.DoddsPaperData = await DoddsPaperData();
+        dataState.EmbeddingsData = await EmbeddingsData();
         dataState.DoddsCoauthorData = await DoddsCoauthorData();
         dataState.isInitializing = false;
 }

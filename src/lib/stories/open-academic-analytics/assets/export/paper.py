@@ -105,7 +105,7 @@ def prepare_for_deduplication(df):
 
 
 @dg.asset(
-    deps=["academic_publications","author"],
+    deps=["academic_publications","author","umap_embeddings"],
     group_name="export",
     description="📊 Clean and prepare publication data for analysis dashboard"
 )
@@ -114,13 +114,18 @@ def paper():
     
     # Load and join data
     papers_file = config.data_raw_path / config.paper_output_file
+    embedding_file = config.data_processed_path / config.embeddings_file
     authors_file = config.data_export_path / config.author_output_file
     
     print(f"📖 Loading papers from {papers_file}")
     df_papers = pd.read_parquet(papers_file)
+    df_papers = df_papers[~df_papers.doi.isna()]
     
     print(f"📚 Loading author profiles from {authors_file}")
     df_authors = pd.read_parquet(authors_file)
+
+    print(f"Loading embeddings")
+    df_emb = pd.read_parquet(embedding_file)
     
     # Use DuckDB to do the JOIN
     # We use author schema to adument with author_age 
@@ -128,9 +133,10 @@ def paper():
     df = duckdb.sql("""
         SELECT p.ego_aid, a.display_name as name, p.pub_date, p.pub_year, p.title,
                p.cited_by_count, p.doi, p.wid, p.authors, p.work_type, 
-               a.author_age as ego_age, 
+               a.author_age as ego_age, e.umap_1, e.umap_2, 
         FROM df_papers p
         LEFT JOIN df_authors a ON p.ego_aid = a.aid AND p.pub_year = a.pub_year
+        LEFT JOIN df_emb e ON p.doi = e.doi AND p.ego_aid = p.ego_aid
     """).df()
     
     print(f"Retrieved {len(df)} papers")
