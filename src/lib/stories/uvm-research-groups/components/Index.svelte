@@ -1,4 +1,5 @@
 <script>
+  import { base } from '$app/paths';
   import Scrolly from '$lib/components/helpers/Scrolly.svelte';
   import MorphingChart from './MorphingChart.svelte';
   import WaffleChart from './Waffle.svelte';
@@ -7,8 +8,6 @@
   import Embeddings from './Embeddings.svelte'
   import Spinner from '$lib/components/helpers/Spinner.svelte'
   import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
-  // import embeddings from '../data/umap_results.csv'
-
 
   import { dataState, initializeApp } from '../state.svelte.ts';
 
@@ -71,7 +70,11 @@
 
   <Embeddings embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
 
-  <h2>Conclusion</h2>
+  <section id="conclusion" class="story">
+    <h2>Conclusion</h2>
+
+    <p>Poetic conclusion about what we accomplished. Also what about other faculties at UVM? Visit <a href="{base}/open-academic-analytics">our dashboard</a> for more.</p>
+  </section>
 {/if}
 
 <style>

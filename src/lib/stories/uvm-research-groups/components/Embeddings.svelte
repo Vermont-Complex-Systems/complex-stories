@@ -137,7 +137,7 @@
     />    
   </div>
 
-  <p>It is hard to draw any strong conclusion.</p>
+  <p>It is hard to draw any strong conclusion. One issue is that earlier papers have worst embeddings coverage, which is sad. </p>
 
   {#if selectedCoauthors.length > 0}
     <div class="selected-info">
