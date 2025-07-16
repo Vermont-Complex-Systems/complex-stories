@@ -60,6 +60,9 @@ def uvm_profs_2023():
         # Filter just 2023 and UVM
         df = df[(df.payroll_year == 2023) & (df.inst_ipeds_id == 231174)]
         
+        # Save a copy in export
+        df.to_parquet(config.data_export_path / config.uvm_profs_2023_file)
+        
         # Reorder columns for pipeline consistency
         column_order = [
             'oa_display_name', 'is_prof', 'group_size', 'perceived_as_male', 
@@ -76,7 +79,7 @@ def uvm_profs_2023():
         df['oa_uid'] = df['oa_uid'].str.upper()
 
         # Augment authors metadata with their colleges and FOS
-        df_depts = pd.read_csv(input_file)
+        df_depts = pd.read_parquet(input_file)
         df = df.merge(df_depts, how="left", left_on="host_dept", right_on="department")
         
         filtered_count = len(df)
@@ -84,7 +87,7 @@ def uvm_profs_2023():
         logger.info(f"✅ Final dataset: {filtered_count} researchers ready for analysis")
         
         # save file
-        df.to_csv(output_file, sep="\t", index=False)
+        df.to_parquet(output_file)
 
         return MaterializeResult(
             metadata={

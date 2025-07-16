@@ -3,19 +3,16 @@
   import MorphingChart from './MorphingChart.svelte';
   import WaffleChart from './Waffle.svelte';
   import Nav from './Nav.svelte';
+  import Intro from './Intro.svelte'
+  import Spinner from '$lib/components/helpers/Spinner.svelte'
   import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
-  import coauthorData from "../data/uvm_2023_or_dodds.csv";
-  import paperData from "../data/papers_uvm_2023_or_dodds.csv"
   import embeddings from '../data/umap_results.csv'
-  import { group } from 'd3-array'
-	
+  
   import { Plot, Dot } from 'svelteplot';
 
   import { dataState, initializeApp } from '../state.svelte.ts';
 
-
   let { story, data } = $props();
-
     
   // Initialize on component mount
   initializeApp();
@@ -26,57 +23,23 @@
   let width = $state(900);
   let height = 1800;
   let scrollyIndex = $state();
-
-  let groupedData = $derived(() => {
-    if (!dataState.trainingAggData?.length) return new Map();
-    
-    // Flatten the data - create multiple entries for people with multiple departments
-    const flattenedData = dataState.trainingAggData.flatMap(person => {
-      const depts = (person.college || 'Unknown').split(';').map(d => d.trim());
-      return depts.map(dept => ({
-        ...person,
-        college: dept
-      }));
-    });
-    
-    return group(flattenedData, d => d.college);
-  });
-
+  
   $inspect(dataState.trainingAggData)
-
 </script>
 
 <Nav bind:isDark />
 
-
 {#if dataState.isInitializing}
   <div class="loading-container">
-    <p>Loading authors...</p>
+    <Spinner />
   </div>
 {:else}
-<section id="story" class="story">
-  <h1>How does scientific productivity coevolve with coauthorships?</h1>
-   
-  <p>Here's the {dataState.trainingAggData.length} UVM faculty annotated with research group:</p>
-    
-        <WaffleChart data={ dataState.trainingAggData } groupBy="college"/>
 
-  <p>We can also look by college</p>
+<section id="story" class="story">  
+  <Intro data={dataState.trainingAggData}/>
 
-  <div class="waffle-grid">
-      {#each groupedData() as [collegeName, collegeData]}
-         <WaffleChart 
-          data={collegeData} 
-          title="{collegeName} ({collegeData.length})"
-          cellSize={30}
-          rows={4}
-        />
-      {/each}
-  </div>
-
-  <p>Interesting. But now, we zoom in on a particular faculty to try to understand better what it feels like to have a research group.</p>
   <h2>Zooming in</h2>
-  <p>We explore a simple timeline plot showing how scientific productivity and social collaborations changes over time. As a given researcher advance in his career, call him Peter, it is expected that his patterns of collaborations will change. In particular, we are interested in using a few relevant features to determine from the data when Peter started his lab.</p>
+  <p>To better understand faculty career trajectory, we explore a simple timeline plot showing how scientific productivity coevolve social collaborations. As a faculty advance in his career, call him Peter, it is expected that his patterns of collaborations will change. We are interested in a few relevant features to determine from the data when Peter started his research groups.</p>
     
   <div class="scrolly-container">
       <div class="scrolly-content">
@@ -97,7 +60,11 @@
       </div>
       
       <div class="scrolly-chart">
-        <MorphingChart {scrollyIndex} {coauthorData} {paperData} {width} {height} />
+        <MorphingChart 
+          {scrollyIndex} 
+          DoddsCoauthorData={dataState.DoddsCoauthorData} 
+          DoddsPaperData={dataState.DoddsPaperData} 
+          {width} {height} />
       </div>
     </div>
   </section>
@@ -124,20 +91,42 @@
 <style>
 
   .loading-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        gap: 1rem;
-    }
-
-  .waffle-grid {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
     gap: 1rem;
-    margin: 2rem 0;
+    box-sizing: border-box;
   }
+  .waffle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin: 0 0;
+  }
+
+  .college-section {
+  grid-column: 1 / -1; /* Span full width */
+  margin-bottom: 2rem;
+}
+
+.college-header {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #ddd;
+  color: #333;
+}
+
+.department-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
 
 
   /* Story-wide settings */

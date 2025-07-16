@@ -158,7 +158,7 @@ def training_dataset():
         .pipe(add_network_features, df_coauthor_clean, df_papers)
     )
 
-    df_annots = pd.read_csv(researchers_file, sep="\t")
+    df_annots = pd.read_parquet(researchers_file, sep="\t")
     
     # Merge with annotations (inner join - only keep researchers in annotation data)
     training_dataset = training_dataset.merge(df_annots, how="inner", left_on=['aid'], right_on=['oa_uid'])

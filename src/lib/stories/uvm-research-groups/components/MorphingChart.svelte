@@ -5,11 +5,9 @@
   import Tooltip from './Tooltip.svelte';
   import Legend from './Legend.svelte';
 
-  let { scrollyIndex, coauthorData, paperData, width, height } = $props();
-
+  let { scrollyIndex, DoddsCoauthorData, DoddsPaperData, width, height } = $props();
+  
   // Derived data
-  let DoddsCoauthorData = $derived(coauthorData?.filter(c => c.uvm_faculty_2023 === "False") || []);
-  let DoddsPaperData = $derived(paperData?.filter(p => p.ego_aid === "A5040821463") || []);
   let hasData = $derived(DoddsCoauthorData.length > 0 && DoddsPaperData.length > 0);
 
   // Constants

@@ -42,13 +42,17 @@ def uvm_departments():
     try:
         df = pd.read_csv(dataset_url)
         logger.info(f"✓ Successfully loaded {len(df)} department mappings")
-        
+
         expected_columns = ['department', 'college', 'inst_ipeds_id', 'year']
         if not all(col in df.columns for col in expected_columns):
             raise Exception(f"Missing expected columns. Found: {list(df.columns)}")
         
         # Select year and UVM
         df = df[(df.inst_ipeds_id == 231174) & (df.year == 2023)]
+
+        # Save raw copy to static
+        df.to_parquet(config.data_export_path / config.departments_file)
+        
 
         # Remove any empty rows
         initial_count = len(df)
@@ -74,7 +78,7 @@ def uvm_departments():
             logger.info(f"    {college}: {dept_count} departments")
         
         # Save to file
-        df.to_csv(output_file, index=False)
+        df.to_parquet(output_file)
         logger.info(f"✓ Saved to {output_file}")
 
         return MaterializeResult(

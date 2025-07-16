@@ -26,7 +26,7 @@ def coauthor_cache(duckdb: DuckDBResource):
     output_file = config.data_raw_path / config.author_output_file
 
     # Load known corrections
-    target_aids = pd.read_csv(uvm_profs_2023, sep="\t")
+    target_aids = pd.read_parquet(uvm_profs_2023)
     target_aids = target_aids[~target_aids['oa_uid'].isna()]
     known_years_df = target_aids[['oa_uid', 'first_pub_year']].dropna()
     known_first_pub_years = {k.upper(): int(v) for k, v in known_years_df.values}

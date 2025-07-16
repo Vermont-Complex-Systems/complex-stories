@@ -1,8 +1,7 @@
 <script>
   import { Plot, Dot, LineY, AreaY, HTMLTooltip } from 'svelteplot';
 
-  import PaperChart from './PaperChart.svelte';
-  import CoauthorChart from './CoauthorChart.svelte';
+  import TimelineChart from './TimelineChart.svelte';
   import Toggle from './Toggle.svelte'
   import RangeFilter from './RangeFilter.svelte'
   import CollabChart from './Collaboration.Agg.svelte'
@@ -50,11 +49,7 @@
   let filteredAggData = $derived(
     trainingAggData?.filter(d=>dataState.availableColleges.slice(0,4).includes(d.college) && d.author_age < maxAge) || []
   );
-  let filteredAggData2 = $derived(
-    trainingAggData?.filter(d=>dataState.availableColleges.slice(4,8).includes(d.college) && d.author_age < maxAge) || []
-  );
 
-  $inspect(filteredAggData2.map(d=>d.author_age))
 </script>
 
 <div class="dashboard">
@@ -62,23 +57,25 @@
     <div class="charts-grid">
       <div class="chart-panel">
         <h2>Coauthor Collaborations</h2>
-        <CoauthorChart 
+        <TimelineChart 
           {coauthorData}
           {paperData}
           {trainingData}
           width={chartWidth}
           height={chartHeight}
+          chartType="coauthor"
           colorMode={dashboardState.colorMode}
           highlightedCoauthor={dashboardState.highlightedCoauthor}
         />
       </div>
       <div class="chart-panel">
         <h2>Publications Timeline</h2>
-        <PaperChart 
+        <TimelineChart 
           {paperData}
           {coauthorData}
           width={chartWidth}
           height={chartHeight}
+          chartType="paper"
           highlightedAuthor={dashboardState.highlightedAuthor}
         />
       </div>

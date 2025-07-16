@@ -1,12 +1,12 @@
 <script>
 	import { PersonStanding } from '@lucide/svelte';
 	
-	let { data = [], rows = 5, cellSize = 30, highlightName = null, title = null } = $props();
+	let { data = [], rows = 5, cellSize = 50, highlightName = null, title = null } = $props();
 
 	let hoveredPerson = $state(null);
 	let mousePos = $state({ x: 0, y: 0 });
 
-	let cols = $derived(Math.ceil(Math.sqrt(data.length)));
+	let cols = $derived(Math.ceil(Math.sqrt(data.length * 2))); // 1.5x wider than tall
 	let actualRows = $derived(Math.ceil(data.length / cols));
 
 	function getPosition(index) {
@@ -42,9 +42,9 @@
 				onmousemove={(e) => mousePos = { x: e.clientX, y: e.clientY }}
 			>
 				<PersonStanding 
-					size={cellSize - 4} 
+					size={cellSize - 2} 
 					color={getColor(person)}
-					style="cursor: pointer; margin: 2px; {highlightName && person.name === highlightName ? 'filter: drop-shadow(0 0 8px currentColor);' : ''}"
+					style="cursor: pointer; {highlightName && person.name === highlightName ? 'filter: drop-shadow(0 0 8px currentColor);' : ''}"
 				/>
 			</foreignObject>
 		{/each}
@@ -59,8 +59,11 @@
 			{hoveredPerson.name}<br>
 			{hoveredPerson.has_research_group ? 'Has research group' : 'No research group'}
 			{#if hoveredPerson.college}
-				<br>College: {hoveredPerson.college}
-			{/if}
+            <br>College: {hoveredPerson.college}
+                {/if}
+			{#if hoveredPerson.host_dept}
+                <br>Department: {hoveredPerson.host_dept}
+            {/if}
 		</div>
 	{/if}
 </div>
@@ -69,7 +72,6 @@
 	.waffle {
 		position: relative;
 		display: inline-block;
-		margin: 1rem;
 	}
 
 	h4 {

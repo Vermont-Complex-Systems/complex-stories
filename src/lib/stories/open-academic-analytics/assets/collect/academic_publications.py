@@ -134,7 +134,7 @@ def academic_publications(duckdb: DuckDBResource):
         db_exporter.load_existing_data(output_file)
         
         # Load researchers
-        target_aids = pd.read_csv(input_file, sep="\t")
+        target_aids = pd.read_parquet(input_file)
         logger.info(f"Found {len(target_aids)} researchers with OpenAlex IDs")
         
         # Extract known first publication years if available

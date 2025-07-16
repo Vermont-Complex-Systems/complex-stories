@@ -84,7 +84,7 @@ def uvm_departments():
         df[columns_to_strip] = df[columns_to_strip].apply(lambda x: x.str.strip())
         
         # Save to file
-        df.to_csv(output_file, index=False)
+        df.to_parquet(output_file, index=False)
 
         return MaterializeResult(
             metadata={

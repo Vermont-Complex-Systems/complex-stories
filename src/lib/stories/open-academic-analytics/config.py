@@ -119,10 +119,8 @@ class PipelineConfig(Config):
     max_valid_year: int = 2024
     
     # File names
-    researchers_input_file: str = "uvm_profs_2023.parquet"
-    uvm_profs_2023_file: str = "researchers.tsv"
-    departments_file: str = "uvm_departments.csv"
-    paper_raw: str = "researchers.tsv"    
+    uvm_profs_2023_file: str = "uvm_profs_2023.parquet"
+    departments_file: str = "uvm_departments.parquet"
     
     paper_output_file: str = "paper.parquet"
     author_output_file: str = "author.parquet"
