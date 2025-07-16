@@ -68,7 +68,7 @@ export async function EmbeddingsData() {
                 AND doi != ''
                 ORDER BY doi, RANDOM()
             )
-            TABLESAMPLE BERNOULLI(30 PERCENT)  -- 10% sample
+            TABLESAMPLE BERNOULLI(30 PERCENT)  -- 30% sample
         )
         ORDER BY pub_date
         `);

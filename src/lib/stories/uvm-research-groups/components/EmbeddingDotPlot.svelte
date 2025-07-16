@@ -6,7 +6,8 @@
     width = 800, 
     height = 600,
     margin = { top: 20, right: 20, bottom: 20, left: 20 },
-    highlightedIds = [] // Array of ego_aid values to highlight
+    highlightedIds = [], // Array of ego_aid values to highlight
+    timeRange = null // [startpub_Year, endpub_Year] or null for no time filtering
   } = $props();
 
   // Calculate inner dimensions
@@ -45,9 +46,15 @@
   let mouseY = $state(0);
 
   function handleMouseEnter(event, point) {
-    // Only show tooltip if point is highlighted (or if no selection is active)
-    const isHighlighted = highlightedIds.includes(point.ego_aid);
-    if (highlightedIds.length === 0 || isHighlighted) {
+    // Check if point matches both ID and time criteria
+    const isHighlighted = highlightedIds.includes(point.coauth_aid || point.ego_aid);
+    const isInTimeRange = !timeRange || 
+      (point.pub_year >= timeRange[0] && point.pub_year <= timeRange[1]);
+    
+    const shouldShowTooltip = (highlightedIds.length === 0 && !timeRange) || 
+                             (isHighlighted && isInTimeRange);
+    
+    if (shouldShowTooltip) {
       mouseX = event.clientX;
       mouseY = event.clientY;
       tooltipContent = `title: ${point.title}\nauthors: ${point.authors}\ndoi: ${point.doi}\npub_year: ${point.pub_year}`;
@@ -95,15 +102,17 @@
       
       <!-- Data points -->
       {#each embeddingData as point, i}
-        {@const isHighlighted = highlightedIds.includes(point.ego_aid)}
+        {@const isHighlighted = highlightedIds.includes(point.coauth_aid || point.ego_aid)}
+        {@const isInTimeRange = !timeRange || (point.pub_year >= timeRange[0] && point.pub_year <= timeRange[1])}
+        {@const shouldHighlight = isHighlighted && isInTimeRange}
         <circle
           cx={xScale(+point.umap_1)}
           cy={yScale(+point.umap_2)}
-          r={isHighlighted ? "6" : "4"}
-          fill={isHighlighted ? "#FF5722" : "#4CAF50"}
+          r={shouldHighlight ? "6" : "4"}
+          fill={shouldHighlight ? "#FF5722" : "#4CAF50"}
           stroke="#333"
           stroke-width="1"
-          opacity={highlightedIds.length > 0 ? (isHighlighted ? 1 : 0.3) : 0.7}
+          opacity={(highlightedIds.length > 0 || timeRange) ? (shouldHighlight ? 1 : 0.3) : 0.7}
           class="data-point"
           onmouseenter={(e) => handleMouseEnter(e, point)}
           onmouseleave={handleMouseLeave}

@@ -34,7 +34,7 @@
   </div>
 {:else}
 
-  <!-- <Intro data={dataState.trainingAggData}/>
+  <Intro data={dataState.trainingAggData}/>
 
   <section id="story" class="story">  
 
@@ -67,10 +67,11 @@
             {width} {height} />
         </div>
       </div>
-    </section> -->
+  </section>
 
   <Embeddings embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
 
+  <h2>Conclusion</h2>
 {/if}
 
 <style>
