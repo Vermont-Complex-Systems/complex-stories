@@ -2,14 +2,14 @@
     import { Plot, Dot } from 'svelteplot';
     import DodgeChart from '$lib/components/helpers/DodgeChart.svelte';
     import EmbeddingDotPlot from './EmbeddingDotPlot.svelte';
-    import CoauthorChart from './CoauthorChart.svelte';
+    import BrushableCoauthorChart from './BrushableCoauthorChart.svelte';
     import * as d3 from 'd3';
     
     import { dashboardState } from '../state.svelte.ts';
     import { ageColorScale, processCoauthorData, getCombinedDateRange, parseDate } from '../utils/combinedChartUtils2'
 
     let { embeddingData, coauthorData } = $props();
-
+$inspect(embeddingData)
     // Process coauthor data into positioned points
   let processedCoauthorData = $derived.by(() => {
     if (!filteredCoauthorData || filteredCoauthorData.length === 0) return [];
@@ -101,6 +101,14 @@ let styledCoauthorData = $derived.by(() => {
 //     });
 //   });
 
+  let selectedCoauthors = $state([]);
+  
+  function handleBrushSelection(brushedPoints) {
+    selectedCoauthors = brushedPoints;
+    console.log('Selected coauthors:', brushedPoints);
+
+  }
+
 </script>
 
 <section id="embeddings" class="story">
@@ -113,16 +121,25 @@ let styledCoauthorData = $derived.by(() => {
         height={700} 
     />
 
-  <CoauthorChart 
-          displayData={styledCoauthorData}
-          rawData={filteredCoauthorData}
-          {timeScale}
-          colorScale={ageColorScale}
-          width={chartWidth}
-          height={chartHeight}
-          colorMode={'age_diff'}
+  <BrushableCoauthorChart 
+    displayData={styledCoauthorData}
+    {timeScale}
+    width={chartWidth}
+    height={chartHeight}
+    onBrushSelection={handleBrushSelection}
     />
   <p>(show same plot than before, but just the coauthor side that is rotated on the side. It would be nice to make it brushable, so that we highlight the paper positions for chosen coauthors. Doing so could help visualize changes in coauthors correlate with changes in how ego explore the embedding space. Or not.)</p>
+
+  {#if selectedCoauthors.length > 0}
+    <div class="selected-info">
+        <h4>Selected Coauthors:</h4>
+        <ul>
+        {#each selectedCoauthors as coauthor}
+            <li>{coauthor.name} ({coauthor.year})</li>
+        {/each}
+        </ul>
+    </div>
+    {/if}
 </section>
 
 <style>
