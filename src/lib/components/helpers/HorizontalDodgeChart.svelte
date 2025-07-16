@@ -8,10 +8,10 @@
     // Layout props
     width, 
     height,
-    // Time scale for grid lines
+    // Time scale for grid lines (now horizontal)
     timeScale,
     // Grid configuration
-    gridStyle = 'full', // 'full' (0 to width) or 'margins' (respecting left/right margins)
+    gridStyle = 'full', // 'full' (0 to height) or 'margins' (respecting top/bottom margins)
     // Event handlers
     onPointClick = null,
     onChartClick = null,
@@ -22,13 +22,13 @@
   // Constants
   const MARGIN_TOP = 50;
   const MARGIN_BOTTOM = 50;
-  const MARGIN_LEFT = 40;
+  const MARGIN_LEFT = 60;  // Increased for year labels
   const MARGIN_RIGHT = 40;
 
   // Check if we have data
   let hasData = $derived(displayData && displayData.length > 0);
 
-  // Year ticks
+  // Year ticks (now for X-axis)
   let yearTicks = $derived.by(() => {
     if (!timeScale) return [];
     const [startDate, endDate] = timeScale.domain();
@@ -36,25 +36,6 @@
     const [startYear, endYear] = [startDate.getFullYear(), endDate.getFullYear()];
     const yearSpacing = Math.max(1, Math.floor((endYear - startYear) / 15));
     return d3.range(startYear, endYear + 1, yearSpacing);
-  });
-
-  // Grid line properties based on style
-  let gridProps = $derived(() => {
-    if (gridStyle === 'full') {
-      return {
-        x1: 0,
-        x2: width,
-        textX: 10,
-        textAnchor: "start"
-      };
-    } else { // 'margins'
-      return {
-        x1: MARGIN_LEFT,
-        x2: width - MARGIN_RIGHT,
-        textX: MARGIN_LEFT - 5,
-        textAnchor: "end"
-      };
-    }
   });
 
   // Tooltip state
@@ -99,7 +80,7 @@
   <div class="viz-content">
     <div class="plot-container">
       <div class="chart-area">
-        <!-- Main dodge chart visualization -->
+        <!-- Main horizontal dodge chart visualization -->
         <svg 
           {width} 
           {height} 
@@ -110,27 +91,25 @@
           onkeydown={(e) => e.key === 'Enter' && handleChartClick(e)}
         >
           
-          <!-- Grid lines and year labels -->
+          <!-- Vertical grid lines and year labels (for X-axis) -->
           <g class="grid-container">
             {#each yearTicks as year}
               {@const yearDate = new Date(year, 0, 1)}
-              {@const y = timeScale(yearDate)}
+              {@const x = timeScale(yearDate)}
               {@const isFullGrid = gridStyle === 'full'}
-              {@const lineX1 = isFullGrid ? 0 : MARGIN_LEFT}
-              {@const lineX2 = isFullGrid ? width : width - MARGIN_RIGHT}
-              {@const labelX = isFullGrid ? 10 : MARGIN_LEFT - 5}
-              {@const labelAnchor = isFullGrid ? "start" : "end"}
+              {@const lineY1 = isFullGrid ? 0 : MARGIN_TOP}
+              {@const lineY2 = isFullGrid ? height : height - MARGIN_BOTTOM}
               <line 
-                x1={lineX1} 
-                x2={lineX2} 
-                y1={y} 
-                y2={y} 
+                x1={x} 
+                x2={x} 
+                y1={lineY1} 
+                y2={lineY2} 
                 class="grid-line"
               />
               <text 
-                x={labelX} 
-                y={y - 5} 
-                text-anchor={labelAnchor} 
+                x={x} 
+                y={height - MARGIN_BOTTOM + 15} 
+                text-anchor="middle" 
                 class="year-label"
               >
                 {year}
@@ -139,7 +118,7 @@
           </g>
           
           <!-- Data points -->
-          <g transform="translate({MARGIN_LEFT}, 0)">
+          <g transform="translate(0, {MARGIN_TOP})">
             {#each displayData as point}
               <circle
                 cx={point.x}

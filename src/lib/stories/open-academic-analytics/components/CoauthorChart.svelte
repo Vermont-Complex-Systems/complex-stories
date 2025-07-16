@@ -1,5 +1,5 @@
 <script>
-  import DodgeChart from './DodgeChart.svelte';
+  import DodgeChart from '$lib/components/helpers/DodgeChart.svelte';
   import ChangePointChart from './ChangePointChart.svelte';
   import Legend from './Legend.svelte';
   import { dashboardState } from '../state.svelte.ts';

@@ -2,6 +2,14 @@
 import { registerParquetFile, query } from '$lib/utils/duckdb.js';
 import { coauthorURL, departmentURL, paperURL, trainingUrl } from './data/loader.js';
 
+export const dashboardState = $state({
+    selectedAuthor: 'Peter Sheridan Dodds',
+    colorMode: 'age_diff',
+    highlightedAuthor: null,
+    authorAgeFilter: null, // [minAge, maxAge] or null
+    highlightedCoauthor: null,
+});
+
 export const dataState = $state({
     isInitializing: true,
     trainingAggData: null,

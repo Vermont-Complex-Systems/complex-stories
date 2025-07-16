@@ -1,5 +1,5 @@
 <script>
-  import DodgeChart from './DodgeChart.svelte';
+  import DodgeChart from '$lib/components/helpers/DodgeChart.svelte';
 
   let { displayData = [], width, height, timeScale } = $props();
 
