@@ -96,7 +96,8 @@
   let highlightedIds = $derived(
     selectedCoauthors.map(coauthor => coauthor.coauth_aid).filter(Boolean)
   );
-  
+
+
   let timeRange = $derived.by(() => {
     if (selectedCoauthors.length === 0) return null;
     
@@ -108,10 +109,9 @@
   
   function handleBrushSelection(brushedPoints) {
     selectedCoauthors = brushedPoints;
-    console.log('Selected coauthors:', brushedPoints);
-    console.log('Time range:', timeRange);
   }
 
+$inspect(selectedCoauthors)
 </script>
 
 <section id="embeddings" class="story">
@@ -124,7 +124,7 @@
       {embeddingData}
       width={1200} 
       height={650}
-      highlightedIds={highlightedIds}
+      {selectedCoauthors}
       timeRange={timeRange}
     />
 
@@ -135,20 +135,11 @@
         {timeScale}
         onBrushSelection={handleBrushSelection}
     />    
+    <small>brush to filter</small>
   </div>
 
-  <p>It is hard to draw any strong conclusion. One issue is that earlier papers have worst embeddings coverage, which is sad. </p>
+  <p>It is hard to draw any strong conclusion, but it seems to me that around 2015-2016 there were two main clusters corresponding to . One issue is that earlier papers have worst embeddings coverage, which is too bad. </p>
 
-  {#if selectedCoauthors.length > 0}
-    <div class="selected-info">
-        <h4>Selected Coauthors:</h4>
-        <ul>
-        {#each selectedCoauthors as coauthor}
-            <li>{coauthor.name} ({coauthor.year})</li>
-        {/each}
-        </ul>
-    </div>
-    {/if}
 </section>
 
 <style>

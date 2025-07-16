@@ -6,7 +6,7 @@
     width = 800, 
     height = 600,
     margin = { top: 20, right: 20, bottom: 20, left: 20 },
-    highlightedIds = [], // Array of ego_aid values to highlight
+    selectedCoauthors = [], // Array of ego_aid values to highlight
     timeRange = null // [startpub_Year, endpub_Year] or null for no time filtering
   } = $props();
 
@@ -45,14 +45,18 @@
   let mouseX = $state(0);
   let mouseY = $state(0);
 
-  function handleMouseEnter(event, point) {
-    // Check if point matches both ID and time criteria
-    const isHighlighted = highlightedIds.includes(point.coauth_aid || point.ego_aid);
+    function handleMouseEnter(event, point) {
+    // Use the same logic as highlighting
+    const isPeterDodds = point.ego_aid === 'A5040821463';
+    const hasSelectedCoauthor = selectedCoauthors.length > 0 && selectedCoauthors.some(coauth => 
+      point.authors?.includes(coauth.name)
+    );
+    const shouldHighlight = isPeterDodds && hasSelectedCoauthor;
     const isInTimeRange = !timeRange || 
       (point.pub_year >= timeRange[0] && point.pub_year <= timeRange[1]);
     
-    const shouldShowTooltip = (highlightedIds.length === 0 && !timeRange) || 
-                             (isHighlighted && isInTimeRange);
+    const shouldShowTooltip = (selectedCoauthors.length === 0 && !timeRange) || 
+                            (shouldHighlight && isInTimeRange);
     
     if (shouldShowTooltip) {
       mouseX = event.clientX;
@@ -65,6 +69,8 @@
   function handleMouseLeave() {
     showTooltip = false;
   }
+
+
 </script>
 
 <div class="plot-container">
@@ -102,25 +108,26 @@
       
       <!-- Data points -->
       {#each embeddingData as point, i}
-        {@const isHighlighted = highlightedIds.includes(point.coauth_aid || point.ego_aid)}
+        {@const isPeterDodds = point.ego_aid === 'A5040821463'}
+        {@const hasSelectedCoauthor = selectedCoauthors.length > 0 && selectedCoauthors.some(coauth => 
+          point.authors?.includes(coauth.name)
+        )}
+        {@const shouldHighlight = isPeterDodds && hasSelectedCoauthor}
         {@const isInTimeRange = !timeRange || (point.pub_year >= timeRange[0] && point.pub_year <= timeRange[1])}
-        {@const shouldHighlight = isHighlighted && isInTimeRange}
+        {@const finalHighlight = shouldHighlight && isInTimeRange}
         <circle
           cx={xScale(+point.umap_1)}
           cy={yScale(+point.umap_2)}
-          r={shouldHighlight ? "6" : "4"}
-          fill={shouldHighlight ? "#FF5722" : "#4CAF50"}
+          r={finalHighlight ? "6" : "4"}
+          fill={finalHighlight ? "#FF5722" : "#4CAF50"}
           stroke="#333"
           stroke-width="1"
-          opacity={(highlightedIds.length > 0 || timeRange) ? (shouldHighlight ? 1 : 0.3) : 0.7}
+          opacity={(selectedCoauthors.length > 0 || timeRange) ? (finalHighlight ? 1 : 0.3) : 0.7}
           class="data-point"
           onmouseenter={(e) => handleMouseEnter(e, point)}
           onmouseleave={handleMouseLeave}
         />
       {/each}
-      
-      <!-- No axes -->
-      
     </g>
   </svg>
 

@@ -184,32 +184,4 @@
     stroke: #fff;
     stroke-width: 1;
   }
-
-  .brush-controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 1rem;
-  }
-
-  .clear-brush-btn {
-    padding: 0.5rem 1rem;
-    background: #4682b4;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.2s ease;
-  }
-
-  .clear-brush-btn:hover {
-    background: #5a9bd3;
-  }
-
-  .selection-info {
-    font-size: 14px;
-    color: var(--color-fg);
-    font-weight: 500;
-  }
 </style>
