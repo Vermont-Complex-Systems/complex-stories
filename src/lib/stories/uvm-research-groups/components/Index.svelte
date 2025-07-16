@@ -33,8 +33,22 @@
   </div>
 {:else}
 
-  <Intro data={dataState.trainingAggData}/>
 
+  <div class="header-container">
+  <div class="header-text">
+    <h1>Mapping the Research Ecosystem of the University of Vermont</h1>
+    <div class="article-meta">
+      <p class="author">By <a href="{base}/author/jonathan-st-onge">Jonathan St-Onge</a></p>
+      <p class="date">May 16, 2025</p>
+    </div>
+  </div>
+  <div class="logo-container">
+    <img src="{base}/UVM_Seal_Gr.png" alt="Home" class="logo" />
+  </div>
+</div>
+
+  <Intro data={dataState.trainingAggData}/>
+  
   <section id="story" class="story">  
 
     <h2>Zooming in</h2>
@@ -78,46 +92,88 @@
 {/if}
 
 <style>
+    /* Header Layout */
+  .header-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 4rem auto 0 auto;
+    padding: 0 2rem;
+  }
 
+  .header-text {
+    flex: 1;
+    max-width: 600px;
+  }
+
+  .header-container h1 {
+    margin: 0 0 1rem 0 !important;
+    font-size: var(--font-size-xlarge);
+    font-family: var(--serif);
+  }
+
+  .logo {
+    height: 300px;
+    width: auto;
+    object-fit: contain;
+    max-width: 400px;
+    transform: translateY(-30px);
+  }
+
+  .article-meta {
+    margin: 0;
+    font-family: var(--sans);
+  }
+
+  .article-meta .author {
+    font-size: var(--font-size-medium);
+    color: var(--color-secondary-gray);
+    margin: 0 0 0.25rem 0;
+    font-weight: 500;
+  }
+
+  .article-meta .date {
+    font-size: var(--font-size-small);
+    color: var(--color-tertiary-gray);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* Loading */
   .loading-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 100vh;
-    margin: 0;
-    padding: 0;
     gap: 1rem;
-    box-sizing: border-box;
   }
-  
-  /* Story-wide settings */
+
+  /* Story sections */
   :global(#story) {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 2rem;
   }
 
-  :global(#story h1) {
-    font-size: var(--font-size-xlarge);
-    margin: 2rem 0 3rem 0;
-    text-align: left;
+  :global(#story h2) {
+    font-size: 1.8rem;
+    margin: 2rem 0 1rem 0;
     font-family: var(--serif);
   }
 
-
   section p {
-      font-size: 22px;
-      max-width: 800px;
-      line-height: 1.3;
+    font-size: 22px;
+    max-width: 800px;
+    line-height: 1.3;
   }
 
   /* Scrolly layout */
-  
   .scrolly-container {
     display: grid;
-    margin-top: 3rem; 
-    grid-template-columns: 3fr 7fr; /* Text gets 3/10, chart gets 7/10 */
+    margin-top: 3rem;
+    grid-template-columns: 3fr 7fr;
     gap: 2rem;
     min-height: 100vh;
   }
@@ -126,13 +182,12 @@
     position: sticky;
     top: calc(50vh - 350px);
     height: fit-content;
-    overflow: visible; 
+    overflow: visible;
   }
 
   .scrolly-content {
-    width: 400px; /* Control the text width */
+    width: 400px;
   }
-  
 
   .spacer {
     height: 75vh;
@@ -149,7 +204,7 @@
     background: #f5f5f5;
     color: #ccc;
     border-radius: 5px;
-    transform: translateX(-4rem);  /* Magic number to push text on the left */
+    transform: translateX(-4rem);
     box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
     transition: all 500ms ease;
   }
@@ -170,8 +225,24 @@
     color: #fff;
   }
 
-  /* Mobile */
+  /* Mobile responsive */
   @media (max-width: 1200px) {
+    .header-container {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 1rem;
+    }
+
+    .header-text {
+      max-width: none;
+    }
+
+    .logo {
+      transform: none;
+      height: 200px;
+    }
+
     :global(#story) {
       padding: 0 1rem;
     }

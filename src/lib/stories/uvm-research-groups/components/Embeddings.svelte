@@ -152,10 +152,13 @@
 </section>
 
 <style>
-    section p {
-      font-size: 22px;
-      max-width: 800px;
-      line-height: 1.3;
+section p {
+    font-size: 22px;
+    max-width: 800px;
+    line-height: 1.3;
+    margin-top: 2rem; /* Add more space after paragraphs */
+    margin-bottom: 2rem; /* Add more space after paragraphs */
   }
+
 </style>
 
