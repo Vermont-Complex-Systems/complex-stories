@@ -60,13 +60,11 @@
 </script>
 
 
-
+<section id="story" class="story">  
+  
   <h1>Mapping the research ecosystem of the University of Vermont.</h1>
    
-  <p>In 2008, Sears adopted an organizational structure that pitted departments against each other. This led to a tribal warfare state of affairs, <a href="https://d3.harvard.edu/platform-rctom/submission/sears-the-collapse-of-a-company-from-within/">accelerating its downfall</a>.</p>
-  <p>Some say that US universities operated similarly for a long, with each department reporting its own profit and remaining siloed. While this is slowly changing, I have yet to meet anyone at UVM who understands the broader research ecosystem, particularly around software development. To better understand UVM's research landscape, we make a deep dive on research groups at UVM</p>. 
-  
-  <p>We first take a look at the {data.length} UVMfaculty, annotated with whether they have a research group or not:</p>
+  <p>In 2008, Sears adopted an organizational structure that pitted departments against each other. This led to a tribal warfare state of affairs, <a href="https://d3.harvard.edu/platform-rctom/submission/sears-the-collapse-of-a-company-from-within/">accelerating its downfall</a>. Some say that US universities operated similarly for a long, with each department reporting its own profit and remaining siloed. While this is slowly changing, I have yet to meet anyone at UVM who understands the broader research ecosystem, particularly around software development. To better understand UVM's research landscape, we make a deep dive on research groups at UVM. We first take a look at the {data.length} UVMfaculty, annotated with whether they have a research group or not:</p>
     
     <WaffleChart data={ data } cellSize={25}/>
 
@@ -124,9 +122,16 @@
 </div>
 
 <p>Interesting. But now, we zoom in on a particular faculty to try to understand better what it feels like to have a research group.</p>
-  
-<style>
 
+</section>
+  
+
+<style >
+  section p {
+      font-size: 22px;
+      max-width: 800px;
+      line-height: 1.3;
+  }
 
   .waffle-grid {
     display: grid;

@@ -144,7 +144,6 @@ class OpenAlexFetcher:
             logger.error(f"Failed to get most recent work for {author_id}: {str(e)}")
             return None
         
-
     def get_author_info_by_name(self, author_name):
         """
         Get author information by name from OpenAlex.

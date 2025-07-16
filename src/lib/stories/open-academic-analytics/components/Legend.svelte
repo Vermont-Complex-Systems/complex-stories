@@ -83,11 +83,7 @@
           </div>
         {/each}
         
-        <!-- Always show unknown/null data indicator -->
-        <div class="legend-item" style="animation-delay: {legendItems.length * 0.1}s">
-          <div class="legend-dot" style="background: #888888; opacity: 0.3;"></div>
-          <span>Unknown/No data</span>
-        </div>
+
       </div>
     {/key}
   </div>

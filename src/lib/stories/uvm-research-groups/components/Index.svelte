@@ -1,14 +1,13 @@
 <script>
+  import { base } from '$app/paths';
   import Scrolly from '$lib/components/helpers/Scrolly.svelte';
   import MorphingChart from './MorphingChart.svelte';
   import WaffleChart from './Waffle.svelte';
   import Nav from './Nav.svelte';
   import Intro from './Intro.svelte'
+  import Embeddings from './Embeddings.svelte'
   import Spinner from '$lib/components/helpers/Spinner.svelte'
   import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
-  import embeddings from '../data/umap_results.csv'
-  
-  import { Plot, Dot } from 'svelteplot';
 
   import { dataState, initializeApp } from '../state.svelte.ts';
 
@@ -24,7 +23,6 @@
   let height = 1800;
   let scrollyIndex = $state();
   
-  $inspect(dataState.trainingAggData)
 </script>
 
 <Nav bind:isDark />
@@ -35,57 +33,48 @@
   </div>
 {:else}
 
-<section id="story" class="story">  
   <Intro data={dataState.trainingAggData}/>
 
-  <h2>Zooming in</h2>
-  <p>To better understand faculty career trajectory, we explore a simple timeline plot showing how scientific productivity coevolve social collaborations. As a faculty advance in his career, call him Peter, it is expected that his patterns of collaborations will change. We are interested in a few relevant features to determine from the data when Peter started his research groups.</p>
-    
-  <div class="scrolly-container">
-      <div class="scrolly-content">
-        <div class="spacer"></div>
-        <Scrolly bind:value={scrollyIndex}>
-          {#each doddsSection as text, i}
-            {@const active = scrollyIndex === i}
-            <div class="step" class:active>
-              {#if text.type === 'markdown'}
-                <p><Md text={text.value}/></p>
-              {:else}
-                <p>{@html text.value}</p>
-              {/if}
-            </div>
-          {/each}
-        </Scrolly>
-        <div class="spacer"></div>
-      </div>
+  <section id="story" class="story">  
+
+    <h2>Zooming in</h2>
+    <p>To better understand faculty career trajectory, we explore a simple timeline plot showing how scientific productivity coevolve social collaborations. As a faculty advance in his career, call him Peter, it is expected that his patterns of collaborations will change. We are interested in a few relevant features to determine from the data when Peter started his research groups.</p>
       
-      <div class="scrolly-chart">
-        <MorphingChart 
-          {scrollyIndex} 
-          DoddsCoauthorData={dataState.DoddsCoauthorData} 
-          DoddsPaperData={dataState.DoddsPaperData} 
-          {width} {height} />
+    <div class="scrolly-container">
+        <div class="scrolly-content">
+          <div class="spacer"></div>
+          <Scrolly bind:value={scrollyIndex}>
+            {#each doddsSection as text, i}
+              {@const active = scrollyIndex === i}
+              <div class="step" class:active>
+                {#if text.type === 'markdown'}
+                  <p><Md text={text.value}/></p>
+                {:else}
+                  <p>{@html text.value}</p>
+                {/if}
+              </div>
+            {/each}
+          </Scrolly>
+          <div class="spacer"></div>
+        </div>
+        
+        <div class="scrolly-chart">
+          <MorphingChart 
+            {scrollyIndex} 
+            DoddsCoauthorData={dataState.DoddsCoauthorData} 
+            DoddsPaperData={dataState.DoddsPaperData} 
+            {width} {height} />
+        </div>
       </div>
-    </div>
   </section>
 
-<section id="embeddings" class="story">
-  <h3>Embeddings</h3>
-  <p>Instead of using time to position paper, we can also use embeddings. (WIP)</p>
+  <Embeddings embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
 
-  <Plot width={1200} height={800} 
-    x={{ domain: [-6, 18], grid: true }}
-    y={{ domain: [-5, 13], grid: true }}
-    caption="UMAP embeddings of Peter's papers and a sample of UVM faculties."> 
-      <Dot
-          data={embeddings}
-          x="umap_1"
-          y="umap_2"
-          stroke="black"
-          fill="white" />
-  </Plot>
-  <p>(show same plot than before, but just the coauthor side that is rotated on the side. It would be nice to make it brushable, so that we highlight the paper positions for chosen coauthors. Doing so could help visualize changes in coauthors correlate with changes in how ego explore the embedding space. Or not.)</p>
-</section>
+  <section id="conclusion" class="story">
+    <h2>Conclusion</h2>
+
+    <p>Poetic conclusion about what we accomplished. Also what about other faculties at UVM? Visit <a href="{base}/open-academic-analytics">our dashboard</a> for more.</p>
+  </section>
 {/if}
 
 <style>
@@ -101,34 +90,7 @@
     gap: 1rem;
     box-sizing: border-box;
   }
-  .waffle-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-    margin: 0 0;
-  }
-
-  .college-section {
-  grid-column: 1 / -1; /* Span full width */
-  margin-bottom: 2rem;
-}
-
-.college-header {
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #ddd;
-  color: #333;
-}
-
-.department-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-
+  
   /* Story-wide settings */
   :global(#story) {
     max-width: 1200px;
@@ -143,11 +105,6 @@
     font-family: var(--serif);
   }
 
-  section p {
-      font-size: 22px;
-      max-width: 800px;
-      line-height: 1.3;
-  }
 
   section p {
       font-size: 22px;

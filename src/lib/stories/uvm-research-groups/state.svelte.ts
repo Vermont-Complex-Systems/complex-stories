@@ -2,6 +2,14 @@
 import { registerParquetFile, query } from '$lib/utils/duckdb.js';
 import { coauthorURL, departmentURL, paperURL, trainingUrl } from './data/loader.js';
 
+export const dashboardState = $state({
+    selectedAuthor: 'Peter Sheridan Dodds',
+    colorMode: 'age_diff',
+    highlightedAuthor: null,
+    authorAgeFilter: null, // [minAge, maxAge] or null
+    highlightedCoauthor: null,
+});
+
 export const dataState = $state({
     isInitializing: true,
     trainingAggData: null,
@@ -36,7 +44,34 @@ export async function DoddsCoauthorData(authorName) {
     const result = await query(`
         SELECT *, strftime(pub_date::DATE, '%Y-%m-%d') as pub_date 
         FROM coauthor
-        WHERE aid = 'A5040821463'`);
+        WHERE aid = 'A5040821463'
+        `);
+    return result;
+}
+
+export async function EmbeddingsData() {
+    await registerTables();
+    const result = await query(`
+        SELECT *, strftime(pub_date::DATE, '%Y-%m-%d') as pub_date 
+        FROM (
+            -- Keep ALL papers from ego author
+            SELECT * FROM paper WHERE ego_aid = 'A5040821463'
+            
+            UNION ALL
+            
+            -- 10% sample from other distinct DOIs
+            SELECT * FROM (
+                SELECT DISTINCT ON (doi) *
+                FROM paper 
+                WHERE ego_aid != 'A5040821463' 
+                AND doi IS NOT NULL 
+                AND doi != ''
+                ORDER BY doi, RANDOM()
+            )
+            TABLESAMPLE BERNOULLI(30 PERCENT)  -- 30% sample
+        )
+        ORDER BY pub_date
+        `);
     return result;
 }
 
@@ -73,6 +108,7 @@ export async function initializeApp() {
         dataState.isInitializing = true;
         dataState.trainingAggData = await trainingAggData();
         dataState.DoddsPaperData = await DoddsPaperData();
+        dataState.EmbeddingsData = await EmbeddingsData();
         dataState.DoddsCoauthorData = await DoddsCoauthorData();
         dataState.isInitializing = false;
 }

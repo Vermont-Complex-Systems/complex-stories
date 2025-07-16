@@ -3,6 +3,7 @@
     import Sidebar from './Sidebar.svelte';
     import Dashboard from './Dashboard.svelte';
     import TutorialPopup from './TutorialPopup.svelte';
+    import Spinner from '$lib/components/helpers/Spinner.svelte'
     
     import { 
         uiState, 
@@ -29,7 +30,7 @@
         <div class="layout">
             {#if dataState.isInitializing}
                 <div class="loading-container">
-                    <p>Loading authors...</p>
+                    <Spinner />
                 </div>
             {:else if dataState.error}
                 <div class="error-container">
@@ -69,6 +70,18 @@
 <TutorialPopup bind:visible={showTutorial} />
 
 <style>
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        gap: 1rem;
+        box-sizing: border-box;
+    }
 
     /* Story-specific global reset */
     .dashboard-app * {
