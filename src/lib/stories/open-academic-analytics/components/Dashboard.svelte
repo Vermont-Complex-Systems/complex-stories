@@ -6,7 +6,6 @@
   import Toggle from './helpers/Toggle.svelte'
   import RangeFilter from './helpers/RangeFilter.svelte'
   import CollabChart from './Collaboration.Agg.svelte'
-  import ProdChart from './Productivity.Agg.svelte'
   import { dashboardState, dataState, uiState } from '../state.svelte.ts';
   import { innerWidth } from 'svelte/reactivity/window';
   import { getCombinedDateRange, ageColorScale, acquaintanceColorScale, processCoauthorData, processPaperData } from '../utils/combinedChartUtils.js';
@@ -215,6 +214,7 @@
         <h2>Publications Timeline</h2>
         <PaperChart 
           displayData={styledPaperData}
+          {productivityData}
           width={chartWidth}
           height={chartHeight}
           timeScale={sharedTimeScale}
@@ -231,10 +231,6 @@
           />
     </div>
     <CollabChart data={filteredAggData} {maxAge}/>
-    <div class="agg-plot-container">
-      <h3>Mean number of papers by college</h3>
-      <ProdChart data={productivityData.filter(d => d.author_age < maxAge)}/>
-    </div>
   </div>
 </div>
 

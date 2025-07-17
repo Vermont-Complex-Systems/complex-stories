@@ -75,17 +75,6 @@ export async function trainingData(authorName) {
     return result;
 }
 
-export async function prodAgg(college) {
-    await registerTables();
-    const result = await query(`
-        SELECT nb_papers, author_age, college, name,
-        FROM training 
-        WHERE college = '${college}'
-        ORDER BY author_age
-        `);
-    return result;
-}
-
 export async function trainingAggData() {
     await registerTables();
     const result = await query(`
@@ -194,7 +183,6 @@ export async function initializeApp() {
         dataState.availableAuthors = await loadAvailableAuthors();
         dataState.availableColleges = await loadAvailableColleges();
         dataState.trainingAggData = await trainingAggData();
-        dataState.prodAgg = await prodAgg(dashboardState.selectedCollege);
         dataState.isInitializing = false;
     }
     
