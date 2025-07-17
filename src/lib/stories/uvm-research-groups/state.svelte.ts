@@ -52,29 +52,53 @@ export async function DoddsCoauthorData(authorName) {
 export async function EmbeddingsData() {
     await registerTables();
     const result = await query(`
-        SELECT *, strftime(pub_date::DATE, '%Y-%m-%d') as pub_date 
-        FROM (
-            -- Keep ALL papers from ego author
-            SELECT * FROM paper WHERE ego_aid = 'A5040821463'
-            
-            UNION ALL
-            
-            -- 10% sample from other distinct DOIs
-            SELECT * FROM (
-                SELECT DISTINCT ON (doi) *
-                FROM paper 
-                WHERE ego_aid != 'A5040821463' 
-                AND doi IS NOT NULL 
-                AND umap_1 IS NOT NULL
-                AND doi != ''
-                ORDER BY doi, RANDOM()
-            )
-            TABLESAMPLE BERNOULLI(50 PERCENT)  -- 50% sample
+        WITH exploded_depts AS (
+            SELECT 
+                t.payroll_name as name,
+                t.oa_uid,
+                t.has_research_group,
+                trim(unnest(string_split(t.host_dept, ';'))) as host_dept,
+                t.perceived_as_male,
+                t.group_url,
+                t.group_size
+            FROM training t
+            WHERE oa_uid IS NOT NULL
         )
-        ORDER BY pub_date
+        SELECT DISTINCT doi, *, strftime(pub_date::DATE, '%Y-%m-%d') as pub_date, e.host_dept 
+        FROM paper p
+        LEFT JOIN exploded_depts e ON p.ego_aid = e.oa_uid
+        WHERE p.umap_1 IS NOT NULL
         `);
     return result;
 }
+// export async function EmbeddingsData() {
+//     await registerTables();
+//     const result = await query(`
+//         SELECT *, strftime(pub_date::DATE, '%Y-%m-%d') as pub_date 
+//         FROM (
+//             -- Keep ALL papers from ego author
+//             SELECT * FROM paper WHERE ego_aid = 'A5040821463'
+            
+//             UNION ALL
+            
+//             -- 10% sample from other distinct DOIs
+//             SELECT * FROM (
+//                 SELECT DISTINCT ON (doi) *
+//                 FROM paper 
+//                 WHERE ego_aid != 'A5040821463' 
+//                 AND doi IS NOT NULL 
+//                 AND umap_1 IS NOT NULL
+//                 AND doi != ''
+//                 ORDER BY doi, RANDOM()
+//             )
+//             TABLESAMPLE BERNOULLI(90 PERCENT)  -- 50% sample
+//         )
+//         ORDER BY 
+//             CASE WHEN ego_aid = 'A5040821463' THEN 1 ELSE 0 END,  -- Peter's papers last
+//             pub_date  -- Then by date within each group
+//         `);
+//     return result;
+// }
 
 export async function trainingAggData(authorName) {
     await registerTables();

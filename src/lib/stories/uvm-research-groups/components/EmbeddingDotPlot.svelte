@@ -1,11 +1,13 @@
 <script>
   import * as d3 from 'd3';
+  import Legend from './EmbeddingDotPlot.Legend.svelte'; 
+  import Select from './EmbeddingDotPlot.Select.svelte'; 
   
   let { 
     embeddingData = [], 
     width = 800, 
     height = 600,
-    margin = { top: 20, right: 20, bottom: 20, left: 20 },
+    margin = { top: 10, right: 85, bottom: 20, left: 0 },
     selectedCoauthors = [], // Array of ego_aid values to highlight
     timeRange = null // [startpub_Year, endpub_Year] or null for no time filtering
   } = $props();
@@ -49,6 +51,41 @@
   let innerWidth = $derived(width - margin.left - margin.right);
   let innerHeight = $derived(height - margin.top - margin.bottom);
 
+  let colorFOS = $state('s2FieldsOfStudy')
+
+  // Get unique fields of study
+  const uniqueFields = $derived([...new Set(embeddingData.map(d => {
+      const fieldValue = d[colorFOS];
+      if (!fieldValue) return null;
+      
+      // Only split for s2FieldsOfStudy, use raw value for others
+      if (colorFOS === 's2FieldsOfStudy') {
+        return fieldValue.split("; ")[1];
+      } else {
+        return fieldValue;
+      }
+    }))].filter(Boolean));
+
+  const fieldToIndex = $derived(new Map(uniqueFields.map((field, index) => [field, index])));
+
+  // Create scales
+  let zScale = $derived.by(() => {
+    if (!embeddingData.length) return d3.scaleOrdinal();
+    
+      const baseScale = d3.scaleSequential()
+        .domain([0, uniqueFields.length - 1])
+        .interpolator(d3.interpolateTurbo);
+      
+      // Return a function that handles null values
+      return (fieldIndex) => {
+        if (fieldIndex === null || fieldIndex === undefined) {
+          return '#d3d3d3'; // Light grey for null values
+        }
+        return baseScale(fieldIndex);
+      };
+  });
+
+  
   // Create scales
   let xScale = $derived.by(() => {
     if (!embeddingData.length) return d3.scaleLinear();
@@ -89,7 +126,7 @@
   if (shouldShowTooltip) {
     mouseX = event.clientX;
     mouseY = event.clientY;
-    tooltipContent = `title: ${point.title}\nauthors: ${point.authors}\ndoi: ${point.doi}\npub_year: ${point.pub_year}`;
+    tooltipContent = `title: ${point.title}]\nfos (MAG): ${point.fieldsOfStudy}\nfos (S2): ${point.s2FieldsOfStudy?.split("; ")[1]}\nFaculty main department: ${point.host_dept}\nabstract: ${point.abstract}\nauthors: ${point.authors}\ndoi: ${point.doi}\npub_year: ${point.pub_year}`;
     showTooltip = true;
   }
 }
@@ -98,8 +135,36 @@
     showTooltip = false;
   }
 
+  const getFieldValue = $derived.by(() => {
+  return (point) => {
+    const fieldValue = colorFOS === 's2FieldsOfStudy' 
+      ? point[colorFOS]?.split("; ")[1] 
+      : point[colorFOS];
+    
+    return fieldValue ? fieldToIndex.get(fieldValue) : null;
+  };
+});
+
 
 </script>
+
+<Select 
+  bind:value={colorFOS}
+  options={ [
+    { value: 's2FieldsOfStudy', label: 'S2 Fields of Study' },
+    { value: 'fieldsOfStudy', label: 'MAG Fields of Study' },
+    { value: 'host_dept', label: 'Faculty main department' }
+  ] }
+  label="Color by:"
+  maxWidthRatio={0.25}
+/>
+
+<Legend 
+  uniqueFields={uniqueFields}
+  colorScale={zScale}
+  maxWidthRatio={0.7} 
+  itemWidth={100}
+/>
 
 <div class="plot-container">
   <svg {width} {height}>
@@ -138,14 +203,20 @@
       {#each embeddingData as point, i}
         {@const isPeterDodds = point.ego_aid === 'A5040821463'}
         {@const shouldHighlight = isPeterDodds && highlightedPaperIndices.has(i)}
+        {@const fieldValue = getFieldValue(point)}
+        {@const isNullField = fieldValue === null}
         <circle
           cx={xScale(+point.umap_1)}
           cy={yScale(+point.umap_2)}
           r={shouldHighlight ? "6" : "4"}
-          fill={shouldHighlight ? "#ffd100" : "#154734"}
-          stroke="#333"
-          stroke-width="1"
-          opacity={(selectedCoauthors.length > 0 || timeRange) ? (shouldHighlight ? 1 : 0.3) : 0.7}
+          fill={shouldHighlight ? "red" : zScale(fieldValue)}
+          stroke={shouldHighlight ? "black" : null}
+          opacity={
+            shouldHighlight ? 1 : 
+            (selectedCoauthors.length > 0 || timeRange) ? 
+              (isNullField ? 0.15 : 0.3) : 
+              (isNullField ? 0.3 : 0.7)
+          }
           class="data-point"
           onmouseenter={(e) => handleMouseEnter(e, point, i)}
           onmouseleave={handleMouseLeave}
@@ -177,7 +248,6 @@
   }
 
   .data-point:hover {
-    r: 6;
     opacity: 1;
   }
 

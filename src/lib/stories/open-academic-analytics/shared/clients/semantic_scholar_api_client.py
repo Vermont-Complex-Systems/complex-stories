@@ -170,7 +170,11 @@ class SemanticScholarEmbeddings:
         print(f"Processing {len(dois)} DOIs using batch API...")
         
         # Get papers in batches
-        all_papers = self.get_papers_batch(dois, fields=["paperId", "title", "embedding"], batch_size=batch_size)
+        all_papers = self.get_papers_batch(
+            dois, 
+            fields=["paperId", "title", "abstract", "embedding", "fieldsOfStudy", "s2FieldsOfStudy"], 
+            batch_size=batch_size
+            )
         
         # Process results and extract embeddings
         results = []
@@ -181,6 +185,9 @@ class SemanticScholarEmbeddings:
                 embedding_data = {
                     "paperId": paper.get("paperId"),
                     "title": paper.get("title"),
+                    "abstract": paper.get("abstract"),
+                    "fieldsOfStudy": paper.get("fieldsOfStudy"),
+                    "s2FieldsOfStudy": paper.get("s2FieldsOfStudy"),
                     "doi": paper.get("original_doi"),  # Use the original DOI we added
                     "embedding": paper["embedding"]["vector"] if paper["embedding"] else None
                 }

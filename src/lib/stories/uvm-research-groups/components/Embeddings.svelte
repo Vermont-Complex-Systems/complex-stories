@@ -1,5 +1,4 @@
 <script>
-    import { Plot, Dot } from 'svelteplot';
     import DodgeChart from '$lib/components/helpers/DodgeChart.svelte';
     import EmbeddingDotPlot from './EmbeddingDotPlot.svelte';
     import BrushableCoauthorChart from './BrushableCoauthorChart.svelte';
@@ -111,12 +110,12 @@
     selectedCoauthors = brushedPoints;
   }
 
-$inspect(selectedCoauthors)
+$inspect(embeddingData)
 </script>
 
 <section id="embeddings" class="story">
   <h3>Embeddings</h3>
-  <p>Instead of using time to position paper, we can also use embeddings to position similar papers closer together. To do so, we use Semantic Scholar API which take into account the similarity of paper titles and abstract, but also the relative proximity in citation space. That is, a paper can be similar in terms of content but pushed apart by virtue of being cited by different communities. We use UMAP to project down Semantic scholar high dimensional  embeddings on a two-dimensional cartesian plane, so you should take that visualization with a big grain of salt. We will plot here 30% of all papers by our UVM 2023 faculties (according to the payroll), as well as all the papers of Peter. Hence, we have a map of how Peter and coauthors are situated within UVM topic space. What is of interest to us is how Peter's exploration of content space might have been modified by his diverse coauthors. </p>
+  <p>Instead of using time to position paper, we can also use embeddings to position similar papers closer together. To do so, we use Semantic Scholar API which take into account the similarity of paper titles and abstract, but also the relative proximity in citation space. That is, a paper can be similar in terms of content but pushed apart by virtue of being cited by different communities. We use UMAP to project down Semantic scholar high dimensional  embeddings on a two-dimensional cartesian plane, so you should take that visualization with a big grain of salt. We will plot here 30% of all papers by our UVM 2023 faculties (according to the payroll), as well as all the papers of Peter. Hence, we have a map of how Peter and coauthors are situated within UVM topic space. What is of interest to us is how Peter's exploration of content space might have been modified by his diverse coauthors, contextualized by UVM broader research ecosystem: </p>
 
 
   <div class="charts-container">

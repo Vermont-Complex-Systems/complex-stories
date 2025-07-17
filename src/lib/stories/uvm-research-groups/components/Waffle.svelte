@@ -18,9 +18,9 @@
 
 	function getColor(person) {
 		if (highlightName && person.name === highlightName) {
-			return '#FF5722'; // Orange for highlighted person
+			return 'red'; // Orange for highlighted person
 		}
-		return person.has_research_group ? '#4CAF50' : '#FFC107';
+		return person.has_research_group ? '#ffd100' : '#257355';
 	}
 </script>
 
