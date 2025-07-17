@@ -2,12 +2,13 @@
   import * as d3 from 'd3';
   import Legend from './EmbeddingDotPlot.Legend.svelte'; 
   import Select from './EmbeddingDotPlot.Select.svelte'; 
+  import Annotate from './EmbeddingDotPlot.Text.svelte'; 
   
   let { 
     embeddingData = [], 
     width = 800, 
     height = 600,
-    margin = { top: 10, right: 85, bottom: 20, left: 0 },
+    margin = { top: 10, right: 155, bottom: 20, left: 0 },
     selectedCoauthors = [], // Array of ego_aid values to highlight
     timeRange = null // [startpub_Year, endpub_Year] or null for no time filtering
   } = $props();
@@ -126,7 +127,7 @@
   if (shouldShowTooltip) {
     mouseX = event.clientX;
     mouseY = event.clientY;
-    tooltipContent = `title: ${point.title}]\nfos (MAG): ${point.fieldsOfStudy}\nfos (S2): ${point.s2FieldsOfStudy?.split("; ")[1]}\nFaculty main department: ${point.host_dept}\nabstract: ${point.abstract}\nauthors: ${point.authors}\ndoi: ${point.doi}\npub_year: ${point.pub_year}`;
+    tooltipContent = `title: ${point.title.toUpperCase()}\nfos (MAG): ${point.fieldsOfStudy}\nfos (S2): ${point.s2FieldsOfStudy?.split("; ")[1]}\nFaculty main department: ${point.host_dept}\nabstract: ${point.abstract}\nauthors: ${point.authors}\ndoi: ${point.doi}\npub_year: ${point.pub_year}`;
     showTooltip = true;
   }
 }
@@ -144,6 +145,108 @@
     return fieldValue ? fieldToIndex.get(fieldValue) : null;
   };
 });
+
+  const annotations = [
+    {
+      x: 9.2,  
+      y: 8.2, 
+      text: "Mixed bag (Computational)",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      }
+    },
+    {
+      x: 10,  
+      y: 5, 
+      text: "Social sciences",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      }
+    },
+    {
+      x: 10,  
+      y: -1.2, 
+      text: "Agricultural sciences",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      }
+    },
+    {
+      x: 12.2,  
+      y: 1.2, 
+      text: "Ecology",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      }
+    },
+    {
+      x: 14.2,  
+      y: 6.2, 
+      text: "Computer science",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      }
+    },
+    {
+      x: 14.2,  
+      y: 5.7, 
+      text: "and algorithms",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      }
+    },
+    {
+      x: 6.2,  
+      y: 12.7, 
+      text: "Health sciences",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      },
+    },
+    {
+      x: 2.2,  
+      y: 4.5, 
+      text: "Biomedical",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      },
+    },
+    {
+      x: 6.7,  
+      y: 3, 
+      text: "Physics",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      },
+    },
+  ]
 
 
 </script>
@@ -197,6 +300,22 @@
           stroke-width="1"
           opacity="0.3"
         />
+      {/each}
+      
+      {#each annotations as annotation}
+        <text
+          x={xScale(annotation.x)}
+          y={yScale(annotation.y)}
+          fill={annotation.style?.color || "var(--color-fg)"}
+          font-size={annotation.style?.fontSize || "12px"}
+          font-weight={annotation.style?.fontWeight || "normal"}
+          text-anchor={annotation.style?.textAnchor || "start"}
+          dominant-baseline={annotation.style?.dominantBaseline || "middle"}
+          opacity={annotation.style?.opacity || 1}
+          class="annotation-text"
+        >
+          {annotation.text}
+        </text>
       {/each}
       
       <!-- Data points -->

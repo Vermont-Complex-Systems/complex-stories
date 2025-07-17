@@ -5,7 +5,7 @@
   import WaffleChart from './Waffle.svelte';
   import Nav from './Nav.svelte';
   import Intro from './Intro.svelte'
-  import Embeddings from './Embeddings.svelte'
+  import EmbeddingSection from './EmbeddingSection.svelte'
   import Spinner from '$lib/components/helpers/Spinner.svelte'
   import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 
@@ -19,7 +19,7 @@
   const doddsSection = data.zoomingIn;
   
   let isDark = $state(false);
-  let width = $state(900);
+  let width = $state(950);
   let height = 1800;
   let scrollyIndex = $state();
   
@@ -52,7 +52,7 @@
   <section id="story" class="story">  
 
     <h2>Zooming in</h2>
-    <p>To better understand faculty career trajectory, we explore a simple timeline plot showing how scientific productivity coevolve social collaborations. As a faculty advance in his career, call him Peter, it is expected that his patterns of collaborations will change. We are interested in a few relevant features to determine from the data when Peter started his research groups.</p>
+    <p>To better understand faculty career trajectories, we build a simple timeline plot showing how scientific productivity coevolves with social collaborations. As a faculty member advances in his career—call him Peter—it is expected that his patterns of collaborations will change. We are interested in a few relevant features to determine from the data when Peter started his research group.</p>
       
     <div class="scrolly-container">
         <div class="scrolly-content">
@@ -80,14 +80,17 @@
             {width} {height} />
         </div>
       </div>
-  </section>
 
-  <Embeddings embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
+    <p>We've learned a few things. </p>
+    </section>
 
-  <section id="conclusion" class="story">
+  <EmbeddingSection embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
+
+  <section id="story" class="story">
     <h2>Conclusion</h2>
 
-    <p>Poetic conclusion about what we accomplished. Also what about other faculties at UVM? Visit <a href="{base}/open-academic-analytics">our dashboard</a> for more.</p>
+    <p>We started out by looking at the broader picture of how many groups there were at UVM. Then, we zoomed in on a particular fauculty, trying to better understand the coevolution of collaborations and productivity. Our analysis remains limited, as we didn't analyze how the patterns we noticed in the timeline plot generalized to other researchers. This is for a future post.</p>
+    <p>In the meantime, you want to carry the same analysis to other faculties at UVM? Visit <a href="{base}/open-academic-analytics">our dashboard</a> for more.</p>
   </section>
 {/if}
 
@@ -112,6 +115,7 @@
     font-size: var(--font-size-xlarge);
     font-family: var(--serif);
   }
+  
 
   .logo {
     height: 300px;
@@ -150,31 +154,29 @@
     gap: 1rem;
   }
 
-  /* Story sections */
-  :global(#story) {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem;
-  }
-
+  
+  
   :global(#story h2) {
     font-size: 1.8rem;
     margin: 2rem 0 1rem 0;
     font-family: var(--serif);
   }
-
+  
   section p {
     font-size: 22px;
     max-width: 800px;
     line-height: 1.3;
+    margin-top: 2rem; /* Add more space after paragraphs */
+    margin-bottom: 2rem; /* Add more space after paragraphs */
   }
-
+  
   /* Scrolly layout */
   .scrolly-container {
+    max-width: 1200px;
+    margin: 0 auto;
     display: grid;
     margin-top: 3rem;
     grid-template-columns: 3fr 7fr;
-    gap: 2rem;
     min-height: 100vh;
   }
 

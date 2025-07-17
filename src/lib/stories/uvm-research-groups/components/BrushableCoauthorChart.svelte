@@ -145,7 +145,7 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: rotate(270deg) translate(-45%, -49%);
+    transform: rotate(270deg) translate(-45%, -50.3%);
     transform-origin: 0 0;
     border: 2px solid rgb(237, 237, 237);
     width: var(--chart-width);

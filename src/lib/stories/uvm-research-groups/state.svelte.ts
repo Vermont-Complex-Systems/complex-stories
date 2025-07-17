@@ -68,6 +68,9 @@ export async function EmbeddingsData() {
         FROM paper p
         LEFT JOIN exploded_depts e ON p.ego_aid = e.oa_uid
         WHERE p.umap_1 IS NOT NULL
+        ORDER BY 
+            CASE WHEN ego_aid = 'A5040821463' THEN 1 ELSE 0 END,  -- Peter's papers last
+            pub_date  -- Then by date within each group
         `);
     return result;
 }

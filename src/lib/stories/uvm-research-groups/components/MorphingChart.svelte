@@ -50,7 +50,7 @@
       viewTransform = {
         scaleX: 0.8,
         scaleY: 0.8,
-        translateY: -height / 4
+        translateY: -height / 3.5
       };
     } else if (config.translateToYear && hasData) {
       const targetDate = new Date(config.translateToYear, 0, 1);
@@ -116,7 +116,7 @@
         opacity: yearOpacity * authorOpacity,
         displayColor: getPointColor(point, chartState.colorMode),
         isHighlighted: isHighlightedAuthor,
-        r: point.r * (isHighlightedAuthor ? 1.3 : 1)
+        r: point.r * (isHighlightedAuthor ? 1 : 1)
       };
     });
   });

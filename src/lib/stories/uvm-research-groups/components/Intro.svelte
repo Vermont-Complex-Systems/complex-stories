@@ -63,11 +63,11 @@
 
 <section id="story" class="story">  
   
-  <p>In 2008, Sears adopted an organizational structure that pitted departments against each other. This led to a tribal warfare state of affairs, <a href="https://d3.harvard.edu/platform-rctom/submission/sears-the-collapse-of-a-company-from-within/">accelerating its downfall</a>. Some say that US universities operated similarly for a long, with each department reporting its own profit and remaining siloed. While this is slowly changing, I have yet to meet anyone at UVM who understands the broader research ecosystem, particularly around software development. To better understand UVM's research landscape, we make a deep dive on research groups at UVM. We first take a look at the {data.length} UVMfaculty, annotated with whether they have a research group or not:</p>
+  <p>In 2008, Sears adopted an organizational structure that pitted departments against each other. This led to a tribal warfare state of affairs, <a href="https://d3.harvard.edu/platform-rctom/submission/sears-the-collapse-of-a-company-from-within/">accelerating its downfall</a>. Some say that US universities operate somwhat similarly sitll today, with each department reporting its own profit and remaining siloed. While this is slowly changing, I have yet to meet anyone at UVM who understands the broader research ecosystem, particularly around software development. To better understand UVM's research landscape, we take a deep dive into research groups at UVM. We first take a look at the {data.length} UVM faculty, annotated with whether they have a research group or not:</p>
     
     <WaffleChart data={ data } cellSize={25}/>
 
-  <p>We can see that about one third of faculty have mentioned groups, defined here as any claim from faculties to have some kind of research group on the Internet. Now, we can look at how this distribution changes when stratified by:   <span class="grouping-controls">
+  <p>We can see that about one third of faculty have research groups, defined here as any claim from faculties to have some kind of research group on the Internet. Now, we can look at how this distribution changes when stratified by:   <span class="grouping-controls">
     <button 
       class:active={groupBy === 'college'}
       onclick={() => groupBy = 'college'}
@@ -100,7 +100,7 @@
               {:else}
               <WaffleChart 
                 data={deptData} 
-                title="{deptName} ({deptData.length})"
+                title="{deptName}"
                 cellSize={20}
               />
             {/if}
@@ -113,14 +113,17 @@
     {#each groupedData() as [groupName, groupData]}
       <WaffleChart 
         data={groupData} 
-        title="{groupName} ({groupData.length})"
+        title="{groupName}"
         cellSize={25}
       />
     {/each}
   {/if}
 </div>
 
-<p>Interesting. But now, we zoom in on a particular faculty to try to understand better what it feels like to have a research group.</p>
+
+<p>Looking at colleges, we note that roughly a half of faculties in College of Medicine and CEMS have research groups, while the College of Agriculture and Life Sciences (CALS) and the Rubenstein School of Environment is more about two thirds! In the College of Arts and Sciences (CAS), it is fewer than a third, with {(19/80)*100}% of faculties having groups. In the College of Nursing and Health Sciences, Education and Social Services, and Business, faculties with research groups are in the minority, hinting at different epistemic cultures at UVM.</p>  
+
+<p>Looking at department level, we can see that most groups in CAS are either in Psychological Science, Biology, or Chemistry. In CALS, it is also heterogenous with CDAE having no research groups, while in other departments the majority of faculties do have groups.</p>
 
 </section>
   

@@ -4,7 +4,7 @@
     import BrushableCoauthorChart from './BrushableCoauthorChart.svelte';
     import * as d3 from 'd3';
     
-    import { dashboardState } from '../state.svelte.ts';
+    import { dashboardState } from '../state.svelte';
     import { ageColorScale, processCoauthorData, getCombinedDateRange, parseDate } from '../utils/combinedChartUtils2'
 
     let { embeddingData, coauthorData } = $props();
@@ -29,7 +29,7 @@
   });
 
   let chartWidth = 250
-  const chartHeight = 1105
+  const chartHeight = 1045
 
   let styledCoauthorData = $derived.by(() => {
     if (!processedCoauthorData.length) return [];
@@ -110,12 +110,13 @@
     selectedCoauthors = brushedPoints;
   }
 
-$inspect(embeddingData)
 </script>
 
 <section id="embeddings" class="story">
-  <h3>Embeddings</h3>
-  <p>Instead of using time to position paper, we can also use embeddings to position similar papers closer together. To do so, we use Semantic Scholar API which take into account the similarity of paper titles and abstract, but also the relative proximity in citation space. That is, a paper can be similar in terms of content but pushed apart by virtue of being cited by different communities. We use UMAP to project down Semantic scholar high dimensional  embeddings on a two-dimensional cartesian plane, so you should take that visualization with a big grain of salt. We will plot here 30% of all papers by our UVM 2023 faculties (according to the payroll), as well as all the papers of Peter. Hence, we have a map of how Peter and coauthors are situated within UVM topic space. What is of interest to us is how Peter's exploration of content space might have been modified by his diverse coauthors, contextualized by UVM broader research ecosystem: </p>
+   <h3>Embeddings (WIP)</h3>
+  <p>Instead of using time to position paper, we can also use embeddings to position similar papers closer together in space. To do so, we use the <a href="https://allenai.org/blog/specter2-adapting-scientific-document-embeddings-to-multiple-fields-and-task-formats-c95686c06567">Specter2 model</a>, accesible via Semantic Scholar's API, which has the benefit of taking into account the similarity of paper titles and abstract, but also the relative proximity in citation space. That is, a paper can be similar in terms of content but pushed apart by virtue of being cited by different communities. We use <a href="https://umap-learn.readthedocs.io/en/latest/">UMAP</a> to project down the high dimensional embedding space onto a two-dimensional cartesian plane. We plot a subset of our UVM 2023 faculties (we are still annotating faculty with their database identifiers).</p>
+    
+  <p>Taking Peter again as our example, what is of interest to us is how his exploration of this embedding space might have been modified by his diverse coauthors, contextualized within UVM broader research ecosystem: </p>
 
 
   <div class="charts-container">
@@ -137,11 +138,29 @@ $inspect(embeddingData)
     <small>brush to filter</small>
   </div>
 
-  <p>It is hard to draw any strong conclusion, but it seems to me that around 2015-2016 there were two main clusters corresponding to . One issue is that earlier papers have worst embeddings coverage, which is too bad. </p>
+  <p>Brushing the bottom chart over the years, it seems that Peter focused on a mixed bag of computational sciences early on (2015-2016), which makes sense. Starting in 2020-2021, he made incursions into health science. From ground truth, we know that this corresponds to different periods for his lab, with the Mass Mutual funding coming in later on.</p>
 
+<p>There are a few issues with this plot, such as reducing the high-dimensionality of papers onto two dimensions. Another issue is that earlier papers have worse embedding coverage, which is too bad (we might fix that later on by running the embedding model ourselves).</p>
+
+<p>All that being said, this plot remains highly informative for getting a glimpse of the UVM ecosystem, and exploring how different periods in collaboration are reflected in how faculty might explore topics.</p>
 </section>
 
 <style>
+  /* Story-wide settings */
+ :global(#embeddings) {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+  :global(#embeddings h1) {
+    font-size: var(--font-size-xlarge);
+    margin: 2rem 0 3rem 0;
+    text-align: left;
+    font-family: var(--serif);
+  }
+
+
 section p {
     font-size: 22px;
     max-width: 800px;
@@ -149,6 +168,5 @@ section p {
     margin-top: 2rem; /* Add more space after paragraphs */
     margin-bottom: 2rem; /* Add more space after paragraphs */
   }
-
 </style>
 
