@@ -2,7 +2,7 @@
     import Nav from './Nav.svelte';
     import Sidebar from './Sidebar.svelte';
     import Dashboard from './Dashboard.svelte';
-    import TutorialPopup from './TutorialPopup.svelte';
+    import TutorialPopup from './helpers/TutorialPopup.svelte';
     import Spinner from '$lib/components/helpers/Spinner.svelte'
     
     import { 
@@ -11,7 +11,6 @@
         dataState,
         initializeApp,
         loadSelectedAuthor,
-        loadSelectedCollege
     } from '../state.svelte.ts';
     
     // Initialize on component mount

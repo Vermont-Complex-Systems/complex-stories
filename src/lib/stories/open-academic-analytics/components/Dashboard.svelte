@@ -3,8 +3,8 @@
 
   import CoauthorChart from './CoauthorChart.svelte';
   import PaperChart from './PaperChart.svelte';
-  import Toggle from './Toggle.svelte'
-  import RangeFilter from './RangeFilter.svelte'
+  import Toggle from './helpers/Toggle.svelte'
+  import RangeFilter from './helpers/RangeFilter.svelte'
   import CollabChart from './Collaboration.Agg.svelte'
   import ProdChart from './Productivity.Agg.svelte'
   import { dashboardState, dataState, uiState } from '../state.svelte.ts';

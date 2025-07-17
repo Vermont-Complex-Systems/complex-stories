@@ -1,7 +1,7 @@
   <script>
     import { Plot, Dot, LineY, AreaY, HTMLTooltip } from 'svelteplot';
-    import Toggle from './Toggle.svelte'
-    import RangeFilter from './RangeFilter.svelte'
+    import Toggle from './helpers/Toggle.svelte'
+    import RangeFilter from './helpers/RangeFilter.svelte'
     
     let { data, maxAge } = $props();
   </script>
