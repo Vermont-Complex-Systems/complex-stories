@@ -6,12 +6,13 @@
   import Toggle from './Toggle.svelte'
   import RangeFilter from './RangeFilter.svelte'
   import CollabChart from './Collaboration.Agg.svelte'
+  import ProdChart from './Productivity.Agg.svelte'
   import { dashboardState, dataState, uiState } from '../state.svelte.ts';
   import { innerWidth } from 'svelte/reactivity/window';
   import { getCombinedDateRange, ageColorScale, acquaintanceColorScale, processCoauthorData, processPaperData } from '../utils/combinedChartUtils.js';
   import * as d3 from 'd3';
   
-  let { paperData, coauthorData, trainingAggData, trainingData } = $props();
+  let { paperData, coauthorData, trainingAggData, productivityData, trainingData } = $props();
 
   // Calculate available width for charts considering sidebar and layout
   let chartWidth = $derived.by(() => {
@@ -191,6 +192,7 @@
     trainingAggData?.filter(d=>dataState.availableColleges.slice(0,4).includes(d.college) && d.author_age < maxAge) || []
   );
 
+
 </script>
 
 <div class="dashboard">
@@ -229,12 +231,20 @@
           />
     </div>
     <CollabChart data={filteredAggData} {maxAge}/>
+    <div class="agg-plot-container">
+      <h3>Mean number of papers by college</h3>
+      <ProdChart data={productivityData.filter(d => d.author_age < maxAge)}/>
+    </div>
   </div>
 </div>
 
 
 
 <style>
+  .agg-plot-container {
+    margin-top:3rem
+  }
+
   .dashboard {
     max-width: 100%;
     margin: 0;

@@ -14,6 +14,7 @@ export const dashboardState = $state({
     highlightedAuthor: null,
     authorAgeFilter: null, // [minAge, maxAge] or null
     highlightedCoauthor: null,
+    selectedCollege: 'College of Engineering and Mathematical Sciences'
 });
 
 // Data State
@@ -65,7 +66,18 @@ export async function trainingData(authorName) {
 }
 
 // model output
-export async function trainingAggData(authorName) {
+export async function prodAgg(college) {
+    await registerTables();
+    const result = await query(`
+        SELECT nb_papers, author_age, college, name,
+        FROM training 
+        WHERE college = '${college}'
+        ORDER BY author_age
+        `);
+    return result;
+}
+
+export async function trainingAggData() {
     await registerTables();
     const result = await query(`
         SELECT 
@@ -175,9 +187,11 @@ export async function initializeApp() {
         dataState.availableAuthors = await loadAvailableAuthors();
         dataState.availableColleges = await loadAvailableColleges();
         dataState.trainingAggData = await trainingAggData();
+        dataState.prodAgg = await prodAgg(dashboardState.selectedCollege);
         dataState.isInitializing = false;
-}
-
+    }
+    
+    
 // 2. Author Selection - Specific author data
 export async function loadSelectedAuthor() {
     dataState.isLoadingAuthor = true;
