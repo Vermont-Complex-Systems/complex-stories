@@ -132,8 +132,9 @@ def paper():
     print("Querying papers with author metadata...")
     df = duckdb.sql("""
         SELECT p.ego_aid, a.display_name as name, p.pub_date, p.pub_year, p.title,
-               p.cited_by_count, p.doi, p.wid, p.authors, p.work_type, 
-               a.author_age as ego_age, e.umap_1, e.umap_2, 
+               p.cited_by_count, e.abstract, e.s2FieldsOfStudy, 
+               p.doi, p.wid, p.authors, p.work_type, p.primary_topic,
+               e.fieldsOfStudy, a.author_age as ego_age, e.umap_1, e.umap_2, 
         FROM df_papers p
         LEFT JOIN df_authors a ON p.ego_aid = a.aid AND p.pub_year = a.pub_year
         LEFT JOIN df_emb e ON p.doi = e.doi AND p.ego_aid = p.ego_aid
@@ -161,7 +162,6 @@ def paper():
     # HRDAG: Save processed data
     output_file = config.data_export_path / config.paper_output_file
     print(f"💾 Saving {len(df_processed)} processed papers to {output_file}")
-    output_file.parent.mkdir(parents=True, exist_ok=True)
     df_processed.to_parquet(output_file)
     
     print("✅ Publication dataset preparation completed!")

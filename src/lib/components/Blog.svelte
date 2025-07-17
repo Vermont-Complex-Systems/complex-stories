@@ -147,10 +147,6 @@
     background: var(--color-button-hover);
   }
 
-  .chevron {
-    flex-shrink: 0;
-  }
-
   .text {
     flex-shrink: 0;
   }

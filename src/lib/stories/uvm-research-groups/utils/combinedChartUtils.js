@@ -70,7 +70,7 @@ export function createPaperPoint(d, targetY) {
   };
 }
 
-export function checkCollision(testX, testY, point, placedPoints, padding = 2) {
+export function checkCollision(testX, testY, point, placedPoints, padding = 0) {
   for (const existing of placedPoints) {
     const dx = testX - existing.x;
     const dy = testY - existing.y;

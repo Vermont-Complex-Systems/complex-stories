@@ -79,11 +79,6 @@
     return `Coauthor: ${point.name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nShared Institution: ${institutionName}`;
   }
 
-  // Coauthor-specific click handlers
-  function handleCoauthorClick(event, point) {
-    dashboardState.highlightedCoauthor = point.name;
-  }
-
   function handleChartClick(event) {
     dashboardState.highlightedCoauthor = null;
   }
@@ -122,7 +117,6 @@
         {timeScale}
         gridStyle="full"
         formatTooltip={formatCoauthorTooltip}
-        onPointClick={handleCoauthorClick}
         onChartClick={handleChartClick}
       />
     </div>
@@ -151,7 +145,7 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: rotate(270deg) translate(-45%, -49%);
+    transform: rotate(270deg) translate(-45%, -50.3%);
     transform-origin: 0 0;
     border: 2px solid rgb(237, 237, 237);
     width: var(--chart-width);
@@ -183,33 +177,5 @@
     fill: #4682b4;
     stroke: #fff;
     stroke-width: 1;
-  }
-
-  .brush-controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 1rem;
-  }
-
-  .clear-brush-btn {
-    padding: 0.5rem 1rem;
-    background: #4682b4;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.2s ease;
-  }
-
-  .clear-brush-btn:hover {
-    background: #5a9bd3;
-  }
-
-  .selection-info {
-    font-size: 14px;
-    color: var(--color-fg);
-    font-weight: 500;
   }
 </style>

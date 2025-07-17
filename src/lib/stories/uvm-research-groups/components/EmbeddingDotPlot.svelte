@@ -1,19 +1,92 @@
 <script>
   import * as d3 from 'd3';
+  import Legend from './EmbeddingDotPlot.Legend.svelte'; 
+  import Select from './EmbeddingDotPlot.Select.svelte'; 
+  import Annotate from './EmbeddingDotPlot.Text.svelte'; 
   
   let { 
     embeddingData = [], 
     width = 800, 
     height = 600,
-    margin = { top: 20, right: 20, bottom: 20, left: 20 },
-    highlightedIds = [], // Array of ego_aid values to highlight
+    margin = { top: 10, right: 155, bottom: 20, left: 0 },
+    selectedCoauthors = [], // Array of ego_aid values to highlight
     timeRange = null // [startpub_Year, endpub_Year] or null for no time filtering
   } = $props();
+
+
+    // Step 1: Extract coauthor names from selection
+  let selectedCoauthorNames = $derived(
+    new Set(selectedCoauthors.map(c => c.name))
+  );
+
+  // Step 2: Filter embedding data to only Peter's papers
+  let petersPapers = $derived(
+    embeddingData.filter(point => point.ego_aid === 'A5040821463')
+  );
+
+  // Step 3: From Peter's papers, find which ones have selected coauthors
+  let highlightedPaperIndices = $derived.by(() => {
+    if (selectedCoauthors.length === 0) return new Set();
+    
+    const highlighted = new Set();
+    
+    petersPapers.forEach((paper, originalIndex) => {
+      const hasSelectedCoauthor = [...selectedCoauthorNames].some(name => 
+        paper.authors?.includes(name)
+      );
+      
+      const isInTimeRange = !timeRange || 
+        (paper.pub_year >= timeRange[0] && paper.pub_year <= timeRange[1]);
+      
+      if (hasSelectedCoauthor && isInTimeRange) {
+        // Find the original index in embeddingData
+        const embeddingIndex = embeddingData.indexOf(paper);
+        highlighted.add(embeddingIndex);
+      }
+    });
+    
+    return highlighted;
+  });
 
   // Calculate inner dimensions
   let innerWidth = $derived(width - margin.left - margin.right);
   let innerHeight = $derived(height - margin.top - margin.bottom);
 
+  let colorFOS = $state('s2FieldsOfStudy')
+
+  // Get unique fields of study
+  const uniqueFields = $derived([...new Set(embeddingData.map(d => {
+      const fieldValue = d[colorFOS];
+      if (!fieldValue) return null;
+      
+      // Only split for s2FieldsOfStudy, use raw value for others
+      if (colorFOS === 's2FieldsOfStudy') {
+        return fieldValue.split("; ")[1];
+      } else {
+        return fieldValue;
+      }
+    }))].filter(Boolean));
+
+  const fieldToIndex = $derived(new Map(uniqueFields.map((field, index) => [field, index])));
+
+  // Create scales
+  let zScale = $derived.by(() => {
+    if (!embeddingData.length) return d3.scaleOrdinal();
+    
+      const baseScale = d3.scaleSequential()
+        .domain([0, uniqueFields.length - 1])
+        .interpolator(d3.interpolateTurbo);
+      
+      // Return a function that handles null values
+      return (fieldIndex) => {
+        if (fieldIndex === null || fieldIndex === undefined) {
+          return '#d3d3d3'; // Light grey for null values
+        }
+        return baseScale(fieldIndex);
+      };
+  });
+
+  
   // Create scales
   let xScale = $derived.by(() => {
     if (!embeddingData.length) return d3.scaleLinear();
@@ -45,27 +118,156 @@
   let mouseX = $state(0);
   let mouseY = $state(0);
 
-  function handleMouseEnter(event, point) {
-    // Check if point matches both ID and time criteria
-    const isHighlighted = highlightedIds.includes(point.coauth_aid || point.ego_aid);
-    const isInTimeRange = !timeRange || 
-      (point.pub_year >= timeRange[0] && point.pub_year <= timeRange[1]);
-    
-    const shouldShowTooltip = (highlightedIds.length === 0 && !timeRange) || 
-                             (isHighlighted && isInTimeRange);
-    
-    if (shouldShowTooltip) {
-      mouseX = event.clientX;
-      mouseY = event.clientY;
-      tooltipContent = `title: ${point.title}\nauthors: ${point.authors}\ndoi: ${point.doi}\npub_year: ${point.pub_year}`;
-      showTooltip = true;
-    }
+  function handleMouseEnter(event, point, i) {
+    const isPeterDodds = point.ego_aid === 'A5040821463';
+    const shouldHighlight = isPeterDodds && highlightedPaperIndices.has(i);
+  
+  const shouldShowTooltip = (selectedCoauthors.length === 0 && !timeRange) || shouldHighlight;
+  
+  if (shouldShowTooltip) {
+    mouseX = event.clientX;
+    mouseY = event.clientY;
+    tooltipContent = `title: ${point.title.toUpperCase()}\nfos (MAG): ${point.fieldsOfStudy}\nfos (S2): ${point.s2FieldsOfStudy?.split("; ")[1]}\nFaculty main department: ${point.host_dept}\nabstract: ${point.abstract}\nauthors: ${point.authors}\ndoi: ${point.doi}\npub_year: ${point.pub_year}`;
+    showTooltip = true;
   }
+}
 
   function handleMouseLeave() {
     showTooltip = false;
   }
+
+  const getFieldValue = $derived.by(() => {
+  return (point) => {
+    const fieldValue = colorFOS === 's2FieldsOfStudy' 
+      ? point[colorFOS]?.split("; ")[1] 
+      : point[colorFOS];
+    
+    return fieldValue ? fieldToIndex.get(fieldValue) : null;
+  };
+});
+
+  const annotations = [
+    {
+      x: 9.2,  
+      y: 8.2, 
+      text: "Mixed bag (Computational)",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      }
+    },
+    {
+      x: 10,  
+      y: 5, 
+      text: "Social sciences",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      }
+    },
+    {
+      x: 10,  
+      y: -1.2, 
+      text: "Agricultural sciences",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      }
+    },
+    {
+      x: 12.2,  
+      y: 1.2, 
+      text: "Ecology",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      }
+    },
+    {
+      x: 14.2,  
+      y: 6.2, 
+      text: "Computer science",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      }
+    },
+    {
+      x: 14.2,  
+      y: 5.7, 
+      text: "and algorithms",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      }
+    },
+    {
+      x: 6.2,  
+      y: 12.7, 
+      text: "Health sciences",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      },
+    },
+    {
+      x: 2.2,  
+      y: 4.5, 
+      text: "Biomedical",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      },
+    },
+    {
+      x: 6.7,  
+      y: 3, 
+      text: "Physics",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      },
+    },
+  ]
+
+
 </script>
+
+<Select 
+  bind:value={colorFOS}
+  options={ [
+    { value: 's2FieldsOfStudy', label: 'S2 Fields of Study' },
+    { value: 'fieldsOfStudy', label: 'MAG Fields of Study' },
+    { value: 'host_dept', label: 'Faculty main department' }
+  ] }
+  label="Color by:"
+  maxWidthRatio={0.25}
+/>
+
+<Legend 
+  uniqueFields={uniqueFields}
+  colorScale={zScale}
+  maxWidthRatio={0.7} 
+  itemWidth={100}
+/>
 
 <div class="plot-container">
   <svg {width} {height}>
@@ -100,27 +302,45 @@
         />
       {/each}
       
+      {#each annotations as annotation}
+        <text
+          x={xScale(annotation.x)}
+          y={yScale(annotation.y)}
+          fill={annotation.style?.color || "var(--color-fg)"}
+          font-size={annotation.style?.fontSize || "12px"}
+          font-weight={annotation.style?.fontWeight || "normal"}
+          text-anchor={annotation.style?.textAnchor || "start"}
+          dominant-baseline={annotation.style?.dominantBaseline || "middle"}
+          opacity={annotation.style?.opacity || 1}
+          class="annotation-text"
+        >
+          {annotation.text}
+        </text>
+      {/each}
+      
       <!-- Data points -->
       {#each embeddingData as point, i}
-        {@const isHighlighted = highlightedIds.includes(point.coauth_aid || point.ego_aid)}
-        {@const isInTimeRange = !timeRange || (point.pub_year >= timeRange[0] && point.pub_year <= timeRange[1])}
-        {@const shouldHighlight = isHighlighted && isInTimeRange}
+        {@const isPeterDodds = point.ego_aid === 'A5040821463'}
+        {@const shouldHighlight = isPeterDodds && highlightedPaperIndices.has(i)}
+        {@const fieldValue = getFieldValue(point)}
+        {@const isNullField = fieldValue === null}
         <circle
           cx={xScale(+point.umap_1)}
           cy={yScale(+point.umap_2)}
           r={shouldHighlight ? "6" : "4"}
-          fill={shouldHighlight ? "#FF5722" : "#4CAF50"}
-          stroke="#333"
-          stroke-width="1"
-          opacity={(highlightedIds.length > 0 || timeRange) ? (shouldHighlight ? 1 : 0.3) : 0.7}
+          fill={shouldHighlight ? "red" : zScale(fieldValue)}
+          stroke={shouldHighlight ? "black" : null}
+          opacity={
+            shouldHighlight ? 1 : 
+            (selectedCoauthors.length > 0 || timeRange) ? 
+              (isNullField ? 0.15 : 0.3) : 
+              (isNullField ? 0.3 : 0.7)
+          }
           class="data-point"
-          onmouseenter={(e) => handleMouseEnter(e, point)}
+          onmouseenter={(e) => handleMouseEnter(e, point, i)}
           onmouseleave={handleMouseLeave}
         />
       {/each}
-      
-      <!-- No axes -->
-      
     </g>
   </svg>
 
@@ -147,7 +367,6 @@
   }
 
   .data-point:hover {
-    r: 6;
     opacity: 1;
   }
 
