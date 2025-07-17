@@ -10,6 +10,41 @@
     timeRange = null // [startpub_Year, endpub_Year] or null for no time filtering
   } = $props();
 
+
+    // Step 1: Extract coauthor names from selection
+  let selectedCoauthorNames = $derived(
+    new Set(selectedCoauthors.map(c => c.name))
+  );
+
+  // Step 2: Filter embedding data to only Peter's papers
+  let petersPapers = $derived(
+    embeddingData.filter(point => point.ego_aid === 'A5040821463')
+  );
+
+  // Step 3: From Peter's papers, find which ones have selected coauthors
+  let highlightedPaperIndices = $derived.by(() => {
+    if (selectedCoauthors.length === 0) return new Set();
+    
+    const highlighted = new Set();
+    
+    petersPapers.forEach((paper, originalIndex) => {
+      const hasSelectedCoauthor = [...selectedCoauthorNames].some(name => 
+        paper.authors?.includes(name)
+      );
+      
+      const isInTimeRange = !timeRange || 
+        (paper.pub_year >= timeRange[0] && paper.pub_year <= timeRange[1]);
+      
+      if (hasSelectedCoauthor && isInTimeRange) {
+        // Find the original index in embeddingData
+        const embeddingIndex = embeddingData.indexOf(paper);
+        highlighted.add(embeddingIndex);
+      }
+    });
+    
+    return highlighted;
+  });
+
   // Calculate inner dimensions
   let innerWidth = $derived(width - margin.left - margin.right);
   let innerHeight = $derived(height - margin.top - margin.bottom);
@@ -45,26 +80,19 @@
   let mouseX = $state(0);
   let mouseY = $state(0);
 
-    function handleMouseEnter(event, point) {
-    // Use the same logic as highlighting
+  function handleMouseEnter(event, point, i) {
     const isPeterDodds = point.ego_aid === 'A5040821463';
-    const hasSelectedCoauthor = selectedCoauthors.length > 0 && selectedCoauthors.some(coauth => 
-      point.authors?.includes(coauth.name)
-    );
-    const shouldHighlight = isPeterDodds && hasSelectedCoauthor;
-    const isInTimeRange = !timeRange || 
-      (point.pub_year >= timeRange[0] && point.pub_year <= timeRange[1]);
-    
-    const shouldShowTooltip = (selectedCoauthors.length === 0 && !timeRange) || 
-                            (shouldHighlight && isInTimeRange);
-    
-    if (shouldShowTooltip) {
-      mouseX = event.clientX;
-      mouseY = event.clientY;
-      tooltipContent = `title: ${point.title}\nauthors: ${point.authors}\ndoi: ${point.doi}\npub_year: ${point.pub_year}`;
-      showTooltip = true;
-    }
+    const shouldHighlight = isPeterDodds && highlightedPaperIndices.has(i);
+  
+  const shouldShowTooltip = (selectedCoauthors.length === 0 && !timeRange) || shouldHighlight;
+  
+  if (shouldShowTooltip) {
+    mouseX = event.clientX;
+    mouseY = event.clientY;
+    tooltipContent = `title: ${point.title}\nauthors: ${point.authors}\ndoi: ${point.doi}\npub_year: ${point.pub_year}`;
+    showTooltip = true;
   }
+}
 
   function handleMouseLeave() {
     showTooltip = false;
@@ -109,22 +137,17 @@
       <!-- Data points -->
       {#each embeddingData as point, i}
         {@const isPeterDodds = point.ego_aid === 'A5040821463'}
-        {@const hasSelectedCoauthor = selectedCoauthors.length > 0 && selectedCoauthors.some(coauth => 
-          point.authors?.includes(coauth.name)
-        )}
-        {@const shouldHighlight = isPeterDodds && hasSelectedCoauthor}
-        {@const isInTimeRange = !timeRange || (point.pub_year >= timeRange[0] && point.pub_year <= timeRange[1])}
-        {@const finalHighlight = shouldHighlight && isInTimeRange}
+        {@const shouldHighlight = isPeterDodds && highlightedPaperIndices.has(i)}
         <circle
           cx={xScale(+point.umap_1)}
           cy={yScale(+point.umap_2)}
-          r={finalHighlight ? "6" : "4"}
-          fill={finalHighlight ? "#FF5722" : "#4CAF50"}
+          r={shouldHighlight ? "6" : "4"}
+          fill={shouldHighlight ? "#ffd100" : "#154734"}
           stroke="#333"
           stroke-width="1"
-          opacity={(selectedCoauthors.length > 0 || timeRange) ? (finalHighlight ? 1 : 0.3) : 0.7}
+          opacity={(selectedCoauthors.length > 0 || timeRange) ? (shouldHighlight ? 1 : 0.3) : 0.7}
           class="data-point"
-          onmouseenter={(e) => handleMouseEnter(e, point)}
+          onmouseenter={(e) => handleMouseEnter(e, point, i)}
           onmouseleave={handleMouseLeave}
         />
       {/each}

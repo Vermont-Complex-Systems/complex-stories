@@ -65,6 +65,7 @@ export async function EmbeddingsData() {
                 FROM paper 
                 WHERE ego_aid != 'A5040821463' 
                 AND doi IS NOT NULL 
+                AND umap_1 IS NOT NULL
                 AND doi != ''
                 ORDER BY doi, RANDOM()
             )

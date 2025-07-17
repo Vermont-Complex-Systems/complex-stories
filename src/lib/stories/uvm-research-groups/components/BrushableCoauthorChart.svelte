@@ -79,11 +79,6 @@
     return `Coauthor: ${point.name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nShared Institution: ${institutionName}`;
   }
 
-  // Coauthor-specific click handlers
-  function handleCoauthorClick(event, point) {
-    dashboardState.highlightedCoauthor = point.name;
-  }
-
   function handleChartClick(event) {
     dashboardState.highlightedCoauthor = null;
   }
@@ -122,7 +117,6 @@
         {timeScale}
         gridStyle="full"
         formatTooltip={formatCoauthorTooltip}
-        onPointClick={handleCoauthorClick}
         onChartClick={handleChartClick}
       />
     </div>
