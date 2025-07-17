@@ -6,6 +6,7 @@ from itertools import combinations
 import dagster as dg
 from dagster import MaterializeResult, MetadataValue
 from config import config
+import datasets
 
 def load_coauthor_data(filepath):
     """Load coauthor parquet file"""
@@ -158,7 +159,7 @@ def training_dataset():
         .pipe(add_network_features, df_coauthor_clean, df_papers)
     )
 
-    df_annots = pd.read_parquet(researchers_file, sep="\t")
+    df_annots = pd.read_parquet(researchers_file)
     
     # Merge with annotations (inner join - only keep researchers in annotation data)
     training_dataset = training_dataset.merge(df_annots, how="inner", left_on=['aid'], right_on=['oa_uid'])
@@ -166,6 +167,10 @@ def training_dataset():
     
     training_dataset.to_parquet(output_file)
 
+    # Push a version to hugginface
+    from datasets import Dataset    
+    ds = Dataset.from_pandas(training_dataset)
+    ds.push_to_hub("Vermont-Complex-Systems/training_data")
 
     return MaterializeResult(
         metadata={
