@@ -2,21 +2,30 @@
 import { registerParquetFile, query } from '$lib/utils/duckdb.js';
 import { paperUrl, coauthorUrl, trainingUrl } from './data/loader.js';
 
+// ------------------
+//
+// APP STATES
+//
+//-------------------
+
+
 // UI State
 export const uiState = $state({
     sidebarCollapsed: false,
     isDarkMode: false
 });
 
+// Filters, both sidebar and chart specific
 export const dashboardState = $state({
     selectedAuthor: 'Peter Sheridan Dodds',
     colorMode: 'age_diff',
     highlightedAuthor: null,
     authorAgeFilter: null, // [minAge, maxAge] or null
     highlightedCoauthor: null,
+    selectedCollege: 'College of Engineering and Mathematical Sciences'
 });
 
-// Data State
+// Data State: the data we load
 export const dataState = $state({
     // App-level
     availableAuthors: [],
@@ -36,13 +45,12 @@ export const dataState = $state({
     error: null
 });
 
-// Derived state
-export const derivedData = {
-    get availableCoauthors() {
-        if (!dataState.coauthorData?.length) return [];
-        return [...new Set(dataState.coauthorData.map(d => d.coauth_name).filter(Boolean))].sort();
-    }
-};
+
+// ------------------
+//
+// DUCKDB
+//
+//-------------------
 
 // Tables registration state
 let tablesRegistered = false;
@@ -57,15 +65,17 @@ async function registerTables() {
     tablesRegistered = true;
 }
 
-// model output
+
 export async function trainingData(authorName) {
     await registerTables();
-    const result = await query(`SELECT * FROM training WHERE name = '${authorName}'`);
+    const result = await query(`
+        SELECT * 
+        FROM training 
+        WHERE name = '${authorName}'`);
     return result;
 }
 
-// model output
-export async function trainingAggData(authorName) {
+export async function trainingAggData() {
     await registerTables();
     const result = await query(`
         SELECT 
@@ -82,7 +92,6 @@ export async function trainingAggData(authorName) {
     return result;
 }
 
-// Load available authors
 async function loadAvailableAuthors() {
     await registerTables();
     
@@ -104,14 +113,13 @@ async function loadAvailableColleges() {
     await registerTables();
     
     const result = await query(`
-        SELECT DISTINCT  college FROM training 
+        SELECT DISTINCT college FROM training 
         WHERE college IS NOT NULL
     `);
     
     return result.map(d=>d.college);
 }
 
-// Load data for specific author
 async function loadAuthorData(authorName) {
     await registerTables();
     
@@ -176,8 +184,9 @@ export async function initializeApp() {
         dataState.availableColleges = await loadAvailableColleges();
         dataState.trainingAggData = await trainingAggData();
         dataState.isInitializing = false;
-}
-
+    }
+    
+    
 // 2. Author Selection - Specific author data
 export async function loadSelectedAuthor() {
     dataState.isLoadingAuthor = true;
@@ -189,6 +198,7 @@ export async function loadSelectedAuthor() {
 }
 
 // Auto-collapse sidebar on mobile
+
 if (typeof window !== 'undefined') {
     function handleResize() {
         if (window.innerWidth <= 768) {
@@ -203,6 +213,7 @@ if (typeof window !== 'undefined') {
 }
 
 // UI Actions
+
 export function toggleSidebar() {
     uiState.sidebarCollapsed = !uiState.sidebarCollapsed;
 }
@@ -211,8 +222,4 @@ export function resetDashboardFilters() {
     dashboardState.highlightedAuthor = null;
     dashboardState.authorAgeFilter = null;
     dashboardState.colorMode = 'age_diff';
-}
-
-export function setSelectedAuthor(authorName) {
-    dashboardState.selectedAuthor = authorName;
 }

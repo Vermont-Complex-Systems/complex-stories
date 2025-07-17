@@ -2,7 +2,7 @@
     import Nav from './Nav.svelte';
     import Sidebar from './Sidebar.svelte';
     import Dashboard from './Dashboard.svelte';
-    import TutorialPopup from './TutorialPopup.svelte';
+    import TutorialPopup from './helpers/TutorialPopup.svelte';
     import Spinner from '$lib/components/helpers/Spinner.svelte'
     
     import { 
@@ -10,18 +10,19 @@
         dashboardState, 
         dataState,
         initializeApp,
-        loadSelectedAuthor
+        loadSelectedAuthor,
     } from '../state.svelte.ts';
     
     // Initialize on component mount
     initializeApp();
     let showTutorial = $state(true);
     
-    // Auto-load data when selected author changes
+    // Auto-load data when selected author or changes
     $effect(() => {
         if (dashboardState.selectedAuthor && !dataState.isInitializing) {
             loadSelectedAuthor();
         }
+        
     });
 </script>
 
@@ -60,6 +61,7 @@
                         coauthorData={dataState.coauthorData}
                         trainingAggData={dataState.trainingAggData}
                         trainingData={dataState.trainingData}
+                        productivityData={dataState.prodAgg}
                     />
                 </main>
             {/if}

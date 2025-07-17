@@ -62,7 +62,7 @@
           fill="var(--color-fg)"
           dominant-baseline="middle"
         >
-          {field ? (field.length > 12 ? field.substring(0, 12) + '...' : field) : 'Unknown'}
+          {field ? (field.length > 12 ? field.substring(0, 30) + '...' : field) : 'Unknown'}
         </text>
       </g>
     {/each}

@@ -127,7 +127,7 @@
   if (shouldShowTooltip) {
     mouseX = event.clientX;
     mouseY = event.clientY;
-    tooltipContent = `title: ${point.title.toUpperCase()}\nfos (MAG): ${point.fieldsOfStudy}\nfos (S2): ${point.s2FieldsOfStudy?.split("; ")[1]}\nFaculty main department: ${point.host_dept}\nabstract: ${point.abstract}\nauthors: ${point.authors}\ndoi: ${point.doi}\npub_year: ${point.pub_year}`;
+    tooltipContent = `title: ${point.title.toUpperCase()}\nfos (MAG): ${point.fieldsOfStudy}\nfos (S2): ${point.s2FieldsOfStudy?.split("; ")[1]}\nFaculty main department: ${point.host_dept} (${point.college})\nabstract: ${point.abstract}\nauthors: ${point.authors}\ndoi: ${point.doi}\npub_year: ${point.pub_year}`;
     showTooltip = true;
   }
 }
@@ -256,7 +256,8 @@
   options={ [
     { value: 's2FieldsOfStudy', label: 'S2 Fields of Study' },
     { value: 'fieldsOfStudy', label: 'MAG Fields of Study' },
-    { value: 'host_dept', label: 'Faculty main department' }
+    { value: 'host_dept', label: 'Faculty main department' },
+    { value: 'college', label: 'Faculty college' }
   ] }
   label="Color by:"
   maxWidthRatio={0.25}
@@ -266,7 +267,7 @@
   uniqueFields={uniqueFields}
   colorScale={zScale}
   maxWidthRatio={0.7} 
-  itemWidth={100}
+  itemWidth={200}
 />
 
 <div class="plot-container">

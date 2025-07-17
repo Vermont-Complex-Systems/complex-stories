@@ -79,3 +79,40 @@ Check out the [Dagster+ documentation](https://docs.dagster.io/dagster-plus/) to
  - `Fully customizable dashboard`: Integrates seamlessly with the front-end ecosystems, using [bits-ui](https://bits-ui.com/) for creating all kinds of components (sidebar, toggle, filters, etc). 
  - `High-level abstraction`: Making use of [svelte-plot](https://svelteplot.dev/) for high-level charting.
  - `Data transformation powered by duckdb`: As with our back-end, we use duckdb to wrangle data on the fly. Using duckdb both for back-end and fron-end as tremendous advantage, helping with maintainability.
+
+This is work in progress. But we try to stay organized by decomposing our dashboard with as many subcomponents as necessary. 
+
+```
+.
+├── assets // dagster assets building the data pipeline
+├── components // svelte components
+│   ├── ChangePointChart.svelte
+│   ├── CoauthorChart.svelte
+│   ├── Collaboration.Agg.svelte // denote aggregate charts with `.Agg` suffix
+│   ├── Dashboard.svelte
+│   ├── helpers // Inputs and other misc components
+│   │   ├── RangeFilter.svelte
+│   │   ├── ThemeToggle.svelte
+│   │   ├── Toggle.svelte
+│   │   └── TutorialPopup.svelte
+│   ├── Index.svelte // main component
+│   ├── Legend.svelte
+│   ├── Nav.svelte
+│   ├── PaperChart.svelte
+│   ├── Productivity.Agg.svelte
+│   ├── sidebar
+│   │   ├── AuthorAgeFilter.svelte
+│   │   ├── ColorModeFilter.svelte
+│   │   ├── DataInfo.svelte
+│   │   ├── HighlightCoauthorFilter.svelte
+│   │   └── SelectAuthors.svelte
+│   └── Sidebar.svelte 
+├── data
+│   ├── copy.json
+│   └── loader.js // duckdb loader, loading parquet files from static/
+├── state.svelte.ts // centralized states to manage dashboard
+└── utils
+    └── combinedChartUtils.js
+```
+
+We are experimenting with centralizing our data work as much as we can in our `state.svelte.ts`. This is where we query our data using `duckdb`, making it efficient even as data increases in size. By taking advantage of Svelte new system of [Universal reactivity](https://svelte.dev/tutorial/svelte/universal-reactivity), we ensure that data is available to all our components are once and that everything remain in sync...

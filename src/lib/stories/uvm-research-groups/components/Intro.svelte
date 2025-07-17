@@ -63,7 +63,9 @@
 
 <section id="story" class="story">  
   
-  <p>In 2008, Sears adopted an organizational structure that pitted departments against each other. This led to a tribal warfare state of affairs, <a href="https://d3.harvard.edu/platform-rctom/submission/sears-the-collapse-of-a-company-from-within/">accelerating its downfall</a>. Some say that US universities operate somwhat similarly sitll today, with each department reporting its own profit and remaining siloed. While this is slowly changing, I have yet to meet anyone at UVM who understands the broader research ecosystem, particularly around software development. To better understand UVM's research landscape, we take a deep dive into research groups at UVM. We first take a look at the {data.length} UVM faculty, annotated with whether they have a research group or not:</p>
+  <p>In 2008, Sears adopted an organizational structure that pitted departments against each other. This led to a tribal warfare state of affairs, <a href="https://d3.harvard.edu/platform-rctom/submission/sears-the-collapse-of-a-company-from-within/">accelerating its downfall</a>. Some say that US universities operate somwhat similarly sitll today, with each department reporting its own profit and remaining siloed. While this is slowly changing, I have yet to meet anyone at UVM who understands the broader research ecosystem, particularly around software development.</p> 
+  
+  <p>To better understand UVM's research landscape, we take a deep dive into research groups at UVM. We first take a look at the {data.length} UVM faculty, annotated with whether they have a research group or not:</p>
     
     <WaffleChart data={ data } cellSize={25}/>
 
@@ -100,7 +102,7 @@
               {:else}
               <WaffleChart 
                 data={deptData} 
-                title="{deptName}"
+                title={deptName}
                 cellSize={20}
               />
             {/if}
@@ -113,7 +115,7 @@
     {#each groupedData() as [groupName, groupData]}
       <WaffleChart 
         data={groupData} 
-        title="{groupName}"
+        title={groupName}
         cellSize={25}
       />
     {/each}

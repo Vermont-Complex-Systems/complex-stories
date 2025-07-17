@@ -3,15 +3,15 @@
 
   import CoauthorChart from './CoauthorChart.svelte';
   import PaperChart from './PaperChart.svelte';
-  import Toggle from './Toggle.svelte'
-  import RangeFilter from './RangeFilter.svelte'
+  import Toggle from './helpers/Toggle.svelte'
+  import RangeFilter from './helpers/RangeFilter.svelte'
   import CollabChart from './Collaboration.Agg.svelte'
   import { dashboardState, dataState, uiState } from '../state.svelte.ts';
   import { innerWidth } from 'svelte/reactivity/window';
   import { getCombinedDateRange, ageColorScale, acquaintanceColorScale, processCoauthorData, processPaperData } from '../utils/combinedChartUtils.js';
   import * as d3 from 'd3';
   
-  let { paperData, coauthorData, trainingAggData, trainingData } = $props();
+  let { paperData, coauthorData, trainingAggData, productivityData, trainingData } = $props();
 
   // Calculate available width for charts considering sidebar and layout
   let chartWidth = $derived.by(() => {
@@ -191,6 +191,7 @@
     trainingAggData?.filter(d=>dataState.availableColleges.slice(0,4).includes(d.college) && d.author_age < maxAge) || []
   );
 
+
 </script>
 
 <div class="dashboard">
@@ -213,6 +214,7 @@
         <h2>Publications Timeline</h2>
         <PaperChart 
           displayData={styledPaperData}
+          {productivityData}
           width={chartWidth}
           height={chartHeight}
           timeScale={sharedTimeScale}
@@ -235,6 +237,10 @@
 
 
 <style>
+  .agg-plot-container {
+    margin-top:3rem
+  }
+
   .dashboard {
     max-width: 100%;
     margin: 0;

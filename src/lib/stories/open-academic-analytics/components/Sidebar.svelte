@@ -51,7 +51,11 @@
                 <ColorModeFilter />
                 <DataInfo {paperData} {coauthorData} {availableCoauthors} />
             </Accordion.Root>
-
+            <div class="interaction-help">
+                <p class="data-info">
+                    Training dataset for the bayesian change point analysis available <a href="https://huggingface.co/datasets/Vermont-Complex-Systems/training_data/viewer?views%5B%5D=train">here</a>.
+                </p>
+            </div>
             <!-- Reset Button -->
             <div class="reset-section">
                 <Button.Root onclick={resetDashboardFilters} variant="outline" size="sm" class="reset-button">
@@ -80,6 +84,17 @@
 </div>
 
 <style>
+    .interaction-help {
+        text-align: center;
+    }
+
+    .data-info {
+        font-size: var(--font-size-xsmall);
+        color: var(--color-secondary-gray);
+        margin: 0;
+        line-height: 1.3;
+    }
+        
     .sidebar-content {
         height: 100%;
         display: flex;

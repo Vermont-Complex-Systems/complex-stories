@@ -35,3 +35,6 @@ src/lib/stories/open-academic-analytics/data/raw/
 src/lib/stories/open-academic-analytics/:memory*
 src/lib/stories/open-academic-analytics/assets/fit/stan/*
 !src/lib/stories/open-academic-analytics/assets/fit/stan/*.stan
+src/lib/stories/open-academic-analytics/open_academic_analytics.egg-info/
+
+~/

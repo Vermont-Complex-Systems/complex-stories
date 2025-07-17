@@ -1,6 +1,6 @@
 <script>
     import { base } from '$app/paths';
-    import ThemeToggle from './ThemeToggle.svelte';
+    import ThemeToggle from './helpers/ThemeToggle.svelte';
 </script>
 
 <nav class="nav">

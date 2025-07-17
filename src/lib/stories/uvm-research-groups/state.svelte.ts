@@ -1,6 +1,6 @@
 // src/lib/stories/open-academic-analytics/state.svelte.ts
 import { registerParquetFile, query } from '$lib/utils/duckdb.js';
-import { coauthorURL, departmentURL, paperURL, trainingUrl } from './data/loader.js';
+import { coauthorURL, departmentURL, paperURL, trainingUrl, uvmProfsURL } from './data/loader.js';
 
 export const dashboardState = $state({
     selectedAuthor: 'Peter Sheridan Dodds',
@@ -27,6 +27,7 @@ async function registerTables() {
     await registerParquetFile(departmentURL, 'department');
     await registerParquetFile(paperURL, 'paper');
     await registerParquetFile(coauthorURL, 'coauthor');
+    await registerParquetFile(uvmProfsURL, 'uvm_profs_2023');
     tablesRegistered = true;
 }
 
@@ -54,17 +55,18 @@ export async function EmbeddingsData() {
     const result = await query(`
         WITH exploded_depts AS (
             SELECT 
-                t.payroll_name as name,
-                t.oa_uid,
+                DISTINCT t.name,
+                t.aid as oa_uid,
                 t.has_research_group,
                 trim(unnest(string_split(t.host_dept, ';'))) as host_dept,
                 t.perceived_as_male,
+                t.college,
                 t.group_url,
                 t.group_size
             FROM training t
             WHERE oa_uid IS NOT NULL
         )
-        SELECT DISTINCT doi, *, strftime(pub_date::DATE, '%Y-%m-%d') as pub_date, e.host_dept 
+        SELECT DISTINCT doi, *, strftime(pub_date::DATE, '%Y-%m-%d') as pub_date, e.host_dept, e.college
         FROM paper p
         LEFT JOIN exploded_depts e ON p.ego_aid = e.oa_uid
         WHERE p.umap_1 IS NOT NULL
@@ -114,7 +116,7 @@ export async function trainingAggData(authorName) {
                 t.perceived_as_male,
                 t.group_url,
                 t.group_size
-            FROM training t
+            FROM uvm_profs_2023 t
         )
         SELECT DISTINCT 
             e.name,
