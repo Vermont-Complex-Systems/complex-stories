@@ -76,59 +76,21 @@ export async function EmbeddingsData() {
         `);
     return result;
 }
-// export async function EmbeddingsData() {
-//     await registerTables();
-//     const result = await query(`
-//         SELECT *, strftime(pub_date::DATE, '%Y-%m-%d') as pub_date 
-//         FROM (
-//             -- Keep ALL papers from ego author
-//             SELECT * FROM paper WHERE ego_aid = 'A5040821463'
-            
-//             UNION ALL
-            
-//             -- 10% sample from other distinct DOIs
-//             SELECT * FROM (
-//                 SELECT DISTINCT ON (doi) *
-//                 FROM paper 
-//                 WHERE ego_aid != 'A5040821463' 
-//                 AND doi IS NOT NULL 
-//                 AND umap_1 IS NOT NULL
-//                 AND doi != ''
-//                 ORDER BY doi, RANDOM()
-//             )
-//             TABLESAMPLE BERNOULLI(90 PERCENT)  -- 50% sample
-//         )
-//         ORDER BY 
-//             CASE WHEN ego_aid = 'A5040821463' THEN 1 ELSE 0 END,  -- Peter's papers last
-//             pub_date  -- Then by date within each group
-//         `);
-//     return result;
-// }
 
 export async function trainingAggData(authorName) {
     await registerTables();
     const result = await query(`
        WITH exploded_depts AS (
             SELECT 
-                t.payroll_name as name,
-                t.has_research_group,
-                trim(unnest(string_split(t.host_dept, ';'))) as host_dept,
-                t.perceived_as_male,
-                t.group_url,
-                t.group_size
+                DISTINCT t.payroll_name as name,
+                trim(unnest(string_split(t.host_dept, ';'))) as department,
+                *
             FROM uvm_profs_2023 t
         )
-        SELECT DISTINCT 
-            e.name,
-            e.has_research_group,
-            e.host_dept,
-            e.perceived_as_male,
-            e.group_url,
-            e.group_size,
-            d.college
+        SELECT *
         FROM exploded_depts e
-        LEFT JOIN department d ON e.host_dept = d.department
-        ORDER BY has_research_group
+        WHERE inst_ipeds_id = 231174 AND payroll_year = 2023
+        ORDER BY has_research_group, perceived_as_male, oa_uid
         `);
     return result;
 }

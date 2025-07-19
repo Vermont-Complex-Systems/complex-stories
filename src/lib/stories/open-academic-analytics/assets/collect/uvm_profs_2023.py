@@ -10,7 +10,6 @@ from config import config
 
 @asset(
     group_name="import",
-    deps=["uvm_departments"],
     description="📋 UVM Professors 2023 dataset from Vermont Complex Systems",
     freshness_policy=FreshnessPolicy.time_window(
         fail_window=timedelta(hours=168),  # Fail if no update in 7 days
@@ -66,7 +65,7 @@ def uvm_profs_2023():
         # Reorder columns for pipeline consistency
         column_order = [
             'oa_display_name', 'is_prof', 'group_size', 'perceived_as_male', 
-            'host_dept', 'has_research_group', 'oa_uid', 'group_url', 'first_pub_year',
+            'host_dept', 'college', 'has_research_group', 'oa_uid', 'group_url', 'first_pub_year',
             'payroll_name', 'position', 'notes'
         ]
         
@@ -78,10 +77,6 @@ def uvm_profs_2023():
         df = df[~df['oa_uid'].isna()]
         df['oa_uid'] = df['oa_uid'].str.upper()
 
-        # Augment authors metadata with their colleges and FOS
-        df_depts = pd.read_parquet(input_file)
-        df = df.merge(df_depts, how="left", left_on="host_dept", right_on="department")
-        
         filtered_count = len(df)
         logger.info(f"✓ Filtered {initial_count - filtered_count} researchers without OpenAlex IDs")
         logger.info(f"✅ Final dataset: {filtered_count} researchers ready for analysis")

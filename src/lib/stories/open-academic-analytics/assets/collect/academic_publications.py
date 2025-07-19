@@ -145,9 +145,6 @@ def academic_publications(duckdb: DuckDBResource):
         if config.target_researcher:
             target_aids = target_aids[target_aids['oa_uid'] == config.target_researcher]
             logger.info(f"🎯 DEV MODE: Processing {config.target_researcher}")
-        elif config.max_researchers:
-            target_aids = target_aids.head(config.max_researchers)
-            logger.info(f"🔧 DEV MODE: Processing first {config.max_researchers} researchers")
         
         if len(target_aids) == 0:
             return MaterializeResult(

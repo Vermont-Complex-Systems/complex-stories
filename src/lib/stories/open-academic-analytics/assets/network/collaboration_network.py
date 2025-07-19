@@ -83,9 +83,6 @@ def collaboration_network(duckdb: DuckDBResource):
         if config.target_researcher:
             targets = targets[targets['ego_aid'] == config.target_researcher]
             print(f"🎯 DEV MODE: Processing {config.target_researcher}")
-        elif config.max_researchers:
-            targets = targets.head(config.max_researchers)
-            print(f"🔧 DEV MODE: Processing first {config.max_researchers} researchers")
         
         print(f"Selected {len(targets)} target authors for processing")
 

@@ -1,16 +1,14 @@
 <script>
   import { Accordion } from "bits-ui";
-  import { dashboardState } from '../../state.svelte.ts';
+  import { dashboardState, dataState } from '../../state.svelte.ts';
   import { UserCheck } from "@lucide/svelte";
-
-  let { availableAuthors } = $props();
 
   // Filter authors by age if filter is active
   let filteredAuthors = $derived.by(() => {
-    if (!dashboardState.authorAgeFilter) return availableAuthors;
+    if (!dashboardState.authorAgeFilter) return dataState.availableAuthors;
     
     const [minAge, maxAge] = dashboardState.authorAgeFilter;
-    return availableAuthors.filter(author => {
+    return dataState.availableAuthors.filter(author => {
       // Now availableAuthors contains objects with current_age
       const age = author.current_age || 0;
       return age >= minAge && age <= maxAge;
@@ -37,7 +35,7 @@
   // Show filter status
   let filterStatus = $derived.by(() => {
     if (!dashboardState.authorAgeFilter) return '';
-    const total = availableAuthors.length;
+    const total = dataState.availableAuthors.length;
     const filtered = filteredAuthors.length;
     return `(${filtered} of ${total} authors)`;
   });

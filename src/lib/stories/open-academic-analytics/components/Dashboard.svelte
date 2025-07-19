@@ -53,7 +53,7 @@
   let coauthorColorScale = $derived.by(() => {
     if (!coauthorData || coauthorData.length === 0) return null;
     
-    const colorMode = dashboardState.colorMode;
+    const colorMode = dashboardState.coauthorNodeColor;
     
     if (colorMode === 'age_diff') {
       return ageColorScale;
@@ -110,7 +110,7 @@
     return processedCoauthorData.map(point => {
       // Get the value for coloring
       let colorValue;
-      const colorMode = dashboardState.colorMode;
+      const colorMode = dashboardState.coauthorNodeColor;
       if (colorMode === 'age_diff') {
         colorValue = point.age_category;
       } else if (colorMode === 'acquaintance') {
@@ -146,8 +146,8 @@
       }
       
       // Apply highlight filter
-      if (dashboardState.highlightedCoauthor) {
-        const isHighlightedCoauthor = point.name === dashboardState.highlightedCoauthor;
+      if (dashboardState.clickedCoauthor) {
+        const isHighlightedCoauthor = point.name === dashboardState.clickedCoauthor;
         opacity *= isHighlightedCoauthor ? 1 : 0.2;
       }
       
@@ -166,12 +166,7 @@
     
     return processedPaperData.map(point => {
       let opacity = 1;
-      
-      // Apply author highlight filter if provided
-      if (dashboardState.highlightedAuthor) {
-        const isHighlightedAuthor = point.ego_aid === dashboardState.highlightedAuthor;
-        opacity *= isHighlightedAuthor ? 1 : 0.2;
-      }
+  
       
       return {
         ...point,
@@ -206,7 +201,7 @@
           colorScale={coauthorColorScale}
           width={chartWidth}
           height={chartHeight}
-          colorMode={dashboardState.colorMode}
+          colorMode={dashboardState.coauthorNodeColor}
           {trainingData}
         />
       </div>

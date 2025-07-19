@@ -57,14 +57,6 @@ class PipelineConfig(Config):
         return self.data_processed_path
     
     @property
-    def RESEARCHERS_INPUT_FILE(self) -> str:
-        return self.researchers_input_file
-    
-    @property
-    def RESEARCHERS_TSV_FILE(self) -> str:
-        return self.researchers_tsv_file
-    
-    @property
     def TRAINING_DATA_OUTPUT_FILE(self) -> str:
         return self.training_data_file
     
@@ -83,10 +75,6 @@ class PipelineConfig(Config):
     @property
     def TARGET_RESEARCHER(self) -> Optional[str]:
         return self.target_researcher
-    
-    @property
-    def MAX_RESEARCHERS(self) -> Optional[int]:
-        return self.max_researchers
     
     @property
     def FORCE_UPDATE(self) -> bool:
@@ -113,10 +101,8 @@ class PipelineConfig(Config):
         return self.umap_config
     
     # Development settings (reading from .env)
-    development_mode: bool = True
-    max_researchers: Optional[int] = int(os.getenv("MAX_RESEARCHERS", "1")) if os.getenv("MAX_RESEARCHERS") else None
-    target_researcher: Optional[str] = os.getenv("TARGET_RESEARCHER")
-    force_update: bool = os.getenv("FORCE_UPDATE", "false").lower() == "true"
+    target_researcher: Optional[str] = None
+    force_update: bool = False
     enable_debug: bool = True
     progress_report_interval: int = 10
     

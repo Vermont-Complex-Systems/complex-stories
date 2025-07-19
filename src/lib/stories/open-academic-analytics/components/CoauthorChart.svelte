@@ -25,11 +25,11 @@
 
   // Coauthor-specific click handlers
   function handleCoauthorClick(event, point) {
-    dashboardState.highlightedCoauthor = point.name;
+    dashboardState.clickedCoauthor = point.name;
   }
 
   function handleChartClick(event) {
-    dashboardState.highlightedCoauthor = null;
+    dashboardState.clickedCoauthor = null;
   }
 </script>
 

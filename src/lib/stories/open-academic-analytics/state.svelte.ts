@@ -19,7 +19,6 @@ export const uiState = $state({
 export const dashboardState = $state({
     selectedAuthor: 'Peter Sheridan Dodds',
     colorMode: 'age_diff',
-    highlightedAuthor: null,
     authorAgeFilter: null, // [minAge, maxAge] or null
     highlightedCoauthor: null,
     selectedCollege: 'College of Engineering and Mathematical Sciences'
@@ -221,5 +220,5 @@ export function toggleSidebar() {
 export function resetDashboardFilters() {
     dashboardState.highlightedAuthor = null;
     dashboardState.authorAgeFilter = null;
-    dashboardState.colorMode = 'age_diff';
+    dashboardState.coauthorNodeColor = 'age_diff';
 }

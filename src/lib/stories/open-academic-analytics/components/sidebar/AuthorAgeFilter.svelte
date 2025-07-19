@@ -1,14 +1,12 @@
 <script>
   import * as d3 from 'd3';
-  import { dashboardState } from '../../state.svelte.ts';
-
-  let { availableAuthors = [] } = $props();
+  import { dashboardState, dataState } from '../../state.svelte.ts';
 
   // Extract age data from available authors and calculate range
   let authorAgeData = $derived.by(() => {
-    if (!availableAuthors || availableAuthors.length === 0) return { ages: [], min: 0, max: 100 };
+    if (!dataState.availableAuthors || dataState.availableAuthors.length === 0) return { ages: [], min: 0, max: 100 };
     
-    const ages = availableAuthors
+    const ages = dataState.availableAuthors
       .map(author => +author.current_age || 0)
       .filter(age => age > 0 && age < 120)
       .sort((a, b) => a - b);
@@ -123,9 +121,9 @@
 
   // Show filtered author count
   let filteredAuthorCount = $derived.by(() => {
-    if (!selectedAgeRange) return availableAuthors.length;
+    if (!selectedAgeRange) return dataState.availableAuthors.length;
     const [min, max] = selectedAgeRange;
-    return availableAuthors.filter(author => {
+    return dataState.availableAuthors.filter(author => {
       const age = author.current_age || 0;
       return age >= min && age <= max;
     }).length;
@@ -143,7 +141,7 @@
           {selectedAgeRange[0]} - {selectedAgeRange[1]} years
         </span>
         <span class="filter-badge">
-          {filteredAuthorCount} of {availableAuthors.length}
+          {filteredAuthorCount} of {dataState.availableAuthors.length}
         </span>
         <button class="clear-button" onclick={clearFilter}>Clear</button>
       </div>

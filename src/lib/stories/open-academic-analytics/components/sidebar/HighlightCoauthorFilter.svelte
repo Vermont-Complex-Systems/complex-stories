@@ -16,7 +16,7 @@
   // Debug the state changes
   $effect(() => {
     console.log('🔍 Filter state:', {
-      currentHighlighted: dashboardState.highlightedCoauthor,
+      currentHighlighted: dashboardState.clickedCoauthor,
       availableCoauthors: uniqueCoauthors.length,
       sampleCoauthors: uniqueCoauthors.slice(0, 3)
     });
@@ -37,7 +37,7 @@
       
       <select 
         class="filter-select"
-        bind:value={dashboardState.highlightedCoauthor}
+        bind:value={dashboardState.clickedCoauthor}
       >
         <option value="">All coauthors</option>
         {#each uniqueCoauthors as coauthorName}
@@ -52,7 +52,7 @@
           style="padding: 0.25rem 0.5rem; font-size: 0.8em; border: 1px solid #ccc; background: white;"
           onclick={() => {
             if (uniqueCoauthors.length > 0) {
-              dashboardState.highlightedCoauthor = uniqueCoauthors[0];
+              dashboardState.clickedCoauthor = uniqueCoauthors[0];
               console.log('🧪 Test set to first coauthor:', uniqueCoauthors[0]);
             }
           }}
@@ -63,7 +63,7 @@
         <button 
           style="padding: 0.25rem 0.5rem; font-size: 0.8em; border: 1px solid #ccc; background: white;"
           onclick={() => {
-            dashboardState.highlightedCoauthor = '';
+            dashboardState.clickedCoauthor = '';
             console.log('🧪 Test cleared');
           }}
         >
