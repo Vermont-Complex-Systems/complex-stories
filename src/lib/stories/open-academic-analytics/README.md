@@ -6,11 +6,13 @@ This project offers s micro-macro perspective on the coevolution of scientific p
 
 ### Missing 
 
- - [ ] Add a departments/colleges brush filter
- - [ ] Add a toggle to filter based on whether faculties have a research groups
- - [ ] Missing bayesian switchpoint model to detect when faculties start collaborating more extensively with younger collaborators. Perhaps we could use that to predict from data the existence of research groups
- - [ ] Maybe add macro plots where we can do some statistics.
+ - [x] Missing bayesian switchpoint model to detect when faculties start collaborating more extensively with younger collaborators. Perhaps we could use that to predict from data the existence of research groups
+ - [ ] Aggregate plots where we can do some statistics.
    - [ ] time series plot where horizontal axis is standardized age, vertical axis is number of collaborations, and color is (bucketized) relative academic age. That is, what is the proportion of all authors that start to collaborate more extensively with younger authors starting at, say, `academic_age = 10`? How is that different across colleges? Within college, how are faculties with research groups differ from non-PIs.
+ - [ ] Global filters
+   - [ ] Add h-index filter to get uvm superstars
+   - [ ] Add a departments/colleges brush filter
+   - [ ] Add a toggle to filter based on whether faculties have a research groups
 
 ### Back-end: Implementing principled data processing using dagster
 
