@@ -1,5 +1,4 @@
 <script>
-  import { Plot, Dot, LineY, AreaY, HTMLTooltip } from 'svelteplot';
   import * as d3 from 'd3';
 
   import CoauthorChart from './CoauthorChart.svelte';
@@ -7,39 +6,21 @@
   import Toggle from './helpers/Toggle.svelte'
   import RangeFilter from './helpers/RangeFilter.svelte'
   import CollabChart from './Collaboration.Agg.svelte'
-  import { dashboardState, dataState, uiState } from '../state.svelte.ts';
+  import { dashboardState, dataState, uiState, unique } from '../state.svelte.ts';
   import { innerWidth } from 'svelte/reactivity/window';
+  import { calculateChartWidth, calculateChartHeight, spacing } from '../utils/layout.js';
+
   import {  getCombinedDateRange } from '../utils/combinedChartUtils.js';
   
   // Calculate available width for charts considering sidebar and layout
-  let chartWidth = $derived.by(() => {
-    const screenWidth = innerWidth.current;
-    if (!screenWidth) return 400; // SSR fallback
-    
-    // Calculate actual available space step by step
-    const sidebarWidth = uiState.sidebarCollapsed ? 80 : 272; // 5rem or 17rem
-    const mainContentPadding = 88; // 5.5rem left padding
-    const dashboardPadding = 20; // Reduced from 40
-    const chartsGridGap = 20; // gap between the two charts
-    const chartPanelPadding = 20; // Reduced from 40
-    
-    // Available width for the entire charts container
-    const availableForChartsContainer = screenWidth - sidebarWidth - mainContentPadding - dashboardPadding;
-    
-    // Each chart gets half the container minus gap and panel padding
-    const availablePerChart = (availableForChartsContainer - chartsGridGap) / 2 - chartPanelPadding;
-    
-    // Ensure minimum and maximum sizes - increased max
-    const finalWidth = Math.max(400, Math.min(700, availablePerChart)); // Increased from 300,500
-    
-    return finalWidth;
-  });
+  let chartWidth = $derived(
+    calculateChartWidth(innerWidth.current, uiState.sidebarCollapsed)
+  )
 
   const chartHeight = $derived(
-    dataState.coauthorData?.length > 600 
-      ? dataState.coauthorData?.length < 1500 ? 1200 : 2200 
-      : 800
+    calculateChartHeight(dataState.coauthorData?.length)
   );
+
 
   // Create shared time scale for both charts
   let sharedTimeScale = $derived.by(() => {
@@ -56,13 +37,10 @@
 
   
   let maxAge = $state(30);
-  let isFacet = $state(false);
-  let showMed = $state(false);
-  let showArea = $state(false);
   
   let filteredAggData = $derived(
     dataState.trainingAggData?.filter(d => 
-      dataState.availableColleges.slice(0,4).includes(d.college) && 
+      unique.colleges.slice(0,4).includes(d.college) &&  
       d.author_age < maxAge
     ) || []
   );

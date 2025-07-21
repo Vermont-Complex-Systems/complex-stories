@@ -22,7 +22,7 @@
     
     const scale = d3.scaleSqrt()
       .domain([minValue, maxValue])
-      .range([1, 12])
+      .range([2, 12])
       .clamp(true);
     
     // Return a function that takes a data object and extracts the field

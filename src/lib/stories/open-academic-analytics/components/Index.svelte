@@ -10,8 +10,7 @@
         dashboardState, 
         dataState,
         initializeApp,
-        loadSelectedAuthor,
-        trainingAggData,
+        loadSelectedAuthor
     } from '../state.svelte.ts';
     
     // Initialize on component mount
@@ -23,7 +22,6 @@
         if (dashboardState.selectedAuthor && !dataState.isInitializing) {
             loadSelectedAuthor();
         }
-        
     });
 </script>
 

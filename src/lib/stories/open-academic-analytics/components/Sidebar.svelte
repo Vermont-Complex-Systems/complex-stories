@@ -9,19 +9,13 @@
     import ColorModeFilter from './sidebar/ColorModeFilter.svelte';
     import PaperNodeSize from './sidebar/NodeSize.paper.svelte';
 
-    import {  dataState } from '../state.svelte.ts';
+    import {  dataState, unique } from '../state.svelte.ts';
 
     // ✅ Access from state directly
     let paperData = $derived(dataState.paperData);
     let coauthorData = $derived(dataState.coauthorData);
-    let availableAuthors = $derived(dataState.availableAuthors);
-
-    let availableCoauthors = $derived.by(() => {
-        const coauthorData = dataState.coauthorData;
-        if (!coauthorData || coauthorData.length === 0) return [];
-        const coauthors = [...new Set(coauthorData.map(c => c.coauth_name).filter(Boolean))];
-        return coauthors.sort().slice(0, 50);
-        });
+    let availableAuthors = $derived(unique.authors);      // ✅ Clean
+    let availableCoauthors = $derived(unique.coauthors);      // ✅ Clean
 </script>
 
 <div class="sidebar-content">

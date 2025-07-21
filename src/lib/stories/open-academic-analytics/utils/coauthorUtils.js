@@ -1,15 +1,14 @@
 import * as d3 from 'd3';
 import { placePointMultiPass, parseDate } from './combinedChartUtils'
+import { getEffectiveChartDimensions } from './layout.js';
 
 export function processCoauthorData(coauthorData, width, height, timeScale, radiusScale) {
   if (!coauthorData || coauthorData.length === 0) {
     return [];
   }
 
-  const MARGIN_LEFT = 40;
-  const MARGIN_RIGHT = 40;
-  const effectiveWidth = width - MARGIN_LEFT - MARGIN_RIGHT;
-  const centerX = effectiveWidth / 2;
+  const { width: effectiveWidth, centerX } = getEffectiveChartDimensions(width, height);
+
 
   const coauthorPoints = coauthorData.map(d => {
     const parsedDate = parseDate(d.pub_date);

@@ -1,5 +1,6 @@
 import * as d3 from 'd3';
 import { placePointMultiPass, parseDate } from './combinedChartUtils'
+import { getEffectiveChartDimensions } from './layout.js';
 
 // paperUtils.js
 export function processPaperData(paperData, width, height, timeScale, radiusScale) {
@@ -7,10 +8,7 @@ export function processPaperData(paperData, width, height, timeScale, radiusScal
     return [];
   }
 
-  const MARGIN_LEFT = 40;
-  const MARGIN_RIGHT = 40;
-  const effectiveWidth = width - MARGIN_LEFT - MARGIN_RIGHT;
-  const centerX = effectiveWidth / 2;
+  const { width: effectiveWidth, centerX } = getEffectiveChartDimensions(width, height);
 
   const paperPoints = paperData.map(d => {
     const parsedDate = parseDate(d.pub_date);

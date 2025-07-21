@@ -32,13 +32,14 @@ export const dashboardState = $state({
     highlightedCoauthor: null             // string | null - deprecated, keeping for backward compatibility
 });
 
+
 // Data State - Holds all loaded data
 export const dataState = $state({
-    // App-level data
-    availableAuthors: [],                 // List of all available authors
-    availableColleges: [],                // List of all available colleges
     isInitializing: true,                 // Loading state for initial app setup
     
+    // app-specific data
+    availableAuthors: [],  // ✅ Add this back
+
     // Author-specific data
     paperData: [],                        // Papers for selected author
     coauthorData: [],                     // Coauthor relationships for selected author
@@ -115,17 +116,6 @@ async function loadAvailableAuthors() {
     return result;
 }
 
-async function loadAvailableColleges() {
-    await registerTables();
-    
-    const result = await query(`
-        SELECT DISTINCT college FROM training 
-        WHERE college IS NOT NULL
-    `);
-    
-    return result.map(d => d.college);
-}
-
 async function loadAuthorData(authorName) {
     await registerTables();
     
@@ -195,9 +185,8 @@ export async function initializeApp() {
         dataState.isInitializing = true;
         dataState.error = null;
         
-        dataState.availableAuthors = await loadAvailableAuthors();
-        dataState.availableColleges = await loadAvailableColleges();
         dataState.trainingAggData = await trainingAggData();
+        dataState.availableAuthors = await loadAvailableAuthors(); // ✅ Add this back
         
         dataState.isInitializing = false;
     } catch (error) {
@@ -224,16 +213,67 @@ export async function loadSelectedAuthor() {
     }
 }
 
+
+// ------------------
+// UNIQUE DATA CLASS
+// ------------------
+
+class DerivedData {
+    authors = $derived(dataState.availableAuthors || []);
+
+    colleges = $derived.by(() => {
+        if (!dataState.trainingAggData || dataState.trainingAggData.length === 0) return [];
+        return [...new Set(dataState.trainingAggData
+        .map(d => d.college)
+        .filter(college => college != null)
+        )];
+    });
+
+
+  institutions = $derived.by(() => {
+    if (!dataState.coauthorData || dataState.coauthorData.length === 0) return [];
+    
+    const field = dataState.coauthorData.some(d => d.institution_normalized) 
+      ? 'institution_normalized' 
+      : 'institution';
+    
+    return [...new Set(dataState.coauthorData
+      .map(d => d[field])
+      .filter(inst => inst != null && inst !== '' && inst !== 'Unknown')
+    )];
+  });
+
+  coauthors = $derived.by(() => {
+    if (!dataState.coauthorData || dataState.coauthorData.length === 0) return [];
+    const coauthors = [...new Set(dataState.coauthorData.map(c => c.coauth_name).filter(Boolean))];
+    return coauthors.sort().slice(0, 50);
+  });
+
+
+  workTypes = $derived.by(() => {
+    if (!dataState.paperData || dataState.paperData.length === 0) return [];
+    return [...new Set(dataState.paperData
+      .map(d => d.work_type)
+      .filter(type => type != null)
+    )];
+  });
+}
+
+// ✅ Export the instance - this should work!
+export const unique = new DerivedData();
+
+
 // ------------------
 //
 // UI ACTIONS
 //
 //-------------------
 
-// Auto-collapse sidebar on mobile
+import { breakpoints } from './utils/layout.js';
+
 if (typeof window !== 'undefined') {
     function handleResize() {
-        if (window.innerWidth <= 768) {
+        if (window.innerWidth <= breakpoints.mobile) {
             uiState.sidebarCollapsed = true;
         } else {
             uiState.sidebarCollapsed = false;
