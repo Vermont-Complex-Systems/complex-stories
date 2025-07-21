@@ -1,11 +1,16 @@
 <script>
   let { paperData = [], coauthorData = [], availableCoauthors = [] } = $props();
+  
+  // import { dataState } from '../../state.svelte.ts';
+  
+  // let selected_authors_group_url = $derived(dataState.trainingData[0]['group_url'])
+  // let selected_authors_depts = $derived(Array.from(new Set(dataState.trainingData.map(d => d.host_dept))).join(", "))
 </script>
 
 <div class="data-info-section">
   <div class="section-header">
     <span class="section-icon">📈</span>
-    <span class="section-title">Dataset Info</span>
+    <span class="section-title">Author Info</span>
   </div>
   
   <div class="data-stats">
@@ -21,6 +26,16 @@
       <span class="stat-label">Unique Coauthors:</span>
       <span class="stat-value">{availableCoauthors.length}</span>
     </div>
+    <!-- <div class="stat-row">
+      <span class="stat-label">Departments:</span>
+      <span class="stat-value-text">{selected_authors_depts}</span>
+    </div>
+    {#if selected_authors_group_url}
+      <div class="stat-row">
+        <span class="stat-label">Group URL:</span>
+        <span class="stat-value-href"><a href={selected_authors_group_url}>{selected_authors_group_url}</a></span>
+      </div>
+    {/if} -->
   </div>
 </div>
 
@@ -76,5 +91,15 @@
   .stat-value {
     color: var(--color-fg);
     font-weight: var(--font-weight-bold);
+  }
+  
+  .stat-value-text {
+    color: var(--color-fg);
+    font-size: 10px;
+  }
+  
+  .stat-value-href {
+    color: var(--color-fg);
+    font-size: 12px;
   }
 </style>

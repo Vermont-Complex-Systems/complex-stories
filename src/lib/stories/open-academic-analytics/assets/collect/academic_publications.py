@@ -11,10 +11,10 @@ from dagster import MaterializeResult, MetadataValue
 from dagster_duckdb import DuckDBResource
 
 from config import config
+
 from shared.database.database_adapter import DatabaseExporterAdapter
 from shared.clients.openalex_api_client import OpenAlexFetcher
 from shared.utils.utils import shuffle_date_within_month
-
 
 
 def _create_paper_record(w, target_aid, target_name):
@@ -129,9 +129,11 @@ def academic_publications(duckdb: DuckDBResource):
     output_file = config.data_raw_path / config.paper_output_file
 
     with duckdb.get_connection() as conn:
+        # import duckdb 
+        # conn = duckdb.connect(":memory:")
         # Initialize database and load existing data
         db_exporter = DatabaseExporterAdapter(conn)
-        db_exporter.load_existing_data(output_file)
+        db_exporter.load_existing_paper_data(output_file)
         
         # Load researchers
         target_aids = pd.read_parquet(input_file)
@@ -146,17 +148,39 @@ def academic_publications(duckdb: DuckDBResource):
             target_aids = target_aids[target_aids['oa_uid'] == config.target_researcher]
             logger.info(f"🎯 DEV MODE: Processing {config.target_researcher}")
         
-        if len(target_aids) == 0:
-            return MaterializeResult(
-                metadata={"status": MetadataValue.text("No researchers found matching criteria")}
-            )
+        if config.update_age:
+            # Make sure that for those we have known first_pub_year, no publication years come before that.
+            query = """SELECT *
+                        FROM paper p
+                        WHERE NOT EXISTS (
+                            SELECT 1 
+                            FROM (SELECT unnest($1) as ego_aid, unnest($2) as first_pub_year) lookup
+                            WHERE lookup.ego_aid = p.ego_aid 
+                            AND p.pub_year < lookup.first_pub_year
+                        )"""
+            papers_df = db_exporter.con.execute(query, [
+                list(known_first_pub_years.keys()),
+                list(known_first_pub_years.values())
+            ]).df()
 
+            papers_df.to_parquet(output_file)
+
+            return MaterializeResult(
+                metadata={"status": MetadataValue.text("Age has been updated")}
+            )
+        
         # Initialize fetcher and tracking variables
         fetcher = OpenAlexFetcher()
         total_papers_saved = 0
         total_researchers_processed = 0
         year_range = [float('inf'), 0]  # Track min/max years
         
+
+        if len(target_aids) == 0:
+            return MaterializeResult(
+                metadata={"status": MetadataValue.text("No researchers found matching criteria")}
+            )
+
         # Process each researcher
         for i, row in tqdm(target_aids.iterrows(), total=len(target_aids), desc="Fetching papers"):
             target_aid = row['oa_uid']

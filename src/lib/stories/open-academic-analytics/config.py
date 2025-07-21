@@ -101,8 +101,9 @@ class PipelineConfig(Config):
         return self.umap_config
     
     # Development settings (reading from .env)
-    target_researcher: Optional[str] = None
-    force_update: bool = False
+    target_researcher: Optional[str] = "A5038390659"
+    force_update: bool = True
+    update_age: bool = False
     enable_debug: bool = True
     progress_report_interval: int = 10
     

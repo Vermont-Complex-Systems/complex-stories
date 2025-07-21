@@ -1,20 +1,25 @@
 <script>
-    import { ageColorScale } from '../utils/combinedChartUtils'
     import { Plot, Dot, LineY, Text, selectLast } from 'svelteplot';
+    import { ageColorScale, colorConstants } from '../utils/colorScales.js';
+    
     let { data, visible = true } = $props();
 </script>
 
 <div class="switchpoint" class:visible>
     <div class="legend-title">Bayesian Change Point model</div>
     <Plot 
-        grid 
-        frame 
-        width={190}
-        height={170}
-        x={{label: false}}
-        y={{label: "↑ #Collaborations"}}
-        color={{scheme: [ageColorScale('older'), ageColorScale('same'), ageColorScale('younger')]}}
-    >
+    grid 
+    frame 
+    width={190}
+    height={170}
+    x={{label: false}}
+    y={{label: "↑ #Collaborations"}}
+    color={{scheme: [
+      ageColorScale('older'), 
+      ageColorScale('same'), 
+      ageColorScale('younger')
+    ]}}
+  >
         <Dot 
             {data}  
             x="pub_year" 

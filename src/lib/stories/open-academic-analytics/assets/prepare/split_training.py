@@ -6,7 +6,7 @@ from itertools import combinations
 import dagster as dg
 from dagster import MaterializeResult, MetadataValue
 from config import config
-import datasets
+from datasets import Dataset    
 
 def load_coauthor_data(filepath):
     """Load coauthor parquet file"""
@@ -168,15 +168,16 @@ def training_dataset():
     training_dataset.to_parquet(output_file)
 
     # Push a version to hugginface
-    from datasets import Dataset    
     ds = Dataset.from_pandas(training_dataset)
     ds.push_to_hub("Vermont-Complex-Systems/training_data")
 
     return MaterializeResult(
         metadata={
-            "input_coauthor": MetadataValue.path(str(coauthor_file)),
-            "input_uvm_profs_2023": MetadataValue.path(str(researchers_file)),
-            "input_paper_file": MetadataValue.path(str(paper_file)),
+            "input_files": MetadataValue.json({
+                "collaborations": str(config.data_clean_path / config.coauthor_output_file),
+                "papers": str(config.data_clean_path / config.paper_output_file),
+                "uvm_profs_2023": str(config.data_raw_path / config.uvm_profs_2023_file)
+            }),
             "output_file": MetadataValue.path(str(output_file))
         }
     )

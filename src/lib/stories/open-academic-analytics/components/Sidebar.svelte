@@ -7,16 +7,21 @@
     import AuthorAgeFilter from './sidebar/AuthorAgeFilter.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
     import ColorModeFilter from './sidebar/ColorModeFilter.svelte';
-    
-    let { paperData = [], coauthorData = [], availableAuthors = [] } = $props();
+    import PaperNodeSize from './sidebar/NodeSize.paper.svelte';
+
+    import {  dataState } from '../state.svelte.ts';
+
+    // ✅ Access from state directly
+    let paperData = $derived(dataState.paperData);
+    let coauthorData = $derived(dataState.coauthorData);
+    let availableAuthors = $derived(dataState.availableAuthors);
 
     let availableCoauthors = $derived.by(() => {
+        const coauthorData = dataState.coauthorData;
         if (!coauthorData || coauthorData.length === 0) return [];
-        // Get unique coauthor names (not IDs) from coauthor data
         const coauthors = [...new Set(coauthorData.map(c => c.coauth_name).filter(Boolean))];
-        return coauthors.sort().slice(0, 50); // Increased limit and sorted
-    });
-
+        return coauthors.sort().slice(0, 50);
+        });
 </script>
 
 <div class="sidebar-content">
@@ -49,6 +54,7 @@
                 <AuthorAgeFilter {availableAuthors} />
                 <SelectAuthors {availableAuthors} />
                 <ColorModeFilter />
+                <PaperNodeSize />
                 <DataInfo {paperData} {coauthorData} {availableCoauthors} />
             </Accordion.Root>
             <div class="interaction-help">

@@ -5,6 +5,7 @@ from dagster import MaterializeResult, MetadataValue
 from dagster_duckdb import DuckDBResource
 
 from config import config
+
 from shared.database.database_adapter import DatabaseExporterAdapter
 from shared.clients.openalex_api_client import OpenAlexFetcher
 
@@ -27,38 +28,20 @@ def coauthor_cache(duckdb: DuckDBResource):
 
     # Load known corrections
     target_aids = pd.read_parquet(uvm_profs_2023)
-    target_aids = target_aids[~target_aids['oa_uid'].isna()]
     known_years_df = target_aids[['oa_uid', 'first_pub_year']].dropna()
     known_first_pub_years = {k.upper(): int(v) for k, v in known_years_df.values}
     print(f"📝 Loaded {len(known_first_pub_years)} known publication year corrections")
 
     with duckdb.get_connection() as conn:
+        # import duckdb 
+        # conn = duckdb.connect(":memory:")
         print(f"✅ Connected to database")
 
-        # Load papers from target authors
-        df_pap = pd.read_parquet(paper_file)
-        conn.execute("CREATE TABLE paper AS SELECT * FROM df_pap")
-
-        # Load cached author information if exists
-        if output_file.exists():
-            df_author = pd.read_parquet(output_file)
-                        
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS author (
-                    aid VARCHAR,
-                    display_name VARCHAR,
-                    institution VARCHAR,
-                    pub_year INT,
-                    first_pub_year INT,
-                    last_pub_year INT,
-                    PRIMARY KEY(aid, pub_year)
-                )
-            """)
-            
-            conn.execute("INSERT INTO author SELECT * FROM df_author")
-        
         # Initialize components
         db_exporter = DatabaseExporterAdapter(conn)
+        db_exporter.load_existing_paper_data(paper_file)
+        db_exporter.load_existing_author_data(output_file)
+
         fetcher = OpenAlexFetcher()
         
         # Build publication year cache from existing data
@@ -93,6 +76,53 @@ def coauthor_cache(duckdb: DuckDBResource):
             researchers_with_papers = [r for r in researchers_with_papers if r[0] == config.target_researcher]
             print(f"🎯 DEV MODE: Processing {config.target_researcher}")
         
+        if config.update_age:
+            # step 1: 
+            # Get rid of previously entered cache authors with wrong first_pub_year
+            # based on current paper publication range. First update the coumn first_pub_year.
+            db_exporter.con.execute("""
+                    WITH paper_mins AS (
+                        SELECT ego_aid, MIN(pub_year) as min_year
+                        FROM paper
+                        GROUP BY ego_aid
+                    )
+                    UPDATE author 
+                    SET first_pub_year = pm.min_year
+                    FROM paper_mins pm
+                        WHERE author.aid = pm.ego_aid
+                        AND author.first_pub_year > pm.min_year
+                    """).df()
+            
+            # then remove those rows smaller than updated first_pub_year
+            db_exporter.con.execute("DELETE FROM author a WHERE a.pub_year < a.first_pub_year").df()
+            
+            # step 2:
+            # When updating age, we first filter out papers that 
+            # happened before first_pub_year (hand labeled)
+            # Here, we identify authors who do not exist anymore 
+            # as a result of this, assuming those were false positives.
+            all_authors_df = db_exporter.con.execute("""
+                            WITH exploded_authors AS (
+                                    SELECT 
+                                        DISTINCT trim(unnest(string_split(authors, ', '))) as author
+                                    FROM paper
+                            )
+                            SELECT * FROM author a
+                            LEFT JOIN exploded_authors e ON a.display_name = e.author
+                                    """).df()
+            
+            authors_to_remove = all_authors_df[all_authors_df.author.isna()].aid.tolist()
+
+            authors_df = db_exporter.con.execute(
+                """SELECT * FROM author a WHERE aid NOT IN $1""", 
+                [authors_to_remove]).df()
+                        
+            authors_df.to_parquet(output_file)
+
+            return MaterializeResult(
+                metadata={"status": MetadataValue.text("Age has been updated")}
+            )
+
         total_author_records = 0
         total_coauthors_identified = 0
         
@@ -218,6 +248,7 @@ def coauthor_cache(duckdb: DuckDBResource):
             failed_authors = []
             
             for _, row in all_authors_df.iterrows():
+                # row = all_authors_df.iloc[1,:]
                 aid = row['aid']
                 year = row['pub_year']
                 display_name = row['display_name']

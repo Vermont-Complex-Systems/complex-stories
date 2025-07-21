@@ -11,6 +11,7 @@ from dagster import MaterializeResult, MetadataValue
 from dagster_duckdb import DuckDBResource
 
 from config import config
+
 from shared.database.database_adapter import DatabaseExporterAdapter
 from shared.utils.utils import shuffle_date_within_month
 
@@ -34,35 +35,18 @@ def collaboration_network(duckdb: DuckDBResource):
         # import duckdb
         # conn = duckdb.connect(":memory:")
         
-        df_pap = pd.read_parquet(paper_file)
-        conn.execute("CREATE TABLE paper AS SELECT * FROM df_pap")
-
-        df_auth = pd.read_parquet(author_file)
-        print(f"Loaded {len(df_auth)} author records")
-        conn.execute("CREATE TABLE author AS SELECT * FROM df_auth")
-        
-        if output_file.exists():
-            df_coauth = pd.read_parquet(output_file)
-            conn.execute("""
-            CREATE TABLE IF NOT EXISTS coauthor2 (
-                ego_aid VARCHAR,
-                pub_date DATE,
-                pub_year INT,
-                coauthor_aid VARCHAR,
-                coauthor_name VARCHAR,
-                acquaintance VARCHAR,
-                yearly_collabo INT,
-                all_times_collabo INT,
-                shared_institutions VARCHAR,
-                coauthor_institution VARCHAR,
-                PRIMARY KEY(ego_aid, coauthor_aid, pub_year)
-            )
-        """)
-            conn.execute("INSERT INTO coauthor2 SELECT * FROM df_coauth")
-
+        # Initialize components
         db_exporter = DatabaseExporterAdapter(conn)
+
+        db_exporter.load_existing_paper_data(paper_file)
+        db_exporter.load_existing_author_data(author_file)
+        db_exporter.load_existing_coauthor_data(output_file)
+
         print(f"✅ Connected to database")
         
+        df_auth = db_exporter.con.sql("SELECT * FROM author").df()
+        df_pap = db_exporter.con.sql("SELECT * FROM paper").df()
+
         # Create optimization lookups
         print("Creating lookup tables for collaboration analysis...")
         target2info = df_auth[['aid', 'pub_year', 'institution']]\
@@ -76,7 +60,7 @@ def collaboration_network(duckdb: DuckDBResource):
         print(f"Created lookup tables with {len(target2info)} target entries and {len(coaut2info)} coauthor entries")
         
         # Get target authors
-        targets = df_pap[['ego_aid', 'ego_display_name']].drop_duplicates()
+        targets = db_exporter.con.sql("SELECT DISTINCT ego_aid, ego_display_name FROM paper").df()
         print(f"Found {len(targets)} target authors")
 
         # Development mode filtering
@@ -85,6 +69,26 @@ def collaboration_network(duckdb: DuckDBResource):
             print(f"🎯 DEV MODE: Processing {config.target_researcher}")
         
         print(f"Selected {len(targets)} target authors for processing")
+        
+        if config.update_age:
+            # authors now only contains those who exist, after filter out papers before first years.
+            # we now remove any coauthors aid who do not exist in our author cache.
+            df_coauthors = db_exporter.con.execute("""
+                SELECT *
+                    FROM coauthor2 c
+                    WHERE EXISTS (
+                        SELECT 1 
+                        FROM author a 
+                        WHERE a.aid = c.coauthor_aid
+                    )
+                """).df()
+            
+
+            df_coauthors.to_parquet(output_file)
+
+            return MaterializeResult(
+                metadata={"status": MetadataValue.text("Age has been updated")}
+            )
 
         # Force update logic if needed
         if config.force_update:

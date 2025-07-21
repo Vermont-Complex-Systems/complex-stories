@@ -73,23 +73,48 @@ class DatabaseExporterAdapter:
                 pub_year INT,
                 first_pub_year INT,
                 last_pub_year INT,
-                author_age INT,
                 PRIMARY KEY(aid, pub_year)
             )
         """)
     
-    def load_existing_data(self, output_file):
+    def load_existing_paper_data(self, cache_file):
         """
         Load existing data from parquet file into database if it exists.
         
         Args:
-            output_file (Path): Path to the parquet file containing existing data
+            cache_file (Path): Path to the parquet file containing existing data
         """
-        if output_file.exists():
-            df_pap = pd.read_parquet(output_file)
+        if cache_file.exists():
+            df_pap = pd.read_parquet(cache_file)
             # Insert existing data, ignoring conflicts since table might already have data
             self.con.execute("INSERT INTO paper SELECT * FROM df_pap ON CONFLICT DO NOTHING")
-            logger.info(f"Loaded {len(df_pap)} existing papers from {output_file}")
+            logger.info(f"Loaded {len(df_pap)} existing papers from {cache_file}")
+    
+    def load_existing_author_data(self, cache_file):
+        """
+        Load existing data from parquet file into database if it exists.
+        
+        Args:
+            cache_file (Path): Path to the parquet file containing existing data
+        """
+        if cache_file.exists():
+            df_author = pd.read_parquet(cache_file)
+            # Insert existing data, ignoring conflicts since table might already have data
+            self.con.execute("INSERT INTO author SELECT * FROM df_author ON CONFLICT DO NOTHING")
+            logger.info(f"Loaded {len(df_author)} existing authors from {cache_file}")
+    
+    def load_existing_coauthor_data(self, cache_file):
+        """
+        Load existing data from parquet file into database if it exists.
+        
+        Args:
+            cache_file (Path): Path to the parquet file containing existing data
+        """
+        if cache_file.exists():
+            df_coauthor = pd.read_parquet(cache_file)
+            # Insert existing data, ignoring conflicts since table might already have data
+            self.con.execute("INSERT INTO coauthor2 SELECT * FROM df_coauthor ON CONFLICT DO NOTHING")
+            logger.info(f"Loaded {len(df_coauthor)} existing coauthors from {cache_file}")
     
     def get_author_cache_by_name(self, author_name):
         """

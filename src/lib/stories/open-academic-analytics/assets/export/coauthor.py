@@ -96,7 +96,6 @@ def highlight_shared_institutions(df):
     )
     return df_with_shared
 
-
 def normalize_coauthor_institutions(df):
     """Clean and normalize institution names for coauthor data"""
     print("Normalizing coauthor institution names...")
@@ -133,19 +132,31 @@ def normalize_coauthor_institutions(df):
     return df_normalized
 
 
-def load_and_join_collaboration_data():
+
+@dg.asset(
+    deps=["collaboration_network", "author", "paper"],
+    group_name="export",
+    description="🌐 Prepare collaboration data for interactive network visualization"  
+)
+def coauthor():
+    """Process collaboration data for network visualization with age buckets and timing analysis"""
+    
     """Load collaboration and author data and perform the join"""
     print("🚀 Starting collaboration dataset preparation...")
     
     # HRDAG: Load from intermediary files
     collaborations_file = config.data_clean_path / config.coauthor_output_file
     authors_file = config.data_export_path / config.author_output_file
+    paper_file = config.data_export_path / config.paper_output_file
     
     print(f"📖 Loading collaboration data from {collaborations_file}")
     df_coauth = pd.read_parquet(collaborations_file)
     
     print(f"📚 Loading author profiles from {authors_file}")
     df_authors = pd.read_parquet(authors_file)
+    
+    print(f"📚 Loading author profiles from {authors_file}")
+    df_pap = pd.read_parquet(paper_file)
     
     # Check if we have collaboration data
     coauthor_count = duckdb.sql("SELECT COUNT(*) FROM df_coauth").fetchone()[0]
@@ -155,50 +166,85 @@ def load_and_join_collaboration_data():
         print("❌ No coauthor data found")
         return None
     
-    # Use DuckDB to do the complex JOIN - exactly like the original SQL
-    print("Loading collaboration data with researcher profiles...")
-    df = duckdb.sql("""
-        SELECT 
-            c.pub_year, c.pub_date::VARCHAR as pub_date,
-            ego_a.aid, ego_a.institution, ego_a.display_name as name, 
-            ego_a.author_age, ego_a.first_pub_year, ego_a.last_pub_year,
-            c.yearly_collabo, c.all_times_collabo, c.acquaintance, c.shared_institutions,
-            coauth.aid as coauth_aid, coauth.display_name as coauth_name, coauth.institution as coauth_institution, 
-            coauth.author_age as coauth_age, coauth.first_pub_year as coauth_min_year,
-            (coauth.author_age-ego_a.author_age) AS age_diff
-        FROM 
-            df_coauth c
-        LEFT JOIN 
-            df_authors coauth ON c.coauthor_aid = coauth.aid AND c.pub_year = coauth.pub_year
-        LEFT JOIN 
-            df_authors ego_a ON c.ego_aid = ego_a.aid AND c.pub_year = ego_a.pub_year
-        ORDER BY c.pub_year
-    """).df()
-    
-    print(f"Retrieved {len(df)} collaboration relationships")
-    
-    if len(df) == 0:
-        print("❌ No data after JOIN")
-        return None
-    
-    return df
+    ####################################
+    #                                  #
+    #        MERGE TABLES              #
+    #                                  #
+    ####################################
 
-@dg.asset(
-    deps=["collaboration_network", "coauthor_cache", "author"],
-    group_name="export",
-    description="🌐 Prepare collaboration data for interactive network visualization"  
-)
-def coauthor():
-    """Process collaboration data for network visualization with age buckets and timing analysis"""
+    print("Loading collaboration data with researcher profiles...")
+    query = """
+            -- Main SELECT: Return collaboration data with author details and age differences
+                SELECT 
+                    -- Publication timing information
+                    c.pub_year, 
+                    c.pub_date::VARCHAR as pub_date,
+                    
+                    -- Ego author (main author) information
+                    ego_a.aid, 
+                    ego_a.institution, 
+                    ego_a.display_name as name, 
+                    ego_a.author_age, 
+                    ego_a.first_pub_year, 
+                    ego_a.last_pub_year,
+                    
+                    -- Collaboration metrics
+                    c.yearly_collabo,           -- Collaborations in this year
+                    c.all_times_collabo,        -- Total lifetime collaborations
+                    c.acquaintance,             -- Acquaintance level/familiarity
+                    c.shared_institutions,      -- Number of shared institutions
+                    
+                    -- Co-author information
+                    coauth.aid as coauth_aid, 
+                    coauth.display_name as coauth_name, 
+                    coauth.institution as coauth_institution, 
+                    coauth.author_age as coauth_age, 
+                    coauth.first_pub_year as coauth_min_year,
+                    
+                    -- Calculated field: Age difference between ego author and co-author
+                    (coauth.author_age - ego_a.author_age) AS age_diff
+
+                FROM 
+                    -- Base table: collaboration data
+                    df_coauth c
+
+                -- Join to get co-author details (LEFT JOIN keeps all collaborations even if co-author details missing)
+                LEFT JOIN 
+                    df_authors coauth ON c.coauthor_aid = coauth.aid 
+                                    AND c.pub_year = coauth.pub_year
+
+                -- Join to get ego author details (LEFT JOIN keeps all collaborations even if ego author details missing)  
+                LEFT JOIN 
+                    df_authors ego_a ON c.ego_aid = ego_a.aid 
+                                    AND c.pub_year = ego_a.pub_year
+
+                -- FILTER: Only keep collaborations where the ego author actually has papers in df_pap for that year
+                -- This ensures we're only analyzing collaborations for authors who were actually publishing
+                WHERE EXISTS (
+                    SELECT 1 
+                    FROM df_pap p 
+                    WHERE p.ego_aid = c.ego_aid     -- Same ego author
+                    AND p.pub_year = c.pub_year     -- Same publication year
+                )
+
+                -- Sort results chronologically
+                ORDER BY c.pub_year
+    """
     
-    # Load and join data
-    df = load_and_join_collaboration_data()
+    df = duckdb.sql(query).df()
     
     if df is None:
         return MaterializeResult(
             metadata={"status": MetadataValue.text("No collaboration data available")}
         )
     
+
+    ####################################
+    #                                  #
+    #            FILTERS               #
+    #                                  #
+    ####################################
+
     # Apply all transformations using pipe
     df_processed = (df
                 .pipe(filter_valid_author_ages)
@@ -212,7 +258,6 @@ def coauthor():
     
     # Generate summary statistics
     age_bucket_dist = df_processed['age_category'].value_counts().to_dict()
-    collab_type_dist = df_processed['acquaintance'].value_counts().to_dict() if 'acquaintance' in df_processed.columns else {}
     year_range = f"{int(df_processed.pub_year.min())}-{int(df_processed.pub_year.max())}"
     unique_ego_authors = int(df_processed.aid.nunique())
     unique_coauthors = int(df_processed.coauth_aid.nunique())
@@ -231,27 +276,19 @@ def coauthor():
     print(f"Age bucket distribution: {age_bucket_dist}")
     
     return MaterializeResult(
-        metadata={
-            "collaboration_relationships": MetadataValue.int(len(df_processed)),
-            "unique_ego_authors": MetadataValue.int(unique_ego_authors),
-            "unique_coauthors": MetadataValue.int(unique_coauthors),
-            "year_range": MetadataValue.text(year_range),
-            "age_bucket_distribution": MetadataValue.json(age_bucket_dist),
-            "collaboration_types": MetadataValue.json(collab_type_dist),
-            "input_collaborations_file": MetadataValue.path(str(config.data_clean_path / config.coauthor_output_file)),
-            "input_authors_file": MetadataValue.path(str(config.data_raw_path / config.author_output_file)),
-            "output_file": MetadataValue.path(str(output_file)),
-            "dashboard_ready": MetadataValue.bool(True),
-            "visualization_features": MetadataValue.json({
-                "network_analysis": "Interactive collaboration network",
-                "timeline_view": "Career-stage collaboration evolution", 
-                "age_analysis": "Mentorship and peer collaboration patterns",
-                "institutional_effects": "Role of shared affiliations"
-            }),
-            "research_value": MetadataValue.md(
-                "**Final collaboration network dataset** ready for interactive visualization. "
-                "Enables exploration of mentorship patterns, career-stage effects, and "
-                "institutional collaboration networks."
+                metadata={
+                    "unique_ego_authors": MetadataValue.int(unique_ego_authors),
+                    "year_range": MetadataValue.text(year_range),
+                    "input_files": MetadataValue.json({
+                        "collaborations": str(config.data_clean_path / config.coauthor_output_file),
+                        "authors": str(config.data_export_path / config.author_output_file)
+                    }),
+                    "output_file": MetadataValue.path(str(output_file)),
+                    "PRIMARY KEY": MetadataValue.md("Tidy on (ego_aid, coauthor_aid, pub_year): Data is aggregated by the number of yearly collaborations between ego aid and each of its coauthor."),
+                    "dependencies": MetadataValue.md("""
+- **collaboration_network**: Raw coauthor data source  
+- **author**: Augments coauthor data with ego information  
+- **paper**: Visualizes coauthors from filtered papers
+                    """)
+                }
             )
-        }
-    )

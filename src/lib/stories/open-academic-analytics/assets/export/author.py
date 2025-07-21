@@ -32,7 +32,6 @@ def validate_data_quality(df):
     
     return df
 
-
 def load_author_data():
     """Load author data from the input file"""
     print("🚀 Starting researcher dataset preparation...")
