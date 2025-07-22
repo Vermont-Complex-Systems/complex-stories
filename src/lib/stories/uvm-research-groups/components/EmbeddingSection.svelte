@@ -28,7 +28,7 @@
       .range([50, chartHeight - 50]); // MARGIN_TOP to height - MARGIN_BOTTOM
   });
 
-  let chartWidth = 250
+  let chartWidth = 280
   const chartHeight = 1045
 
   let styledCoauthorData = $derived.by(() => {

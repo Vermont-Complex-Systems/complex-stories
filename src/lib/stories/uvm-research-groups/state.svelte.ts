@@ -69,7 +69,7 @@ export async function EmbeddingsData() {
         SELECT DISTINCT doi, *, strftime(pub_date::DATE, '%Y-%m-%d') as pub_date, e.host_dept, e.college
         FROM paper p
         LEFT JOIN exploded_depts e ON p.ego_aid = e.oa_uid
-        WHERE p.umap_1 IS NOT NULL
+        WHERE p.umap_1 IS NOT NULL AND p.umap_1 > -6
         ORDER BY 
             CASE WHEN ego_aid = 'A5040821463' THEN 1 ELSE 0 END,  -- Peter's papers last
             pub_date  -- Then by date within each group

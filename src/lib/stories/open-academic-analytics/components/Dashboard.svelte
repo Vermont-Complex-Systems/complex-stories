@@ -21,7 +21,6 @@
     calculateChartHeight(dataState.coauthorData?.length)
   );
 
-
   // Create shared time scale for both charts
   let sharedTimeScale = $derived.by(() => {
     const paperData = dataState.paperData;
@@ -30,10 +29,10 @@
     if (!paperData && !coauthorData) return d3.scaleTime();
     
     const dateRange = getCombinedDateRange(paperData, coauthorData);
-    return d3.scaleTime()
-      .domain(dateRange)
-      .range([50, chartHeight - 50]);
-  });
+      return d3.scaleTime()
+        .domain(dateRange)
+        .range([50, chartHeight - 50]);
+    });
 
   
   let maxAge = $state(30);
@@ -60,33 +59,28 @@
         />
     </div>
   <div class="chart-panel">
-  <h2>Publications Timeline</h2>
-        <PaperChart 
+    <h2>Publications Timeline</h2>
+      <PaperChart 
           timeScale={sharedTimeScale}
           width={chartWidth}
           height={chartHeight}
         />
-      </div>
-      <div>
-      </div>
     </div>
-    <h3>Aggregated patterns</h3>
-    <div class="toggle-controls">
-          <RangeFilter 
-            bind:value={maxAge}
-            label="Max academic age: {maxAge} "
-          />
     </div>
-    <CollabChart data={filteredAggData} {maxAge}/>
+      <h3>Aggregated patterns</h3>
+        <div class="toggle-controls">
+            <RangeFilter 
+              bind:value={maxAge}
+              label="Max academic age: {maxAge} "
+            />
+        </div>
+      <CollabChart data={filteredAggData} {maxAge}/>
   </div>
 </div>
 
 
 
 <style>
-  .agg-plot-container {
-    margin-top:3rem
-  }
 
   .dashboard {
     max-width: 100%;

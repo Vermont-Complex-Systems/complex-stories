@@ -37,18 +37,7 @@
   
   // Paper-specific tooltip formatter
   function formatPaperTooltip(point) {
-    const citationInfo = point.citation_percentile !== undefined 
-      ? `Citations: ${point.cited_by_count} (${Math.round(point.citation_percentile)}th percentile)`
-      : `Citations: ${point.cited_by_count}`;
-    
-    const impactInfo = point.citation_category 
-      ? `\nImpact: ${point.citation_category.replace('_', ' ')}`
-      : '';
-    
-    // Add the scale value to tooltip
-    const scaleInfo = `\n${scaleField === 'cited_by_count' ? 'Citations' : 'Coauthors'}: ${point.scaleValue}`;
-    
-    return `Title: ${point.title}\nYear: ${point.year}\n${citationInfo}${impactInfo}${scaleInfo}\nCoauthors: ${point.authors}\nType: ${point.work_type}\nDOI: ${point.doi}`;
+    return `${point.ego_aid}\nTitle: ${point.title}\nYear: ${point.year}\nCoauthors: ${point.authors} (${point.nb_coauthors} coauthors)\nType: ${point.work_type}\nDOI: ${point.doi}`;
   }
   
   // Apply styling and highlighting to paper data

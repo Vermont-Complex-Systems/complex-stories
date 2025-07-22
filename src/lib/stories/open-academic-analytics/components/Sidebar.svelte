@@ -1,21 +1,13 @@
 <script>
     import { Accordion, Button } from "bits-ui";
-    import { User, Palette, Users, RotateCcw, UserCheck } from "@lucide/svelte";
-    import { uiState, toggleSidebar, resetDashboardFilters } from '../state.svelte.ts';
+    import { User, Palette, Users, RotateCcw, UserCheck, ChevronRight, ChevronLeft, ChevronDown, ChevronUp } from "@lucide/svelte";
+    import { uiState, toggleSidebar } from '../state.svelte.ts';
     
     import SelectAuthors from './sidebar/SelectAuthors.svelte';
     import AuthorAgeFilter from './sidebar/AuthorAgeFilter.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
     import ColorModeFilter from './sidebar/ColorModeFilter.svelte';
     import PaperNodeSize from './sidebar/NodeSize.paper.svelte';
-
-    import {  dataState, unique } from '../state.svelte.ts';
-
-    // ✅ Access from state directly
-    let paperData = $derived(dataState.paperData);
-    let coauthorData = $derived(dataState.coauthorData);
-    let availableAuthors = $derived(unique.authors);      // ✅ Clean
-    let availableCoauthors = $derived(unique.coauthors);      // ✅ Clean
 </script>
 
 <div class="sidebar-content">
@@ -25,43 +17,36 @@
         {/if}
         <Button.Root onclick={toggleSidebar} variant="ghost" size="sm" class="sidebar-toggle">
             <!-- Desktop: horizontal chevron, Mobile: vertical chevron -->
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron-desktop">
+            <div class="chevron-desktop">
                 {#if uiState.sidebarCollapsed}
-                    <path d="M9 18l6-6-6-6"/>
+                    <ChevronRight size={16} />
                 {:else}
-                    <path d="M15 18l-6-6 6-6"/>
+                    <ChevronLeft size={16} />
                 {/if}
-            </svg>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron-mobile">
+            </div>
+            <div class="chevron-mobile">
                 {#if uiState.sidebarCollapsed}
-                    <path d="M6 9l6 6 6-6"/>
+                    <ChevronDown size={16} />
                 {:else}
-                    <path d="M18 15l-6-6-6 6"/>
+                    <ChevronUp size={16} />
                 {/if}
-            </svg>
+            </div>
         </Button.Root>
     </div>
     
     {#if !uiState.sidebarCollapsed}
         <div class="sidebar-body">
             <Accordion.Root type="multiple" value={["author-select", "filters", "data"]} class="accordion">
-                <AuthorAgeFilter {availableAuthors} />
-                <SelectAuthors {availableAuthors} />
+                <AuthorAgeFilter />
+                <SelectAuthors />
                 <ColorModeFilter />
                 <PaperNodeSize />
-                <DataInfo {paperData} {coauthorData} {availableCoauthors} />
+                <DataInfo />
             </Accordion.Root>
             <div class="interaction-help">
                 <p class="data-info">
                     Training dataset for the bayesian change point analysis available <a href="https://huggingface.co/datasets/Vermont-Complex-Systems/training_data/viewer?views%5B%5D=train">here</a>.
                 </p>
-            </div>
-            <!-- Reset Button -->
-            <div class="reset-section">
-                <Button.Root onclick={resetDashboardFilters} variant="outline" size="sm" class="reset-button">
-                    <RotateCcw size={14} />
-                    Reset Filters
-                </Button.Root>
             </div>
         </div>
     {:else}

@@ -6,6 +6,7 @@ This preserves all your existing business logic while using the official resourc
 """
 import logging
 import pandas as pd
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +64,6 @@ class DatabaseExporterAdapter:
                 PRIMARY KEY(ego_aid, coauthor_aid, pub_year)
             )
         """)
-        
         # Author info table (exact same as original DatabaseExporter)
         self.con.execute("""
             CREATE TABLE IF NOT EXISTS author (
@@ -156,7 +156,21 @@ class DatabaseExporterAdapter:
         ).fetchall()
         
         return paper_cache, coauthor_cache
-    
+
+    def is_likely_up_to_date(self, author_id):
+        """Quick check if author data seems current without needing API calls."""
+        max_db = self.con.execute(
+            "SELECT MAX(pub_year) FROM paper WHERE ego_aid = ?", 
+            (author_id,)
+        ).fetchone()
+        
+        if not max_db or max_db[0] is None:
+            return False
+        
+        # If we have papers from this year or last year, probably up-to-date
+        current_year = datetime.now().year
+        return max_db[0] >= current_year - 1
+
     def is_up_to_date(self, author_id, min_year, max_year):
         """
         Check if the database records for an author are up to date.
@@ -210,7 +224,7 @@ class DatabaseExporterAdapter:
         except Exception as e:
             logger.error(f"Error saving papers to database: {str(e)}")
             self.con.rollback()
-    
+
     def save_coauthors(self, coauthors):
         """
         Save coauthor data to the database.

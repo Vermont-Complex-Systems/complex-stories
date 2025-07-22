@@ -209,6 +209,7 @@
   // Check if we have training data and display data
   let hasTrainingData = $derived(trainingData && trainingData.length > 0);
   let hasData = $derived(displayData && displayData.length > 0);
+
 </script>
 
 <div class="coauthor-chart">

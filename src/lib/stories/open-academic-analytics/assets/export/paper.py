@@ -4,6 +4,7 @@ visualization_prep.py
 Stage 3: Prepare datasets for interactive dashboards and analysis
 """
 import pandas as pd
+import pyarrow as pa
 import dagster as dg
 import numpy as np
 from dagster import MaterializeResult, MetadataValue
@@ -116,6 +117,7 @@ def paper():
     papers_file = config.data_raw_path / config.paper_output_file
     embedding_file = config.data_processed_path / config.embeddings_file
     authors_file = config.data_export_path / config.author_output_file
+    output_file = config.data_export_path / config.paper_output_file
     
     print(f"📖 Loading papers from {papers_file}")
     df_papers = pd.read_parquet(papers_file)
@@ -159,18 +161,11 @@ def paper():
     avg_coauthors = float(df_processed.nb_coauthors.mean())
     unique_authors = int(df_processed.ego_aid.nunique())
     
-    # HRDAG: Save processed data
-    output_file = config.data_export_path / config.paper_output_file
-    print(f"💾 Saving {len(df_processed)} processed papers to {output_file}")
     df_processed.to_parquet(output_file)
     
-    print("✅ Publication dataset preparation completed!")
-    print(f"Final paper count: {len(df_processed)}")
-    print(f"Unique authors: {unique_authors}")
-    print(f"Year range: {year_range}")
-    print(f"Work types: {work_type_dist}")
-    print(f"Average coauthors per paper: {avg_coauthors:.1f}")
-    
+    # get schema from pyarrow
+    pap = pa.Table.from_pandas(df_processed)
+
     return MaterializeResult(
         metadata={
             "papers_processed": MetadataValue.int(len(df_processed)),
@@ -181,10 +176,11 @@ def paper():
             "input_papers_file": MetadataValue.path(str(config.data_raw_path / config.paper_output_file)),
             "input_authors_file": MetadataValue.path(str(config.data_raw_path / config.author_output_file)),
             "output_file": MetadataValue.path(str(output_file)),
-            "dashboard_ready": MetadataValue.bool(True),
-            "research_value": MetadataValue.md(
-                "**Publication timeline dataset** ready for dashboard visualization. "
-                "Shows researcher productivity, collaboration breadth, and career progression."
+            "schema": dg.TableSchema(
+                columns=[
+                    dg.TableColumn(name, str(column_type))
+                    for name, column_type in zip(pap.schema.names, pap.schema.types)
+                ]
             )
         }
     )

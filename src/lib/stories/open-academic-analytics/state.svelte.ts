@@ -16,20 +16,13 @@ export const uiState = $state({
 
 // Dashboard State - Controls filtering, selection, and visualization settings
 export const dashboardState = $state({
-    // Author selection
     selectedAuthor: 'Peter Sheridan Dodds',
     selectedCollege: 'College of Engineering and Mathematical Sciences',
-    
-    // Visualization settings
-    coauthorNodeColor: 'age_diff',        // 'age_diff' | 'acquaintance' | 'institutions' | 'shared_institutions'
-    paperNodeSize: 'cited_by_count',      // 'cited_by_count' | 'nb_coauthors'
-    
-    // Filters
-    ageFilter: null,                      // [minAge, maxAge] or null
-    
-    // Interaction state
-    clickedCoauthor: null,                // string | null - for highlighting specific coauthor
-    highlightedCoauthor: null             // string | null - deprecated, keeping for backward compatibility
+    coauthorNodeColor: 'age_diff',
+    paperNodeSize: 'cited_by_count',
+    ageFilter: null,
+    clickedCoauthor: null,
+    highlightedCoauthor: null
 });
 
 
@@ -37,9 +30,6 @@ export const dashboardState = $state({
 export const dataState = $state({
     isInitializing: true,                 // Loading state for initial app setup
     
-    // app-specific data
-    availableAuthors: [],  // ✅ Add this back
-
     // Author-specific data
     paperData: [],                        // Papers for selected author
     coauthorData: [],                     // Coauthor relationships for selected author
@@ -47,6 +37,7 @@ export const dataState = $state({
     isLoadingAuthor: false,               // Loading state for author-specific data
     
     // Global analytics data
+    availableAuthors: [], 
     trainingAggData: null,                // Aggregated training data across all authors
     isLoadingGlobalData: false,           // Loading state for global data
     
@@ -186,7 +177,7 @@ export async function initializeApp() {
         dataState.error = null;
         
         dataState.trainingAggData = await trainingAggData();
-        dataState.availableAuthors = await loadAvailableAuthors(); // ✅ Add this back
+        dataState.availableAuthors = await loadAvailableAuthors(); 
         
         dataState.isInitializing = false;
     } catch (error) {
@@ -216,9 +207,15 @@ export async function loadSelectedAuthor() {
 
 // ------------------
 // UNIQUE DATA CLASS
+// We cannot export derived statement from object, we need a class.
 // ------------------
 
 class DerivedData {
+    chosen_author = $derived.by(() => {
+        if (!dataState.trainingData) return [];
+        return dataState.trainingData[0]
+    })
+
     authors = $derived(dataState.availableAuthors || []);
 
     colleges = $derived.by(() => {
@@ -229,33 +226,10 @@ class DerivedData {
         )];
     });
 
-
-  institutions = $derived.by(() => {
-    if (!dataState.coauthorData || dataState.coauthorData.length === 0) return [];
-    
-    const field = dataState.coauthorData.some(d => d.institution_normalized) 
-      ? 'institution_normalized' 
-      : 'institution';
-    
-    return [...new Set(dataState.coauthorData
-      .map(d => d[field])
-      .filter(inst => inst != null && inst !== '' && inst !== 'Unknown')
-    )];
-  });
-
   coauthors = $derived.by(() => {
     if (!dataState.coauthorData || dataState.coauthorData.length === 0) return [];
     const coauthors = [...new Set(dataState.coauthorData.map(c => c.coauth_name).filter(Boolean))];
-    return coauthors.sort().slice(0, 50);
-  });
-
-
-  workTypes = $derived.by(() => {
-    if (!dataState.paperData || dataState.paperData.length === 0) return [];
-    return [...new Set(dataState.paperData
-      .map(d => d.work_type)
-      .filter(type => type != null)
-    )];
+    return coauthors.sort();
   });
 }
 
@@ -286,14 +260,6 @@ if (typeof window !== 'undefined') {
 
 export function toggleSidebar() {
     uiState.sidebarCollapsed = !uiState.sidebarCollapsed;
-}
-
-export function resetDashboardFilters() {
-    dashboardState.clickedCoauthor = null;
-    dashboardState.highlightedCoauthor = null;
-    dashboardState.ageFilter = null;
-    dashboardState.coauthorNodeColor = 'age_diff';
-    dashboardState.paperNodeSize = 'cited_by_count';
 }
 
 // Helper action for updating filters

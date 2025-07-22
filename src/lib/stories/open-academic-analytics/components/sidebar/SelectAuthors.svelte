@@ -5,7 +5,6 @@
 
   let availableAuthors = $derived(unique.authors);      // ✅ Clean
 
-  $inspect(availableAuthors)
   // Filter authors by age if filter is active
   let filteredAuthors = $derived.by(() => {
     if (!dashboardState.authorAgeFilter) return availableAuthors;

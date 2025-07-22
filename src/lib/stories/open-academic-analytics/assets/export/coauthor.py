@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import dagster as dg
 from dagster import MaterializeResult, MetadataValue
+import pyarrow as pa
 import duckdb
 
 from config import config
@@ -275,6 +276,9 @@ def coauthor():
     print(f"Year range: {year_range}")
     print(f"Age bucket distribution: {age_bucket_dist}")
     
+    coauth = pa.Table.from_pandas(df_processed)
+
+
     return MaterializeResult(
                 metadata={
                     "unique_ego_authors": MetadataValue.int(unique_ego_authors),
@@ -284,11 +288,16 @@ def coauthor():
                         "authors": str(config.data_export_path / config.author_output_file)
                     }),
                     "output_file": MetadataValue.path(str(output_file)),
-                    "PRIMARY KEY": MetadataValue.md("Tidy on (ego_aid, coauthor_aid, pub_year): Data is aggregated by the number of yearly collaborations between ego aid and each of its coauthor."),
                     "dependencies": MetadataValue.md("""
 - **collaboration_network**: Raw coauthor data source  
 - **author**: Augments coauthor data with ego information  
 - **paper**: Visualizes coauthors from filtered papers
-                    """)
+"""),
+                    "schema": dg.TableSchema(
+                        columns=[
+                            dg.TableColumn(name, str(column_type))
+                            for name, column_type in zip(coauth.schema.names, coauth.schema.types)
+                        ]
+                    )
                 }
             )

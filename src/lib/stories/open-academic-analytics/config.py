@@ -81,6 +81,10 @@ class PipelineConfig(Config):
         return self.force_update
     
     @property
+    def RETRY_FAILED_DOIS(self) -> bool:
+        return self.retry_failed_dois
+    
+    @property
     def ACCEPTED_WORK_TYPES(self) -> List[str]:
         return self.accepted_work_types
     
@@ -100,13 +104,14 @@ class PipelineConfig(Config):
     def UMAP_CONFIG(self) -> Dict[str, float]:
         return self.umap_config
     
-    # Development settings (reading from .env)
-    target_researcher: Optional[str] = "A5038390659"
-    force_update: bool = True
+    # Development settings
+    target_researcher: Optional[str] = None
+    force_update: bool = False
     update_age: bool = False
     enable_debug: bool = True
     progress_report_interval: int = 10
-    
+    retry_failed_dois: bool = False
+
     # API settings
     pyalex_email: str = os.getenv("PYALEX_EMAIL", "jonathanstonge7@gmail.com")
     

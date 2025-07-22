@@ -1,10 +1,5 @@
 <script>
-  let { paperData = [], coauthorData = [], availableCoauthors = [] } = $props();
-  
-  // import { dataState } from '../../state.svelte.ts';
-  
-  // let selected_authors_group_url = $derived(dataState.trainingData[0]['group_url'])
-  // let selected_authors_depts = $derived(Array.from(new Set(dataState.trainingData.map(d => d.host_dept))).join(", "))
+  import { dashboardState, dataState, unique } from '../../state.svelte.ts';
 </script>
 
 <div class="data-info-section">
@@ -16,26 +11,26 @@
   <div class="data-stats">
     <div class="stat-row">
       <span class="stat-label"># Papers:</span>
-      <span class="stat-value">{paperData?.length || 0}</span>
+      <span class="stat-value">{dataState.paperData.length}</span>
     </div>
     <div class="stat-row">
       <span class="stat-label">Total collaborations:</span>
-      <span class="stat-value">{coauthorData?.length || 0}</span>
+      <span class="stat-value">{dataState.coauthorData.length}</span>
     </div>
     <div class="stat-row">
       <span class="stat-label">Unique Coauthors:</span>
-      <span class="stat-value">{availableCoauthors.length}</span>
+      <span class="stat-value">{unique.coauthors.length}</span>
     </div>
-    <!-- <div class="stat-row">
+    <div class="stat-row">
       <span class="stat-label">Departments:</span>
-      <span class="stat-value-text">{selected_authors_depts}</span>
+      <span class="stat-value-text">{unique.chosen_author.host_dept}</span>
     </div>
-    {#if selected_authors_group_url}
+    {#if unique.chosen_author.group_url}
       <div class="stat-row">
         <span class="stat-label">Group URL:</span>
-        <span class="stat-value-href"><a href={selected_authors_group_url}>{selected_authors_group_url}</a></span>
+        <span class="stat-value-href"><a href={unique.chosen_author.group_url}>{unique.chosen_author.group_url}</a></span>
       </div>
-    {/if} -->
+    {/if}
   </div>
 </div>
 

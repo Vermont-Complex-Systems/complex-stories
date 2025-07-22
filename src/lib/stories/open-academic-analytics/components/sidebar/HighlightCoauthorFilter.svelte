@@ -1,26 +1,10 @@
 <script>
   import { Accordion } from "bits-ui";
-  import { dashboardState } from '../../state.svelte.ts';
+  import { dashboardState, dataState, unique } from '../../state.svelte.ts';
 
-  let { coauthorData } = $props();
+  let coauthorData = $derived(dataState.coauthorData);
+  let uniqueCoauthor = $derived(unique.coauthors);
 
-  // Available coauthors for highlighting
-  let uniqueCoauthors = $derived.by(() => {
-    if (!coauthorData || coauthorData.length === 0) return [];
-    
-    const uniqueNames = [...new Set(coauthorData.map(d => d.coauth_name))];
-    console.log('🔍 Unique coauthors:', uniqueNames.slice(0, 5));
-    return uniqueNames.sort();
-  });
-
-  // Debug the state changes
-  $effect(() => {
-    console.log('🔍 Filter state:', {
-      currentHighlighted: dashboardState.clickedCoauthor,
-      availableCoauthors: uniqueCoauthors.length,
-      sampleCoauthors: uniqueCoauthors.slice(0, 3)
-    });
-  });
 </script>
 
 <Accordion.Item value="highlight-coauthor">

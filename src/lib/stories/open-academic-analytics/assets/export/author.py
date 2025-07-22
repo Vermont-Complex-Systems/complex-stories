@@ -1,12 +1,7 @@
-"""
-visualization_prep.py
-
-Stage 3: Prepare datasets for interactive dashboards and analysis
-"""
-import numpy as np
 import pandas as pd
 import dagster as dg
 from dagster import MaterializeResult, MetadataValue
+import pyarrow as pa
 
 from config import config
 from shared.utils.data_transforms import create_age_standardization
@@ -109,31 +104,25 @@ def author():
                     .pipe(print_final_summary)
                    )
     
-    # Extract metrics for metadata
-    valid_age_std = df_processed.age_std.notna().sum()
-    unique_institutions = df_processed.institution.nunique() if 'institution' in df_processed.columns else 0
     
     # HRDAG: Save processed data to export directory
     output_file = config.data_export_path / config.author_output_file
-    print(f"💾 Saving {len(df_processed)} processed author records to {output_file}")
-    output_file.parent.mkdir(parents=True, exist_ok=True)
     df_processed.to_parquet(output_file)
     
+    # get schema from pyarrow
+    auth = pa.Table.from_pandas(df_processed)
+
     return MaterializeResult(
         metadata={
             "researcher_records": MetadataValue.int(len(df_processed)),
             "unique_researchers": MetadataValue.int(int(df_processed.aid.nunique())),
-            "records_with_age_std": MetadataValue.int(int(valid_age_std)),
-            "institutions": MetadataValue.int(int(unique_institutions)),
             "input_file": MetadataValue.path(str(config.data_raw_path / config.author_output_file)),
             "output_file": MetadataValue.path(str(output_file)),
-            "visualization_feature": MetadataValue.md(
-                "**Age standardization** enables smooth timeline animations showing "
-                "career progression and collaboration patterns over time."
-            ),
-            "research_value": MetadataValue.md(
-                "**Researcher profile dataset** for career stage analysis and "
-                "timeline visualization of academic progression."
+            "schema": dg.TableSchema(
+                columns=[
+                    dg.TableColumn(name, str(column_type))
+                    for name, column_type in zip(auth.schema.names, auth.schema.types)
+                ]
             )
         }
     )

@@ -20,9 +20,10 @@ class OpenAlexFetcher:
         """
         self.rate_limit = rate_limit
         self.last_request_time = 0
+        self.api_call_count = 0  # Track total API calls
     
     def _rate_limit(self):
-        """Apply rate limiting to API requests"""
+        """Apply rate limiting to API requests and increment call counter"""
         current_time = time.time()
         time_since_last = current_time - self.last_request_time
         min_interval = 1.0 / self.rate_limit
@@ -32,6 +33,20 @@ class OpenAlexFetcher:
             time.sleep(sleep_time)
         
         self.last_request_time = time.time()
+        self.api_call_count += 1  # Increment counter for each API call
+    
+    def get_api_call_count(self):
+        """
+        Get the total number of API calls made.
+        
+        Returns:
+            int: Total number of API calls
+        """
+        return self.api_call_count
+    
+    def reset_api_call_count(self):
+        """Reset the API call counter to zero."""
+        self.api_call_count = 0
     
     def get_publication_range(self, author_id, known_first_pub_year=None):
         """
@@ -44,13 +59,13 @@ class OpenAlexFetcher:
         Returns:
             tuple: (min_year, max_year)
         """
-        # Apply rate limiting
-        self._rate_limit()
-        
-        # If known_first_pub_year is provided, use it
+        # If known_first_pub_year is provided, use it (no API call needed for min_yr)
         if known_first_pub_year is not None:
             min_yr = known_first_pub_year
         else:
+            # Apply rate limiting and count API call
+            self._rate_limit()
+            
             # Otherwise query OpenAlex for earliest publication
             try:
                 earliest_work = Works().filter(authorships={"author": {"id": author_id}})\
@@ -61,9 +76,9 @@ class OpenAlexFetcher:
                 logger.error(f"Failed to get first publication year for {author_id}: {str(e)}")
                 return None, None
         
-        # Get latest publication year
+        # Get latest publication year (always requires API call)
         try:
-            author_info = self.get_author_info(author_id)
+            author_info = self.get_author_info(author_id)  # This will increment counter
             if not author_info or 'counts_by_year' not in author_info or not author_info['counts_by_year']:
                 logger.error(f"No publication year data for {author_id}")
                 return min_yr, None
