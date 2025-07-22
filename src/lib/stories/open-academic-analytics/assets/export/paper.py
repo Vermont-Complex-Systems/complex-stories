@@ -173,9 +173,17 @@ def paper():
             "year_range": MetadataValue.text(year_range),
             "work_type_distribution": MetadataValue.json(work_type_dist),
             "avg_coauthors_per_paper": MetadataValue.float(avg_coauthors),
-            "input_papers_file": MetadataValue.path(str(config.data_raw_path / config.paper_output_file)),
-            "input_authors_file": MetadataValue.path(str(config.data_raw_path / config.author_output_file)),
+            "input_files": MetadataValue.json({
+                "papers": str(config.data_raw_path / config.paper_output_file),
+                "authors": str(config.data_raw_path / config.author_output_file),
+                "embeddings": str(config.data_processed_path / config.embeddings_file),
+            }),
             "output_file": MetadataValue.path(str(output_file)),
+            "dependencies": MetadataValue.md("""
+- **paper**: raw paper data source 
+- **author**: Augments paper data with ego information  
+- **embeddings**: Augments paper data with umap embeddings coordinates
+"""),
             "schema": dg.TableSchema(
                 columns=[
                     dg.TableColumn(name, str(column_type))

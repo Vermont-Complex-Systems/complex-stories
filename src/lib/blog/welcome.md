@@ -19,13 +19,13 @@ With that in hand, we can ask more specific questions such as how do they manage
 The open academic analytics project is messy; we hand annotate faculty on whether they have research groups or not (which requires philosophical legwork), we call the [openAlex](https://openalex.org/) API to access research metadata (which is noisy and imperfect), we wrangle data to build relevant features, and we build models to answer scientific questions. To manage and visualize our dependency graphs between our tasks, we use dagster. As a data orchestration tool, we build such dependency graphs as `assets` that can be schematized as follows:
 
 <div style="width: 60%; max-width: fit-content; margin-inline: auto;">
-  <img src="/Global_Asset_Lineage.jpg" alt="data pipeline">
+  <img src="/uvm_departments_assets.jpg" alt="data pipeline">
 </div>
 
 To illustrate how dagster works, we focus on the steps of going from raw data to the paper timeline chart, where node size is proportional to the number of citations. Our first asset `uvm_departments` is about checking the availability and downloading an upstream file that lives in our [complex-datasets](https://github.com/Vermont-Complex-Systems/datasets) repository:
 
 <div class="margin-right">
-  <img src="/paper_timeline.jpg" alt="paper pipeline">
+  <img src="/papers.jpg" alt="paper pipeline">
 </div>
 
 ```python
@@ -37,20 +37,19 @@ from config import config
 
 @asset(
     group_name="import",
-    description="🏛️ UVM Departments to Colleges mapping for organizational analysis"
+    description="📋 UVM Professors 2023 dataset from Vermont Complex Systems",
 )
-def uvm_departments():
+def uvm_profs_2023():
     """
-    Fetches department-to-college mapping from Complex Datasets
+    Fetches and processes UVM professors dataset from Vermont Complex Systems.
     """
     logger = get_dagster_logger()
     
     base_url = 'https://vermont-complex-systems.github.io'
-    dataset_url = f"{base_url}/datasets/data/academic-department.csv"
-    output_file = config.data_raw_path / config.departments_file
+    dataset_url = f"{base_url}/datasets/data/academic-research-groups.csv"
+    output_file = config.data_raw_path / config.uvm_profs_2023_file
 
     try:
-        # Check availability
         logger.info(f"Checking availability: {dataset_url}")
         head_response = requests.head(dataset_url, timeout=10)
         
@@ -79,9 +78,14 @@ def uvm_departments():
         # Select year and UVM
         df = df[(df.inst_ipeds_id == 231174) & (df.year == 2023)]
 
-        # Normalize department and college names
-        columns_to_strip = ['department', 'college', 'category']
-        df[columns_to_strip] = df[columns_to_strip].apply(lambda x: x.str.strip())
+        # Reorder columns for pipeline consistency
+        column_order = [
+            'oa_display_name', 'is_prof', 'group_size', 'perceived_as_male', 
+            'host_dept', 'college', 'has_research_group', 'oa_uid', 'group_url', 'first_pub_year',
+            'payroll_name', 'position', 'notes'
+        ]
+
+        df = df[column_order]
         
         # Save to file
         df.to_parquet(output_file, index=False)
@@ -92,17 +96,20 @@ def uvm_departments():
                 "output_file": MetadataValue.path(str(output_file))
             }
         )
+    except Exception as e:
+        logger.error(f"Failed to download/parse CSV: {e}")
+        raise
 ```
 
-First, note that implementing dagster is a matter of adding [decorators](https://dagster.io/blog/unlocking-flexible-pipelines-customizing-asset-decorator) to functions, which makes it easy to integrate into an existing pipeline. We enforce the PDP philosophy of writing input-output tasks ourselves. Our input is `dataset_url` (while checking for availability upstream) and our output is `./data/raw/uvm_departments.csv` (the exact path and filename is stored in our [config.py](https://github.com/Vermont-Complex-Systems/complex-stories/blob/main/src/lib/stories/open-academic-analytics/config.py#L124) file). The function performs basic filtering steps in the middle, which we keep track of using `get_dagster_logger()`, and returns this `MaterializeResult` object, which represents a successful materialization of an asset. On our local server, we can see that the `group_name`, `description`, and other metadata will show nicely as follows:
+First, note that implementing dagster is a matter of adding [decorators](https://dagster.io/blog/unlocking-flexible-pipelines-customizing-asset-decorator) to functions, which makes it easy to integrate into an existing pipeline. We enforce the PDP philosophy of writing input-output tasks ourselves. Our input is `dataset_url` (while checking for availability upstream) and our output is `./data/raw/uvm_profs_2023.csv` (the exact path and filename is stored in our [config.py](https://github.com/Vermont-Complex-Systems/complex-stories/blob/main/src/lib/stories/open-academic-analytics/config.py#L124) file). The function performs basic filtering and checking, which we keep track of using `get_dagster_logger()` (distinguishing between info, warning, and error logs), and returns a `MaterializeResult` object, which represents a successful materialization of an asset. On our local server, we can see that the `group_name`, `description`, and other metadata will show nicely as follows:
 
 <div style="box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);">
-  <img src="/uvm_departments_assets.jpg" alt="paper pipeline">
+  <img src="/paper_timeline.jpg" alt="paper pipeline">
 </div>
 
-This is documentation for collaborators and our future selves! By having a simple input-output structure, we should be able to tell a story just by looking at this high-level summary of our data pipeline. If something happens to `uvm_departments`, we know `uvm_profs_2023` should be impacted.
+This is documentation for collaborators and our future selves! By having a simple input-output structure, we should be able to tell a story just by looking at this high-level summary of our data pipeline. If something happens to `uvm_profs_2023`, we know `academic_publications` and `coauthor_cache` should be rematerialized as result.
 
-We skip the implementation details of `uvm_profs_2023` and `academic_publications`, as they play a similar ingestion role to `uvm_departments`. But we note that `academic_publications` is a thin wrapper over the OpenAlex API, whose role is to get the data without making any transformation to it. We do implement a caching strategy using [duckdb](https://duckdb.org/) to reduce our API calls to OpenAlex, as we want to calculate `academic age` for all selected authors and coauthors. To do so, we need to call for each author the first and last publication years, which is somewhat expensive. See the [code](https://github.com/Vermont-Complex-Systems/complex-stories/blob/main/src/lib/stories/open-academic-analytics/shared/database/database_adapter.py) for more details.
+Without going into the implementation details of `academic_publications`, note that `academic_publications` is a thin wrapper over the OpenAlex API, whose role is to get the data without making any transformation to it. We do implement a caching strategy using [duckdb](https://duckdb.org/) to reduce our API calls to OpenAlex, as we want to calculate `academic age` for all selected authors and coauthors. To do so, we need to call for each author the first and last publication years, which is somewhat expensive. See the [code](https://github.com/Vermont-Complex-Systems/complex-stories/blob/main/src/lib/stories/open-academic-analytics/shared/database/database_adapter.py) for more details.
 
 We look at the final step, where we do the data wrangling:
 
