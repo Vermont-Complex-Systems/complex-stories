@@ -52,7 +52,7 @@
   let innerWidth = $derived(width - margin.left - margin.right);
   let innerHeight = $derived(height - margin.top - margin.bottom);
 
-  let colorFOS = $state('s2FieldsOfStudy')
+  let colorFOS = $state('college')
 
   // Get unique fields of study
   const uniqueFields = $derived([...new Set(embeddingData.map(d => {
@@ -199,8 +199,7 @@
   bind:value={colorFOS}
   options={ [
     { value: 's2FieldsOfStudy', label: 'S2 Fields of Study' },
-    { value: 'fieldsOfStudy', label: 'MAG Fields of Study' },
-    { value: 'department', label: 'Faculty main department' },
+    { value: 'host_dept', label: 'Faculty main department' },
     { value: 'college', label: 'Faculty college' }
   ] }
   label="Color by:"

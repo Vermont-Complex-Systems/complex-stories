@@ -32,7 +32,7 @@
     },
     {
       "type": "html",
-      "value": "<b>Hiring</b>: If we look at shared affiliation with coauthors, we can see a typical pattern for early career researchers. We can see that he started out at <span style='color:#FF6B35; font-weight:bold;'>MIT</span>, before moving on to <span style='color:#4682B4; font-weight:bold;'>Columbia</span>. He briefly collaborated with people at the <span style='color:#B59410; font-weight:bold;'>Santa Fe Institute</span>, perhaps for a post-doctoral fellowship, then did the rest of his career at <span style='color:#2E8B57; font-weight:bold;'>University of Vermont</span>. We can corroborate this information by looking up his CV, which indicates that his PhD was indeed at <span style='color:#FF6B35; font-weight:bold;'>MIT</span>, while he did a postdoc at <span style='color:#4682B4; font-weight:bold;'>Columbia</span>, but not at the <span style='color:#B59410; font-weight:bold;'>Santa Fe Institute</span>. He started at <span style='color:#2E8B57; font-weight:bold;'>UVM</span> as assistant professor earlier than we thought, in 2006.",
+      "value": "<b>Hiring</b>: If we look at shared affiliation with coauthors, we can see a typical pattern for early career researchers. We can see that he started out at <span style='color:#FF6B35; font-weight:bold;'>MIT</span>, before moving on to <span style='color:#4682B4; font-weight:bold;'>Columbia</span>. Then, he moved at <span style='color:#2E8B57; font-weight:bold;'>University of Vermont</span> to spent the rest of his career. We can corroborate this information by looking up his CV, which indicates that his PhD was indeed at <span style='color:#FF6B35; font-weight:bold;'>MIT</span>, while he did a postdoc at <span style='color:#4682B4; font-weight:bold;'>Columbia</span>. He started at <span style='color:#2E8B57; font-weight:bold;'>UVM</span> as assistant professor earlier than we thought, in 2006.",
       "data": {
         "year": "1999-2007",
         "event": "Early Career",
@@ -41,7 +41,7 @@
     },
     {
       "type": "markdown",
-      "value": "**Faculty first years**: The hallmark of having a research group is that you collaborate much more extensively with younger collaborators, as you become a mentor. Across domains, this happens in different ways. In this case, we can also see something different.",
+      "value": "**Faculty first years**: The hallmark of having a research group is that you collaborate much more extensively with younger collaborators, as you become a mentor (or administrator). Across domains, this happens in different ways. In this case, we can also see something different.",
       "data": {
         "year": "2008-2015", 
         "event": "Complete Overview",
