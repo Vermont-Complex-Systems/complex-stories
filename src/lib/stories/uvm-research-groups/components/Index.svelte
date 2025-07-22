@@ -81,7 +81,6 @@
         </div>
       </div>
 
-    <p>We've learned a few things. </p>
     </section>
 
   <EmbeddingSection embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
