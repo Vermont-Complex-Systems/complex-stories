@@ -5,7 +5,7 @@
 
   let { data } = $props();
   
-  let groupBy = $state('college'); // 'college' or 'host_dept'
+  let groupBy = $state('college'); // 'college' or 'department'
   
   let groupedData = $derived(() => {
     if (!data?.length) return new Map();
@@ -20,7 +20,7 @@
     
     const grouped = group(flattenedData, d => d[groupBy]);
     
-    if (groupBy === 'host_dept') {
+    if (groupBy === 'department') {
       // For departments, group by college
       const deptsByCollege = new Map();
       
@@ -63,22 +63,25 @@
 
 <section id="story" class="story">  
   
-  <p>In 2008, Sears adopted an organizational structure that pitted departments against each other. This led to a tribal warfare state of affairs, <a href="https://d3.harvard.edu/platform-rctom/submission/sears-the-collapse-of-a-company-from-within/">accelerating its downfall</a>. Some say that US universities operate somwhat similarly sitll today, with each department reporting its own profit and remaining siloed. While this is slowly changing, I have yet to meet anyone at UVM who understands the broader research ecosystem, particularly around software development.</p> 
+  <p>In 2008, Sears adopted an organizational structure that pitted departments against each other. This led to a tribal warfare state of affairs, <a href="https://d3.harvard.edu/platform-rctom/submission/sears-the-collapse-of-a-company-from-within/">accelerating its downfall</a>. Some say that US universities operate somewhat similarly today, with each department reporting its own profit and remaining siloed. While this is slowly changing, I have yet to meet anyone at UVM who understands the broader research ecosystem, particularly around software development.</p> 
   
-  <p>To better understand UVM's research landscape, we take a deep dive into research groups at UVM. We first take a look at the {data.length} UVM faculty, annotated with whether they have a research group or not:</p>
+  <p>To better understand UVM's research landscape, we take a deep dive into research groups at UVM. We first take a look at the {data.length} UVM faculty (as of 2023, based on <a href="https://www.uvm.edu/d10-files/documents/2024-12/2024-2025-Base-Pay.pdf">payroll</a>):</p>
     
-    <WaffleChart data={ data } cellSize={25}/>
+    <WaffleChart {data} cellSize={25} highlightCategory="no_oa_uid"/>
 
-  <p>We can see that about one third of faculty have research groups, defined here as any claim from faculties to have some kind of research group on the Internet. Now, we can look at how this distribution changes when stratified by:   <span class="grouping-controls">
+  <p>We denote faculties with or without research groups in yellow and green in typical UVM fashion. Highlighted in red, we have faculties without openAlex identifiers, which we use as our main academic database for authors metadata. As can be seen below, these are mostly faculties engage in the arts; theater, music, dance, art history.</p>
+  <p>Last but not least, we chose to represent perceived sex as binary shape. Unfortunately, we didn't record how faculty gender identity, and even if we did we are hesitant to share the data here. The assessment of perceived sex was done while annotating faculties with research groups and not, and was based on perceived information about faculties; mostly their faculty headshot. We felt it was important to represent that category to better understand gendered patterns in science, and in particular at UVM.</p>
+  <p>Now, we can see that about one third of faculty have research groups, defined here as any claim from faculties to have some kind of research group on the Internet. This is a somewhat restrictive definition of research groups, which aligned with the idea of groups in collective action theory. That is, it is a definition of groups that stem from individuals, here principal  (PIs), recognizing themselves as such. Now, we can look at how this proportion changes when stratified by  <span class="grouping-controls">
     <button 
       class:active={groupBy === 'college'}
       onclick={() => groupBy = 'college'}
     >
       Colleges & Schools
     </button>
+    or
     <button 
-      class:active={groupBy === 'host_dept'}
-      onclick={() => groupBy = 'host_dept'}
+      class:active={groupBy === 'department'}
+      onclick={() => groupBy = 'department'}
     >
       Departments
     </button>
@@ -87,7 +90,7 @@
   </p>
 
   <div class="waffle-grid">
-  {#if groupBy === 'host_dept'}
+  {#if groupBy === 'department'}
     <!-- Grouped by college view -->
     {#each groupedData() as [collegeName, departments]}
       <div class="college-section">
@@ -98,12 +101,14 @@
               <WaffleChart 
                 data={deptData} 
                 cellSize={20}
+                highlightCategory="no_oa_uid"
               />
               {:else}
               <WaffleChart 
                 data={deptData} 
                 title={deptName}
                 cellSize={20}
+                highlightCategory="no_oa_uid"
               />
             {/if}
           {/each}
@@ -117,13 +122,16 @@
         data={groupData} 
         title={groupName}
         cellSize={25}
+        highlightCategory="no_oa_uid"
       />
     {/each}
   {/if}
 </div>
 
-
-<p>Looking at colleges, we note that roughly a half of faculties in College of Medicine and CEMS have research groups, while the College of Agriculture and Life Sciences (CALS) and the Rubenstein School of Environment is more about two thirds! In the College of Arts and Sciences (CAS), it is fewer than a third, with {(19/80)*100}% of faculties having groups. In the College of Nursing and Health Sciences, Education and Social Services, and Business, faculties with research groups are in the minority, hinting at different epistemic cultures at UVM.</p>  
+<p>Already those waffle charts are saying something interesting. Looking at colleges, we note that roughly half of faculties in College of Medicine and CEMS have research groups. Eyeballing perceived sex, there are more male PIs with reseach groups ({(25/30 * 100).toFixed(2)}% of PIs are also males) in the College of Medicine than women (versus {(27/40 * 100).toFixed(2)}% of non-PIs are perceived as males. Combining both numbers, one realize that only {(16/69*100).toFixed(2)}% of faculties in the College of Medicine are women).</p>
+<p>CEMS has an even lower proportion with only {3/24*100}% PIs perveid as women. We shold be careful in interpreting those numbers at face value though. Part of our definition of research group is that the faculty is claiming publicly (on the Internet) to have a group. By that definition, <a href="https://drizzo.w3.uvm.edu/">Donna M. Rizzo</a>, for example, has more graduate students than some PIs, but she never explicitly says that this is "her research group". We had to draw the line somewhere. Future modeling work could potentially address those pitfalls, but the <a href="https://arxiv.org/abs/2507.02758">ontology of groups</a> is famously hard to pin down.</p>
+  
+<p>The the College of Agriculture and Life Sciences (CALS) and the Rubenstein School of Environment have higher proportion of faculties with groups and are closer to gender equality! Finally, as one would expect, the College of Arts and Sciences (CAS) has fewer PIs, with about {(19/80)*100}% of faculties having groups. In the College of Nursing and Health Sciences, Education and Social Services, and Business, faculties with research groups are in the minority, hinting at different epistemic cultures at UVM.</p>  
 
 <p>Looking at department level, we can see that most groups in CAS are either in Psychological Science, Biology, or Chemistry. In CALS, it is also heterogenous with CDAE having no research groups, while in other departments the majority of faculties do have groups.</p>
 

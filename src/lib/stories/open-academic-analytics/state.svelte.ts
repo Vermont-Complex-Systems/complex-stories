@@ -8,47 +8,46 @@ import { paperUrl, coauthorUrl, trainingUrl } from './data/loader.js';
 //
 //-------------------
 
-
-// UI State
+// UI State - Controls layout and appearance
 export const uiState = $state({
     sidebarCollapsed: false,
     isDarkMode: false
 });
 
-// Filters, both sidebar and chart specific
+// Dashboard State - Controls filtering, selection, and visualization settings
 export const dashboardState = $state({
     selectedAuthor: 'Peter Sheridan Dodds',
-    colorMode: 'age_diff',
-    highlightedAuthor: null,
-    authorAgeFilter: null, // [minAge, maxAge] or null
-    highlightedCoauthor: null,
-    selectedCollege: 'College of Engineering and Mathematical Sciences'
+    selectedCollege: 'College of Engineering and Mathematical Sciences',
+    coauthorNodeColor: 'age_diff',
+    paperNodeSize: 'cited_by_count',
+    ageFilter: null,
+    clickedCoauthor: null,
+    highlightedCoauthor: null
 });
 
-// Data State: the data we load
+
+// Data State - Holds all loaded data
 export const dataState = $state({
-    // App-level
-    availableAuthors: [],
-    availableColleges: [],
-    isInitializing: true,
+    isInitializing: true,                 // Loading state for initial app setup
     
-    // Author-specific  
-    paperData: [],
-    coauthorData: [],
-    trainingData: null,
-    isLoadingAuthor: false,
+    // Author-specific data
+    paperData: [],                        // Papers for selected author
+    coauthorData: [],                     // Coauthor relationships for selected author
+    trainingData: null,                   // Training data for selected author
+    isLoadingAuthor: false,               // Loading state for author-specific data
     
-    // Global analytics
-    TrainingAggData: null,
-    isLoadingGlobalData: false,
+    // Global analytics data
+    availableAuthors: [], 
+    trainingAggData: null,                // Aggregated training data across all authors
+    isLoadingGlobalData: false,           // Loading state for global data
     
-    error: null
+    // Error handling
+    error: null                           // Error message if something goes wrong
 });
-
 
 // ------------------
 //
-// DUCKDB
+// DUCKDB QUERIES
 //
 //-------------------
 
@@ -64,7 +63,6 @@ async function registerTables() {
     await registerParquetFile(trainingUrl, 'training');
     tablesRegistered = true;
 }
-
 
 export async function trainingData(authorName) {
     await registerTables();
@@ -107,17 +105,6 @@ async function loadAvailableAuthors() {
     `);
     
     return result;
-}
-
-async function loadAvailableColleges() {
-    await registerTables();
-    
-    const result = await query(`
-        SELECT DISTINCT college FROM training 
-        WHERE college IS NOT NULL
-    `);
-    
-    return result.map(d=>d.college);
 }
 
 async function loadAuthorData(authorName) {
@@ -177,31 +164,90 @@ async function loadAuthorData(authorName) {
     return [paperData, coauthorData];
 }
 
+// ------------------
+//
+// STATE ACTIONS
+//
+//-------------------
+
 // 1. App Init (once) - Global data everyone needs
 export async function initializeApp() {
+    try {
         dataState.isInitializing = true;
-        dataState.availableAuthors = await loadAvailableAuthors();
-        dataState.availableColleges = await loadAvailableColleges();
+        dataState.error = null;
+        
         dataState.trainingAggData = await trainingAggData();
+        dataState.availableAuthors = await loadAvailableAuthors(); 
+        
+        dataState.isInitializing = false;
+    } catch (error) {
+        dataState.error = error.message;
         dataState.isInitializing = false;
     }
-    
-    
-// 2. Author Selection - Specific author data
-export async function loadSelectedAuthor() {
-    dataState.isLoadingAuthor = true;
-    const [papers, coauthors] = await loadAuthorData(dashboardState.selectedAuthor);
-    dataState.paperData = papers;
-    dataState.coauthorData = coauthors;
-    dataState.trainingData = await trainingData(dashboardState.selectedAuthor);
-    dataState.isLoadingAuthor = false;
 }
 
-// Auto-collapse sidebar on mobile
+// 2. Author Selection - Specific author data
+export async function loadSelectedAuthor() {
+    try {
+        dataState.isLoadingAuthor = true;
+        dataState.error = null;
+        
+        const [papers, coauthors] = await loadAuthorData(dashboardState.selectedAuthor);
+        dataState.paperData = papers;
+        dataState.coauthorData = coauthors;
+        dataState.trainingData = await trainingData(dashboardState.selectedAuthor);
+        
+        dataState.isLoadingAuthor = false;
+    } catch (error) {
+        dataState.error = error.message;
+        dataState.isLoadingAuthor = false;
+    }
+}
+
+
+// ------------------
+// UNIQUE DATA CLASS
+// We cannot export derived statement from object, we need a class.
+// ------------------
+
+class DerivedData {
+    chosen_author = $derived.by(() => {
+        if (!dataState.trainingData) return [];
+        return dataState.trainingData[0]
+    })
+
+    authors = $derived(dataState.availableAuthors || []);
+
+    colleges = $derived.by(() => {
+        if (!dataState.trainingAggData || dataState.trainingAggData.length === 0) return [];
+        return [...new Set(dataState.trainingAggData
+        .map(d => d.college)
+        .filter(college => college != null)
+        )];
+    });
+
+  coauthors = $derived.by(() => {
+    if (!dataState.coauthorData || dataState.coauthorData.length === 0) return [];
+    const coauthors = [...new Set(dataState.coauthorData.map(c => c.coauth_name).filter(Boolean))];
+    return coauthors.sort();
+  });
+}
+
+// ✅ Export the instance - this should work!
+export const unique = new DerivedData();
+
+
+// ------------------
+//
+// UI ACTIONS
+//
+//-------------------
+
+import { breakpoints } from './utils/layout.js';
 
 if (typeof window !== 'undefined') {
     function handleResize() {
-        if (window.innerWidth <= 768) {
+        if (window.innerWidth <= breakpoints.mobile) {
             uiState.sidebarCollapsed = true;
         } else {
             uiState.sidebarCollapsed = false;
@@ -212,14 +258,20 @@ if (typeof window !== 'undefined') {
     window.addEventListener('resize', handleResize);
 }
 
-// UI Actions
-
 export function toggleSidebar() {
     uiState.sidebarCollapsed = !uiState.sidebarCollapsed;
 }
 
-export function resetDashboardFilters() {
-    dashboardState.highlightedAuthor = null;
-    dashboardState.authorAgeFilter = null;
-    dashboardState.colorMode = 'age_diff';
+// Helper action for updating filters
+export function setAgeFilter(minAge, maxAge) {
+    dashboardState.ageFilter = minAge !== null && maxAge !== null ? [minAge, maxAge] : null;
+}
+
+// Helper action for author selection
+export function selectAuthor(authorName) {
+    if (dashboardState.selectedAuthor !== authorName) {
+        dashboardState.selectedAuthor = authorName;
+        dashboardState.clickedCoauthor = null;
+        dashboardState.highlightedCoauthor = null;
+    }
 }

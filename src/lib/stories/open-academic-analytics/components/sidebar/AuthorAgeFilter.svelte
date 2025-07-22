@@ -1,9 +1,9 @@
 <script>
   import * as d3 from 'd3';
-  import { dashboardState } from '../../state.svelte.ts';
+  import { dashboardState, dataState, unique } from '../../state.svelte.ts';
 
-  let { availableAuthors = [] } = $props();
-
+  let availableAuthors = $derived(unique.authors);      // ✅ Clean
+  
   // Extract age data from available authors and calculate range
   let authorAgeData = $derived.by(() => {
     if (!availableAuthors || availableAuthors.length === 0) return { ages: [], min: 0, max: 100 };

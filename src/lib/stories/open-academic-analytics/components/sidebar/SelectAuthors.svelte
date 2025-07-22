@@ -1,9 +1,9 @@
 <script>
   import { Accordion } from "bits-ui";
-  import { dashboardState } from '../../state.svelte.ts';
+  import { dashboardState, dataState, unique } from '../../state.svelte.ts';
   import { UserCheck } from "@lucide/svelte";
 
-  let { availableAuthors } = $props();
+  let availableAuthors = $derived(unique.authors);      // ✅ Clean
 
   // Filter authors by age if filter is active
   let filteredAuthors = $derived.by(() => {

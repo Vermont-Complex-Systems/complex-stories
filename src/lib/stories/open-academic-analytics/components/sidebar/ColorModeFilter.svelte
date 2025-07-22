@@ -9,7 +9,7 @@
     <span class="section-title">Coauthor Node Color</span>
   </div>
   
-  <select bind:value={dashboardState.colorMode} class="filter-select">
+  <select bind:value={dashboardState.coauthorNodeColor} class="filter-select">
     <option value="age_diff">Age Difference</option>
     <option value="acquaintance">Collaboration History</option>
     <option value="institutions">Institutions</option>
@@ -17,11 +17,11 @@
   </select>
   
   <div class="color-info">
-    {#if dashboardState.colorMode === 'age_diff'}
+    {#if dashboardState.coauthorNodeColor === 'age_diff'}
       <p class="info-text">Colors based on age relative to main author</p>
-    {:else if dashboardState.colorMode === 'institutions'} 
+    {:else if dashboardState.coauthorNodeColor === 'institutions'} 
       <p class="info-text">Colors based on coauthor's institution</p>
-    {:else if dashboardState.colorMode === 'shared_institutions'} 
+    {:else if dashboardState.coauthorNodeColor === 'shared_institutions'} 
       <p class="info-text">Colors based on shared institutions</p>
     {:else}
       <p class="info-text">Colors based on collaboration history</p>

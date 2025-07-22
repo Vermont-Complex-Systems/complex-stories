@@ -1,26 +1,36 @@
 <script>
-  let { paperData = [], coauthorData = [], availableCoauthors = [] } = $props();
+  import { dashboardState, dataState, unique } from '../../state.svelte.ts';
 </script>
 
 <div class="data-info-section">
   <div class="section-header">
     <span class="section-icon">📈</span>
-    <span class="section-title">Dataset Info</span>
+    <span class="section-title">Author Info</span>
   </div>
   
   <div class="data-stats">
     <div class="stat-row">
       <span class="stat-label"># Papers:</span>
-      <span class="stat-value">{paperData?.length || 0}</span>
+      <span class="stat-value">{dataState.paperData.length}</span>
     </div>
     <div class="stat-row">
       <span class="stat-label">Total collaborations:</span>
-      <span class="stat-value">{coauthorData?.length || 0}</span>
+      <span class="stat-value">{dataState.coauthorData.length}</span>
     </div>
     <div class="stat-row">
       <span class="stat-label">Unique Coauthors:</span>
-      <span class="stat-value">{availableCoauthors.length}</span>
+      <span class="stat-value">{unique.coauthors.length}</span>
     </div>
+    <div class="stat-row">
+      <span class="stat-label">Departments:</span>
+      <span class="stat-value-text">{unique.chosen_author.host_dept}</span>
+    </div>
+    {#if unique.chosen_author.group_url}
+      <div class="stat-row">
+        <span class="stat-label">Group URL:</span>
+        <span class="stat-value-href"><a href={unique.chosen_author.group_url}>{unique.chosen_author.group_url}</a></span>
+      </div>
+    {/if}
   </div>
 </div>
 
@@ -76,5 +86,15 @@
   .stat-value {
     color: var(--color-fg);
     font-weight: var(--font-weight-bold);
+  }
+  
+  .stat-value-text {
+    color: var(--color-fg);
+    font-size: 10px;
+  }
+  
+  .stat-value-href {
+    color: var(--color-fg);
+    font-size: 12px;
   }
 </style>

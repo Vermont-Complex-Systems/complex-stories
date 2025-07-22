@@ -127,7 +127,7 @@
   if (shouldShowTooltip) {
     mouseX = event.clientX;
     mouseY = event.clientY;
-    tooltipContent = `title: ${point.title.toUpperCase()}\nfos (MAG): ${point.fieldsOfStudy}\nfos (S2): ${point.s2FieldsOfStudy?.split("; ")[1]}\nFaculty main department: ${point.host_dept} (${point.college})\nabstract: ${point.abstract}\nauthors: ${point.authors}\ndoi: ${point.doi}\npub_year: ${point.pub_year}`;
+    tooltipContent = `title: ${point.title.toUpperCase()}\nfos (MAG): ${point.fieldsOfStudy}\nfos (S2): ${point.s2FieldsOfStudy?.split("; ")[1]}\nFaculty main department: ${point.department} (${point.college})\nabstract: ${point.abstract}\nauthors: ${point.authors}\ndoi: ${point.doi}\npub_year: ${point.pub_year}`;
     showTooltip = true;
   }
 }
@@ -148,85 +148,8 @@
 
   const annotations = [
     {
-      x: 9.2,  
-      y: 8.2, 
-      text: "Mixed bag (Computational)",
-      style: {
-        color: "red",
-        fontSize: "14px",
-        fontWeight: "bold",
-        textAnchor: "middle"
-      }
-    },
-    {
-      x: 10,  
-      y: 5, 
-      text: "Social sciences",
-      style: {
-        color: "red",
-        fontSize: "14px",
-        fontWeight: "bold",
-        textAnchor: "middle"
-      }
-    },
-    {
-      x: 10,  
-      y: -1.2, 
-      text: "Agricultural sciences",
-      style: {
-        color: "red",
-        fontSize: "14px",
-        fontWeight: "bold",
-        textAnchor: "middle"
-      }
-    },
-    {
-      x: 12.2,  
-      y: 1.2, 
-      text: "Ecology",
-      style: {
-        color: "red",
-        fontSize: "14px",
-        fontWeight: "bold",
-        textAnchor: "middle"
-      }
-    },
-    {
-      x: 14.2,  
-      y: 6.2, 
-      text: "Computer science",
-      style: {
-        color: "red",
-        fontSize: "14px",
-        fontWeight: "bold",
-        textAnchor: "middle"
-      }
-    },
-    {
-      x: 14.2,  
-      y: 5.7, 
-      text: "and algorithms",
-      style: {
-        color: "red",
-        fontSize: "14px",
-        fontWeight: "bold",
-        textAnchor: "middle"
-      }
-    },
-    {
-      x: 6.2,  
-      y: 12.7, 
-      text: "Health sciences",
-      style: {
-        color: "red",
-        fontSize: "14px",
-        fontWeight: "bold",
-        textAnchor: "middle"
-      },
-    },
-    {
-      x: 2.2,  
-      y: 4.5, 
+      x: 4.2,  
+      y: 7, 
       text: "Biomedical",
       style: {
         color: "red",
@@ -236,9 +159,9 @@
       },
     },
     {
-      x: 6.7,  
-      y: 3, 
-      text: "Physics",
+      x: 11.2,  
+      y: 11.5, 
+      text: "Health sciences",
       style: {
         color: "red",
         fontSize: "14px",
@@ -246,8 +169,29 @@
         textAnchor: "middle"
       },
     },
+    {
+      x: 15.2,  
+      y: 6.5, 
+      text: "Social sciences",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      },
+    },
+    {
+      x: 11.2,  
+      y: 4.2, 
+      text: "STEM",
+      style: {
+        color: "red",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAnchor: "middle"
+      },
+    }
   ]
-
 
 </script>
 
@@ -256,7 +200,7 @@
   options={ [
     { value: 's2FieldsOfStudy', label: 'S2 Fields of Study' },
     { value: 'fieldsOfStudy', label: 'MAG Fields of Study' },
-    { value: 'host_dept', label: 'Faculty main department' },
+    { value: 'department', label: 'Faculty main department' },
     { value: 'college', label: 'Faculty college' }
   ] }
   label="Color by:"
@@ -303,22 +247,6 @@
         />
       {/each}
       
-      {#each annotations as annotation}
-        <text
-          x={xScale(annotation.x)}
-          y={yScale(annotation.y)}
-          fill={annotation.style?.color || "var(--color-fg)"}
-          font-size={annotation.style?.fontSize || "12px"}
-          font-weight={annotation.style?.fontWeight || "normal"}
-          text-anchor={annotation.style?.textAnchor || "start"}
-          dominant-baseline={annotation.style?.dominantBaseline || "middle"}
-          opacity={annotation.style?.opacity || 1}
-          class="annotation-text"
-        >
-          {annotation.text}
-        </text>
-      {/each}
-      
       <!-- Data points -->
       {#each embeddingData as point, i}
         {@const isPeterDodds = point.ego_aid === 'A5040821463'}
@@ -341,6 +269,22 @@
           onmouseenter={(e) => handleMouseEnter(e, point, i)}
           onmouseleave={handleMouseLeave}
         />
+      {/each}
+
+      {#each annotations as annotation}
+        <text
+          x={xScale(annotation.x)}
+          y={yScale(annotation.y)}
+          fill={annotation.style?.color || "var(--color-fg)"}
+          font-size={annotation.style?.fontSize || "12px"}
+          font-weight={annotation.style?.fontWeight || "normal"}
+          text-anchor={annotation.style?.textAnchor || "start"}
+          dominant-baseline={annotation.style?.dominantBaseline || "middle"}
+          opacity={annotation.style?.opacity || 1}
+          class="annotation-text"
+        >
+          {annotation.text}
+        </text>
       {/each}
     </g>
   </svg>

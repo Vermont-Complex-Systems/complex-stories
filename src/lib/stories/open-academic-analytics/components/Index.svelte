@@ -10,7 +10,7 @@
         dashboardState, 
         dataState,
         initializeApp,
-        loadSelectedAuthor,
+        loadSelectedAuthor
     } from '../state.svelte.ts';
     
     // Initialize on component mount
@@ -22,7 +22,6 @@
         if (dashboardState.selectedAuthor && !dataState.isInitializing) {
             loadSelectedAuthor();
         }
-        
     });
 </script>
 
@@ -40,11 +39,7 @@
                 </div>
             {:else}
                 <aside class="sidebar-container {uiState.sidebarCollapsed ? 'collapsed' : ''}">
-                    <Sidebar 
-                        paperData={dataState.paperData} 
-                        coauthorData={dataState.coauthorData} 
-                        availableAuthors={dataState.availableAuthors}
-                    />
+                    <Sidebar />
                 </aside>
                 
                 <main class="main-content {uiState.sidebarCollapsed ? 'collapsed-sidebar' : ''}">
@@ -56,13 +51,7 @@
                         </div>
                     {/if}
                     
-                    <Dashboard 
-                        paperData={dataState.paperData} 
-                        coauthorData={dataState.coauthorData}
-                        trainingAggData={dataState.trainingAggData}
-                        trainingData={dataState.trainingData}
-                        productivityData={dataState.prodAgg}
-                    />
+                    <Dashboard />
                 </main>
             {/if}
         </div>

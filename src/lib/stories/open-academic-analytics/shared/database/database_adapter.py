@@ -6,6 +6,7 @@ This preserves all your existing business logic while using the official resourc
 """
 import logging
 import pandas as pd
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +64,6 @@ class DatabaseExporterAdapter:
                 PRIMARY KEY(ego_aid, coauthor_aid, pub_year)
             )
         """)
-        
         # Author info table (exact same as original DatabaseExporter)
         self.con.execute("""
             CREATE TABLE IF NOT EXISTS author (
@@ -73,23 +73,48 @@ class DatabaseExporterAdapter:
                 pub_year INT,
                 first_pub_year INT,
                 last_pub_year INT,
-                author_age INT,
                 PRIMARY KEY(aid, pub_year)
             )
         """)
     
-    def load_existing_data(self, output_file):
+    def load_existing_paper_data(self, cache_file):
         """
         Load existing data from parquet file into database if it exists.
         
         Args:
-            output_file (Path): Path to the parquet file containing existing data
+            cache_file (Path): Path to the parquet file containing existing data
         """
-        if output_file.exists():
-            df_pap = pd.read_parquet(output_file)
+        if cache_file.exists():
+            df_pap = pd.read_parquet(cache_file)
             # Insert existing data, ignoring conflicts since table might already have data
             self.con.execute("INSERT INTO paper SELECT * FROM df_pap ON CONFLICT DO NOTHING")
-            logger.info(f"Loaded {len(df_pap)} existing papers from {output_file}")
+            logger.info(f"Loaded {len(df_pap)} existing papers from {cache_file}")
+    
+    def load_existing_author_data(self, cache_file):
+        """
+        Load existing data from parquet file into database if it exists.
+        
+        Args:
+            cache_file (Path): Path to the parquet file containing existing data
+        """
+        if cache_file.exists():
+            df_author = pd.read_parquet(cache_file)
+            # Insert existing data, ignoring conflicts since table might already have data
+            self.con.execute("INSERT INTO author SELECT * FROM df_author ON CONFLICT DO NOTHING")
+            logger.info(f"Loaded {len(df_author)} existing authors from {cache_file}")
+    
+    def load_existing_coauthor_data(self, cache_file):
+        """
+        Load existing data from parquet file into database if it exists.
+        
+        Args:
+            cache_file (Path): Path to the parquet file containing existing data
+        """
+        if cache_file.exists():
+            df_coauthor = pd.read_parquet(cache_file)
+            # Insert existing data, ignoring conflicts since table might already have data
+            self.con.execute("INSERT INTO coauthor2 SELECT * FROM df_coauthor ON CONFLICT DO NOTHING")
+            logger.info(f"Loaded {len(df_coauthor)} existing coauthors from {cache_file}")
     
     def get_author_cache_by_name(self, author_name):
         """
@@ -131,7 +156,21 @@ class DatabaseExporterAdapter:
         ).fetchall()
         
         return paper_cache, coauthor_cache
-    
+
+    def is_likely_up_to_date(self, author_id):
+        """Quick check if author data seems current without needing API calls."""
+        max_db = self.con.execute(
+            "SELECT MAX(pub_year) FROM paper WHERE ego_aid = ?", 
+            (author_id,)
+        ).fetchone()
+        
+        if not max_db or max_db[0] is None:
+            return False
+        
+        # If we have papers from this year or last year, probably up-to-date
+        current_year = datetime.now().year
+        return max_db[0] >= current_year - 1
+
     def is_up_to_date(self, author_id, min_year, max_year):
         """
         Check if the database records for an author are up to date.
@@ -185,7 +224,7 @@ class DatabaseExporterAdapter:
         except Exception as e:
             logger.error(f"Error saving papers to database: {str(e)}")
             self.con.rollback()
-    
+
     def save_coauthors(self, coauthors):
         """
         Save coauthor data to the database.
