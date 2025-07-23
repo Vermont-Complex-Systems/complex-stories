@@ -19,7 +19,15 @@ async function registerTables() {
 export async function loadPaperData() {
     await registerTables();
     const result = await query(`
-        SELECT strftime(publication_date::DATE, '%Y-%m-%d') as pub_date, * FROM paper ORDER BY cited_by_count DESC
+        SELECT 
+        strftime(publication_date::DATE, '%Y-%m-%d') as pub_date, * 
+        FROM paper 
+        WHERE 
+            professor_oa_uid = 'https://openalex.org/A5014570718' 
+            AND publication_year > 1983
+            AND doi IS NOT NULL
+            AND work_type IN ('article', 'preprint', 'book-chapter', 'book', 'report')
+        ORDER BY publication_date DESC
         `);
     return result;
 }
