@@ -3,47 +3,31 @@
 
   import CoauthorChart from './CoauthorChart.svelte';
   import PaperChart from './PaperChart.svelte';
-  import Toggle from './helpers/Toggle.svelte'
-  import RangeFilter from './helpers/RangeFilter.svelte'
-  import CollabChart from './Collaboration.Agg.svelte'
-  import { dashboardState, dataState, uiState, unique } from '../state.svelte.ts';
+  import { data } from './state.svelte.ts';
   import { innerWidth } from 'svelte/reactivity/window';
-  import { calculateChartWidth, calculateChartHeight, spacing } from '../utils/layout.js';
+  import { calculateChartWidth, calculateChartHeight, spacing } from './layout.js';
 
-  import {  getCombinedDateRange } from '../utils/combinedChartUtils.js';
+  import {  getCombinedDateRange } from './combinedChartUtils.js';
   
   // Calculate available width for charts considering sidebar and layout
-  let chartWidth = $derived(
-    calculateChartWidth(innerWidth.current, uiState.sidebarCollapsed)
+  let width = $derived(
+    calculateChartWidth(innerWidth.current, true)
   )
 
-  const chartHeight = $derived(
-    calculateChartHeight(dataState.coauthorData?.length)
+  const height = $derived(
+    calculateChartHeight(data.coauthor?.length)
   );
 
   // Create shared time scale for both charts
-  let sharedTimeScale = $derived.by(() => {
-    const paperData = dataState.paperData;
-    const coauthorData = dataState.coauthorData;
-    
-    if (!paperData && !coauthorData) return d3.scaleTime();
-    
-    const dateRange = getCombinedDateRange(paperData, coauthorData);
-      return d3.scaleTime()
-        .domain(dateRange)
-        .range([50, chartHeight - 50]);
-    });
-
-  
-  let maxAge = $state(30);
-  
-  let filteredAggData = $derived(
-    dataState.trainingAggData?.filter(d => 
-      unique.colleges.slice(0,4).includes(d.college) &&  
-      d.author_age < maxAge
-    ) || []
-  );
-
+  let timeScale = $derived.by(() => {
+        
+        if (!data.paper && !data.coauthor) return d3.scaleTime();
+        
+        const dateRange = getCombinedDateRange(data.paper, data.coauthor, 'pub_date');
+        return d3.scaleTime()
+            .domain(dateRange)
+            .range([50, height - 50]);
+      });
 
 </script>
 
@@ -52,29 +36,13 @@
     <div class="charts-grid">
       <div class="chart-panel">
         <h2>Coauthor Collaborations</h2>
-        <CoauthorChart 
-          timeScale={sharedTimeScale}
-          width={chartWidth}
-          height={chartHeight}
-        />
+        <CoauthorChart  {timeScale} {width} {height}/>
+      </div>
+      <div class="chart-panel">
+        <h2>Publications Timeline</h2>
+          <PaperChart {timeScale} {width} {height} />
+      </div>
     </div>
-  <div class="chart-panel">
-    <h2>Publications Timeline</h2>
-      <PaperChart 
-          timeScale={sharedTimeScale}
-          width={chartWidth}
-          height={chartHeight}
-        />
-    </div>
-    </div>
-      <h3>Aggregated patterns</h3>
-        <div class="toggle-controls">
-            <RangeFilter 
-              bind:value={maxAge}
-              label="Max academic age: {maxAge} "
-            />
-        </div>
-      <CollabChart data={filteredAggData} {maxAge}/>
   </div>
 </div>
 

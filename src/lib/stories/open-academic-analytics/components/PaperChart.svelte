@@ -5,13 +5,13 @@
   import { data } from './state.svelte.ts';
   
   let { width, height, timeScale } = $props();
-  let paperData = $derived(data.paper);
   
+  $inspect(data.paper)
   // Create the radius scale based on the selected field
   let radiusScale = $derived.by(() => {
-    if (!paperData || paperData.length === 0) return null;
+    if (!data.paper || data.paper.length === 0) return null;
     
-    const values = paperData.map(d => +d['cited_by_count'] || 0);
+    const values = data.paper.map(d => +d['cited_by_count'] || 0);
     const [minValue, maxValue] = d3.extent(values);
     
     if (minValue === maxValue) {
@@ -29,13 +29,13 @@
   });
   // Process paper data into positioned points
   let processedPaperData = $derived.by(() => {
-    if (!paperData || paperData.length === 0) return [];
-    return processPaperData(paperData, width, height, timeScale, radiusScale);
+    if (!data.paper || data.paper.length === 0) return [];
+    return processPaperData(data.paper, width, height, timeScale, radiusScale);
   });
   
   // Paper-specific tooltip formatter
   function formatPaperTooltip(point) {
-    return `${point.ego_aid}\nTitle: ${point.title}\nYear: ${point.year}\nCoauthors: ${point.authors} (${point.nb_coauthors} coauthors)\nType: ${point.work_type}\nDOI: ${point.doi}`;
+    return `Title: ${point.title}\nYear: ${point.publication_year}\n# coauthors: ${point.nb_coauthors}\nType: ${point.work_type}\nDOI: ${point.doi}`;
   }
   
   // Apply styling and highlighting to paper data

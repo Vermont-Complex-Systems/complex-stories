@@ -144,7 +144,7 @@ export function parseDate(dateStr) {
 }
 
 // Get combined date range from both datasets
-export function getCombinedDateRange(paperData, coauthorData) {
+export function getCombinedDateRange(paperData, coauthorData, dateCol) {
   const allData = [];
   if (paperData && paperData.length > 0) {
     allData.push(...paperData);
@@ -153,11 +153,7 @@ export function getCombinedDateRange(paperData, coauthorData) {
     allData.push(...coauthorData);
   }
   
-  if (allData.length === 0) {
-    return [new Date('1990-01-01'), new Date('2025-12-31')];
-  }
-  
-  const allDates = allData.map(d => parseDate(d.pub_date));
+  const allDates = allData.map(d => parseDate(d[dateCol]));
   const [minDate, maxDate] = d3.extent(allDates);
   
   const paddedMinDate = new Date(minDate.getFullYear() - 1, 0, 1);

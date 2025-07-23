@@ -10,7 +10,7 @@ STATIC_DATA_PATH = Path("../../../../../static/data")
     deps=["uvm_publications"],
     key=["exports", "paper_parquet"]
 )
-def export_paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
+def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """Export publications data as parquet for static frontend"""
     
     # Ensure the static data directory exists
@@ -33,6 +33,9 @@ def export_paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                     p.language,
                     p.doi,
                     
+                    -- Add coauthor count
+                    auth_counts.nb_coauthors,
+            
                     -- Author-specific info
                     a.author_position,
                     a.is_corresponding,
@@ -70,9 +73,19 @@ def export_paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                     p.created_date
                 FROM oa.main.publications p
                 JOIN oa.main.authorships a ON p.id = a.work_id
+                JOIN (
+                    -- Count all authors per paper
+                    SELECT 
+                        work_id,
+                        COUNT(*) - 1 as nb_coauthors  -- Subtract 1 to exclude the UVM professor themselves
+                    FROM oa.main.authorships
+                    GROUP BY work_id
+                ) auth_counts ON p.id = auth_counts.work_id
                 WHERE a.author_oa_id IN (
                     SELECT 'https://openalex.org/' || oa_uid FROM oa.main.uvm_profs_2023
                 )
+                    AND p.doi IS NOT NULL
+                    AND p.type IN ('article', 'preprint', 'book-chapter', 'book', 'report')
                 ORDER BY p.cited_by_count DESC, p.id, a.author_display_name
             ) TO '{STATIC_DATA_PATH}/paper.parquet' (FORMAT PARQUET)
         """)
