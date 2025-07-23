@@ -1,5 +1,7 @@
 <script>
   import { base } from '$app/paths';
+  import PersonIcon from './PersonIcon.svelte';
+
   import Scrolly from '$lib/components/helpers/Scrolly.svelte';
   import MorphingChart from './MorphingChart.svelte';
   import WaffleChart from './Waffle.svelte';
@@ -22,7 +24,7 @@
   let width = $state(950);
   let height = 1800;
   let scrollyIndex = $state();
-  
+
 </script>
 
 <Nav bind:isDark />
@@ -51,7 +53,15 @@
   
   <section id="story" class="story">  
 
-    <h2>Zooming in</h2>
+    <div style="display: flex; align-items: left; justify-content: left; gap: 20px;">
+        <h2 style="margin: 0;">Zooming in</h2>
+        
+          <PersonIcon 
+                person={dataState.trainingAggData.filter(d=>d.payroll_name === 'Dodds, Peter')[0]} 
+                size={45} 
+            />
+    </div>
+        
     <p>To better understand faculty career trajectories, we build a simple timeline plot showing how scientific productivity coevolves with social collaborations. As a faculty member advances in his career—call him Peter—it is expected that his patterns of collaborations will change. We are interested in a few relevant features to determine from the data when Peter started his research group.</p>
       
     <div class="scrolly-container">
