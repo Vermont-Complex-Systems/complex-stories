@@ -1,12 +1,12 @@
 <script>
   import * as d3 from 'd3';
   import DodgeChart from '$lib/components/helpers/DodgeChart.svelte';
-  import { processPaperData } from './paperUtils.js';
+  import { processPaperData } from './utils/paperUtils.js';
   import { data } from './state.svelte.ts';
   
   let { width, height, timeScale } = $props();
   
-  $inspect(data.paper)
+  
   // Create the radius scale based on the selected field
   let radiusScale = $derived.by(() => {
     if (!data.paper || data.paper.length === 0) return null;

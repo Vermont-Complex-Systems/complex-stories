@@ -73,7 +73,6 @@ def fetch_author_publication_range(oa_client: OpenAlexResource, author_id: str) 
         dg.get_dagster_logger().error(f"Failed to fetch publication range for {author_id}: {str(e)}")
         return None, None, 0
     
-
 @dg.asset(
     kinds={"openalex"},
     key=["target", "main", "coauthor_cache"],
@@ -102,7 +101,7 @@ def build_coauthor_cache(
             SELECT COUNT(*) FROM oa.main.coauthor_cache
         """).fetchone()[0]
         
-        coauthors_to_process = get_external_coauthors_to_process(conn, limit=1568)
+        coauthors_to_process = get_external_coauthors_to_process(conn, limit=1000)
     
     dg.get_dagster_logger().info(
         f"External coauthors: {total_external} total, {already_cached} already cached, "
@@ -128,7 +127,7 @@ def build_coauthor_cache(
             dg.get_dagster_logger().info(f"Processing {author_name}...")
             
             # Fetch complete publication data for this author
-            first_year, last_year, total_pubs = fetch_author_publication_range(oa_client, author_id)
+            first_year, last_year, total_pubs = fetch_author_publication_range(oa_client, author_id, conn)
             
             fetch_successful = first_year is not None
             

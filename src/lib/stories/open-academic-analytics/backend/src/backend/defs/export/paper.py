@@ -23,7 +23,7 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
             COPY (
                 SELECT 
                     a.author_oa_id as professor_oa_uid,
-                    a.author_display_name as professor_name,
+                    a.author_display_name as name,
                     p.id as work_id,
                     p.title,
                     p.publication_year,
@@ -86,6 +86,7 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                 )
                     AND p.doi IS NOT NULL
                     AND p.type IN ('article', 'preprint', 'book-chapter', 'book', 'report')
+                    AND auth_counts.nb_coauthors < 25
                 ORDER BY p.cited_by_count DESC, p.id, a.author_display_name
             ) TO '{STATIC_DATA_PATH}/paper.parquet' (FORMAT PARQUET)
         """)

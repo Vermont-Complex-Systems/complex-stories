@@ -4,7 +4,7 @@
   // import ChangePointChart from './ChangePointChart.svelte';
   // import Legend from './Legend.svelte';
   import { data } from './state.svelte.ts';
-  import { processCoauthorData } from './coauthorUtils.js';
+  import { processCoauthorData } from './utils/coauthorUtils.js';
   
   // ✅ Import centralized color scales
   import { 
@@ -12,7 +12,7 @@
     acquaintanceColorScale, 
     createInstitutionColorScale,
     createSharedInstitutionColorScale 
-  } from './colorScales.js';
+  } from './utils/colorScales.js';
 
   let { width, height, timeScale } = $props();
   

@@ -27,7 +27,7 @@ def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                     SELECT DISTINCT 
                         work_id,
                         professor_oa_uid,
-                        professor_name,
+                        name,
                         publication_year,
                         publication_date,
                         nb_coauthors
@@ -42,7 +42,7 @@ def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                         pd.publication_date,
                         pd.nb_coauthors,
                         pd.professor_oa_uid as uvm_professor_id,
-                        pd.professor_name as uvm_professor_name,
+                        pd.name,
                         auth.author_oa_id as coauthor_id,
                         auth.author_display_name as coauthor_name,
                         auth.institutions as coauth_institutions_json
@@ -100,7 +100,7 @@ def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                 yearly_collaborations AS (
                     SELECT 
                         uvm_professor_id,
-                        uvm_professor_name,
+                        name,
                         coauthor_id,
                         coauthor_name,
                         publication_year,
@@ -109,7 +109,7 @@ def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                         MAX(nb_coauthors) as nb_coauthors  -- Add this here
                     FROM collaboration_pairs
                     GROUP BY 
-                        uvm_professor_id, uvm_professor_name,
+                        uvm_professor_id, name,
                         coauthor_id, coauthor_name,
                         publication_year
                 )
@@ -125,7 +125,7 @@ def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                     
                     -- UVM professor info
                     yc.uvm_professor_id as aid,
-                    yc.uvm_professor_name as name,
+                    yc.name,
                     COALESCE(prof.host_dept, 'Unknown') as institution,
                     
                     -- Age calculations for UVM professor
@@ -204,7 +204,7 @@ def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                 LEFT JOIN coauthor_primary_institution cpi 
                     ON yc.coauthor_id = cpi.coauthor_id
                 ORDER BY 
-                    yc.uvm_professor_name, 
+                    yc.name, 
                     yc.coauthor_name,
                     yc.publication_year
             ) TO '{STATIC_DATA_PATH}/coauthor.parquet' (FORMAT PARQUET)

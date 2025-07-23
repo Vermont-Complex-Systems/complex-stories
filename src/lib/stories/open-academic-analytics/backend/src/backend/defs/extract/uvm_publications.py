@@ -108,7 +108,6 @@ def create_publications_tables(conn) -> None:
         )
     """)
 
-
 def get_professors_to_update(conn, limit: int = 2) -> List[Tuple[str, str]]:
     """Get list of professors who need updating, prioritizing those never synced"""
     result = conn.execute("""
@@ -126,7 +125,6 @@ def get_professors_to_update(conn, limit: int = 2) -> List[Tuple[str, str]]:
     
     return [(row[0], row[1]) for row in result]
 
-
 def get_latest_publication_date(conn, oa_uid: str) -> Optional[str]:
     """Get the latest publication date for a professor from authorships"""
     result = conn.execute("""
@@ -134,6 +132,17 @@ def get_latest_publication_date(conn, oa_uid: str) -> Optional[str]:
         FROM oa.main.publications p
         JOIN oa.main.authorships a ON p.id = a.work_id
         WHERE a.author_oa_id = ?
+    """, [oa_uid]).fetchone()
+    
+    return result[0] if result and result[0] else None
+
+
+def get_corrected_first_pub_year(conn, oa_uid: str) -> Optional[int]:
+    """Get the corrected first publication year for a UVM professor"""
+    result = conn.execute("""
+        SELECT first_pub_year 
+        FROM oa.main.uvm_profs_2023 
+        WHERE 'https://openalex.org/' || oa_uid = ?
     """, [oa_uid]).fetchone()
     
     return result[0] if result and result[0] else None
@@ -320,16 +329,42 @@ def uvm_publications(
                 """, [oa_uid]).fetchone()[0]
                 
                 latest_date = get_latest_publication_date(conn, oa_uid)
+                corrected_first_year = get_corrected_first_pub_year(conn, oa_uid)
                 
-                dg.get_dagster_logger().info(f"{display_name}: currently has {current_count} authorships, latest: {latest_date}")
+                dg.get_dagster_logger().info(
+                    f"{display_name}: currently has {current_count} authorships, "
+                    f"latest: {latest_date}, corrected first year: {corrected_first_year}"
+                )
+            
+            # Build the filter for OpenAlex API
+            filter_parts = [f"author.id:{oa_uid}"]
+            
+            # Determine the earliest date to fetch
+            earliest_date = None
+            if corrected_first_year:
+                earliest_date = f"{corrected_first_year}-01-01"
+                dg.get_dagster_logger().info(f"Using corrected first year {corrected_first_year} as earliest date")
+            
+            if latest_date and earliest_date:
+                # Use the later of the two dates
+                if latest_date >= earliest_date:
+                    filter_parts.append(f"from_publication_date:{latest_date}")
+                    dg.get_dagster_logger().info(f"Fetching publications since latest date: {latest_date}")
+                else:
+                    filter_parts.append(f"from_publication_date:{earliest_date}")
+                    dg.get_dagster_logger().info(f"Fetching publications since corrected first year: {earliest_date}")
+            elif latest_date:
+                filter_parts.append(f"from_publication_date:{latest_date}")
+                dg.get_dagster_logger().info(f"Fetching publications since latest date: {latest_date}")
+            elif earliest_date:
+                filter_parts.append(f"from_publication_date:{earliest_date}")
+                dg.get_dagster_logger().info(f"Fetching publications since corrected first year: {earliest_date}")
+            else:
+                dg.get_dagster_logger().info(f"Fetching all publications for {display_name} (first sync, no corrections)")
             
             # Fetch works from OpenAlex
-            if latest_date:
-                dg.get_dagster_logger().info(f"Fetching publications for {display_name} since {latest_date}")
-                works = oa_client.get_all_works(filter=f"author.id:{oa_uid},from_publication_date:{latest_date}")
-            else:
-                dg.get_dagster_logger().info(f"Fetching all publications for {display_name} (first sync)")
-                works = oa_client.get_all_works(filter=f"author.id:{oa_uid}")
+            filter_string = ",".join(filter_parts)
+            works = oa_client.get_all_works(filter=filter_string)
             
             dg.get_dagster_logger().info(f"Found {len(works)} works for {display_name}")
             
