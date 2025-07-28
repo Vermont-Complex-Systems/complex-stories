@@ -65,7 +65,6 @@ The easiest way to deploy your Dagster project is to use Dagster+.
 Check out the [Dagster+ documentation](https://docs.dagster.io/dagster-plus/) to learn more.
 </details>
 
-
 ### Front-end: A very svelte dashboard (experimental)
 
 Why svelte to build a data apps over something like [Observable framework](https://observablehq.com/framework/), which is designed for such job? Framework is a powerful static-site generators for data that comes with "battery included". By that, I mean that out of the box libraries like duckdb, Leaflet, Lodash, are all working. But, I think there are two main reasons to favor svelte over Framework in our work.
@@ -108,8 +107,7 @@ Here, `DataInfo.svelte` is a simple component that summarize statistics for a se
 With our `state.svelte.ts`, we do the following:
 
 ```js
-// components/state.svelte.ts
-
+// custom duckdb client 
 import { registerParquetFile, query } from '$lib/utils/duckdb.js';
 import { paperUrl, coauthorUrl } from '../data/loader.js';
 
@@ -348,13 +346,36 @@ In our sidebar, this can be called without any prop (similar to the rest of the 
 </div>
 ```
 
-Global states can be tricky, and preivously I've learned to avoid them in my `Python` code. But in this case I like it because I don't care about all the intermediary steps when passing down props in this data app. I know those global variables are always available, and declared in my `state.svelte.ts`. 
+Global states can be tricky, and preivously I've learned to avoid them in my `Python` code. But in this case I like it because I don't care about all the intermediary steps when passing down props in this data app. I know those global variables are always available, and declared in my `state.svelte.ts`. For instance, in my `DataInfo.svelte`, I simply do
 
+```js
+<script>
+  import { data } from '../state.svelte.ts';
+</script>
+
+<div class="data-info-section">
+  <div class="section-header">
+    <span class="section-icon">📈</span>
+    <span class="section-title">Author Info</span>
+  </div>
+  
+  <div class="data-stats">
+    <div class="stat-row">
+      <span class="stat-label"># Papers:</span>
+      <span class="stat-value">{data.paper?.length}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Total collaborations:</span>
+      <span class="stat-value">{data.coauthor?.length}</span>
+    </div>
+  </div>
+</div>
+```
+
+Once again, no needs to pass props around and it works as expected. It was very easy to add that subcomponent, without fearing to break anything.
+
+It is still work in progress, but so far it has proved a nice pattern I didn't see anywhere else. There might be performance issues, but so far the app can handle a fairly large datasets  without too much hassle (the `coauthor.parquet` table has 157,847 rows, which is not nothing in the fron-end world).
 
 #### Tradeoffs of using svelte for building data apps
 
-The tradeoff is that we need to setup some of what Frameworks was doing for us, e.g.
- 
-- `Data transformation powered by duckdb`: As with our back-end, we use duckdb to wrangle data on the fly. Using duckdb both for back-end and fron-end as tremendous advantage, helping with maintainability.
-
-
+The tradeoff is that we need to setup some of what Frameworks was doing for us, e.g. duckdb. 
