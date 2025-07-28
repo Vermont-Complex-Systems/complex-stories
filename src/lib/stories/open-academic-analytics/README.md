@@ -106,7 +106,7 @@ Here, `DataInfo.svelte` is a simple component that summarize statistics for a se
 
 With our `state.svelte.ts`, we do the following:
 
-```svelte
+```js
 // custom duckdb client 
 import { registerParquetFile, query } from '$lib/utils/duckdb.js';
 import { paperUrl, coauthorUrl } from '../data/loader.js';
@@ -242,42 +242,42 @@ Alright, so there are really four main parts to our `state.svelte.ts` (with one 
 
 Coming back to our example, lets look at how to our `state.svelte.ts` simplify our sidebar components:
 
-```js
+```svelte
 <script>
-import { Accordion } from "bits-ui";
-import { UserCheck } from "@lucide/svelte";
-import { dashboardState, unique } from '../state.svelte.ts';
+  import { Accordion } from "bits-ui";
+  import { UserCheck } from "@lucide/svelte";
+  import { dashboardState, unique } from '../state.svelte.ts';
 
-// Filter authors by age if filter is active. 
-let filteredAuthors = $derived.by(() => {
-  if (!dashboardState.authorAgeFilter) return unique.authors;
-    
-  const [minAge, maxAge] = dashboardState.authorAgeFilter;
-  return unique.authors.filter(author => {
-    const age = author.current_age || 0;
-    return age >= minAge && age <= maxAge;
+  // Filter authors by age if filter is active. 
+  let filteredAuthors = $derived.by(() => {
+    if (!dashboardState.authorAgeFilter) return unique.authors;
+      
+    const [minAge, maxAge] = dashboardState.authorAgeFilter;
+    return unique.authors.filter(author => {
+      const age = author.current_age || 0;
+      return age >= minAge && age <= maxAge;
+    });
   });
-});
 
-// Extract author names from filtered authors
-let authorNames = $derived.by(() => {
-  if (!filteredAuthors || filteredAuthors.length === 0) return [];
-  return filteredAuthors.map(author => author.name);
-});
+  // Extract author names from filtered authors
+  let authorNames = $derived.by(() => {
+    if (!filteredAuthors || filteredAuthors.length === 0) return [];
+    return filteredAuthors.map(author => author.name);
+  });
 
 
-let filterStatus = $derived.by(() => {
-  if (!dashboardState.authorAgeFilter) return '';
-  const total = unique.authors.length;
-  const filtered = filteredAuthors.length;
-  return `(${filtered} of ${total} authors)`;
-});
+  let filterStatus = $derived.by(() => {
+    if (!dashboardState.authorAgeFilter) return '';
+    const total = unique.authors.length;
+    const filtered = filteredAuthors.length;
+    return `(${filtered} of ${total} authors)`;
+  });
 
-function handleSelectionChange(event) {
-  const selected = Array.from(event.target.selectedOptions).map(option => option.value);
-  // Only allow one selection - take the last one selected
-  dashboardState.selectedAuthor = selected.length > 0 ? selected[selected.length - 1] : '';
-}
+  function handleSelectionChange(event) {
+    const selected = Array.from(event.target.selectedOptions).map(option => option.value);
+    // Only allow one selection - take the last one selected
+    dashboardState.selectedAuthor = selected.length > 0 ? selected[selected.length - 1] : '';
+  }
 </script>
 
 <!-- BITS-UI Accordion API: 
@@ -326,11 +326,11 @@ In our sidebar, this can be called without any prop (similar to the rest of the 
 
 ```svelte
 <script>
-    import SelectAuthors from './sidebar/SelectAuthors.svelte';
-    import AuthorAgeFilter from './sidebar/AuthorAgeFilter.svelte';
-    import DataInfo from './sidebar/DataInfo.svelte';
-    import CoauthorNodeColor from './sidebar/NodeColor.coauthor.svelte';
-    import PaperNodeSize from './sidebar/NodeSize.paper.svelte';
+  import SelectAuthors from './sidebar/SelectAuthors.svelte';
+  import AuthorAgeFilter from './sidebar/AuthorAgeFilter.svelte';
+  import DataInfo from './sidebar/DataInfo.svelte';
+  import CoauthorNodeColor from './sidebar/NodeColor.coauthor.svelte';
+  import PaperNodeSize from './sidebar/NodeSize.paper.svelte';
 </script>
 
 // more code ...
