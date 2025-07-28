@@ -240,7 +240,7 @@ Alright, so there are really four main parts to our `state.svelte.ts` (with one 
 1. `Write loadSelectedAuthors()`: this is the duckdb calls that react to user input.
 1. `DerivedData class`: In those univeral reactivity files, we cannot export derived variables. To do so, it needs to be wrapped in a class. We use here for reactive variable that are derivable from our state variables, such as keeping track of unique elements in our dataset.  
 
-Coming back to our example, lets look at how to our `state.svelte.ts` simplify our sidebar components:
+Coming back to our example, lets look at how to our `state.svelte.ts` simplify our sidebar components. Here's the `sidebar/SelectAuthors.svelte` component:
 
 ```svelte
 <script>
