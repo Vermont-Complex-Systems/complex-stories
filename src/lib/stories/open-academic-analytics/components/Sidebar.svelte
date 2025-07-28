@@ -36,7 +36,7 @@
     
     {#if !uiState.sidebarCollapsed}
         <div class="sidebar-body">
-            <Accordion.Root type="multiple" value={["author-select", "filters", "data"]} class="accordion">
+            <Accordion.Root type="multiple" value={["author-select"]} class="accordion">
                 <AuthorAgeFilter />
                 <SelectAuthors />
                 <CoauthorNodeColor />

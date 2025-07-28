@@ -21,7 +21,6 @@ export const dashboardState = $state({
 export const data = $state({
     isInitializing: true,
     error: null,
-    paperData: []
 });
 
 let tablesRegistered = false;
