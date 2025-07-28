@@ -4,7 +4,7 @@
   import { UserCheck } from "@lucide/svelte";
 
   let availableAuthors = $derived(unique.authors);   
-  $inspect(availableAuthors);
+  
   // Filter authors by age if filter is active
   let filteredAuthors = $derived.by(() => {
     if (!dashboardState.authorAgeFilter) return availableAuthors;

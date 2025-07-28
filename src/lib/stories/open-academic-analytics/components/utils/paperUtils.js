@@ -54,6 +54,7 @@ export function createPaperPoint(d, targetY, radiusScale) {
     publication_date: d.publication_date,
     cited_by_count: citedBy,
     nb_coauthors: nbCoauthors,
+    coauthor_names: d.coauthor_names,
     work_type: d.work_type,
     doi: d.doi,
     authors: d.authors,

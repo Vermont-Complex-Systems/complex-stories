@@ -6,7 +6,7 @@
     import SelectAuthors from './sidebar/SelectAuthors.svelte';
     import AuthorAgeFilter from './sidebar/AuthorAgeFilter.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
-    import ColorModeFilter from './sidebar/ColorModeFilter.svelte';
+    import CoauthorNodeColor from './sidebar/NodeColor.coauthor.svelte';
     import PaperNodeSize from './sidebar/NodeSize.paper.svelte';
 </script>
 
@@ -39,7 +39,7 @@
             <Accordion.Root type="multiple" value={["author-select", "filters", "data"]} class="accordion">
                 <AuthorAgeFilter />
                 <SelectAuthors />
-                <ColorModeFilter />
+                <CoauthorNodeColor />
                 <PaperNodeSize />
                 <DataInfo />
             </Accordion.Root>

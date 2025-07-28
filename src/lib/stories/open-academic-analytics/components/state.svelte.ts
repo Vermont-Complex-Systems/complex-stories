@@ -40,7 +40,7 @@ export async function loadPaperData(authorName) {
         SELECT 
         strftime(publication_date::DATE, '%Y-%m-%d') as pub_date, * 
         FROM paper 
-        WHERE name = '${authorName}'
+        WHERE name = '${authorName}' AND nb_coauthors < 25
         ORDER BY pub_date DESC
         `);
     return result;
@@ -52,7 +52,7 @@ export async function loadCoauthorData(authorName) {
         strftime(publication_date::DATE, '%Y-%m-%d') as pub_date, 
         * 
         FROM coauthor 
-        WHERE name = '${authorName}'
+        WHERE name = '${authorName}' AND nb_coauthors < 25
         ORDER BY pub_date DESC
         `);
     return result;

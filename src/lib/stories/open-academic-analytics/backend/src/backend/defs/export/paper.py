@@ -71,6 +71,14 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                     
                     p.updated_date,
                     p.created_date
+                     
+                    -- Get coauthors for this paper (excluding the current UVM professor)
+                    (SELECT STRING_AGG(auth_other.author_display_name, '; ' ORDER BY auth_other.author_position)
+                    FROM oa.main.authorships auth_other 
+                    WHERE auth_other.work_id = p.id 
+                    AND auth_other.author_oa_id != a.author_oa_id
+                    ) as coauthor_names,
+
                 FROM oa.main.publications p
                 JOIN oa.main.authorships a ON p.id = a.work_id
                 JOIN (
@@ -86,7 +94,6 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                 )
                     AND p.doi IS NOT NULL
                     AND p.type IN ('article', 'preprint', 'book-chapter', 'book', 'report')
-                    AND auth_counts.nb_coauthors < 25
                 ORDER BY p.cited_by_count DESC, p.id, a.author_display_name
             ) TO '{STATIC_DATA_PATH}/paper.parquet' (FORMAT PARQUET)
         """)

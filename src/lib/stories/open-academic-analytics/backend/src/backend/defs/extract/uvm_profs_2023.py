@@ -23,7 +23,11 @@ def import_filtered_url_to_duckdb(url: str, duckdb: DuckDBResource, table_name: 
         row_count = row_count[0]
 
 
-@dg.asset(kinds={"duckdb"}, key=["target", "main", "uvm_profs_2023"])
+@dg.asset(
+        description="📋 Load UVM Professors 2023 dataset from Complex Stories' dataset repository",
+        kinds={"duckdb"}, 
+        key=["target", "main", "uvm_profs_2023"]
+    )
 def uvm_profs_2023(duckdb: DuckDBResource) -> None:
     import_filtered_url_to_duckdb(
         url="https://vermont-complex-systems.github.io/datasets/data/academic-research-groups.parquet",

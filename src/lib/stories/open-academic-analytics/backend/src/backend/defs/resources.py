@@ -10,18 +10,6 @@ from typing import Optional
 
 database_resource = DuckDBResource(database="/tmp/oa.duckdb")
 
-from dagster_duckdb import DuckDBResource
-import dagster as dg
-import requests
-from requests import Response
-import time
-from threading import Lock
-from collections import deque
-from typing import Optional, List, Dict
-
-
-database_resource = DuckDBResource(database="/tmp/oa.duckdb")
-
 class OpenAlexResource(dg.ConfigurableResource):
     email: str
     api_key: Optional[str] = None
@@ -105,57 +93,6 @@ class OpenAlexResource(dg.ConfigurableResource):
     def get_works(self, **params) -> dict:
         """Helper method to get works with common parameters"""
         return self.request("works", params).json()
-    
-    def get_all_works(self, **params) -> List[Dict]:
-        """Get ALL works with automatic pagination"""
-        all_works = []
-        cursor = None
-        page = 1
-        
-        dg.get_dagster_logger().info("Starting to fetch all works with pagination...")
-        
-        while True:
-            current_params = params.copy()
-            current_params["per_page"] = 200
-            
-            if cursor:
-                current_params["cursor"] = cursor
-            else:
-                current_params["page"] = page
-            
-            response_data = self.request("works", current_params).json()
-            works = response_data.get('results', [])
-            
-            if not works:
-                dg.get_dagster_logger().info(f"No more works found. Total fetched: {len(all_works)}")
-                break
-                
-            all_works.extend(works)
-            
-            # Check for next page
-            meta = response_data.get('meta', {})
-            next_cursor = meta.get('next_cursor')
-            
-            if next_cursor:
-                cursor = next_cursor
-                dg.get_dagster_logger().info(f"Fetched {len(all_works)} works so far, using cursor for next page...")
-            else:
-                # Check if we've got everything using count
-                total_count = meta.get('count', 0)
-                if total_count > 0 and len(all_works) >= total_count:
-                    dg.get_dagster_logger().info(f"Fetched all {len(all_works)} works (total count: {total_count})")
-                    break
-                    
-                # Try page-based pagination as fallback
-                page += 1
-                if page > 100:  # Safety limit to prevent infinite loops
-                    dg.get_dagster_logger().warning(f"Reached page limit of 100, stopping at {len(all_works)} works")
-                    break
-                    
-                dg.get_dagster_logger().info(f"Fetched {len(all_works)} works so far, moving to page {page}...")
-        
-        dg.get_dagster_logger().info(f"Total works fetched: {len(all_works)}")
-        return all_works
     
     def get_authors(self, **params) -> dict:
         """Helper method to get authors with common parameters"""

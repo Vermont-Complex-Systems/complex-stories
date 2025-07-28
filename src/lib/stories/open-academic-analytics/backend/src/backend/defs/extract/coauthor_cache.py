@@ -9,9 +9,9 @@ def create_coauthor_cache_table(conn) -> None:
         CREATE TABLE IF NOT EXISTS oa.main.coauthor_cache (
             author_oa_id VARCHAR PRIMARY KEY,
             author_display_name VARCHAR,
+            institution VARCHAR,
             first_publication_year INTEGER,
             last_publication_year INTEGER,
-            total_publications INTEGER,
             last_fetched_date TIMESTAMP,
             fetch_successful BOOLEAN DEFAULT FALSE
         )
@@ -52,27 +52,25 @@ def fetch_author_publication_range(oa_client: OpenAlexResource, author_id: str) 
         }).json()
         
         results = response.get('group_by', [])
-        meta = response.get('meta', {})
-        total_count = meta.get('count', 0)
         
         if not results:
-            return None, None, total_count
+            return None, None
         
         # Extract all years and find min/max
         years = [item['key'] for item in results if item['key'] is not None]
         
         if not years:
-            return None, None, total_count
+            return None, None
             
         first_year = min(years)
         last_year = max(years)
         
-        return first_year, last_year, total_count
+        return first_year, last_year
         
     except Exception as e:
         dg.get_dagster_logger().error(f"Failed to fetch publication range for {author_id}: {str(e)}")
         return None, None, 0
-    
+   
 @dg.asset(
     kinds={"openalex"},
     key=["target", "main", "coauthor_cache"],
@@ -127,7 +125,7 @@ def build_coauthor_cache(
             dg.get_dagster_logger().info(f"Processing {author_name}...")
             
             # Fetch complete publication data for this author
-            first_year, last_year, total_pubs = fetch_author_publication_range(oa_client, author_id, conn)
+            first_year, last_year = fetch_author_publication_range(oa_client, author_id)
             
             fetch_successful = first_year is not None
             
@@ -136,16 +134,16 @@ def build_coauthor_cache(
                 conn.execute("""
                     INSERT INTO oa.main.coauthor_cache 
                     (author_oa_id, author_display_name, first_publication_year, 
-                     last_publication_year, total_publications, last_fetched_date, fetch_successful)
-                    VALUES (?, ?, ?, ?, ?, NOW(), ?)
+                     last_publication_year, last_fetched_date, fetch_successful)
+                    VALUES (?, ?, ?, ?, NOW(), ?)
                 """, [
-                    author_id, author_name, first_year, last_year, total_pubs, fetch_successful
+                    author_id, author_name, first_year, last_year, fetch_successful
                 ])
             
             if fetch_successful:
                 successful_fetches += 1
                 dg.get_dagster_logger().info(
-                    f"✅ {author_name}: {first_year}-{last_year} ({total_pubs} publications)"
+                    f"✅ {author_name}: {first_year}-{last_year}"
                 )
             else:
                 failed_fetches += 1

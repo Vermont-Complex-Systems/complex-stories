@@ -9,7 +9,7 @@ export const ageColorScale = d3.scaleOrdinal()
 // Acquaintance/collaboration count color scale
 export const acquaintanceColorScale = d3.scaleThreshold()
   .domain([2, 5]) // 1, 2-4, 5+
-  .range(['#35B779FF', '#31688EFF', '#440154FF']); // Few -> Some -> Many
+  .range(['#35B779FF', '#5694c0ff', '#7a0796ff']); // Few -> Some -> Many
 
 // Institution-based color scale (dynamic, so we export a factory function)
 export function createInstitutionColorScale(institutions) {

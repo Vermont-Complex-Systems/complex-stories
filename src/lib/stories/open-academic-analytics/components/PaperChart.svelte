@@ -2,16 +2,22 @@
   import * as d3 from 'd3';
   import DodgeChart from '$lib/components/helpers/DodgeChart.svelte';
   import { processPaperData } from './utils/paperUtils.js';
-  import { data } from './state.svelte.ts';
+  import { data, dashboardState } from './state.svelte.ts';
   
   let { width, height, timeScale } = $props();
   
-  
+  // let margin = {
+  //   top: spacing.chartMarginTop,
+  //   bottom: spacing.chartMarginBottom,
+  //   left: spacing.chartMarginLeft,
+  //   right: spacing.chartMarginRight
+  // }
+
   // Create the radius scale based on the selected field
   let radiusScale = $derived.by(() => {
     if (!data.paper || data.paper.length === 0) return null;
     
-    const values = data.paper.map(d => +d['cited_by_count'] || 0);
+    const values = data.paper.map(d => +d[dashboardState.paperNodeSize] || 0);
     const [minValue, maxValue] = d3.extent(values);
     
     if (minValue === maxValue) {
@@ -25,7 +31,7 @@
       .clamp(true);
     
     // Return a function that takes a data object and extracts the field
-    return (d) => scale(+d['cited_by_count'] || 0);
+    return (d) => scale(+d['nb_coauthors'] || 0);
   });
   // Process paper data into positioned points
   let processedPaperData = $derived.by(() => {
@@ -35,7 +41,7 @@
   
   // Paper-specific tooltip formatter
   function formatPaperTooltip(point) {
-    return `Title: ${point.title}\nYear: ${point.publication_year}\n# coauthors: ${point.nb_coauthors}\nType: ${point.work_type}\nDOI: ${point.doi}`;
+    return `Title: ${point.title}\nYear: ${point.publication_year}\ncoauthors: ${point.coauthor_names} (${point.nb_coauthors})\nType: ${point.work_type}\nDOI: ${point.doi}`;
   }
   
   // Apply styling and highlighting to paper data
@@ -62,7 +68,7 @@
     {width}
     {height}
     {timeScale}
-    gridStyle="margins"
+    gridStyle="full"
     formatTooltip={formatPaperTooltip}
   />
 </div>

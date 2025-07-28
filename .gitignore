@@ -40,3 +40,5 @@ src/lib/stories/open-academic-analytics/open_academic_analytics.egg-info/
 ~/
 src/lib/stories/open-academic-analytics/backend/.tmp_dagster_*
 src/lib/stories/open-academic-analyticsOld/
+src/lib/stories/open-academic-analytics/backend/nohup.out
+.vscode/settings.json

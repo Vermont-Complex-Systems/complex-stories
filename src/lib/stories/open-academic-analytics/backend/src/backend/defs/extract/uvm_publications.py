@@ -108,7 +108,7 @@ def create_publications_tables(conn) -> None:
         )
     """)
 
-def get_professors_to_update(conn, limit: int = 2) -> List[Tuple[str, str]]:
+def get_professors_to_update(conn) -> List[Tuple[str, str]]:
     """Get list of professors who need updating, prioritizing those never synced"""
     result = conn.execute("""
         SELECT s.oa_uid, p.oa_display_name
@@ -120,8 +120,7 @@ def get_professors_to_update(conn, limit: int = 2) -> List[Tuple[str, str]]:
         ORDER BY 
             CASE WHEN s.last_synced_date IS NULL THEN 0 ELSE 1 END,
             s.last_synced_date ASC
-        LIMIT ?
-    """, [limit]).fetchall()
+    """).fetchall()
     
     return [(row[0], row[1]) for row in result]
 
@@ -136,7 +135,6 @@ def get_latest_publication_date(conn, oa_uid: str) -> Optional[str]:
     
     return result[0] if result and result[0] else None
 
-
 def get_corrected_first_pub_year(conn, oa_uid: str) -> Optional[int]:
     """Get the corrected first publication year for a UVM professor"""
     result = conn.execute("""
@@ -146,7 +144,6 @@ def get_corrected_first_pub_year(conn, oa_uid: str) -> Optional[int]:
     """, [oa_uid]).fetchone()
     
     return result[0] if result and result[0] else None
-
 
 def extract_publication_data(work: Dict) -> Tuple:
     """Extract publication data (without author-specific info)"""
@@ -236,11 +233,16 @@ def extract_publication_data(work: Dict) -> Tuple:
     )
     # Total: 9 + 6 + 5 + 6 + 4 + 2 = 32 fields
 
-def process_and_insert_work(work: Dict, conn) -> int:
+def process_and_insert_work(work: Dict, conn, corrected_first_year: Optional[int] = None) -> int:
     """Process a work and insert publication + all authorships"""
     work_id = work.get('id')
     if not work_id:
         return 0
+    
+    # Filter out papers before corrected first year
+    if corrected_first_year and work.get('publication_year'):
+        if work.get('publication_year') < corrected_first_year:
+            return 0  # Skip this paper entirely
     
     # Insert the publication (32 parameters to match the 32 fields)
     publication_data = extract_publication_data(work)
@@ -277,9 +279,8 @@ def process_and_insert_work(work: Dict, conn) -> int:
     
     return authorships_inserted
 
-
 def update_professor_sync_status(conn, oa_uid: str) -> None:
-    """Update the sync status for a professor"""
+    """Update the sync status for a professor."""
     conn.execute("""
         UPDATE oa.main.professor_sync_status 
         SET 
@@ -292,8 +293,46 @@ def update_professor_sync_status(conn, oa_uid: str) -> None:
         WHERE oa_uid = ?
     """, [oa_uid, oa_uid])
 
+def determine_fetch_start_date(oa_uid: str, display_name: str, conn) -> Optional[str]:
+    """
+    Determine the earliest date to start fetching publications for a professor.
+    
+    Strategy:
+    1. If we have a corrected first publication year, that's our absolute earliest bound
+    2. If we already have publications, we can start from the latest one we have
+    3. Choose the later of these two dates to avoid unnecessary re-fetching
+    4. Return None if we should fetch all publications (first time sync, no corrections)
+    """
+    latest_existing = get_latest_publication_date(conn, oa_uid)
+    corrected_first_year = get_corrected_first_pub_year(conn, oa_uid)
+    
+    # Convert corrected year to date string if it exists
+    corrected_earliest = f"{corrected_first_year}-01-01" if corrected_first_year else None
+    
+    # Decision logic
+    if latest_existing and corrected_earliest:
+        # We have both - use whichever is later to avoid gaps
+        start_date = max(latest_existing, corrected_earliest)
+        reason = f"latest existing ({latest_existing}) vs corrected earliest ({corrected_earliest})"
+    elif latest_existing:
+        # Only have existing data - continue from there
+        start_date = latest_existing
+        reason = f"continuing from latest existing publication"
+    elif corrected_earliest:
+        # Only have correction data - start from corrected year
+        start_date = corrected_earliest
+        reason = f"starting from corrected first year ({corrected_first_year})"
+    else:
+        # No existing data or corrections - fetch everything
+        start_date = None
+        reason = "fetching all publications (first sync, no corrections)"
+    
+    dg.get_dagster_logger().info(f"{display_name}: {reason} → start_date: {start_date}")
+    
+    return start_date
 
 @dg.asset(
+    description="📚 Fetch all academic papers for 2023 UVM faculties from OpenAlex database.",
     kinds={"openalex"}, 
     key=["target", "main", "uvm_publications"],
     deps=["uvm_profs_2023", "professor_sync_status"],  
@@ -305,8 +344,8 @@ def uvm_publications(
     """Fetch publication data for UVM professors with proper normalization"""
     
     with duckdb.get_connection() as conn:
-        create_publications_tables(conn)
-        professors_to_update = get_professors_to_update(conn)
+        create_publications_tables(conn) # OA schema in duckdb
+        professors_to_update = get_professors_to_update(conn) # did we query that prof in the last 30days?
     
     dg.get_dagster_logger().info(f"Processing {len(professors_to_update)} professors")
     
@@ -338,31 +377,11 @@ def uvm_publications(
             
             # Build the filter for OpenAlex API
             filter_parts = [f"author.id:{oa_uid}"]
-            
-            # Determine the earliest date to fetch
-            earliest_date = None
-            if corrected_first_year:
-                earliest_date = f"{corrected_first_year}-01-01"
-                dg.get_dagster_logger().info(f"Using corrected first year {corrected_first_year} as earliest date")
-            
-            if latest_date and earliest_date:
-                # Use the later of the two dates
-                if latest_date >= earliest_date:
-                    filter_parts.append(f"from_publication_date:{latest_date}")
-                    dg.get_dagster_logger().info(f"Fetching publications since latest date: {latest_date}")
-                else:
-                    filter_parts.append(f"from_publication_date:{earliest_date}")
-                    dg.get_dagster_logger().info(f"Fetching publications since corrected first year: {earliest_date}")
-            elif latest_date:
-                filter_parts.append(f"from_publication_date:{latest_date}")
-                dg.get_dagster_logger().info(f"Fetching publications since latest date: {latest_date}")
-            elif earliest_date:
-                filter_parts.append(f"from_publication_date:{earliest_date}")
-                dg.get_dagster_logger().info(f"Fetching publications since corrected first year: {earliest_date}")
-            else:
-                dg.get_dagster_logger().info(f"Fetching all publications for {display_name} (first sync, no corrections)")
-            
-            # Fetch works from OpenAlex
+
+            start_date = determine_fetch_start_date(oa_uid, display_name, conn)
+            if start_date:
+                filter_parts.append(f"from_publication_date:{start_date}")
+
             filter_string = ",".join(filter_parts)
             works = oa_client.get_all_works(filter=filter_string)
             
@@ -372,7 +391,7 @@ def uvm_publications(
                 # Process each work
                 with duckdb.get_connection() as conn:
                     for work in works:
-                        authorships_added = process_and_insert_work(work, conn)
+                        authorships_added = process_and_insert_work(work, conn, corrected_first_year)
                         total_authorships_added += authorships_added
                     
                     update_professor_sync_status(conn, oa_uid)
