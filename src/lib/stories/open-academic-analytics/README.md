@@ -80,7 +80,7 @@ Why svelte to build a data apps over something like [Observable framework](https
 
 In [Framework](https://observablehq.com/framework/), I would often end up declaring my reactive variables somewhere in my code without thinking twice about it. Most often, those reactive variables are derived from queries to a Duckdb client to do on-the-fly data wranling. As I added more features to the data app, I would end up having many reactive variables, with a few queries to duckdb here and there, complicating the dependencies. 
 
-As with Svelte, creating components for the different parts of our apps helped tamed the complexity of the app. But I would still end up having many reactive variables passed to all my components, and subcomponents, sometime loosing track of what goes where. 
+As with Svelte, creating components for the different parts of our apps helped tame the complexity of the app. But I would still end up having many reactive variables passed to all my components, and subcomponents, sometime loosing track of what goes where. 
 
 In Svelte 5, instead of passing props all the way down, we can centralize our logic within a single file, say `state.svelte.ts`. For concreteness, consider the following simplified utility tree from our story:
 
@@ -102,7 +102,7 @@ In Svelte 5, instead of passing props all the way down, we can centralize our lo
   └── state.svelte.ts // centralized states to manage dashboard
 ```
 
-Here, `DataInfo.svelte` is a simple component that summarize statistics for a selected authors, derived from the `selectedAuthors` reactive variables in `SelectAuthors.svelte`. As we change authors, the twin charts (`PaperChart.svelte` and `CoauthorChart.svelte`) are updating too, both called from our main `Dashboard.svelte` component. Additionally, `SelectAuthors.svelte` depends on the global `AuthorAgeFilter.svelte`, which decide what authors are displayed in the first place based on the academic age distribution. Arguably, it is in the nature of dashboard to create such intricate dependencies. `NodeColor.coauthor.svelte` is one example of a nested component that specify the color of nodes in the coauthor chart. There are many more.
+Here, `DataInfo.svelte` is a simple component that summarize statistics for a selected author, derived from the `selectedAuthors` reactive variables in `SelectAuthors.svelte`. As users change the selected author, the twin charts (`PaperChart.svelte` and `CoauthorChart.svelte`) are updating too, both called from our main `Dashboard.svelte` component. Additionally, `SelectAuthors.svelte` depends on the global `AuthorAgeFilter.svelte`, which decide what authors are displayed in the first place based on the academic age distribution. Arguably, it is in the nature of dashboard to create such intricate dependencies. `NodeColor.coauthor.svelte` is one example of a nested component that specify the color of nodes in the coauthor chart. There are many more.
 
 With our `state.svelte.ts`, we do the following:
 
@@ -238,7 +238,7 @@ Alright, so there are really four main parts to our `state.svelte.ts` (with one 
 1. `Setting up Duckb client`
 1. `Write initializeApp()`: this is the function that make available what is necessary for the rest of the app to run (we think of it as our function that doesn't take any argument, it'll be run once 😅)
 1. `Write loadSelectedAuthors()`: this is the duckdb calls that react to user input.
-1. `DerivedData class`: In those univeral reactivity files, we cannot export derived variables. To do so, it needs to be wrapped in a class. We use here for reactive variables that are derivable from our state variables, such as keeping track of unique elements in our dataset.  
+1. `DerivedData class`: In those univeral reactivity files, we cannot export derived variables. To do so, it needs to be wrapped in a class. We use here for reactive variable that are derivable from our state variables, such as keeping track of unique elements in our dataset.  
 
 Coming back to our example, lets look at how to our `state.svelte.ts` simplify our sidebar components:
 
