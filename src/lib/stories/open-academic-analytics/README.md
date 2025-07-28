@@ -286,6 +286,7 @@ Coming back to our example, lets look at how to our `state.svelte.ts` simplify o
  care of WAI-ARIA compliance, keyboard navigation by default, and more ... -->
 <Accordion.Item value="author-select">
   <Accordion.Header>
+    <!-- Trigger here allows the header to be collapsible. -->
     <Accordion.Trigger class="accordion-trigger">
       <UserCheck size={16} />
       Select Author {filterStatus}
@@ -300,7 +301,7 @@ Coming back to our example, lets look at how to our `state.svelte.ts` simplify o
         onchange={handleSelectionChange}
         value={dashboardState.selectedAuthor} 
       >
-      <!--  authorNames is filtered based on global age filter here-->
+      <!--  authorNames is filtered based on global age filter here -->
         {#each authorNames as authorName}
           <option value={authorName} selected={dashboardState.selectedAuthor === authorName}>
             {authorName}
@@ -348,7 +349,7 @@ In our sidebar, this can be called without any prop (similar to the rest of the 
 
 Global states can be tricky, and preivously I've learned to avoid them in my `Python` code. But in this case I like it because I don't care about all the intermediary steps when passing down props in this data app. I know those global variables are always available, and declared in my `state.svelte.ts`. For instance, in my `DataInfo.svelte`, I simply do
 
-```js
+```svelte
 <script>
   import { data } from '../state.svelte.ts';
 </script>
