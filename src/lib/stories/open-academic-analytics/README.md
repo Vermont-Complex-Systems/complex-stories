@@ -106,7 +106,7 @@ Here, `DataInfo.svelte` is a simple component that summarize statistics for a se
 
 With our `state.svelte.ts`, we do the following:
 
-```js
+```svelte
 // custom duckdb client 
 import { registerParquetFile, query } from '$lib/utils/duckdb.js';
 import { paperUrl, coauthorUrl } from '../data/loader.js';
@@ -324,7 +324,7 @@ function handleSelectionChange(event) {
 
 In our sidebar, this can be called without any prop (similar to the rest of the sidebar subcomponents), making our code, arguably, quite readable and easily extensible:
 
-```js
+```svelte
 <script>
     import SelectAuthors from './sidebar/SelectAuthors.svelte';
     import AuthorAgeFilter from './sidebar/AuthorAgeFilter.svelte';
