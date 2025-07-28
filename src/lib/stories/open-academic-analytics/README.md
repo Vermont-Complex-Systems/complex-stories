@@ -233,7 +233,7 @@ class DerivedData {
 export const unique = new DerivedData();
 ```
 
-Alright, so there are really four parts to our `state.svelte.ts`
+Alright, so there are really four main parts to our `state.svelte.ts` (with one more optional)
 1. `Declaring objects`: e.g. `dashboardState` and `data` (you could also have `uiState` to keep track of the interface, we use it to know when the sidebar is toggled or not). In svelte, those objects will be usable as any other object. You don't need funky getter and setter as it was previously the case in svelte 4.
 1. `Setting up Duckb client`
 1. `Write initializeApp()`: this is the function that make available what is necessary for the rest of the app to run (we think of it as our function that doesn't take any argument, it'll be run once 😅)
