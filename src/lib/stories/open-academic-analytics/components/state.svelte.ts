@@ -5,7 +5,8 @@ import { paperUrl, coauthorUrl } from '../data/loader.js';
 // UI State - Controls layout and appearance
 export const uiState = $state({
     sidebarCollapsed: false,
-    isDarkMode: false
+    isDarkMode: false,
+    debug: true
 });
 
 export const dashboardState = $state({
@@ -39,7 +40,7 @@ export async function loadPaperData(authorName) {
         SELECT 
         strftime(publication_date::DATE, '%Y-%m-%d') as pub_date, * 
         FROM paper 
-        WHERE name = '${authorName}' AND nb_coauthors < 25
+        WHERE name = '${authorName}'
         ORDER BY pub_date DESC
         `);
 
@@ -52,7 +53,7 @@ export async function loadCoauthorData(authorName) {
         strftime(publication_date::DATE, '%Y-%m-%d') as pub_date, 
         * 
         FROM coauthor 
-        WHERE name = '${authorName}' AND nb_coauthors < 25
+        WHERE name = '${authorName}'
         ORDER BY pub_date DESC
         `);
     return result;
@@ -112,8 +113,8 @@ export async function loadSelectedAuthor() {
 
 class DerivedData {
     chosen_author = $derived.by(() => {
-        if (!data.trainingData) return [];
-        return data.trainingData[0]
+        if (!data.coauthor) return [];
+        return data.coauthor.filter(d=>d.name == dashboardState.selectedAuthor)[0]
     })
 
     authors = $derived(data.availableAuthors || []);
@@ -127,8 +128,8 @@ class DerivedData {
     });
 
   coauthors = $derived.by(() => {
-    if (!data.coauthorData || data.coauthorData.length === 0) return [];
-    const coauthors = [...new Set(data.coauthorData.map(c => c.coauth_name).filter(Boolean))];
+    if (!data.coauthor || data.coauthor.length === 0) return [];
+    const coauthors = [...new Set(data.coauthor.map(c => c.coauth_name).filter(Boolean))];
     return coauthors.sort();
   });
 }

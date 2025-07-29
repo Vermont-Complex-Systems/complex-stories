@@ -25,6 +25,11 @@ def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                     
                     -- Include other joined data you need
                     prof.first_pub_year as prof_first_pub_year_raw,
+                    prof.host_dept, 
+                    prof.college, 
+                    prof.group_url, 
+                    prof.has_research_group, 
+                    prof.perceived_as_male, 
                     ci_uvm.primary_institution,
                     ci_external.primary_institution as coauth_institution
                     
@@ -45,9 +50,15 @@ def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                 -- UVM profs information
                 uvm_professor_id as aid, 
                 uvm_professor_name as name, 
+                college, 
+                group_url, 
+                has_research_group,
+                perceived_as_male, 
                 publication_year, 
                 nb_coauthors, 
                 coauthor_id,
+                coauthor_name as coauth_name,
+                host_dept,
                 
                 -- Clean age calculations using pre-computed values
                 ego_first_pub_year,
@@ -112,9 +123,9 @@ def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
         """)
 
         return dg.MaterializeResult(
-        metadata={
-            "export_path": str(STATIC_DATA_PATH / "coauthor.parquet"),
-        }
+            metadata={
+                "export_path": str(STATIC_DATA_PATH / "coauthor.parquet"),
+            }
     )
 
 

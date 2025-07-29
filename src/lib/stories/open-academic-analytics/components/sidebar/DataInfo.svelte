@@ -1,5 +1,6 @@
 <script>
   import { dashboardState, data, unique } from '../state.svelte.ts';
+  $inspect(unique.chosen_author)
 </script>
 
 <div class="data-info-section">

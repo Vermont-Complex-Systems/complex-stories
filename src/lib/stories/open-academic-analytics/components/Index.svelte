@@ -1,5 +1,6 @@
 <script>
     import * as d3 from 'd3';
+    import DataTable from '$lib/components/helpers/NiceTable.svelte';
     import Spinner from '$lib/components/helpers/Spinner.svelte'
     import {  dashboardState, uiState, data, initializeApp, loadSelectedAuthor } from './state.svelte.js';
     import Dashboard from './Dashboard.svelte';
@@ -44,11 +45,20 @@
                     {/if}
                     
                     <Dashboard />
-                </main>
-            {/if}
-        </div>
-    </div>
-</div>
+                    
+                    
+                    {#if uiState.debug == true}
+                        <h1>Paper table</h1>
+                        <DataTable data={data.paper?.slice(0,5)}/>
+                        
+                        <h1>Coauthor table</h1>
+                        <DataTable data={data.coauthor?.slice(0,5)}/>
+                    {/if}
+                </main>    
+            {/if}    
+        </div>    
+    </div>    
+</div>    
 
 
 <style>
