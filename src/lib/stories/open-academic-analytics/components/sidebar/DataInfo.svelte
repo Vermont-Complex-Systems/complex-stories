@@ -1,6 +1,6 @@
 <script>
   import { dashboardState, data, unique } from '../state.svelte.ts';
-  $inspect(unique.chosen_author)
+  
 </script>
 
 <div class="data-info-section">
@@ -20,13 +20,13 @@
     </div>
     <div class="stat-row">
       <span class="stat-label">Unique Coauthors:</span>
-      <span class="stat-value">{unique.coauthors.length}</span>
+      <span class="stat-value">{unique.coauthors?.length}</span>
     </div>
     <div class="stat-row">
       <span class="stat-label">Departments:</span>
-      <span class="stat-value-text">{unique.chosen_author.host_dept}</span>
+      <span class="stat-value-text">{unique.chosen_author?.host_dept}</span>
     </div>
-    {#if unique.chosen_author.group_url}
+    {#if unique.chosen_author?.group_url}
       <div class="stat-row">
         <span class="stat-label">Group URL:</span>
         <span class="stat-value-href"><a href={unique.chosen_author.group_url}>{unique.chosen_author.group_url}</a></span>

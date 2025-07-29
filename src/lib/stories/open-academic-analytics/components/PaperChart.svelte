@@ -24,7 +24,7 @@
       .clamp(true);
     
     // Return a function that takes a data object and extracts the field
-    return (d) => scale(+d['nb_coauthors'] || 0);
+    return (d) => scale(+d[dashboardState.paperNodeSize] || 0);
   });
   // Process paper data into positioned points
   let processedPaperData = $derived.by(() => {

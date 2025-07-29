@@ -1,13 +1,15 @@
 <script>
     import { Accordion, Button } from "bits-ui";
     import { User, Palette, Users, RotateCcw, UserCheck, ChevronRight, ChevronLeft, ChevronDown, ChevronUp } from "@lucide/svelte";
-    import { uiState, toggleSidebar } from './state.svelte.ts';
+    import { uiState, dashboardState, toggleSidebar } from './state.svelte.ts';
     
     import SelectAuthors from './sidebar/SelectAuthors.svelte';
     import AuthorAgeFilter from './sidebar/AuthorAgeFilter.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
     import CoauthorNodeColor from './sidebar/NodeColor.coauthor.svelte';
     import PaperNodeSize from './sidebar/NodeSize.paper.svelte';
+    import Toggle from '$lib/components/helpers/SimpleToggle.svelte';
+    
 </script>
 
 <div class="sidebar-content">
@@ -42,6 +44,8 @@
                 <CoauthorNodeColor />
                 <PaperNodeSize />
                 <DataInfo />
+                <p>Filter out papers with > 25 coauthors?</p>
+                <Toggle bind:isTrue={dashboardState.filterBigPapers} onText="Yes" offText="No"/>
             </Accordion.Root>
             <div class="interaction-help">
                 <p class="data-info">

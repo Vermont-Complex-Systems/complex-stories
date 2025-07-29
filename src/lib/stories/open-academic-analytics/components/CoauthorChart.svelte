@@ -24,7 +24,7 @@
     
     const scale = d3.scaleSqrt()
       .domain([minCollabs, maxCollabs])
-      .range([2, 12])
+      .range([2, 14])
       .clamp(true);
     
     return (d) => scale(+d.all_times_collabo || 1);
@@ -164,6 +164,8 @@
     const institutionName = d.shared_institutions_normalized || d.shared_institutions || 'Unknown';
     return `Coauthor: ${d.coauth_name || d.name}\nYear: ${d.publication_year}\nAge difference: ${d.age_diff} years\nTotal collaborations: ${d.all_times_collabo}\nShared Institution: ${institutionName}`;
   }
+
+  $inspect(coauthorData)
 
   function handleCoauthorClick(event, point) {
     dashboardState.clickedCoauthor = point.data.coauth_name;

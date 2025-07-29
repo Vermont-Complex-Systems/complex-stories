@@ -16,6 +16,7 @@ export const dashboardState = $state({
     paperNodeSize: 'cited_by_count',
     ageFilter: null,
     clickedCoauthor: null,
+    filterBigPapers: true,
     highlightedCoauthor: null
 });
 
@@ -34,26 +35,26 @@ async function registerTables() {
     tablesRegistered = true;
 }
 
-export async function loadPaperData(authorName) {
+export async function loadPaperData(authorName, filterBigPapers) {
     await registerTables();
     const result = await query(`
         SELECT 
         strftime(publication_date::DATE, '%Y-%m-%d') as pub_date, * 
         FROM paper 
-        WHERE name = '${authorName}'
+        WHERE name = '${authorName}' AND nb_coauthors < ${filterBigPapers ? 25 : 999}
         ORDER BY pub_date DESC
         `);
 
     return result;
 }
-export async function loadCoauthorData(authorName) {
+export async function loadCoauthorData(authorName, filterBigPapers) {
     await registerTables();
     const result = await query(`
         SELECT 
         strftime(publication_date::DATE, '%Y-%m-%d') as pub_date, 
         * 
         FROM coauthor 
-        WHERE name = '${authorName}'
+        WHERE name = '${authorName}' AND nb_coauthors < ${filterBigPapers ? 25 : 999}
         ORDER BY pub_date DESC
         `);
     return result;
@@ -95,8 +96,8 @@ export async function loadSelectedAuthor() {
         data.isLoadingAuthor = true;
         data.error = null;
         
-        data.paper = await loadPaperData(dashboardState.selectedAuthor);
-        data.coauthor = await loadCoauthorData(dashboardState.selectedAuthor);
+        data.paper = await loadPaperData(dashboardState.selectedAuthor, dashboardState.filterBigPapers);
+        data.coauthor = await loadCoauthorData(dashboardState.selectedAuthor, dashboardState.filterBigPapers);
         
         data.isLoadingAuthor = false;
     } catch (error) {
