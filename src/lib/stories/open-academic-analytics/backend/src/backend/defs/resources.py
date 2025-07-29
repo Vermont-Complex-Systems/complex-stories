@@ -405,10 +405,7 @@ def resources():
             "duckdb": database_resource,
             "oa_client": OpenAlexResource(
                 email="jonathanstonge7@gmail.com",
-            ),
-            "s2_client": SemanticScholarResource(
-                # api_key="your_api_key_here",  # Optional
-            ),
+            )
         }
     )
 

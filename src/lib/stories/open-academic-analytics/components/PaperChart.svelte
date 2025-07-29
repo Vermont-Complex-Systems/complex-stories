@@ -6,13 +6,6 @@
   
   let { width, height, timeScale } = $props();
   
-  // let margin = {
-  //   top: spacing.chartMarginTop,
-  //   bottom: spacing.chartMarginBottom,
-  //   left: spacing.chartMarginLeft,
-  //   right: spacing.chartMarginRight
-  // }
-
   // Create the radius scale based on the selected field
   let radiusScale = $derived.by(() => {
     if (!data.paper || data.paper.length === 0) return null;

@@ -56,7 +56,7 @@ export function createCoauthorPoint(d, targetY, radiusScale) {
     coauth_aid: d.coauth_aid,
     aid: d.aid,
     author_name: d.name,
-    author_age: d.author_age,
+    ego_age: d.ego_age,
     coauth_age: d.coauth_age,
     institution: d.institution,
     shared_institutions: d.shared_institutions,

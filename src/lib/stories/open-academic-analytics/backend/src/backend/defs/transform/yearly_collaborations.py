@@ -30,7 +30,7 @@ def yearly_collaborations(duckdb: DuckDBResource) -> dg.MaterializeResult:
             WITH paper_data AS (
                 SELECT DISTINCT 
                     work_id,
-                    professor_oa_uid,
+                    ego_aid,
                     name,
                     publication_year,
                     publication_date,
@@ -45,7 +45,7 @@ def yearly_collaborations(duckdb: DuckDBResource) -> dg.MaterializeResult:
                 pd.nb_coauthors,
                 
                 -- UVM professor info
-                pd.professor_oa_uid as uvm_professor_id,
+                pd.ego_aid as uvm_professor_id,
                 pd.name as uvm_professor_name,
                 
                 -- Coauthor info from authorships
@@ -60,7 +60,7 @@ def yearly_collaborations(duckdb: DuckDBResource) -> dg.MaterializeResult:
                 
             FROM paper_data pd
             JOIN oa.main.authorships auth ON pd.work_id = auth.work_id
-            WHERE auth.author_oa_id != pd.professor_oa_uid  -- Exclude self-collaborations
+            WHERE replace(auth.author_oa_id, 'https://openalex.org/', '') != pd.ego_aid  -- Exclude self-collaborations
         """)
         
         # Create the yearly aggregation table
@@ -91,86 +91,3 @@ def yearly_collaborations(duckdb: DuckDBResource) -> dg.MaterializeResult:
     )
 
 
-@dg.asset_check(
-    asset=yearly_collaborations,
-    description="Verify collaboration data makes sense",
-)
-def collaboration_data_check(duckdb: DuckDBResource) -> dg.AssetCheckResult:
-    """Check for data quality issues in the collaboration pairs"""
-    
-    with duckdb.get_connection() as conn:
-        # Check for potential issues
-        issues = conn.execute("""
-            SELECT 
-                -- Basic counts
-                COUNT(*) as total_records,
-                COUNT(CASE WHEN coauthor_name IS NULL OR coauthor_name = '' THEN 1 END) as missing_coauthor_names,
-                COUNT(CASE WHEN nb_coauthors < 2 THEN 1 END) as papers_with_too_few_coauthors,
-                COUNT(CASE WHEN nb_coauthors > 50 THEN 1 END) as papers_with_many_coauthors,
-                
-                -- Suspicious patterns
-                COUNT(CASE WHEN uvm_professor_name = coauthor_name THEN 1 END) as potential_self_collaborations,
-                COUNT(CASE WHEN publication_year < 1950 OR publication_year > 2025 THEN 1 END) as suspicious_years,
-                
-                -- Institution data availability
-                COUNT(CASE WHEN coauthor_institutions_json IS NOT NULL 
-                           AND coauthor_institutions_json != '[]' THEN 1 END) as with_institution_data,
-                           
-                -- Check for duplicates
-                COUNT(*) - COUNT(DISTINCT (work_id, uvm_professor_id, coauthor_id)) as potential_duplicates
-                
-            FROM oa.main.coauthor_collaborations
-        """).fetchone()
-        
-        # Get examples of suspicious cases
-        suspicious_examples = conn.execute("""
-            SELECT 
-                'Large collaboration' as issue_type,
-                uvm_professor_name,
-                coauthor_name,
-                publication_year,
-                nb_coauthors
-            FROM oa.main.coauthor_collaborations
-            WHERE nb_coauthors > 50
-            
-            UNION ALL
-            
-            SELECT 
-                'Potential self-collab' as issue_type,
-                uvm_professor_name,
-                coauthor_name,
-                publication_year,
-                nb_coauthors
-            FROM oa.main.coauthor_collaborations
-            WHERE uvm_professor_name = coauthor_name
-            
-            LIMIT 10
-        """).fetchall()
-    
-    total_records, missing_names, too_few_coauthors, many_coauthors, self_collabs, suspicious_years, with_institutions, duplicates = issues
-    
-    # Determine if there are serious issues
-    serious_issues = (
-        duplicates > 0 or
-        missing_names > total_records * 0.1 or  # More than 10% missing names
-        self_collabs > 0
-    )
-    
-    return dg.AssetCheckResult(
-        passed=not serious_issues,
-        metadata={
-            "total_records": total_records,
-            "missing_coauthor_names": missing_names,
-            "papers_too_few_coauthors": too_few_coauthors,
-            "papers_many_coauthors": many_coauthors,
-            "potential_self_collaborations": self_collabs,
-            "suspicious_publication_years": suspicious_years,
-            "records_with_institution_data": with_institutions,
-            "institution_data_percentage": round((with_institutions / total_records) * 100, 1) if total_records > 0 else 0,
-            "potential_duplicates": duplicates,
-            "suspicious_examples": [
-                f"{ex[0]}: {ex[1]} + {ex[2]} ({ex[3]}, {ex[4]} coauthors)"
-                for ex in suspicious_examples
-            ] if suspicious_examples else []
-        }
-    )

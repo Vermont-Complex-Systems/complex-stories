@@ -20,7 +20,7 @@ export const dashboardState = $state({
 
 export const data = $state({
     isInitializing: true,
-    error: null,
+    error: null
 });
 
 let tablesRegistered = false;
@@ -42,6 +42,7 @@ export async function loadPaperData(authorName) {
         WHERE name = '${authorName}' AND nb_coauthors < 25
         ORDER BY pub_date DESC
         `);
+
     return result;
 }
 export async function loadCoauthorData(authorName) {
@@ -63,10 +64,10 @@ async function loadAvailableAuthors() {
     const result = await query(`
         SELECT DISTINCT 
             name,
-            LAST(author_age) as current_age,
+            LAST(ego_age) as current_age,
             LAST(publication_year) as last_pub_year
         FROM coauthor 
-        WHERE name IS NOT NULL AND author_age IS NOT NULL
+        WHERE name IS NOT NULL AND ego_age IS NOT NULL
         GROUP BY name
         ORDER BY name
     `);
