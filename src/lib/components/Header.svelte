@@ -45,8 +45,12 @@
 			Blog
 		</a>
 
-		<a href="https://vermont-complex-systems.github.io/datasets/" class="text-button" target="_blank" rel="noopener noreferrer">
+		<a href="https://vermont-complex-systems.github.io/datasets/" class="text-button">
 			Datasets
+		</a>
+		
+    <a href="{base}/research-at-uvm" class="text-button">
+			Groups@UVM
 		</a>
 
     <a 

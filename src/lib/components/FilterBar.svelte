@@ -105,7 +105,7 @@
     border: 1px solid transparent;
     border-radius: var(--border-radius);
     text-transform: uppercase;
-    font-size: var(--font-size-small);
+    font-size: var(--font-size-xsmall);
     font-weight: var(--font-weight-bold);
     font-family: var(--mono);
     color: var(--color-secondary-gray);
