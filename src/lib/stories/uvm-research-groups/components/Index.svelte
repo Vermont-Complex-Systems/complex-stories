@@ -11,7 +11,7 @@
   import Spinner from '$lib/components/helpers/Spinner.svelte'
   import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 
-  import { dataState, initializeApp } from '../state.svelte.ts';
+  import { dataState, initializeApp, loadEmbeddingsData } from '../state.svelte.ts';
 
   let { story, data } = $props();
     
@@ -24,7 +24,31 @@
   let width = $state(950);
   let height = 1800;
   let scrollyIndex = $state();
-
+  
+  // Intersection Observer for lazy loading
+  let embeddingSectionElement = $state();
+  
+  // Svelte 5 effect for intersection observer
+  $effect(() => {
+    if (!embeddingSectionElement) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !dataState.EmbeddingsData && !dataState.loadingEmbeddings) {
+            loadEmbeddingsData();
+          }
+        });
+      },
+      { 
+        rootMargin: '1000px' // Start loading 200px before it comes into view
+      }
+    );
+    
+    observer.observe(embeddingSectionElement);
+    
+    return () => observer.disconnect();
+  });
 </script>
 
 <Nav bind:isDark />
@@ -34,7 +58,6 @@
     <Spinner />
   </div>
 {:else}
-
 
   <div class="header-container">
   <div class="header-text">
@@ -93,7 +116,16 @@
 
     </section>
 
-  <EmbeddingSection embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
+  <!-- Embedding section with intersection observer -->
+  <div bind:this={embeddingSectionElement}>
+    {#if dataState.loadingEmbeddings}
+      <div class="loading-container">
+        <Spinner />
+      </div>
+    {:else if dataState.EmbeddingsData}
+      <EmbeddingSection embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
+    {/if}
+  </div>
 
   <section id="story" class="story">
     <h2>Conclusion</h2>
