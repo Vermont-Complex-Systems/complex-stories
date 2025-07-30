@@ -13,6 +13,10 @@ export const dashboardState = $state({
 export const dataState = $state({
     isInitializing: true,
     trainingAggData: null,
+    DoddsPaperData: null,
+    DoddsCoauthorData: null,
+    EmbeddingsData: null,
+    loadingEmbeddings: false, // Changed: start as false
     isLoadingGlobalData: false,
     error: null
 });
@@ -95,12 +99,26 @@ export async function trainingAggData(authorName) {
     return result;
 }
 
-// App Init (once) - Global data everyone needs
+// App Init (once) - Only load essential data
 export async function initializeApp() {
-        dataState.isInitializing = true;
-        dataState.trainingAggData = await trainingAggData();
-        dataState.DoddsPaperData = await DoddsPaperData();
+    dataState.isInitializing = true;
+    dataState.trainingAggData = await trainingAggData();
+    dataState.DoddsPaperData = await DoddsPaperData();
+    dataState.DoddsCoauthorData = await DoddsCoauthorData();
+    dataState.isInitializing = false;
+    // Don't load embeddings here - load them lazily when needed
+}
+
+// New function: Load embeddings only when needed
+export async function loadEmbeddingsData() {
+    if (dataState.EmbeddingsData) return; // Already loaded
+    
+    dataState.loadingEmbeddings = true;
+    try {
         dataState.EmbeddingsData = await EmbeddingsData();
-        dataState.DoddsCoauthorData = await DoddsCoauthorData();
-        dataState.isInitializing = false;
+    } catch (error) {
+        dataState.error = error;
+    } finally {
+        dataState.loadingEmbeddings = false;
+    }
 }
