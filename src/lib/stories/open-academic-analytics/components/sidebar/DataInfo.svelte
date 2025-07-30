@@ -1,5 +1,6 @@
 <script>
-  import { dashboardState, dataState, unique } from '../../state.svelte.ts';
+  import { dashboardState, data, unique } from '../state.svelte.ts';
+  
 </script>
 
 <div class="data-info-section">
@@ -11,21 +12,21 @@
   <div class="data-stats">
     <div class="stat-row">
       <span class="stat-label"># Papers:</span>
-      <span class="stat-value">{dataState.paperData.length}</span>
+      <span class="stat-value">{data.paper?.length}</span>
     </div>
     <div class="stat-row">
       <span class="stat-label">Total collaborations:</span>
-      <span class="stat-value">{dataState.coauthorData.length}</span>
+      <span class="stat-value">{data.coauthor?.length}</span>
     </div>
     <div class="stat-row">
       <span class="stat-label">Unique Coauthors:</span>
-      <span class="stat-value">{unique.coauthors.length}</span>
+      <span class="stat-value">{unique.coauthors?.length}</span>
     </div>
     <div class="stat-row">
       <span class="stat-label">Departments:</span>
-      <span class="stat-value-text">{unique.chosen_author.host_dept}</span>
+      <span class="stat-value-text">{unique.chosen_author?.host_dept}</span>
     </div>
-    {#if unique.chosen_author.group_url}
+    {#if unique.chosen_author?.group_url}
       <div class="stat-row">
         <span class="stat-label">Group URL:</span>
         <span class="stat-value-href"><a href={unique.chosen_author.group_url}>{unique.chosen_author.group_url}</a></span>

@@ -2,26 +2,16 @@
 import { base } from '$app/paths';
 
 // Use static URLs instead of imports
-export const paperUrl = `${base}/data/open-academic-analytics/paper.parquet`;
-export const authorUrl = `${base}/data/open-academic-analytics/author.parquet`;
-export const coauthorUrl = `${base}/data/open-academic-analytics/coauthor.parquet`;
-export const trainingUrl = `${base}/data/open-academic-analytics/training_data.parquet`;
+export const paperUrl = `${base}/data/paper.parquet`;
+export const coauthorUrl = `${base}/data/coauthor.parquet`;
 
 export const datasets = {
   paper: {
     url: paperUrl,
-    description: 'Academic paper publications'
-  },
-  author: {
-    url: authorUrl,
-    description: 'Author information'
+    description: 'UVM paper publications'
   },
   coauthor: {
-    url: coauthorUrl,
-    description: 'Coauthor relationships'
+    url: paperUrl,
+    description: 'UVM temporal collaboration network'
   },
-  training: {
-    url: trainingUrl,
-    description: 'Model output'
-  }
 };

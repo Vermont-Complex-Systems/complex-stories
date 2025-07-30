@@ -1,8 +1,8 @@
 <script>
   import { Accordion } from "bits-ui";
-  import { dashboardState, dataState, unique } from '../../state.svelte.ts';
+  import { dashboardState, data, unique } from '../state.svelte.ts';
 
-  let coauthorData = $derived(dataState.coauthorData);
+  let coauthorData = $derived(data.coauthorData);
   let uniqueCoauthor = $derived(unique.coauthors);
 
 </script>
