@@ -162,7 +162,7 @@
   function formatTooltip(point) {
     const d = point.data;
     const institutionName = d.shared_institutions_normalized || d.shared_institutions || 'Unknown';
-    return `Coauthor: ${d.coauth_name || d.name}\nYear: ${d.publication_year}\nAge difference: ${d.age_diff} years\nTotal collaborations: ${d.all_times_collabo}\nShared Institution: ${institutionName}`;
+    return `Coauthor: ${d.coauth_name || d.ego_display_name}\nYear: ${d.publication_year}\nAge difference: ${d.age_diff} years\nTotal collaborations: ${d.all_times_collabo}\nShared Institution: ${institutionName}`;
   }
 
   $inspect(coauthorData)

@@ -8,7 +8,7 @@
 
 	function getColor(person) {
 		// Individual name highlighting takes priority
-		if (highlightName && person.name === highlightName) {
+		if (highlightName && person.ego_display_name === highlightName) {
 			return 'red';
 		}
 		
@@ -44,7 +44,7 @@
 
 	function shouldHighlight(person) {
 		// Check if person should have glow effect
-		if (highlightName && person.name === highlightName) {
+		if (highlightName && person.ego_display_name === highlightName) {
 			return true;
 		}
 		

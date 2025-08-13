@@ -6,12 +6,11 @@ from typing import List, Tuple, Optional
 def create_coauthor_cache_table(conn) -> None:
     """Create table to cache coauthor first publication years"""
     conn.execute("""
-        CREATE TABLE IF NOT EXISTS oa.main.coauthor_cache (
-            author_oa_id VARCHAR PRIMARY KEY,
-            author_display_name VARCHAR,
-            institution VARCHAR,
-            first_publication_year INTEGER,
-            last_publication_year INTEGER,
+        CREATE TABLE IF NOT EXISTS oa.cache.coauthor_cache (
+            id VARCHAR PRIMARY KEY,
+            display_name VARCHAR,
+            first_pub_year INTEGER,
+            last_pub_year INTEGER,
             last_fetched_date TIMESTAMP,
             fetch_successful BOOLEAN DEFAULT FALSE
         )
@@ -21,20 +20,16 @@ def get_external_coauthors_to_process(conn, limit: int = 20) -> List[Tuple[str, 
     """Get external coauthors who haven't been processed yet"""
     
     result = conn.execute("""
-        SELECT DISTINCT 
-            a.author_oa_id,
-            a.author_display_name
-        FROM oa.main.authorships a
-        WHERE a.author_oa_id NOT IN (
-            SELECT 'https://openalex.org/' || oa_uid 
-            FROM oa.main.uvm_profs_2023
-        )
-        AND a.author_oa_id NOT IN (
-            SELECT author_oa_id 
-            FROM oa.main.coauthor_cache
-        )
-        ORDER BY a.author_display_name
-        LIMIT ?
+    SELECT DISTINCT 
+        a.author_id,
+        a.author_display_name
+    FROM oa.raw.authorships a
+    LEFT JOIN oa.raw.uvm_profs_2023 u ON a.author_id = u.ego_author_id
+    LEFT JOIN oa.cache.coauthor_cache c ON a.author_id = c.id
+    WHERE u.ego_author_id IS NULL 
+    AND c.id IS NULL
+    ORDER BY a.author_display_name
+    LIMIT ?
     """, [limit]).fetchall()
     
     return [(row[0], row[1]) for row in result]
@@ -87,16 +82,16 @@ def build_coauthor_cache(
         
         # Get total counts for context
         total_external = conn.execute("""
-            SELECT COUNT(DISTINCT a.author_oa_id) as total_external_authors
-            FROM oa.main.authorships a
-            WHERE a.author_oa_id NOT IN (
-                SELECT 'https://openalex.org/' || oa_uid 
-                FROM oa.main.uvm_profs_2023
+            SELECT COUNT(DISTINCT a.author_id) as total_external_authors
+            FROM oa.raw.authorships a
+            WHERE a.author_id NOT IN (
+                SELECT ego_author_id 
+                FROM oa.raw.uvm_profs_2023
             )
         """).fetchone()[0]
         
         already_cached = conn.execute("""
-            SELECT COUNT(*) FROM oa.main.coauthor_cache
+            SELECT COUNT(*) FROM oa.cache.coauthor_cache
         """).fetchone()[0]
         
         coauthors_to_process = get_external_coauthors_to_process(conn, limit=1000)
@@ -132,9 +127,9 @@ def build_coauthor_cache(
             # Store in cache
             with duckdb.get_connection() as conn:
                 conn.execute("""
-                    INSERT INTO oa.main.coauthor_cache 
-                    (author_oa_id, author_display_name, first_publication_year, 
-                     last_publication_year, last_fetched_date, fetch_successful)
+                    INSERT INTO oa.cache.coauthor_cache 
+                    (id, display_name, first_pub_year, 
+                     last_pub_year, last_fetched_date, fetch_successful)
                     VALUES (?, ?, ?, ?, NOW(), ?)
                 """, [
                     author_id, author_name, first_year, last_year, fetch_successful
@@ -156,8 +151,8 @@ def build_coauthor_cache(
             # Still record the attempt
             with duckdb.get_connection() as conn:
                 conn.execute("""
-                    INSERT INTO oa.main.coauthor_cache 
-                    (author_oa_id, author_display_name, last_fetched_date, fetch_successful)
+                    INSERT INTO oa.cache.coauthor_cache 
+                    (id, display_name, last_fetched_date, fetch_successful)
                     VALUES (?, ?, NOW(), FALSE)
                 """, [author_id, author_name])
     
@@ -167,7 +162,7 @@ def build_coauthor_cache(
             SELECT 
                 COUNT(*) as total_cached,
                 COUNT(CASE WHEN fetch_successful = TRUE THEN 1 END) as successful_cached
-            FROM oa.main.coauthor_cache
+            FROM oa.cache.coauthor_cache
         """).fetchone()
         
         remaining = total_external - final_stats[0]
@@ -195,11 +190,11 @@ def coauthor_cache_progress_check(duckdb: DuckDBResource) -> dg.AssetCheckResult
     with duckdb.get_connection() as conn:
         # Simpler query without complex subquery
         total_external = conn.execute("""
-            SELECT COUNT(DISTINCT a.author_oa_id) as total_external_coauthors
-            FROM oa.main.authorships a
-            WHERE a.author_oa_id NOT IN (
-                SELECT 'https://openalex.org/' || oa_uid 
-                FROM oa.main.uvm_profs_2023
+            SELECT COUNT(DISTINCT a.author_id) as total_external_coauthors
+            FROM oa.raw.authorships a
+            WHERE a.author_id NOT IN (
+                SELECT ego_author_id 
+                FROM oa.raw.uvm_profs_2023
             )
         """).fetchone()[0]
         
@@ -207,7 +202,7 @@ def coauthor_cache_progress_check(duckdb: DuckDBResource) -> dg.AssetCheckResult
             SELECT 
                 COUNT(*) as cached_count,
                 COUNT(CASE WHEN fetch_successful = TRUE THEN 1 END) as successful_count
-            FROM oa.main.coauthor_cache
+            FROM oa.cache.coauthor_cache
         """).fetchone()
         
         cached_count, successful_count = cached_stats

@@ -24,65 +24,60 @@ def yearly_collaborations(duckdb: DuckDBResource) -> dg.MaterializeResult:
         # Get the paper parquet path
         paper_parquet_path = STATIC_DATA_PATH / "paper.parquet"
         
-        # Create the raw collaborations table
         conn.execute(f"""
-            CREATE OR REPLACE TABLE oa.main.coauthor_collaborations AS
-            WITH paper_data AS (
-                SELECT DISTINCT 
-                    work_id,
-                    ego_aid,
-                    name,
-                    publication_year,
-                    publication_date,
-                    nb_coauthors
-                FROM read_parquet('{paper_parquet_path}')
-            )
-            SELECT 
-                -- Paper identifiers
-                pd.work_id,
-                pd.publication_year,
-                pd.publication_date,
-                pd.nb_coauthors,
-                
-                -- UVM professor info
-                pd.ego_aid as uvm_professor_id,
-                pd.name as uvm_professor_name,
-                
-                -- Coauthor info from authorships
-                auth.author_oa_id as coauthor_id,
-                auth.author_display_name as coauthor_name,
-                auth.author_position,
-                auth.is_corresponding,
-                
-                -- Raw institution data (we'll process this in next asset)
-                auth.institutions as coauthor_institutions_json,
-                auth.raw_affiliation_strings
-                
-            FROM paper_data pd
-            JOIN oa.main.authorships auth ON pd.work_id = auth.work_id
-            WHERE replace(auth.author_oa_id, 'https://openalex.org/', '') != pd.ego_aid  -- Exclude self-collaborations
-        """)
+                     CREATE OR REPLACE TABLE oa.transform.yearly_collaborations AS
+WITH paper_data AS (
+    SELECT DISTINCT 
+        id,
+        ego_author_id,
+        ego_display_name,
+        publication_year,
+        publication_date,
+        nb_coauthors
+    FROM read_parquet('{paper_parquet_path}')
+),
+coauthor_collaborations AS (
+    SELECT 
+        -- Paper identifiers
+        pd.id,
+        pd.publication_year,
+        pd.publication_date,
+        pd.nb_coauthors,
         
-        # Create the yearly aggregation table
-        conn.execute("""
-            CREATE OR REPLACE TABLE oa.main.yearly_collaborations AS
-            SELECT 
-                uvm_professor_id,
-                uvm_professor_name,
-                coauthor_id,
-                coauthor_name,
-                publication_year,
-                MIN(publication_date) as publication_date,
-                COUNT(*) as yearly_collabo,
-                MAX(nb_coauthors) as nb_coauthors
-            FROM oa.main.coauthor_collaborations
-            GROUP BY 
-                uvm_professor_id, 
-                uvm_professor_name,
-                coauthor_id, 
-                coauthor_name,
-                publication_year
-        """)
+        -- UVM professor info
+        pd.ego_author_id,
+        pd.ego_display_name,
+        
+        -- Coauthor info from authorships
+        auth.author_id as coauthor_id,
+        auth.author_display_name as coauthor_display_name,
+        auth.author_position,
+        auth.is_corresponding,
+        
+        -- Raw institution data
+        auth.institutions as coauthor_institutions,
+        auth.raw_affiliation_strings
+    FROM paper_data pd 
+    JOIN oa.raw.authorships auth ON pd.id = auth.work_id
+    WHERE auth.author_id != pd.ego_author_id  -- Exclude self-collaborations
+)
+SELECT 
+    ego_author_id,
+    ego_display_name,
+    coauthor_id,
+    coauthor_display_name,
+    publication_year,
+    MIN(publication_date) as publication_date,
+    COUNT(*) as yearly_collabo,
+    MAX(nb_coauthors) as nb_coauthors
+FROM coauthor_collaborations
+GROUP BY 
+    ego_author_id, 
+    ego_display_name,
+    coauthor_id, 
+    coauthor_display_name,
+    publication_year
+                     """)
     
     return dg.MaterializeResult(
         metadata={

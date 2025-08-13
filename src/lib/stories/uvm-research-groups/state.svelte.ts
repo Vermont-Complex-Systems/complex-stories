@@ -16,7 +16,7 @@ export const dataState = $state({
     DoddsPaperData: null,
     DoddsCoauthorData: null,
     EmbeddingsData: null,
-    loadingEmbeddings: false, // Changed: start as false
+    loadingEmbeddings: false,
     isLoadingGlobalData: false,
     error: null
 });
@@ -38,18 +38,18 @@ async function registerTables() {
 export async function DoddsPaperData(authorName) {
     await registerTables();
     const result = await query(`
-        SELECT *, strftime(pub_date::DATE, '%Y-%m-%d') as pub_date 
+        SELECT *, strftime(publication_date::DATE, '%Y-%m-%d') as pub_date 
         FROM paper
-        WHERE ego_aid = 'A5040821463'`);
+        WHERE ego_author_id = 'https://openalex.org/A5040821463'`);
     return result;
 }
 
 export async function DoddsCoauthorData(authorName) {
     await registerTables();
     const result = await query(`
-        SELECT *, strftime(pub_date::DATE, '%Y-%m-%d') as pub_date 
+        SELECT *, strftime(publication_date::DATE, '%Y-%m-%d') as pub_date 
         FROM coauthor
-        WHERE aid = 'A5040821463'
+        WHERE ego_author_id = 'https://openalex.org/A5040821463'
         `);
     return result;
 }
@@ -70,14 +70,17 @@ export async function EmbeddingsData() {
             FROM training t
             WHERE oa_uid IS NOT NULL
         )
-        SELECT DISTINCT doi, *, strftime(pub_date::DATE, '%Y-%m-%d') as pub_date, e.host_dept, e.college
+        SELECT 
+            DISTINCT doi, p.*,
+            strftime(publication_date::DATE, '%Y-%m-%d') as pub_date, 
+            e.host_dept, e.college
         FROM paper p
-        LEFT JOIN exploded_depts e ON p.ego_aid = e.oa_uid
-        WHERE p.umap_1 IS NOT NULL AND p.umap_1 > -6
+        LEFT JOIN exploded_depts e ON p.ego_author_id = 'https://openalex.org/' || e.oa_uid 
+        WHERE p.umap_1 IS NOT NULL 
         ORDER BY 
-            CASE WHEN ego_aid = 'A5040821463' THEN 1 ELSE 0 END,  -- Peter's papers last
-            pub_date  -- Then by date within each group
-        LIMIT 4000    
+            CASE WHEN ego_author_id = 'https://openalex.org/A5040821463' THEN 1 ELSE 0 END,
+            RANDOM()
+        LIMIT 6000
         `
     );
     return result;
@@ -108,7 +111,6 @@ export async function initializeApp() {
     dataState.DoddsPaperData = await DoddsPaperData();
     dataState.DoddsCoauthorData = await DoddsCoauthorData();
     dataState.isInitializing = false;
-    // Don't load embeddings here - load them lazily when needed
 }
 
 // New function: Load embeddings only when needed

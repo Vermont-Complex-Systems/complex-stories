@@ -25,7 +25,7 @@ export function processCoauthorData(coauthorData, width, height, timeScale, radi
     if (placePointMultiPass(point, placedPoints, centerX, effectiveWidth)) {
       placedPoints.push(point);
     } else {
-      console.warn('Could not place coauthor point:', point.name);
+      console.warn('Could not place coauthor point:', point.ego_display_name);
       point.x = centerX;
       placedPoints.push(point);
     }
@@ -55,7 +55,7 @@ export function createCoauthorPoint(d, targetY, radiusScale) {
     acquaintance: d.acquaintance,
     coauth_aid: d.coauth_aid,
     aid: d.aid,
-    author_name: d.name,
+    ego_display_name: d.ego_display_name,
     ego_age: d.ego_age,
     coauth_age: d.coauth_age,
     institution: d.institution,

@@ -18,11 +18,11 @@ def coauthor_institutions(duckdb: DuckDBResource) -> dg.MaterializeResult:
     with duckdb.get_connection() as conn:
         # Create the yearly coauthor institutions table directly from authorships
         conn.execute("""
-            CREATE OR REPLACE TABLE oa.main.coauthor_institutions AS
+            CREATE OR REPLACE TABLE oa.transform.coauthor_institutions AS
             WITH yearly_institution_counts AS (
                 SELECT 
-                    a.author_oa_id as coauthor_id,
-                    a.author_display_name as coauthor_name,
+                    a.author_id as id,
+                    a.author_display_name as display_name,
                     p.publication_year,
                     CASE 
                         WHEN a.institutions IS NOT NULL 
@@ -32,10 +32,10 @@ def coauthor_institutions(duckdb: DuckDBResource) -> dg.MaterializeResult:
                         ELSE 'Unknown'
                     END as institution_name,
                     COUNT(*) as institution_count_in_year
-                FROM oa.main.authorships a
-                JOIN oa.main.publications p ON a.work_id = p.id
+                FROM oa.raw.authorships a
+                JOIN oa.raw.publications p ON a.work_id = p.id
                 GROUP BY 
-                    a.author_oa_id,
+                    a.author_id,
                     a.author_display_name,
                     p.publication_year,
                     CASE 
@@ -55,43 +55,43 @@ def coauthor_institutions(duckdb: DuckDBResource) -> dg.MaterializeResult:
             
             max_counts AS (
                 SELECT 
-                    coauthor_id,
-                    coauthor_name,
+                    id,
+                    display_name,
                     publication_year,
                     MAX(institution_count_in_year) as max_count
                 FROM known_institutions
-                GROUP BY coauthor_id, coauthor_name, publication_year
+                GROUP BY id, display_name, publication_year
             ),
             
             tied_institutions AS (
                 SELECT 
-                    ki.coauthor_id,
-                    ki.coauthor_name,
+                    ki.id,
+                    ki.display_name,
                     ki.publication_year,
                     STRING_AGG(ki.institution_name, ' & ' ORDER BY ki.institution_name) as primary_institution
                 FROM known_institutions ki
                 JOIN max_counts mc ON 
-                    ki.coauthor_id = mc.coauthor_id 
+                    ki.id = mc.id 
                     AND ki.publication_year = mc.publication_year
                     AND ki.institution_count_in_year = mc.max_count
-                GROUP BY ki.coauthor_id, ki.coauthor_name, ki.publication_year
+                GROUP BY ki.id, ki.display_name, ki.publication_year
             ),
             
             -- Fallback to 'Unknown' only if no known institutions exist for that author-year
             fallback_unknown AS (
                 SELECT 
-                    yic.coauthor_id,
-                    yic.coauthor_name,
+                    yic.id,
+                    yic.display_name,
                     yic.publication_year,
                     'Unknown' as primary_institution
                 FROM yearly_institution_counts yic
                 WHERE yic.institution_name = 'Unknown'
                   AND NOT EXISTS (
                       SELECT 1 FROM known_institutions ki 
-                      WHERE ki.coauthor_id = yic.coauthor_id 
+                      WHERE ki.id = yic.id 
                         AND ki.publication_year = yic.publication_year
                   )
-                GROUP BY yic.coauthor_id, yic.coauthor_name, yic.publication_year
+                GROUP BY yic.id, yic.display_name, yic.publication_year
             )
             
             SELECT * FROM tied_institutions
@@ -102,8 +102,8 @@ def coauthor_institutions(duckdb: DuckDBResource) -> dg.MaterializeResult:
         # Get statistics
         stats = conn.execute("""
             SELECT 
-                COUNT(DISTINCT (coauthor_id, publication_year)) as total_coauthor_years,
-                COUNT(DISTINCT coauthor_id) as unique_coauthors,
+                COUNT(DISTINCT (id, publication_year)) as total_coauthor_years,
+                COUNT(DISTINCT id) as unique_coauthors,
                 COUNT(DISTINCT publication_year) as years_covered,
                 COUNT(CASE WHEN primary_institution != 'Unknown' THEN 1 END) as with_known_institution,
                 COUNT(DISTINCT primary_institution) as unique_institutions
@@ -113,12 +113,12 @@ def coauthor_institutions(duckdb: DuckDBResource) -> dg.MaterializeResult:
         # Get examples of institution changes over time
         mobility_examples = conn.execute("""
             SELECT 
-                coauthor_name,
+                display_name,
                 COUNT(DISTINCT primary_institution) as institution_changes,
                 STRING_AGG(DISTINCT primary_institution, ' → ' ORDER BY primary_institution) as institutions
             FROM oa.main.coauthor_institutions
             WHERE primary_institution != 'Unknown'
-            GROUP BY coauthor_id, coauthor_name
+            GROUP BY id, display_name
             HAVING COUNT(DISTINCT primary_institution) > 1
             ORDER BY institution_changes DESC
             LIMIT 5

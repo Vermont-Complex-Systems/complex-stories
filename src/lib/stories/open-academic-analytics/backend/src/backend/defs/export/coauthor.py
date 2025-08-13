@@ -18,42 +18,40 @@ def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
         # conn=duckdb.connect("/tmp/oa.duckdb")
         conn.execute(f"""
             COPY (
-            -- DuckDB query with clean CTE structure for age calculations
             WITH base_data AS (
                 SELECT 
                     yc.*,
                     -- Pre-calculate ego and coauthor first publication years (clean coalescing)
-                    COALESCE(prof.first_pub_year, cc_uvm.first_publication_year) as ego_first_pub_year,
-                    cc_external.first_publication_year as coauth_first_pub_year,
+                    COALESCE(prof.first_pub_year, cc_uvm.first_pub_year) as ego_first_pub_year,
+                    cc_external.first_pub_year as coauthor_first_pub_year,
                     
                     -- Include other fields from joins
                     prof.first_pub_year as prof_first_pub_year_raw,
-                    prof.host_dept,
+                    prof.department as ego_department,
                     ci_uvm.primary_institution,
-                    ci_external.primary_institution as coauth_institution
+                    ci_external.primary_institution as coauthor_institution
                     
-                FROM oa.main.yearly_collaborations yc
-                LEFT JOIN oa.main.uvm_profs_2023 prof 
-                    ON replace(yc.uvm_professor_id, 'https://openalex.org/', '') = prof.oa_uid
-                LEFT JOIN oa.main.coauthor_cache cc_external
-                    ON yc.coauthor_id = cc_external.author_oa_id
+                FROM oa.transform.yearly_collaborations yc
+                LEFT JOIN oa.raw.uvm_profs_2023 prof 
+                    ON yc.ego_author_id = prof.ego_author_id
+                LEFT JOIN oa.cache.coauthor_cache cc_external
+                    ON yc.coauthor_id = cc_external.id
                 
-                LEFT JOIN oa.main.coauthor_cache cc_uvm 
-                    ON yc.uvm_professor_id = replace(cc_uvm.author_oa_id, 'https://openalex.org/', '')
+                LEFT JOIN oa.cache.coauthor_cache cc_uvm 
+                    ON yc.ego_author_id = cc_uvm.id
                 
-                LEFT JOIN oa.main.coauthor_institutions ci_uvm 
-                    ON yc.uvm_professor_id = replace(ci_uvm.coauthor_id , 'https://openalex.org/', '')
+                LEFT JOIN oa.transform.coauthor_institutions ci_uvm 
+                    ON yc.ego_author_id = ci_uvm.id
                     AND yc.publication_year = ci_uvm.publication_year
                 
-                LEFT JOIN oa.main.coauthor_institutions ci_external 
-                    ON yc.coauthor_id = ci_external.coauthor_id
+                LEFT JOIN oa.transform.coauthor_institutions ci_external 
+                    ON yc.coauthor_id = ci_external.id
                     AND yc.publication_year = ci_external.publication_year
             ),
 
             age_calculations AS (
                 SELECT 
                     *,
-                    -- Calculate clean age variables
                     CASE 
                         WHEN ego_first_pub_year IS NOT NULL 
                         THEN (publication_year - ego_first_pub_year)
@@ -61,19 +59,18 @@ def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                     END as ego_age,
                     
                     CASE 
-                        WHEN coauth_first_pub_year IS NOT NULL 
-                        THEN (publication_year - coauth_first_pub_year)
+                        WHEN coauthor_first_pub_year IS NOT NULL 
+                        THEN (publication_year - coauthor_first_pub_year)
                         ELSE NULL 
-                    END as coauth_age
+                    END as coauthor_age
                     
                 FROM base_data
             )
-
-            SELECT 
+         SELECT 
                 -- UVM professor information  
-                uvm_professor_id as aid,
-                uvm_professor_name as name,
-                host_dept,
+                ego_author_id,
+                ego_display_name,
+                ego_department,
                 publication_year,
                 nb_coauthors,
                 
@@ -85,19 +82,19 @@ def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                 ego_age,
                 
                 -- Coauthor information
-                coauthor_id as coauth_aid,
-                coauthor_name as coauth_name,
-                coauth_age,  -- Coauthor age at time of publication
-                coauth_first_pub_year as coauth_min_year,
+                coauthor_id,
+                coauthor_display_name,
+                coauthor_age,
+                coauthor_first_pub_year,
                 
                 -- Let pandas calculate age_diff later
-                (ego_age - coauth_age) as age_diff,
+                (ego_age - coauthor_age) as age_diff,
                 
                 CASE 
-                    WHEN ego_age IS NOT NULL AND coauth_age IS NOT NULL THEN
+                    WHEN ego_age IS NOT NULL AND coauthor_age IS NOT NULL THEN
                         CASE 
-                            WHEN (ego_age - coauth_age) > 7 THEN 'younger'
-                            WHEN (ego_age - coauth_age) < -7 THEN 'older'
+                            WHEN (ego_age - coauthor_age) > 7 THEN 'younger'
+                            WHEN (ego_age - coauthor_age) < -7 THEN 'older'
                             ELSE 'same'
                         END
                     ELSE 'unknown'
@@ -106,19 +103,19 @@ def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                 -- Collaboration metrics
                 yearly_collabo,
                 SUM(yearly_collabo) OVER (
-                    PARTITION BY uvm_professor_id, coauthor_id 
+                    PARTITION BY ego_author_id, coauthor_id 
                     ORDER BY publication_year 
                     ROWS UNBOUNDED PRECEDING
                 ) as all_times_collabo,
                 
                 -- Institution information
-                primary_institution as institution,
-                coauth_institution,
+                primary_institution,
+                coauthor_institution,
                 
                 CASE 
                     WHEN primary_institution IS NOT NULL 
-                        AND coauth_institution IS NOT NULL
-                        AND primary_institution = coauth_institution
+                        AND coauthor_institution IS NOT NULL
+                        AND primary_institution = coauthor_institution
                         THEN primary_institution
                         ELSE NULL 
                 END as shared_institutions

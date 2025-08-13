@@ -1,7 +1,7 @@
 import dagster as dg
 from backend.defs.resources import OpenAlexResource
 from dagster_duckdb import DuckDBResource
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional
 import json
 
 
@@ -10,7 +10,7 @@ def create_publications_tables(conn) -> None:
     
     # Publications table - one record per unique work
     conn.execute("""
-        CREATE TABLE IF NOT EXISTS oa.main.publications (
+        CREATE TABLE IF NOT EXISTS oa.raw.publications (
             id VARCHAR PRIMARY KEY,
             doi VARCHAR,
             title VARCHAR,
@@ -93,55 +93,68 @@ def create_publications_tables(conn) -> None:
         )
     """)
     
-    # Authorships table - many records per work (one per author)
+def create_authorships_table(conn) -> None:
+    """Authorships table - many records per work (one per author)"""
+
     conn.execute("""
-        CREATE TABLE IF NOT EXISTS oa.main.authorships (
+        CREATE TABLE IF NOT EXISTS oa.raw.authorships (
             work_id VARCHAR,
-            author_oa_id VARCHAR,
+            author_id VARCHAR,
             author_display_name VARCHAR,
             author_position VARCHAR,  -- first, middle, last
             institutions VARCHAR,     -- JSON array of author's institutions for this work
             raw_affiliation_strings VARCHAR,
             is_corresponding BOOLEAN,
             
-            PRIMARY KEY (work_id, author_oa_id)
+            PRIMARY KEY (work_id, author_id)
         )
     """)
 
-def get_professors_to_update(conn) -> List[Tuple[str, str]]:
-    """Get list of professors who need updating, prioritizing those never synced"""
+def create_uvm_profs_sync_status_table(conn) -> None:
+    """Authorships table - many records per work (one per author)"""
+
+    conn.execute("""
+            CREATE TABLE IF NOT EXISTS oa.cache.uvm_profs_sync_status (
+                ego_author_id VARCHAR PRIMARY KEY,
+                last_synced_date TIMESTAMP,
+                paper_count INTEGER,
+                needs_update BOOLEAN DEFAULT TRUE
+            )
+        """)
+
+def get_uvm_profs_to_update(conn) -> List[str]:
+    """Get list of uvm_profs who need updating, prioritizing those never synced"""
     result = conn.execute("""
-        SELECT s.oa_uid, p.oa_display_name
-        FROM oa.main.professor_sync_status s
-        JOIN oa.main.uvm_profs_2023 p ON s.oa_uid = p.oa_uid
-        WHERE s.needs_update = TRUE 
-           OR s.last_synced_date IS NULL
-           OR s.last_synced_date < (NOW() - INTERVAL '30 days')
+        SELECT ego_author_id
+        FROM oa.cache.uvm_profs_sync_status
+        WHERE needs_update = TRUE 
+           OR last_synced_date IS NULL
+           OR last_synced_date < (NOW() - INTERVAL '30 days')
         ORDER BY 
-            CASE WHEN s.last_synced_date IS NULL THEN 0 ELSE 1 END,
-            s.last_synced_date ASC
+            CASE WHEN last_synced_date IS NULL THEN 0 ELSE 1 END,
+            last_synced_date ASC
     """).fetchall()
     
-    return [(row[0], row[1]) for row in result]
+    return [row[0] for row in result]
 
-def get_latest_publication_date(conn, oa_uid: str) -> Optional[str]:
+def get_latest_publication_date(conn, ego_author_id: str) -> Optional[str]:
     """Get the latest publication date for a professor from authorships"""
     result = conn.execute("""
         SELECT MAX(p.publication_date) 
-        FROM oa.main.publications p
-        JOIN oa.main.authorships a ON p.id = a.work_id
-        WHERE a.author_oa_id = ?
-    """, [oa_uid]).fetchone()
+        FROM oa.raw.publications p
+        JOIN oa.raw.authorships a ON p.id = a.work_id
+        WHERE a.author_id = ?
+    """, [ego_author_id]).fetchone()
     
     return result[0] if result and result[0] else None
 
-def get_corrected_first_pub_year(conn, oa_uid: str) -> Optional[int]:
+def get_corrected_first_pub_year(conn, ego_author_id: str) -> Optional[int]:
     """Get the corrected first publication year for a UVM professor"""
     result = conn.execute("""
         SELECT first_pub_year 
-        FROM oa.main.uvm_profs_2023 
-        WHERE 'https://openalex.org/' || oa_uid = ?
-    """, [oa_uid]).fetchone()
+        FROM oa.raw.uvm_profs_2023 
+        WHERE 'https://openalex.org/' || ego_author_id = ?
+    """, [ego_author_id]).fetchone()
     
     return result[0] if result and result[0] else None
 
@@ -248,7 +261,7 @@ def process_and_insert_work(work: Dict, conn, corrected_first_year: Optional[int
     publication_data = extract_publication_data(work)
     
     conn.execute("""
-        INSERT OR IGNORE INTO oa.main.publications VALUES 
+        INSERT OR IGNORE INTO oa.raw.publications VALUES 
         (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, publication_data)
     
@@ -272,28 +285,28 @@ def process_and_insert_work(work: Dict, conn, corrected_first_year: Optional[int
             )
             
             conn.execute("""
-                INSERT OR IGNORE INTO oa.main.authorships VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT OR IGNORE INTO oa.raw.authorships VALUES (?, ?, ?, ?, ?, ?, ?)
             """, authorship_data)
             
             authorships_inserted += 1
     
     return authorships_inserted
 
-def update_professor_sync_status(conn, oa_uid: str) -> None:
+def update_uvm_profs_sync_status(conn, ego_author_id: str) -> None:
     """Update the sync status for a professor."""
     conn.execute("""
-        UPDATE oa.main.professor_sync_status 
+        UPDATE oa.cache.uvm_profs_sync_status 
         SET 
             last_synced_date = NOW(),
             paper_count = (
-                SELECT COUNT(*) FROM oa.main.authorships 
-                WHERE author_oa_id = ?
+                SELECT COUNT(*) FROM oa.raw.authorships 
+                WHERE author_id = ?
             ),
             needs_update = FALSE
-        WHERE oa_uid = ?
-    """, [oa_uid, oa_uid])
+        WHERE ego_author_id = ?
+    """, [ego_author_id, ego_author_id])
 
-def determine_fetch_start_date(oa_uid: str, display_name: str, conn) -> Optional[str]:
+def determine_fetch_start_date(ego_author_id: str, conn) -> Optional[str]:
     """
     Determine the earliest date to start fetching publications for a professor.
     
@@ -303,8 +316,8 @@ def determine_fetch_start_date(oa_uid: str, display_name: str, conn) -> Optional
     3. Choose the later of these two dates to avoid unnecessary re-fetching
     4. Return None if we should fetch all publications (first time sync, no corrections)
     """
-    latest_existing = get_latest_publication_date(conn, oa_uid)
-    corrected_first_year = get_corrected_first_pub_year(conn, oa_uid)
+    latest_existing = get_latest_publication_date(conn, ego_author_id)
+    corrected_first_year = get_corrected_first_pub_year(conn, ego_author_id)
     
     # Convert corrected year to date string if it exists
     corrected_earliest = f"{corrected_first_year}-01-01" if corrected_first_year else None
@@ -327,7 +340,7 @@ def determine_fetch_start_date(oa_uid: str, display_name: str, conn) -> Optional
         start_date = None
         reason = "fetching all publications (first sync, no corrections)"
     
-    dg.get_dagster_logger().info(f"{display_name}: {reason} → start_date: {start_date}")
+    dg.get_dagster_logger().info(f"{ego_author_id}: {reason} → start_date: {start_date}")
     
     return start_date
 
@@ -335,57 +348,60 @@ def determine_fetch_start_date(oa_uid: str, display_name: str, conn) -> Optional
     description="📚 Fetch all academic papers for 2023 UVM faculties from OpenAlex database.",
     kinds={"openalex"}, 
     key=["target", "main", "uvm_publications"],
-    deps=["uvm_profs_2023", "professor_sync_status"],  
+    deps=["uvm_profs_2023", "uvm_profs_sync_status"],  
 )
 def uvm_publications(
     oa_client: OpenAlexResource, 
     duckdb: DuckDBResource
 ) -> dg.MaterializeResult:
-    """Fetch publication data for UVM professors with proper normalization"""
+    """Fetch publication data for uvm_profs with proper normalization"""
     
     with duckdb.get_connection() as conn:
         create_publications_tables(conn) # OA schema in duckdb
-        professors_to_update = get_professors_to_update(conn) # did we query that prof in the last 30days?
+        create_authorships_table(conn) # OA schema in duckdb
+
+        uvm_profs_to_update = get_uvm_profs_to_update(conn) # did we query that prof in the last 30days?
     
-    dg.get_dagster_logger().info(f"Processing {len(professors_to_update)} professors")
+    dg.get_dagster_logger().info(f"Processing {len(uvm_profs_to_update)} uvm_profs")
     
-    if not professors_to_update:
-        dg.get_dagster_logger().info("All professors are up to date!")
+    if not uvm_profs_to_update:
+        dg.get_dagster_logger().info("All uvm_profs are up to date!")
         return dg.MaterializeResult(
-            metadata={"professors_processed": 0, "reason": "all_up_to_date"}
+            metadata={"uvm_profs_processed": 0, "reason": "all_up_to_date"}
         )
     
     total_works_processed = 0
     total_authorships_added = 0
     
-    for oa_uid, display_name in professors_to_update:
+    for ego_author_id in uvm_profs_to_update:
         try:
             # Check current data for this professor
             with duckdb.get_connection() as conn:
                 current_count = conn.execute("""
-                    SELECT COUNT(*) FROM oa.main.authorships 
-                    WHERE author_oa_id = ?
-                """, [oa_uid]).fetchone()[0]
+                    SELECT COUNT(*) FROM oa.raw.authorships 
+                    WHERE author_id = ?
+                """, [ego_author_id]).fetchone()[0]
                 
-                latest_date = get_latest_publication_date(conn, oa_uid)
-                corrected_first_year = get_corrected_first_pub_year(conn, oa_uid)
+                latest_date = get_latest_publication_date(conn, ego_author_id)
+                corrected_first_year = get_corrected_first_pub_year(conn, ego_author_id)
                 
                 dg.get_dagster_logger().info(
-                    f"{display_name}: currently has {current_count} authorships, "
+                    f"{ego_author_id}: currently has {current_count} authorships, "
                     f"latest: {latest_date}, corrected first year: {corrected_first_year}"
                 )
             
             # Build the filter for OpenAlex API
-            filter_parts = [f"author.id:{oa_uid}"]
+            filter_parts = [f"author.id:{ego_author_id}"]
 
-            start_date = determine_fetch_start_date(oa_uid, display_name, conn)
+            start_date = determine_fetch_start_date(ego_author_id, conn)
             if start_date:
                 filter_parts.append(f"from_publication_date:{start_date}")
 
             filter_string = ",".join(filter_parts)
-            works = oa_client.get_all_works(filter=filter_string)
+            response_data = oa_client.get_works(filter=filter_string)
+            works = response_data.get('results', [])
             
-            dg.get_dagster_logger().info(f"Found {len(works)} works for {display_name}")
+            dg.get_dagster_logger().info(f"Found {len(works)} works for {ego_author_id}")
             
             if works:
                 # Process each work
@@ -394,18 +410,18 @@ def uvm_publications(
                         authorships_added = process_and_insert_work(work, conn, corrected_first_year)
                         total_authorships_added += authorships_added
                     
-                    update_professor_sync_status(conn, oa_uid)
+                    update_uvm_profs_sync_status(conn, ego_author_id)
                 
                 total_works_processed += len(works)
             else:
                 # Still update sync status even if no new works
                 with duckdb.get_connection() as conn:
-                    update_professor_sync_status(conn, oa_uid)
+                    update_uvm_profs_sync_status(conn, ego_author_id)
             
-            dg.get_dagster_logger().info(f"Processed {display_name}: {len(works)} works")
+            dg.get_dagster_logger().info(f"Processed {ego_author_id}: {len(works)} works")
                 
         except Exception as e:
-            dg.get_dagster_logger().error(f"Error fetching publications for {display_name}: {str(e)}")
+            dg.get_dagster_logger().error(f"Error fetching publications for {ego_author_id}: {str(e)}")
     
     # Get final statistics
     with duckdb.get_connection() as conn:
@@ -413,57 +429,52 @@ def uvm_publications(
             SELECT 
                 COUNT(*) as total_publications,
                 COUNT(*) as total_authorships,
-                COUNT(DISTINCT author_oa_id) as professors_with_data
-            FROM oa.main.publications p
-            JOIN oa.main.authorships a ON p.id = a.work_id
+                COUNT(DISTINCT author_id) as uvm_profs_with_data
+            FROM oa.raw.publications p
+            JOIN oa.raw.authorships a ON p.id = a.work_id
         """).fetchone()
     
     return dg.MaterializeResult(
         metadata={
-            "professors_processed": len(professors_to_update),
+            "uvm_profs_processed": len(uvm_profs_to_update),
             "works_processed": total_works_processed,
             "total_publications": final_stats[0],
             "total_authorships": final_stats[1],
-            "professors_with_data": final_stats[2]
+            "uvm_profs_with_data": final_stats[2]
         }
     )
 
 
 @dg.asset(
     kinds={"duckdb"},
-    key=["target", "main", "professor_sync_status"],
+    key=["target", "main", "uvm_profs_sync_status"],
     deps=["uvm_profs_2023"]
 )
-def professor_sync_status(duckdb: DuckDBResource) -> dg.MaterializeResult:
+def uvm_profs_sync_status(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """Track when each professor was last synced with OpenAlex"""
     
     with duckdb.get_connection() as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS oa.main.professor_sync_status (
-                oa_uid VARCHAR PRIMARY KEY,
-                last_synced_date TIMESTAMP,
-                paper_count INTEGER,
-                needs_update BOOLEAN DEFAULT TRUE
-            )
-        """)
+        conn.execute("CREATE SCHEMA IF NOT EXISTS cache")
+
+        create_uvm_profs_sync_status_table(conn)
         
         conn.execute("""
-            INSERT OR IGNORE INTO oa.main.professor_sync_status (oa_uid)
-            SELECT DISTINCT oa_uid 
-            FROM oa.main.uvm_profs_2023 
-            WHERE oa_uid IS NOT NULL
+            INSERT OR IGNORE INTO oa.cache.uvm_profs_sync_status (ego_author_id)
+            SELECT DISTINCT ego_author_id 
+            FROM oa.raw.uvm_profs_2023
+            WHERE ego_author_id IS NOT NULL
         """)
         
         stats = conn.execute("""
             SELECT 
-                COUNT(*) as total_professors,
+                COUNT(*) as total_uvm_profs,
                 COUNT(CASE WHEN needs_update = TRUE OR last_synced_date IS NULL THEN 1 END) as need_update
-            FROM oa.main.professor_sync_status
+            FROM oa.cache.uvm_profs_sync_status
         """).fetchone()
     
     return dg.MaterializeResult(
         metadata={
-            "total_professors": stats[0],
+            "total_uvm_profs": stats[0],
             "needs_update": stats[1]
         }
     )
@@ -483,15 +494,15 @@ def publications_structure_check(duckdb: DuckDBResource) -> dg.AssetCheckResult:
                 COUNT(*) as total_publications,
                 COUNT(CASE WHEN primary_location.is_oa = true THEN 1 END) as open_access_count,
                 AVG(cited_by_count) as avg_citations
-            FROM oa.main.publications
+            FROM oa.raw.publications
         """).fetchone()
         
         auth_stats = conn.execute("""
             SELECT 
                 COUNT(*) as total_authorships,
-                COUNT(DISTINCT author_oa_id) as unique_authors,
+                COUNT(DISTINCT author_id) as unique_authors,
                 COUNT(DISTINCT work_id) as works_with_authors
-            FROM oa.main.authorships
+            FROM oa.raw.authorships
         """).fetchone()
     
     return dg.AssetCheckResult(
@@ -508,19 +519,19 @@ def publications_structure_check(duckdb: DuckDBResource) -> dg.AssetCheckResult:
 
 
 @dg.asset_check(
-    asset=professor_sync_status,
+    asset=uvm_profs_sync_status,
     description="Check professor sync status",
 )
 def sync_status_check(duckdb: DuckDBResource) -> dg.AssetCheckResult:
-    """Check how many professors need syncing"""
+    """Check how many uvm_profs need syncing"""
     
     with duckdb.get_connection() as conn:
         stats = conn.execute("""
             SELECT 
-                COUNT(*) as total_professors,
+                COUNT(*) as total_uvm_profs,
                 COUNT(CASE WHEN needs_update = TRUE OR last_synced_date IS NULL THEN 1 END) as need_update,
                 COUNT(CASE WHEN last_synced_date IS NOT NULL THEN 1 END) as have_been_synced
-            FROM oa.main.professor_sync_status
+            FROM oa.cache.uvm_profs_sync_status
         """).fetchone()
     
     total, need_update, synced = stats
@@ -528,7 +539,7 @@ def sync_status_check(duckdb: DuckDBResource) -> dg.AssetCheckResult:
     return dg.AssetCheckResult(
         passed=total > 0,
         metadata={
-            "total_professors": total,
+            "total_uvm_profs": total,
             "need_update": need_update,
             "already_synced": synced,
             "sync_percentage": round((synced / total) * 100, 1) if total > 0 else 0

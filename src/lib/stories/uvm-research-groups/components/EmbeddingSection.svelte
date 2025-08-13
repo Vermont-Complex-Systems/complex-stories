@@ -9,6 +9,8 @@
 
   let { embeddingData, coauthorData } = $props();
 
+  $inspect(embeddingData);
+
   // Process coauthor data into positioned points
   let processedCoauthorData = $derived.by(() => {
     if (!filteredCoauthorData || filteredCoauthorData.length === 0) return [];
@@ -74,7 +76,7 @@
       
       // Apply highlight filter
       if (dashboardState.highlightedCoauthor) {
-        const isHighlightedCoauthor = point.name === dashboardState.highlightedCoauthor;
+        const isHighlightedCoauthor = point.ego_display_name === dashboardState.highlightedCoauthor;
         opacity *= isHighlightedCoauthor ? 1 : 0.2;
       }
       
@@ -109,7 +111,7 @@
   function handleBrushSelection(brushedPoints) {
     selectedCoauthors = brushedPoints;
   }
-
+  
 </script>
 
 <section id="embeddings" class="story">

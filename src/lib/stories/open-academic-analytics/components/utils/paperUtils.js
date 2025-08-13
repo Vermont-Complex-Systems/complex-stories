@@ -58,7 +58,7 @@ export function createPaperPoint(d, targetY, radiusScale) {
     work_type: d.work_type,
     doi: d.doi,
     authors: d.authors,
-    ego_aid: d.ego_aid,
+    ego_author_id: d.ego_author_id,
     citation_percentile: d.citation_percentile,
     citation_category: d.citation_category
   };

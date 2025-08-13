@@ -52,7 +52,7 @@
 			style:left="{mousePos.x + 10}px"
 			style:top="{mousePos.y - 10}px"
 		>
-			{hoveredPerson.name}<br>
+			{hoveredPerson.ego_display_name}<br>
 			{hoveredPerson.has_research_group ? 'Has research group' : 'No research group'}
 			{#if hoveredPerson.college}
 				<br>College: {hoveredPerson.college}

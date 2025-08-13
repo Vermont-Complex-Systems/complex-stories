@@ -18,7 +18,7 @@
   // Extract author names from filtered authors
   let authorNames = $derived.by(() => {
     if (!filteredAuthors || filteredAuthors.length === 0) return [];
-    return filteredAuthors.map(author => author.name);
+    return filteredAuthors.map(author => author.ego_display_name);
   });
 
   function handleSelectionChange(event) {

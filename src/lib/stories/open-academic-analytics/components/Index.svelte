@@ -49,10 +49,10 @@
                     
                     {#if uiState.debug == true}
                         <h1>Paper table</h1>
-                        <DataTable data={data.paper?.filter(d=>d.name === dashboardState.selectedAuthor).slice(0,5)}/>
+                        <DataTable data={data.paper?.filter(d=>d.ego_display_name === dashboardState.selectedAuthor).slice(0,5)}/>
                         
                         <h1>Coauthor table</h1>
-                        <DataTable data={data.coauthor?.filter(d=>d.name === dashboardState.selectedAuthor).slice(0,5)}/>
+                        <DataTable data={data.coauthor?.filter(d=>d.ego_display_name === dashboardState.selectedAuthor).slice(0,5)}/>
                     {/if}
                 </main>    
             {/if}    

@@ -39,9 +39,10 @@ export async function loadPaperData(authorName, filterBigPapers) {
     await registerTables();
     const result = await query(`
         SELECT 
+        ego_display_name,
         strftime(publication_date::DATE, '%Y-%m-%d') as pub_date, * 
         FROM paper 
-        WHERE name = '${authorName}' AND nb_coauthors < ${filterBigPapers ? 25 : 999}
+        WHERE ego_display_name = '${authorName}' AND nb_coauthors < ${filterBigPapers ? 25 : 999}
         ORDER BY pub_date DESC
         `);
 
@@ -51,10 +52,11 @@ export async function loadCoauthorData(authorName, filterBigPapers) {
     await registerTables();
     const result = await query(`
         SELECT 
+        ego_display_name,
         strftime(publication_date::DATE, '%Y-%m-%d') as pub_date, 
         * 
         FROM coauthor 
-        WHERE name = '${authorName}' AND nb_coauthors < ${filterBigPapers ? 25 : 999}
+        WHERE ego_display_name = '${authorName}' AND nb_coauthors < ${filterBigPapers ? 25 : 999}
         ORDER BY pub_date DESC
         `);
     return result;
@@ -65,13 +67,13 @@ async function loadAvailableAuthors() {
     
     const result = await query(`
         SELECT DISTINCT 
-            name,
+            ego_display_name,
             LAST(ego_age) as current_age,
             LAST(publication_year) as last_pub_year
         FROM coauthor 
-        WHERE name IS NOT NULL AND ego_age IS NOT NULL
-        GROUP BY name
-        ORDER BY name
+        WHERE ego_display_name IS NOT NULL AND ego_age IS NOT NULL
+        GROUP BY ego_display_name
+        ORDER BY ego_display_name
     `);
     
     return result;
@@ -115,7 +117,7 @@ export async function loadSelectedAuthor() {
 class DerivedData {
     chosen_author = $derived.by(() => {
         if (!data.coauthor) return [];
-        return data.coauthor.filter(d=>d.name == dashboardState.selectedAuthor)[0]
+        return data.coauthor.filter(d=>d.ego_display_name == dashboardState.selectedAuthor)[0]
     })
 
     authors = $derived(data.availableAuthors || []);
