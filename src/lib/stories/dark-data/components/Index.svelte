@@ -28,17 +28,18 @@ import { base } from "$app/paths";
     <p>In this project, we seek to understand the extent to which open academic assets are indeed findable and accessible after initial publication and developing methods by which to understand what academic data assets should be findable and accessible.t he level of how findable and accessible these data are is what we call "<b class="luminous">data luminosity</b>".</p>
 
     
-    <p> One obvious way that researchers share their data is through <em>data availability statements</em>. Simply stated, this is a statement in a paper that says whether the data is available, and if so, where it can be found. Those vary wildly across the sciences, but they became more popular in recent years for various reasons.</p>
+    <p> One obvious way that researchers share their data is through <em>data availability statements</em>. Simply stated, this is a statement in a paper that says whether the data is available, and if so, where it can be found. Simple enough? </p>
     
 </section>
 
 <div class="box">
-        <div>CCDC 2051611 contains the supplementary crystallographic <span class="data">data</span> for this work. These data can be obtained free of charge from The Cambridge Crystallographic Data Centre via www.ccdc.cam.ac.uk/data_request/cif.</div>
+        <div>CCDC 2051611 contains the supplementary crystallographic <span class="data">data</span> for this work. These <span class="data">data</span> can be obtained free of charge from The Cambridge Crystallographic Data Centre via www.ccdc.cam.ac.uk/data_request/cif.</div>
         <div>Supplementary <span class="data">data</span> are available at Journal of Tropical Pediatrics online.</div>
         <div>In this paper, we have applied <span class="data">data</span> from various sources. A detailed list of the variables, their definitions and sources is provided in Table 1.</div>
         <div>The <span class="data">data</span> that support the findings of this study are available from the corresponding author upon reasonable request.</div>
         <div>NAISC-L <span class="data">data</span> is stored in a relational database (RDB) and is uplifted to RDF using R2RML, a W3C Recommendation used to express mappings from RDBs to RDF (Das et al. 2012)... These mappings were created using the JUMA mapping tool (Crotti et al. 2018). The graphs can be viewed and downloaded in different RDF serialisation formats</div>
-        <div>Temperature records from (a) mid-Holocene Sr/Ca derived record from KR-AMA-2, (b) modern microatoll KR-MMA-1 Sr/Ca record, and (c) instrumental <span class="data">data</span> obtained from Mourilyan Harbour in situ **data** logger (http://www.aims.gov.au). Temperature values given are the mean of each dataset, with gray shading indicating the 95% confidence interval of the mean.</div>
+        <div>Temperature records from (a) mid-Holocene Sr/Ca derived record from KR-AMA-2, (b) modern microatoll KR-MMA-1 Sr/Ca record, and (c) instrumental <span class="data">data</span> obtained from Mourilyan Harbour in situ <span class="data">data</span> logger (http://www.aims.gov.au). Temperature values given are the mean of each dataset, with gray shading indicating the 95% confidence interval of the mean.</div>
+        <div>Data provided by experimenters, and archived in original form in publications or computer-accessible <span class="data">data</span> repositories, e.g., in EXFOR [55], are considered to be raw <span class="data">data</span>.</div>
 </div>
 
 
