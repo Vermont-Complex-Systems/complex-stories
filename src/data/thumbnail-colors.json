@@ -5,6 +5,11 @@
         "text": "#000"
     },
     {
+        "slug": "friends-funnier-than-you-are",
+        "bg": "hsl(343, 56%, 61%)",
+        "text": "#000"
+    },
+    {
         "slug": "vermont-livability-map",
         "bg": "hsl(170, 100%, 35%)",
         "text": "#000"
