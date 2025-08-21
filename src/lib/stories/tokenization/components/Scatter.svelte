@@ -5,16 +5,16 @@
 
   const { value } = $props();
 
-  // Create simple, fixed data points
-  const baseData = [
-    { id: 1, baseX: 0, baseY: 0 },
-    { id: 2, baseX: 1, baseY: 1 },
-    { id: 3, baseX: 2, baseY: 0.5 },
-    { id: 4, baseX: -1, baseY: -1 },
-    { id: 5, baseX: -0.5, baseY: 1.5 },
-    { id: 6, baseX: 1.5, baseY: -0.5 },
-    { id: 7, baseX: 0.5, baseY: 2 },
-    { id: 8, baseX: -1.5, baseY: 0.5 }
+  // New: baseData as array of 2D arrays [[x, y], ...]
+  const baseData: [number, number][] = [
+    [0, 0],
+    [1, 1],
+    [2, 0.5],
+    [-1, -1],
+    [-0.5, 1.5],
+    [1.5, -0.5],
+    [0.5, 2],
+    [-1.5, 0.5]
   ];
 
   // Tweened transform parameters
@@ -25,10 +25,10 @@
 
   // Transform the data based on tweened values
   let plotData = $derived(
-    baseData.map(point => ({
-      id: point.id,
-      x: point.baseX * scaleX.current + offsetX.current,
-      y: point.baseY * scaleY.current + offsetY.current
+    baseData.map(([x0, y0], i) => ({
+      id: i + 1,
+      x: x0 * scaleX.current + offsetX.current,
+      y: y0 * scaleY.current + offsetY.current
     }))
   );
 
