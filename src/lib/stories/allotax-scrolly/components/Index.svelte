@@ -100,6 +100,10 @@
                 : 0  // We're entering the scrolly section - start at step 0
     );
 
+    // Mobile image helpers
+    let mobileImageGender = $derived(isGirls ? 'girl' : 'boy');
+    let mobileImageStep = $derived(Math.min(effectiveStep, 2));
+
     // Update your renderedData to use effectiveStep:
     let renderedData = $derived.by(() => {
         if (!dat || !barData) return null;
@@ -171,51 +175,64 @@
     <p>Allotaxonometer provides a systematic way to analyze these shifts using <a href="https://arxiv.org/abs/2008.13078">divergence metrics</a>.</p>
 
     <div class="chart-container-scrolly">
-        {#if isDataReady && renderedData}
-            <div class="visualization-container">
-                {#if effectiveStep >= 0}
-                <div class="diamondplot">
-                    <Diamond
-                        dat={renderedData} 
-                        {alpha} 
-                        divnorm={rtd.normalization} 
-                        {title} 
-                        {maxlog10}
-                        {DiamondHeight} 
-                        {marginInner} 
-                        {marginDiamond}
-                    />
-                </div>
-                {/if}
-                
-                {#if effectiveStep >= 1}
-                    <div class="additional-charts" 
-                        in:fade={{ duration: 800, delay: 300 }}
-                    >
-                        <div class="legend-container" 
-                            in:fly={{ x: -50, duration: 600, delay: 500 }}>
-                            <Legend
-                                diamond_dat={dat.counts}
-                                DiamondHeight={DiamondHeight}
-                                max_count_log={max_count_log || 5}
-                            />
-                        </div>
-                        
-                        <div class="balance-container" style="opacity: {effectiveStep >= 2 ? 1 : 0};">
-                            <DivergingBarChart
-                                data={balanceData}
-                                DiamondHeight={DiamondHeight}
-                                DiamondWidth={DiamondWidth}
-                            />
-                        </div>
-                    </div>
-                {/if}
+        {#if isMobile}
+            <!-- Static image for mobile positioned like desktop chart -->
+            <div class="mobile-chart-image">
+                <img 
+                    src="{base}/common/thumbnails/screenshots/allotax-scrolly-{mobileImageGender}-{mobileImageStep}.jpg" 
+                    alt="Allotaxonometer visualization step {mobileImageStep} showing {mobileImageGender} baby names analysis from Quebec"
+                    loading="lazy"
+                />
             </div>
+        {:else}
+            <!-- Interactive visualization for desktop/tablet -->
+            {#if isDataReady && renderedData}
+                <div class="visualization-container">
+                    {#if effectiveStep >= 0}
+                    <div class="diamondplot">
+                        <Diamond
+                            dat={renderedData} 
+                            {alpha} 
+                            divnorm={rtd.normalization} 
+                            {title} 
+                            {maxlog10}
+                            {DiamondHeight} 
+                            {marginInner} 
+                            {marginDiamond}
+                        />
+                    </div>
+                    {/if}
+                    
+                    {#if effectiveStep >= 1}
+                        <div class="additional-charts" 
+                            in:fade={{ duration: 800, delay: 300 }}
+                        >
+                            <div class="legend-container" 
+                                in:fly={{ x: -50, duration: 600, delay: 500 }}>
+                                <Legend
+                                    diamond_dat={dat.counts}
+                                    DiamondHeight={DiamondHeight}
+                                    max_count_log={max_count_log || 5}
+                                />
+                            </div>
+                            
+                            <div class="balance-container" style="opacity: {effectiveStep >= 2 ? 1 : 0};">
+                                <DivergingBarChart
+                                    data={balanceData}
+                                    DiamondHeight={DiamondHeight}
+                                    DiamondWidth={DiamondWidth}
+                                />
+                            </div>
+                        </div>
+                    {/if}
+                </div>
+            {/if}
         {/if}
     </div>
 
 
     <div class="stepContainer">
+        
         <Scrolly bind:value={scrollyIndex} top={isMobile ? 100 : 0} bottom={isMobile ? 100 : 0}>
             {#each steps as text, i}
             {@const active = scrollyIndex === i || (scrollyIndex === undefined && i === 0)}
@@ -374,6 +391,24 @@
         clear: both;
     }
 
+    /* Mobile chart image styling - simple approach */
+    .mobile-chart-image {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        max-width: 90vw;
+        margin: 0 auto;
+    }
+
+    .mobile-chart-image img {
+        width: 100%;
+        height: auto;
+        max-height: 60vh;
+        object-fit: contain;
+        object-position: center;
+    }
+
 	 .visualization-container {
         display: flex;
         flex-direction: column;
@@ -457,6 +492,7 @@
         margin: 0 auto;
         width: 90%;
         justify-content: center;
+        height: 120vh; /* More space between steps on mobile to see the plot */
     }
 
     .step.tablet {
@@ -482,6 +518,10 @@
         text-align: center;
         width: 100%;
         max-width: 600px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
     }
 
     .step.tablet p {
@@ -518,6 +558,14 @@
     :global(.dark) .gender-text.boys {
         color: #93c5fd;
         background: rgba(59, 130, 246, 0.2);
+    }
+
+    /* Dark mode support for mobile background steps */
+    :global(.dark) .step.mobile p {
+        background: rgba(0, 0, 0, 0.85);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
     
     .math-overlay {
@@ -564,6 +612,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            float: none; /* Remove float on tablet */
         }
 
         .additional-charts {
@@ -592,8 +641,12 @@
         }
         
         .chart-container-scrolly {
-            top: calc(50vh - 150px); /* Even less aggressive */
-            max-width: 90vw; /* Use more screen width */
+            position: sticky;
+            top: calc(50vh - 200px);
+            width: 100%;
+            max-width: 90vw;
+            margin: 1rem auto;
+            float: none;
         }
         
         section p {
