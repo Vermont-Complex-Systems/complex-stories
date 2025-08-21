@@ -5,20 +5,6 @@
 </script>
 
 <div class="hero-banner">
-	<!-- Top navigation -->
-	<div class="top-nav">
-		<a 
-			class="home-link"
-			href="{base}/"
-			title="Back to Home"
-		>
-			<img
-				src="{base}/octopus-swim-right.png"
-				alt="Home"
-			/>
-		</a>
-	</div>
-
 	<div class="hero-content">
 		<div class="centered-layout">
 			<div class="text-side">
@@ -100,27 +86,6 @@
         font-weight: 400;
     }
 
-	.top-nav {
-		position: absolute;
-		top: 1rem;
-		right: 1rem;
-		z-index: 3;
-		display: flex;
-		align-items: center;
-	}
-
-	.home-link img {
-		width: clamp(55px, 8vw, 90px);
-		height: clamp(35px, 5.2vw, 58px);
-		border-radius: 4px;
-		object-fit: contain;
-		transition: transform 0.2s ease;
-		transform: translateY(8px);
-	}
-
-	.home-link img:hover {
-		transform: rotate(-2deg) scale(1.1);
-	}
 
 	.hero-content {
 		max-width: 1100px;
@@ -151,7 +116,8 @@
 	.text-block {
 		margin-top: 3rem;
 		color: var(--color-fg);
-		font-size: 1.3rem;
+		font-size: 1.375rem; /* Match global section p styling */
+		line-height: 1.3;
 	}
 
 	.text-block a {
@@ -223,17 +189,4 @@
 		}
 	}
 
-	@media (max-width: 768px) {
-		.top-nav {
-			top: 0.75rem;
-			left: 50%;
-			right: auto;
-			transform: translateX(-50%);
-		}
-
-		.home-link img {
-			width: clamp(75px, 12vw, 110px);
-			height: clamp(48px, 7.8vw, 71px);
-		}
-	}
 </style>

@@ -26,15 +26,10 @@
     
     <!-- Right side: Toggles and author info -->
     <div class="header-right">
-        <!-- Desktop toggles -->
+        <!-- Toggles - always show gender toggle, hide theme toggle on mobile -->
         <div class="toggles-container">
             <ToggleSex bind:isGirls />
             <ThemeToggle bind:isDark hideOnMobile={true} />
-        </div>
-        
-        <!-- Mobile author info -->
-        <div class="mobile-author">
-            <span class="author-name">By <a href="{base}/author/jonathan-st-onge">Jonathan St-Onge</a></span>
         </div>
     </div>
 </header>
@@ -130,10 +125,6 @@
         gap: 1rem;
     }
 
-    .mobile-author {
-        display: none;
-    }
-
     @media (max-width: 768px) {
         header {
             padding: 0.5rem 1rem;
@@ -150,21 +141,7 @@
         }
 
         .toggles-container {
-            display: none;
-        }
-
-        .mobile-author {
-            display: block;
-        }
-
-        .author-name {
-            font-family: var(--mono);
-            font-size: var(--font-size-xsmall);
-            color: var(--color-secondary-gray);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 500;
-            white-space: nowrap;
+            gap: 0.5rem; /* Smaller gap on mobile */
         }
     }
 

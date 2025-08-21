@@ -238,7 +238,7 @@
         <Scrolly bind:value={scrollyIndex} top={isMobile ? 50 : 0} bottom={isMobile ? 50 : 0}>
             {#each steps as text, i}
             {@const active = scrollyIndex === i || (scrollyIndex === undefined && i === 0)}
-            <div class="step" class:active class:mobile={isMobile} class:tablet={isTablet}>
+            <div class="scrolly-step" class:active class:mobile={isMobile} class:tablet={isTablet}>
                 <p> 
                     <ScrollyMd text={text.value} {isGirls} />
                 </p>
@@ -386,12 +386,7 @@
             font-family: var(--mono);
         }
 
-	section p {
-      font-size: 22px;
-      max-width: 800px;
-      line-height: 1.3;
-      margin: 1rem 0 1rem 0;
-  }
+	/* Global paragraph styling now handled in app.css */
 
 
     .initial-chart {
@@ -525,78 +520,6 @@
 			opacity 700ms cubic-bezier(0.76, 0, 0.24, 1);
 	}
 
-	 .step {
-        height: 80vh;
-        display: flex;
-        place-items: center;
-        justify-content: flex-start;
-        margin-right: 60%;
-    }
-
-    .step.mobile {
-        margin: 0 auto;
-        width: 100%;
-        justify-content: center;
-        height: 120vh; /* More space between steps on mobile to see the plot */
-    }
-
-    .step.tablet {
-        margin-right: 20%;
-        width: 70%;
-    }
-
-	.step p {
-        padding: 0.5rem 1rem;
-        background: var(--step-bg, #f5f5f5);
-        color: var(--step-text, #888);
-        border-radius: 5px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        box-shadow: var(--step-shadow, 1px 1px 10px rgba(0, 0, 0, 0.2));
-        z-index: 10;
-        transition: background 500ms ease, color 500ms ease, box-shadow 500ms ease;
-        text-align: left;
-    }
-
-    .step.mobile p {
-        text-align: center;
-        width: 95vw;
-        max-width: 95vw;
-        /* Break out of parent container constraints */
-        margin-left: calc(-50vw + 50%);
-        margin-right: calc(-50vw + 50%);
-        background: rgba(255, 255, 255, 0.98);
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-        position: relative;
-        z-index: 100;
-    }
-
-    .step.tablet p {
-        text-align: left;
-        max-width: 500px;
-    }
-
-    
-    .step.active p {
-        background: var(--step-active-bg, white);
-        color: var(--step-active-text, black);
-        box-shadow: var(--step-active-shadow, 1px 1px 10px rgba(0, 0, 0, 0.2));
-    }
-    
-    /* Dark mode overrides */
-    :global(.dark) .step p {
-        --step-bg: #2a2a2a;
-        --step-text: #888;
-        --step-shadow: 1px 1px 10px rgba(227, 227, 227, 0.5);
-    }
-
-    :global(.dark) .step.active p {
-        --step-active-bg: #383838;
-        --step-active-text: #fff;
-        --step-active-shadow: 1px 1px 10px rgba(230, 230, 230, 0.5);
-    }
 
     /* Dark mode support */
     :global(.dark) .gender-text.girls {
@@ -609,13 +532,6 @@
         background: rgba(59, 130, 246, 0.2);
     }
 
-    /* Dark mode support for mobile background steps */
-    :global(.dark) .step.mobile p {
-        background: rgba(0, 0, 0, 0.85);
-        color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
     
     .math-overlay {
         position: absolute;
@@ -676,9 +592,6 @@
     /* Add extra small screen support */
     @media (max-width: 768px) {
 
-        :global(#story) {
-            padding: 0 0.5rem; /* Reduce side padding on mobile */
-        }
 
         section h1 {
             font-size: var(--font-size-xlarge); 
@@ -764,4 +677,5 @@
         background: rgba(0, 0, 0, 0.05);
         border-radius: 4px;
     }
+
 </style>
