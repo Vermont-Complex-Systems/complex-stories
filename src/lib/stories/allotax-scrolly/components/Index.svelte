@@ -102,6 +102,7 @@
 
     // Mobile image helpers  
     let mobileImageGender = $derived(isGirls ? 'girl' : 'boy');
+    // Use the same logic as the active step: when scrollyIndex is undefined, show step 0
     let mobileImageStep = $derived(scrollyIndex !== undefined ? Math.min(scrollyIndex, 2) : 0);
 
     // Update your renderedData to use effectiveStep:
@@ -181,6 +182,7 @@
                 <img 
                     src="{base}/common/thumbnails/screenshots/allotax-scrolly-{mobileImageGender}-{mobileImageStep}.jpg" 
                     alt="Allotaxonometer visualization step {mobileImageStep} showing {mobileImageGender} baby names analysis from Quebec"
+                    key="{mobileImageGender}-{mobileImageStep}"
                     loading="lazy"
                 />
             </div>
@@ -233,7 +235,7 @@
 
     <div class="stepContainer">
         
-        <Scrolly bind:value={scrollyIndex} top={isMobile ? 100 : 0} bottom={isMobile ? 100 : 0}>
+        <Scrolly bind:value={scrollyIndex} top={isMobile ? 50 : 0} bottom={isMobile ? 50 : 0}>
             {#each steps as text, i}
             {@const active = scrollyIndex === i || (scrollyIndex === undefined && i === 0)}
             <div class="step" class:active class:mobile={isMobile} class:tablet={isTablet}>
@@ -292,7 +294,10 @@
         </div>
         {/if}
 
-    
+{#if isMobile}
+    <p class="mobile-note"><em>Note: The interactive α slider is available on desktop for exploring different parameter values.</em></p>
+{/if}
+
 <p>Where the α parameter lets us tweak the relative importance of the divergence metric, as shown in the top left expression. Try α = ∞, you will see that types tend to be similarly ranked with their frequency, with {@render G(isGirls ? 'Julie' : 'Eric')} at the top. By contrast, α = 0 allows us to inspect what is happening further down in the tail. Finally, those contour lines underlying the diamond plot help guide our interpretation of the rank-divergence metric, tracking how α is varied.</p>
 
 <p>For much more detail about this tool, see the foundational <a href="https://epjdatascience.springeropen.com/articles/10.1140/epjds/s13688-023-00400-x">paper</a>. To try the tool with your own dataset, visit our <a href="{base}/allotaxonometry">web app</a>. If you are more of a coder, you might enjoy our <a href="https://github.com/car-d00r/py-allotax">Python version</a>.</p>
@@ -439,6 +444,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        position: relative;
         z-index: -1;
         padding: 0;
     }
@@ -561,12 +567,11 @@
         text-align: center;
         width: 100%;
         max-width: 600px;
-        background: rgba(255, 255, 255, 0.95);
-        /* backdrop-filter: blur(10px); */
+        background: rgba(255, 255, 255, 0.98);
         border: 1px solid rgba(0, 0, 0, 0.1);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
         position: relative;
-        z-index: 10;
+        z-index: 100;
     }
 
     .step.tablet p {
@@ -692,6 +697,7 @@
             max-width: 90vw;
             margin: 1rem auto;
             float: none;
+            min-height: 60vh;
         }
         
         section p {
@@ -733,11 +739,10 @@
         position: relative;
         max-width: 1400px;
         margin: 0 auto;
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(255, 255, 255, 0.98);
         border-radius: 12px;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
         border: 1px solid rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(8px);
     }
 
     .slider-wrapper {
@@ -745,5 +750,15 @@
         max-width: 400px;
         display: flex;
         justify-content: center;
+    }
+
+    .mobile-note {
+        text-align: center;
+        font-size: 14px;
+        color: #666;
+        margin: 1rem 0;
+        padding: 0.5rem;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 4px;
     }
 </style>
