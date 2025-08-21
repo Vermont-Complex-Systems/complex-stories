@@ -1,5 +1,7 @@
+<!-- src/lib/components/Meta.svelte -->
 <script>
-  import { page } from "$app/stores";
+  import { page } from "$app/state"; // Updated for Svelte 5
+  import { base } from "$app/paths";
   
   let { 
     title, 
@@ -7,12 +9,12 @@
     keywords = "",
     image = "/default-og-image.jpg",
     preloadFont = [],
-    author = "Your Site Name"
+    author = "Vermont Complex Systems Institute"
   } = $props();
   
-  const baseUrl = "https://yoursite.com"; // Your domain
-  const url = `${baseUrl}${$page.url.pathname}`;
-  const fullImageUrl = image.startsWith('http') ? image : `${baseUrl}${image}`;
+  const baseUrl = "https://vermont-complex-systems.github.io"; // Your actual domain
+  const url = `${baseUrl}${base}${page.url.pathname}`;
+  const fullImageUrl = image.startsWith('http') ? image : `${baseUrl}${base}${image}`;
 </script>
 
 <svelte:head>
@@ -23,9 +25,8 @@
     <meta name="keywords" content={keywords} />
   {/if}
 
-  <!-- Open Graph -->
   <meta property="og:title" content={title} />
-  <meta property="og:site_name" content="Your Site Name" />
+  <meta property="og:site_name" content="Complex Stories" />
   <meta property="og:url" content={url} />
   <meta property="og:description" content={description} />
   <meta property="og:type" content="article" />
@@ -34,18 +35,16 @@
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="628" />
 
-  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
   <meta name="twitter:image" content={fullImageUrl} />
 
-  <!-- Technical SEO -->
   <link rel="canonical" href={url} />
   <meta name="robots" content="index, follow, max-image-preview:large" />
 
-  <!-- Font Preloading -->
   {#each preloadFont as href}
     <link rel="preload" {href} as="font" type="font/woff2" crossorigin />
   {/each}
+  
 </svelte:head>

@@ -146,7 +146,7 @@
 
 
 <div class="chart-container">
-	<svg {width} {height}>
+	<svg {width} {height} style="overflow: visible;">
 		<g class="inner-chart">
 			<Edges links={renderedLinks} nodes={nodes_xy} />
 			<Nodes nodes={nodes_xy} />

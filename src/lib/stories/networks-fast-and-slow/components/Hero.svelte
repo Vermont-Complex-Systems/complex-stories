@@ -1,30 +1,37 @@
 <script>
+	import { base } from '$app/paths';
 	import BouncingBalls from "./Bouncing.svelte";
 	let numBalls = $state(50);
 </script>
 
 <div class="hero-banner">
-	<a
-		class="github-link"
-		href="https://github.com/Vermont-Complex-Systems/complex-stories"
-		target="_blank"
-		rel="noopener noreferrer"
-	>
-		<img
-			src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-			alt="GitHub Logo"
-		/>
-	</a>
+	<!-- Top navigation -->
+	<div class="top-nav">
+		<a 
+			class="home-link"
+			href="{base}/"
+			title="Back to Home"
+		>
+			<img
+				src="{base}/octopus-swim-right.png"
+				alt="Home"
+			/>
+		</a>
+	</div>
 
 	<div class="hero-content">
 		<div class="centered-layout">
 			<div class="text-side">
 				<h1>Networks, Fast and Slow</h1>
+				<div class="article-meta">
+					<p class="author">By <a href="{base}/author/jonathan-st-onge">Jonathan St-Onge</a> and <a href="https://www.uvm.edu/socks/node/38?rnd=0.8126330183365708#giulioburgio">Giulio Burgio</a></p>
+					<p class="date">May 16, 2025</p>
+				</div>
 				<div class="text-block">
-					<p>
+					<!-- <p>
 						By <a href="https://jstonge.vercel.app/about">Jonathan St-Onge</a> and
-						<a href="">Giulio Burgio</a>.
-					</p>
+						<a href="https://www.uvm.edu/socks/node/38?rnd=0.8126330183365708#giulioburgio">Giulio Burgio</a>.
+					</p> -->
 					<p>
 						During Covid-19, the Washington Post published the
 						<a href="https://www.washingtonpost.com/graphics/2020/world/corona-simulator/">
@@ -71,23 +78,48 @@
 		padding: 2rem 0;
 		position: relative;
 		box-sizing: border-box;
+		background-color: var(--color-bg);
 	}
 
-	.github-link {
+	.article-meta {
+        margin: -1rem 0 2rem 0; /* Negative margin to pull closer to title */
+        font-family: var(--sans);
+    }
+
+    .article-meta .author {
+        font-size: var(--font-size-medium);
+        color: var(--color-secondary-gray);
+        margin: 0 0 0.25rem 0;
+        font-weight: 500;
+    }
+
+    .article-meta .date {
+        font-size: var(--font-size-small);
+        color: var(--color-tertiary-gray);
+        margin: 0;
+        font-weight: 400;
+    }
+
+	.top-nav {
 		position: absolute;
 		top: 1rem;
 		right: 1rem;
 		z-index: 3;
+		display: flex;
+		align-items: center;
 	}
 
-	.github-link img {
-		width: 40px;
-		height: 40px;
+	.home-link img {
+		width: clamp(55px, 8vw, 90px);
+		height: clamp(35px, 5.2vw, 58px);
+		border-radius: 4px;
+		object-fit: contain;
 		transition: transform 0.2s ease;
+		transform: translateY(8px);
 	}
 
-	.github-link img:hover {
-		transform: scale(1.1);
+	.home-link img:hover {
+		transform: rotate(-2deg) scale(1.1);
 	}
 
 	.hero-content {
@@ -100,7 +132,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-start;
-		gap: 2rem;
+		gap: 3rem;
 	}
 
 	.text-side {
@@ -109,28 +141,31 @@
 	}
 
 	.hero-content h1 {
-		font-size: 3rem;
-		font-weight: bold;
+		color: var(--color-fg);
+		font-size: var(--font-size-xlarge);
+		margin: 2rem 0 3rem 0;
+		text-align: left;
+		font-family: var(--serif);
 	}
 
 	.text-block {
 		margin-top: 3rem;
-		
+		color: var(--color-fg);
 		font-size: 1.3rem;
-		line-height: 1.3;
-	}
-
-	.text-block p {
-		margin-top: 1rem;
 	}
 
 	.text-block a {
-		
+		color: var(--color-link);
 		text-decoration: underline;
+		transition: color var(--transition-medium);
+	}
+
+	.text-block a:hover {
+		color: var(--color-link-hover);
 	}
 
 	.plot-side {
-		transform: translateY(150px);
+		transform: translateY(200px);
 	}
 
 	.ball-count {
@@ -138,16 +173,29 @@
 		justify-content: center;
 		margin-bottom: 1rem;
 		font-size: 1.1rem;
+		color: var(--color-fg);
+		font-family: var(--font-form);
+		gap: 0.5rem;
+		align-items: center;
+	}
+
+	.ball-count input[type="range"] {
+		margin: 0 0.5rem;
 	}
 
 	.chart-container {
 		position: relative;
 		margin: 1rem auto;
-		border: 2px solid #000;
+		border: 2px solid var(--color-border);
 		border-radius: 6px;
 		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-		max-height: 450px;
-		max-width: 350px;
+		background-color: var(--color-bg);
+		display: inline-block; /* Shrinks to content size */
+	}
+
+	/* Dark mode shadow adjustment */
+	:global(.dark) .chart-container {
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 	}
 
 	@media (max-width: 1200px) {
@@ -172,6 +220,20 @@
 
 		.text-block p {
 			text-align: left;
+		}
+	}
+
+	@media (max-width: 768px) {
+		.top-nav {
+			top: 0.75rem;
+			left: 50%;
+			right: auto;
+			transform: translateX(-50%);
+		}
+
+		.home-link img {
+			width: clamp(75px, 12vw, 110px);
+			height: clamp(48px, 7.8vw, 71px);
 		}
 	}
 </style>

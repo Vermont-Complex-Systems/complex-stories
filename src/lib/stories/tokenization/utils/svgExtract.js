@@ -1,3 +1,5 @@
+import { browser } from '$app/environment';
+
 // Utility: parse SVG <text> and <tspan> elements into { id, text, x, y, opacity }, accounting for parent <g> transforms
 function getCumulativeTranslate(el) {
     let x = 0, y = 0;
@@ -5,7 +7,7 @@ function getCumulativeTranslate(el) {
     while (node && node.nodeType === 1 && node.tagName !== 'svg') {
         const transform = node.getAttribute('transform');
         if (transform) {
-            const match = /translate\\(([-\\d.]+)[ ,]+([\\-\\d.]+)\\)/.exec(transform);
+            const match = /translate\(([-\d.]+)[ ,]+([\\-\d.]+)\)/.exec(transform);
             if (match) {
                 x += parseFloat(match[1]);
                 y += parseFloat(match[2]);
@@ -17,6 +19,12 @@ function getCumulativeTranslate(el) {
 }
 
 export function extractTextElementsFromSVG(svgStringOrNode) {
+    // Return empty array if not in browser
+    if (!browser) {
+        console.warn('extractTextElementsFromSVG: DOMParser not available on server');
+        return [];
+    }
+
     let svg;
     if (typeof svgStringOrNode === 'string') {
         const parser = new DOMParser();

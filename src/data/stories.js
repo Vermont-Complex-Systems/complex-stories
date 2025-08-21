@@ -1,7 +1,6 @@
 import data from "$data/stories.csv";
 import colors from "$data/thumbnail-colors.json";
 import { timeParse, timeFormat } from "d3";
-import slugify from "$lib/utils/slugify.js";
 
 const strToArray = (str) => str.split(",").map((d) => d.trim());
 
@@ -23,7 +22,7 @@ const clean = data
     ...d,
     date: parseDate(d.date),
     month: formatMonth(parseDate(d.date)),
-    slug: slugify(d.url),
+    slug: d.url, // Use url directly as slug
     author: strToArray(d.author),
     keyword: strToArray(d.keyword),
     filters: addFaves(strToArray(d.filters), d.faves),

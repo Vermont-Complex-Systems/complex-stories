@@ -1,11 +1,8 @@
+<!-- In Spinner.svelte -->
 <div id="loading"></div>
 <style>
-
   #loading {
     display: inline-block;
-    position: relative;
-    margin-top: 50px;
-    margin-left: calc(50% - 25px);
     width: 50px;
     height: 50px;
     border: 3px solid rgba(255, 23, 23, 0.3);
@@ -21,5 +18,4 @@
   @-webkit-keyframes spin {
     to { -webkit-transform: rotate(360deg); }
   }
-
 </style>
