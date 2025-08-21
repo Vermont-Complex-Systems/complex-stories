@@ -100,9 +100,9 @@
                 : 0  // We're entering the scrolly section - start at step 0
     );
 
-    // Mobile image helpers
+    // Mobile image helpers  
     let mobileImageGender = $derived(isGirls ? 'girl' : 'boy');
-    let mobileImageStep = $derived(Math.min(effectiveStep, 2));
+    let mobileImageStep = $derived(scrollyIndex !== undefined ? Math.min(scrollyIndex, 2) : 0);
 
     // Update your renderedData to use effectiveStep:
     let renderedData = $derived.by(() => {
@@ -250,32 +250,47 @@
 <section>
     <h1>The full picture</h1>
     <p>We now add the final chart to our canvas, the wordshift plot, with our divergence metric of choice, the rank-turbulence divergence. The wordshift plot shows a more direct view of how baby names shift across pairs of systems, with the rank being shown in pale grey. For instance, {@render G(isGirls ? 'Florence' : 'Noah')} going from the {isGirls ? '409' : '855'} rank in <span class="year-1980">1980</span> to {isGirls ? '1.5' : '1'} in <span class="year-2023">2023</span>.</p>
-    <!-- <div class="dashboard-section">
-    <div class="dashboard-container">
-        <div class="math-overlay">
-            <Md text={math} />
+    {#if isMobile}
+        <!-- Mobile static image for final dashboard -->
+        <div class="mobile-dashboard-image">
+            <img 
+                src="{base}/common/thumbnails/screenshots/allotax-scrolly-{mobileImageGender}-dashboard.jpg"
+                alt="Complete allotaxonometer dashboard for {mobileImageGender} baby names analysis"
+                loading="lazy"
+            />
         </div>
-        
-        <Dashboard 
-            {dat}
-            {alpha}
-            divnorm={rtd?.normalization || 1}
-            {barData}
-            {balanceData}
-            {title}
-            {maxlog10}
-            {max_count_log}
-            width={Math.min(innerWidth.current - 40, 1400)} 
-            {DiamondHeight}
-            {DiamondWidth}
-            {marginInner}
-            {marginDiamond}
-            xDomain={[-max_shift * 1.5, max_shift * 1.5]}
-            class="dashboard"
-        />
-    </div>
-    <Slider bind:alphaIndex {alphas} />
-</div> -->
+    {:else}
+    <div class="dashboard-section">
+            <!-- Desktop interactive dashboard -->
+            <div class="dashboard-container">
+                <div class="math-overlay">
+                    <Md text={math} />
+                </div>
+                
+                <Dashboard 
+                    {dat}
+                    {alpha}
+                    divnorm={rtd?.normalization || 1}
+                    {barData}
+                    {balanceData}
+                    {title}
+                    {maxlog10}
+                    {max_count_log}
+                    width={Math.min(innerWidth.current - 40, 1400)} 
+                    {DiamondHeight}
+                    {DiamondWidth}
+                    {marginInner}
+                    {marginDiamond}
+                    xDomain={[-max_shift * 1.5, max_shift * 1.5]}
+                    class="dashboard"
+                />
+                
+                <div class="slider-wrapper">
+                    <Slider bind:alphaIndex {alphas} />
+                </div>
+            </div>
+        </div>
+        {/if}
 
     
 <p>Where the α parameter lets us tweak the relative importance of the divergence metric, as shown in the top left expression. Try α = ∞, you will see that types tend to be similarly ranked with their frequency, with {@render G(isGirls ? 'Julie' : 'Eric')} at the top. By contrast, α = 0 allows us to inspect what is happening further down in the tail. Finally, those contour lines underlying the diamond plot help guide our interpretation of the rank-divergence metric, tracking how α is varied.</p>
@@ -399,6 +414,8 @@
         width: 100%;
         max-width: 90vw;
         margin: 0 auto;
+        position: relative;
+        z-index: -1;
     }
 
     .mobile-chart-image img {
@@ -407,6 +424,32 @@
         max-height: 60vh;
         object-fit: contain;
         object-position: center;
+    }
+
+    /* Mobile dashboard image styling - full width */
+    .mobile-dashboard-image {
+        width: 100vw;
+        margin: 2rem 0;
+        /* Break out of parent constraints */
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: -1;
+        padding: 0;
+    }
+
+    .mobile-dashboard-image img {
+        width: 100%;
+        height: auto;
+        max-width: 100vw;
+        object-fit: contain;
+        object-position: center;
+        display: block;
     }
 
 	 .visualization-container {
@@ -519,9 +562,11 @@
         width: 100%;
         max-width: 600px;
         background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
+        /* backdrop-filter: blur(10px); */
         border: 1px solid rgba(0, 0, 0, 0.1);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        position: relative;
+        z-index: 10;
     }
 
     .step.tablet p {
@@ -572,9 +617,8 @@
         position: absolute;
         top: 5rem;
         left: 3rem;
-        z-index: 10;
+        z-index: 2;
         background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
         padding: 0 0;
         border-radius: 0;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -582,6 +626,7 @@
         max-width: 200px; /* Constrain overlay width */
         overflow: hidden; /* Prevent overflow */
         line-height: 1.2; /* Tighter line spacing for math */
+        pointer-events: none; /* Allow clicks to pass through */
     }
 
     .math-overlay :global(.markdown-content) {
@@ -653,6 +698,14 @@
             font-size: 16px; /* Even smaller text */
             line-height: 1.4; /* Better readability */
         }
+
+        /* Fix dashboard section on mobile */
+        .dashboard-section {
+            width: 100%;
+            margin-left: 0;
+            padding: 2rem 1rem;
+            text-align: center;
+        }
     }
 
     /* Dashboard section styles */
@@ -666,17 +719,31 @@
     .dashboard-section {
         width: 100vw;
         margin-left: calc(-50vw + 50%);
-        padding: 4rem 0 0 8rem;
+        padding: 4rem 2rem 2rem 2rem;
         text-align: center;
     }
 
      .dashboard-container {
         width: 100%;
         display: flex;
-        justify-content: center;
-        padding: 1rem 0;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+        padding: 2rem;
         position: relative;
-        max-width: 1400px; /* Constrain dashboard container */
-        margin: 0 auto; /* Center it */
+        max-width: 1400px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(8px);
+    }
+
+    .slider-wrapper {
+        width: 100%;
+        max-width: 400px;
+        display: flex;
+        justify-content: center;
     }
 </style>
