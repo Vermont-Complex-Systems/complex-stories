@@ -525,10 +525,6 @@
 			opacity 700ms cubic-bezier(0.76, 0, 0.24, 1);
 	}
 
-	.spacer {
-		height: 75vh;
-	}
-
 	 .step {
         height: 80vh;
         display: flex;
@@ -539,7 +535,7 @@
 
     .step.mobile {
         margin: 0 auto;
-        width: 90%;
+        width: 100%;
         justify-content: center;
         height: 120vh; /* More space between steps on mobile to see the plot */
     }
@@ -565,8 +561,11 @@
 
     .step.mobile p {
         text-align: center;
-        width: 100%;
-        max-width: 600px;
+        width: 95vw;
+        max-width: 95vw;
+        /* Break out of parent container constraints */
+        margin-left: calc(-50vw + 50%);
+        margin-right: calc(-50vw + 50%);
         background: rgba(255, 255, 255, 0.98);
         border: 1px solid rgba(0, 0, 0, 0.1);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
@@ -676,6 +675,10 @@
 
     /* Add extra small screen support */
     @media (max-width: 768px) {
+
+        :global(#story) {
+            padding: 0 0.5rem; /* Reduce side padding on mobile */
+        }
 
         section h1 {
             font-size: var(--font-size-xlarge); 
