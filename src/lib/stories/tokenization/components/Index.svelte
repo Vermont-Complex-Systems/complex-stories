@@ -259,11 +259,15 @@
 		z-index: var(--z-middle);
 		pointer-events: none; /* Allow scrolling through it */
 	}
+
+	/* need to add this so user can click on slider in third section */
+	.story-section {
+		pointer-events: none;
+	}
 	
 	.chart-content {
 		width: 100%;
 		height: 100%;
-		display: flex;
 		align-items: center;
 		justify-content: center;
 		pointer-events: auto; /* Re-enable for chart interactions */
