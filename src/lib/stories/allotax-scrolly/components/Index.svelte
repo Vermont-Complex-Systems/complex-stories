@@ -43,6 +43,11 @@
     let isDark = $state(false);
     let isGirls = $state(true);
 
+    // Responsive breakpoints using innerWidth
+    let isMobile = $derived(innerWidth.current <= 768);
+    let isTablet = $derived(innerWidth.current <= 1200 && innerWidth.current > 768);
+    let isDesktop = $derived(innerWidth.current > 1200);
+
     // Data systems
     let currentDataset = $derived(isGirls ? datasets.girls : datasets.boys);
     let sys1 = $derived(currentDataset.sys1);
@@ -168,7 +173,6 @@
     <div class="chart-container-scrolly">
         {#if isDataReady && renderedData}
             <div class="visualization-container">
-                <!-- Diamond plot: show for steps 0, 1, 2 (including undefined as 0) -->
                 {#if effectiveStep >= 0}
                 <div class="diamondplot">
                     <Diamond
@@ -184,7 +188,6 @@
                 </div>
                 {/if}
                 
-                <!-- Additional charts: show from step 1 onwards (no upper limit) -->
                 {#if effectiveStep >= 1}
                     <div class="additional-charts" 
                         in:fade={{ duration: 800, delay: 300 }}
@@ -198,7 +201,6 @@
                             />
                         </div>
                         
-                        <!-- Balance chart: visible from step 2 onwards -->
                         <div class="balance-container" style="opacity: {effectiveStep >= 2 ? 1 : 0};">
                             <DivergingBarChart
                                 data={balanceData}
@@ -213,24 +215,25 @@
     </div>
 
 
-    <div class="spacer"></div>
-    <Scrolly bind:value={scrollyIndex} offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
-        {#each steps as text, i}
-            {@const active = scrollyIndex === i}
-            <div class="step" class:active>
+    <div class="stepContainer">
+        <Scrolly bind:value={scrollyIndex} top={isMobile ? 100 : 0} bottom={isMobile ? 100 : 0}>
+            {#each steps as text, i}
+            {@const active = scrollyIndex === i || (scrollyIndex === undefined && i === 0)}
+            <div class="step" class:active class:mobile={isMobile} class:tablet={isTablet}>
                 <p> 
                     <ScrollyMd text={text.value} {isGirls} />
                 </p>
             </div>
-        {/each}
-    </Scrolly>
-    <div class="spacer"></div>
+            {/each}
+        </Scrolly>
+    </div>
+    
 </section>
 
 <section>
     <h1>The full picture</h1>
     <p>We now add the final chart to our canvas, the wordshift plot, with our divergence metric of choice, the rank-turbulence divergence. The wordshift plot shows a more direct view of how baby names shift across pairs of systems, with the rank being shown in pale grey. For instance, {@render G(isGirls ? 'Florence' : 'Noah')} going from the {isGirls ? '409' : '855'} rank in <span class="year-1980">1980</span> to {isGirls ? '1.5' : '1'} in <span class="year-2023">2023</span>.</p>
-    <div class="dashboard-section">
+    <!-- <div class="dashboard-section">
     <div class="dashboard-container">
         <div class="math-overlay">
             <Md text={math} />
@@ -255,7 +258,7 @@
         />
     </div>
     <Slider bind:alphaIndex {alphas} />
-</div>
+</div> -->
 
     
 <p>Where the α parameter lets us tweak the relative importance of the divergence metric, as shown in the top left expression. Try α = ∞, you will see that types tend to be similarly ranked with their frequency, with {@render G(isGirls ? 'Julie' : 'Eric')} at the top. By contrast, α = 0 allows us to inspect what is happening further down in the tail. Finally, those contour lines underlying the diamond plot help guide our interpretation of the rank-divergence metric, tracking how α is varied.</p>
@@ -446,15 +449,25 @@
         height: 80vh;
         display: flex;
         place-items: center;
-        justify-content: flex-start; /* Align to left */
+        justify-content: flex-start;
         margin-right: 60%;
     }
 
+    .step.mobile {
+        margin: 0 auto;
+        width: 90%;
+        justify-content: center;
+    }
+
+    .step.tablet {
+        margin-right: 20%;
+        width: 70%;
+    }
 
 	.step p {
         padding: 0.5rem 1rem;
         background: var(--step-bg, #f5f5f5);
-        color: var(--step-text, #ccc);
+        color: var(--step-text, #888);
         border-radius: 5px;
         display: flex;
         flex-direction: column;
@@ -462,6 +475,18 @@
         box-shadow: var(--step-shadow, 1px 1px 10px rgba(0, 0, 0, 0.2));
         z-index: 10;
         transition: background 500ms ease, color 500ms ease, box-shadow 500ms ease;
+        text-align: left;
+    }
+
+    .step.mobile p {
+        text-align: center;
+        width: 100%;
+        max-width: 600px;
+    }
+
+    .step.tablet p {
+        text-align: left;
+        max-width: 500px;
     }
 
     
@@ -548,13 +573,6 @@
             align-items: center;
         }
 
-        .step p {
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            text-align: center;
-            transform: none; /* Remove the translateX offset */
-        }
     }
 
     /* Add extra small screen support */
