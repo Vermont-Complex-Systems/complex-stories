@@ -133,7 +133,7 @@ def coauthor_cache(
                 
                 # Store in cache (using same connection)
                 conn.execute("""
-                    INSERT INTO oa.cache.coauthor_cache 
+                    INSERT OR IGNORE INTO oa.cache.coauthor_cache 
                     (id, display_name, first_pub_year, 
                      last_pub_year, last_fetched_date, fetch_successful)
                     VALUES (?, ?, ?, ?, NOW(), ?)
@@ -156,7 +156,7 @@ def coauthor_cache(
                 
                 # Still record the attempt (using same connection)
                 conn.execute("""
-                    INSERT INTO oa.cache.coauthor_cache 
+                    INSERT OR IGNORE INTO oa.cache.coauthor_cache 
                     (id, display_name, last_fetched_date, fetch_successful)
                     VALUES (?, ?, NOW(), FALSE)
                 """, [author_id, author_name])
