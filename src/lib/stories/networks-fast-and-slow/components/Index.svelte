@@ -1,5 +1,10 @@
 <script lang="ts">
 	import { innerWidth } from 'svelte/reactivity/window';
+	import { base } from '$app/paths';
+	
+	// Responsive breakpoints
+	let isMobile = $derived(innerWidth.current <= 768);
+	let isTablet = $derived(innerWidth.current <= 1200 && innerWidth.current > 768);
 	
 	import Network from './Network.svelte';
 	import Quench from './Quench.svelte';
@@ -8,9 +13,11 @@
 	import Scrolly from '$lib/components/helpers/Scrolly.svelte';
 	import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 	import Hero from './Hero.svelte';
+	import ThemeToggle from '$lib/stories/allotax-scrolly/components/ThemeToggle.svelte';
 
 	let { story, data } = $props();
 
+	let isDark = $state(false);
 	let links = Manylinks[0];
 	
 	let scrollyIndex = $state();
@@ -22,6 +29,27 @@
 	let height = 600;
 	const padding = { top: 20, right: 40, bottom: 20, left: 60 };
 </script>
+
+<!-- Navigation header -->
+<header class="header">
+    <div class="header-left">
+        <div class="logo-container">
+            <a href="{base}/" class="logo-link">
+                <img src="{base}/octopus-swim-right.png" alt="Home" class="logo" />
+            </a>
+        </div>
+    </div>
+    
+    <div class="header-center">
+        <!-- Empty for now -->
+    </div>
+    
+    <div class="header-right">
+        <div class="toggles-container">
+            <ThemeToggle bind:isDark hideOnMobile={false} />
+        </div>
+    </div>
+</header>
 
 <Hero />
 
@@ -39,10 +67,10 @@
 		</div>
 
 		<div class="spacer"></div>
-		<Scrolly bind:value={scrollyIndex} offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
+		<Scrolly bind:value={scrollyIndex}>
 			{#each steps as text, i}
 				{@const active = scrollyIndex === i}
-				<div class="step" class:active>
+				<div class="scrolly-step" class:active class:mobile={isMobile} class:tablet={isTablet}>
 					<p> 
 						<Md text={text.value}/>
 					</p>
@@ -68,7 +96,7 @@
 		<Scrolly bind:value={scrollyIndex} offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
 			{#each postIntro as text, i}
 				{@const active = scrollyIndex === i}
-				<div class="step" class:active>
+				<div class="scrolly-step" class:active class:mobile={isMobile} class:tablet={isTablet}>
 					<p> 
 						<Md text={text.value}/>
 					</p>
@@ -107,7 +135,7 @@
 	}
 
 	.text-content p {
-		font-size: 1.3rem; /* Same as Hero text-block */
+		font-size: 1.375rem; /* Match global section p styling */
 		line-height: 1.3;
 		margin-top: 1rem;
 		color: var(--color-fg);
@@ -137,34 +165,7 @@
 		height: 75vh;
 	}
 
-	.step {
-		height: 80vh;
-		display: flex;
-		place-items: center;
-		justify-content: center;
-	}
-
-	.step p {
-		padding: 0.5rem 1rem;
-		background: var(--color-default-story-bg);
-		color: var(--color-secondary-gray);
-		border-radius: 5px;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		transition: background 500ms ease, color 500ms ease;
-		box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
-		z-index: 10;
-		width: 40%;
-		transform: translateX(-60%);
-		font-size: 1rem;
-		line-height: 1.4;
-	}
-
-	.step.active p {
-		background: var(--color-bg);
-		color: var(--color-fg);
-	}
+	/* Local scrolly step overrides for this story - now handled globally */
 
 	/* Mobile responsive */
 	@media (max-width: 1200px) {
@@ -193,23 +194,116 @@
 			float: none;
 		}
 
-		.step {
-			margin-left: 0;
-			padding: 0 1rem;
-			justify-content: center;
+		/* Mobile styles now handled by global framework */
+	}
+
+	/* Dark mode adjustments - now handled by global styles */
+
+	/* Header styles - simplified version of allotax-scrolly Nav */
+	header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0 2rem;
+		position: sticky;
+		top: 0;
+		background: rgba(255, 255, 255, 0.7);
+		backdrop-filter: blur(15px);
+		border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+		z-index: 1000;
+		transition: all 300ms ease;
+		min-height: 1rem;
+		width: 100vw;
+		margin-left: calc(-50vw + 50%);
+		box-sizing: border-box;
+		overflow: visible;
+	}
+
+	:global(.dark) header {
+		background: rgba(30, 30, 30, 0.7);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+	}
+
+	header:hover {
+		background: rgba(255, 255, 255, 0.8);
+	}
+
+	:global(.dark) header:hover {
+		background: rgba(30, 30, 30, 0.8);
+	}
+
+	.header-left, .header-right {
+		display: flex;
+		align-items: center;
+		flex: 0 0 auto;
+	}
+
+	.header-center {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex: 1;
+	}
+
+	.logo-container {
+		max-width: 12rem;
+		transition: transform var(--transition-medium) ease;
+		margin: 0;
+		position: relative;
+		z-index: 10;
+	}
+
+	.logo-container:hover {
+		transform: rotate(var(--left-tilt)) scale(1.05);
+	}
+
+	.logo-link {
+		display: block;
+		border: none;
+	}
+
+	.logo {
+		width: 100%;
+		height: auto;
+		border-radius: var(--border-radius);
+		max-height: 4.5rem;
+		object-fit: contain;
+		transform: translateY(0.6rem);
+	}
+
+	.toggles-container {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	@media (max-width: 768px) {
+		header {
+			padding: 0.5rem 1rem;
+			min-height: 3rem;
+			background: rgba(255, 255, 255, 0.8);
 		}
 
-		.step p {
-			width: 100%;
-			max-width: 600px;
-			margin: 0 auto;
-			text-align: center;
-			transform: none;
+		:global(.dark) header {
+			background: rgba(30, 30, 30, 0.8);
+		}
+
+		.logo {
+			max-height: 2rem;
+		}
+
+		.text-content p {
+			font-size: 1.6rem; /* Match global mobile section p styling */
 		}
 	}
 
-	/* Dark mode adjustments */
-	:global(.dark) .step p {
-		box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.4);
+	@media (max-width: 480px) {
+		.logo-container {
+			max-width: 5rem;
+		}
+
+		.author-name {
+			font-size: var(--font-size-xsmall);
+		}
 	}
 </style>
