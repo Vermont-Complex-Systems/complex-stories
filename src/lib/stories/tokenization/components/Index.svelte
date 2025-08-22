@@ -5,7 +5,9 @@
 	import Hero from './Hero.svelte';
 	import StackedSlider from "./StackedSlider.svelte";
 	import Scatter from "./Scatter.svelte";
+	import ScatterPlot from "./ScatterPlot.svelte";
 	import { browser } from '$app/environment';
+	import { base } from '$app/paths';
 	
 	let { story, data } = $props();
 	
@@ -122,10 +124,13 @@
 			</div>
 		{:else if activeSection === 'third'}
 			<div class="chart-content" key="third">
-				<Scatter 
+				<!-- <Scatter 
 					value={activeSectionData.index ?? 0} 
 					steps={thirdSectionSteps} 
-				/>
+				/> -->
+				<ScatterPlot
+					stepCount={activeSectionData.index ?? 0}
+					/>
 			</div>
 		{/if}
 	</div>
@@ -253,8 +258,10 @@
 	.global-chart-container {
 		position: fixed;
 		top: calc(50vh - 375px);
-		right: 5%;
-		width: 45%;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 80%;
+		max-width: 1200px;
 		height: 750px;
 		z-index: var(--z-middle);
 		pointer-events: none; /* Allow scrolling through it */
@@ -340,7 +347,7 @@
 	.step-content {
 		width: 40%;
 		max-width: 500px;
-		margin-left: 5%;
+		margin: 0 auto;
 		padding: 1.5rem 2rem;
 		
 		/* Parchment-themed step styling */
@@ -391,12 +398,10 @@
 	
 	@media (max-width: 768px) {
 		.global-chart-container {
-			position: relative;
-			top: auto;
-			right: auto;
 			width: 100%;
 			height: 400px;
-			margin: 2rem auto;
+			margin: 4rem auto;
+			padding: 0 2rem;
 		}
 		
 		.story-section {
@@ -404,7 +409,7 @@
 		}
 		
 		.step {
-			height: 60vh;
+			height: 120vh;
 			justify-content: center;
 		}
 		
