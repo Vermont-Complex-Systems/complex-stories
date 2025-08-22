@@ -40,7 +40,7 @@
 
 <div style="margin-bottom: 1.5rem; display: flex; gap: 2rem; align-items: center;">
   <div>
-    <label for="slider">Number: {sliderValue}</label>
+    <label for="slider" min="1" max="20">Number: {sliderValue}</label>
     <input id="slider" type="range" min={min} max={renderMode === 'words' ? words.length : chars.length} bind:value={sliderValue} />
   </div>
 </div>
