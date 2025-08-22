@@ -5,7 +5,11 @@ def import_filtered_url_to_duckdb(url: str, duckdb: DuckDBResource, payroll_year
     
     with duckdb.get_connection() as conn:
 
+        # alll the tables
+        conn.execute("CREATE SCHEMA IF NOT EXISTS oa")
         conn.execute("CREATE SCHEMA IF NOT EXISTS raw")
+        conn.execute("CREATE SCHEMA IF NOT EXISTS cache")
+        conn.execute("CREATE SCHEMA IF NOT EXISTS transform")
 
         row_count = conn.execute(
             f"""
@@ -36,7 +40,6 @@ def import_filtered_url_to_duckdb(url: str, duckdb: DuckDBResource, payroll_year
 @dg.asset(
         description="📋 Load UVM Professors 2023 dataset from Complex Stories' dataset repository",
         kinds={"duckdb"}, 
-        key=["target", "main", "uvm_profs_2023"]
     )
 def uvm_profs_2023(duckdb: DuckDBResource) -> None:
     import_filtered_url_to_duckdb(

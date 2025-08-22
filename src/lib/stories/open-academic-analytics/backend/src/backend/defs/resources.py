@@ -1,19 +1,20 @@
 from dagster_duckdb import DuckDBResource
 import dagster as dg
 from typing import Optional
+import os
 
 from backend.clients.semantic_scholar import SemanticScholarClient
 from backend.clients.openalex import OpenAlexClient
 
 database_resource = DuckDBResource(
     database="/tmp/oa.duckdb"
-    )
+)
 
 class SemanticScholarResource(dg.ConfigurableResource):
-    """Dagster resource for Semantic Scholar API access"""
-    api_key: Optional[str] = None
+    """https://www.semanticscholar.org/product/api"""
+    api_key: Optional[str] = os.environ.get('S2')
     max_requests_per_second: int = 1
-    max_requests_per_day: int = 5000
+    max_requests_per_day: int = 100_000
     base_url: str = "https://api.semanticscholar.org/graph/v1"
     
     def get_client(self) -> SemanticScholarClient:
@@ -26,29 +27,28 @@ class SemanticScholarResource(dg.ConfigurableResource):
         )
 
 class OpenAlexResource(dg.ConfigurableResource):
+    """https://docs.openalex.org/how-to-use-the-api/rate-limits-and-authentication"""
     email: str
-    api_key: Optional[str] = None
     max_requests_per_second: int = 10
-    max_requests_per_day: int = 100000
-    
+    max_requests_per_day: int = 100_000
+    base_url: str = "https://api.openalex.org"   # add base_url
+
     def get_client(self) -> OpenAlexClient:
-        return SemanticScholarClient(
-            api_key=self.api_key,
+        return OpenAlexClient(
+            email=self.email,
             max_requests_per_second=self.max_requests_per_second,
             max_requests_per_day=self.max_requests_per_day,
-            base_url=self.base_url
+            base_url=self.base_url,
         )
-    
-# Update your resources definition
+
 @dg.definitions  
 def resources():
     return dg.Definitions(
         resources={
             "duckdb": database_resource,
-            "oa_client": OpenAlexResource(
+            "oa_resource": OpenAlexResource(
                 email="jonathanstonge7@gmail.com",
             ),
             "s2_client": SemanticScholarResource()
         }
     )
-

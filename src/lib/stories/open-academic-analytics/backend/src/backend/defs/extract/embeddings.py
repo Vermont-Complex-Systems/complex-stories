@@ -37,7 +37,6 @@ def extract_field_categories(field_list):
 
 @dg.asset(
     description="🌐 Get paper embeddings from Semantic Scholar API",
-    key=["embeddings"],
     deps=["uvm_publications"],  
 )
 def embeddings(

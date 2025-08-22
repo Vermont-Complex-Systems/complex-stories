@@ -8,7 +8,6 @@ STATIC_DATA_PATH = Path("../../../../../static/data")
 @dg.asset(
     kinds={"duckdb"},
     deps=["paper_parquet"],
-    key=["target", "main", "yearly_collaborations"]
 )
 def yearly_collaborations(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """

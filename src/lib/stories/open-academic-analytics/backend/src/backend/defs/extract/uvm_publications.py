@@ -1,3 +1,5 @@
+"""Grab all UVM 2023 faculties publications from OpenAlex"""
+
 import dagster as dg
 from backend.defs.resources import OpenAlexResource
 from dagster_duckdb import DuckDBResource
@@ -347,36 +349,36 @@ def determine_fetch_start_date(ego_author_id: str, conn) -> Optional[str]:
 @dg.asset(
     description="📚 Fetch all academic papers for 2023 UVM faculties from OpenAlex database.",
     kinds={"openalex"}, 
-    key=["target", "main", "uvm_publications"],
     deps=["uvm_profs_2023", "uvm_profs_sync_status"],  
 )
 def uvm_publications(
-    oa_client: OpenAlexResource, 
+    oa_resource: OpenAlexResource, 
     duckdb: DuckDBResource
 ) -> dg.MaterializeResult:
     """Fetch publication data for uvm_profs with proper normalization"""
     
+    oa_client = oa_resource.get_client()
+    
     with duckdb.get_connection() as conn:
-        create_publications_tables(conn) # OA schema in duckdb
-        create_authorships_table(conn) # OA schema in duckdb
-
-        uvm_profs_to_update = get_uvm_profs_to_update(conn) # did we query that prof in the last 30days?
-    
-    dg.get_dagster_logger().info(f"Processing {len(uvm_profs_to_update)} uvm_profs")
-    
-    if not uvm_profs_to_update:
-        dg.get_dagster_logger().info("All uvm_profs are up to date!")
-        return dg.MaterializeResult(
-            metadata={"uvm_profs_processed": 0, "reason": "all_up_to_date"}
-        )
-    
-    total_works_processed = 0
-    total_authorships_added = 0
-    
-    for ego_author_id in uvm_profs_to_update:
-        try:
-            # Check current data for this professor
-            with duckdb.get_connection() as conn:
+        # Initialize tables and get professors to update
+        create_publications_tables(conn)
+        create_authorships_table(conn)
+        uvm_profs_to_update = get_uvm_profs_to_update(conn)
+        
+        dg.get_dagster_logger().info(f"Processing {len(uvm_profs_to_update)} uvm_profs")
+        
+        if not uvm_profs_to_update:
+            dg.get_dagster_logger().info("All uvm_profs are up to date!")
+            return dg.MaterializeResult(
+                metadata={"uvm_profs_processed": 0, "reason": "all_up_to_date"}
+            )
+        
+        total_works_processed = 0
+        total_authorships_added = 0
+        
+        for ego_author_id in uvm_profs_to_update:
+            try:
+                # Check current data for this professor
                 current_count = conn.execute("""
                     SELECT COUNT(*) FROM oa.raw.authorships 
                     WHERE author_id = ?
@@ -389,42 +391,39 @@ def uvm_publications(
                     f"{ego_author_id}: currently has {current_count} authorships, "
                     f"latest: {latest_date}, corrected first year: {corrected_first_year}"
                 )
-            
-            # Build the filter for OpenAlex API
-            filter_parts = [f"author.id:{ego_author_id}"]
+                
+                # Build the filter for OpenAlex API
+                filter_parts = [f"author.id:{ego_author_id}"]
 
-            start_date = determine_fetch_start_date(ego_author_id, conn)
-            if start_date:
-                filter_parts.append(f"from_publication_date:{start_date}")
+                start_date = determine_fetch_start_date(ego_author_id, conn)
+                if start_date:
+                    filter_parts.append(f"from_publication_date:{start_date}")
 
-            filter_string = ",".join(filter_parts)
-            response_data = oa_client.get_works(filter=filter_string)
-            works = response_data.get('results', [])
-            
-            dg.get_dagster_logger().info(f"Found {len(works)} works for {ego_author_id}")
-            
-            if works:
-                # Process each work
-                with duckdb.get_connection() as conn:
+                filter_string = ",".join(filter_parts)
+                
+                # Make API call
+                response_data = oa_client.get_works(filter=filter_string)
+                works = response_data.get('results', [])
+                
+                dg.get_dagster_logger().info(f"Found {len(works)} works for {ego_author_id}")
+                
+                if works:
+                    # Process each work
                     for work in works:
                         authorships_added = process_and_insert_work(work, conn, corrected_first_year)
                         total_authorships_added += authorships_added
                     
-                    update_uvm_profs_sync_status(conn, ego_author_id)
+                    total_works_processed += len(works)
                 
-                total_works_processed += len(works)
-            else:
-                # Still update sync status even if no new works
-                with duckdb.get_connection() as conn:
-                    update_uvm_profs_sync_status(conn, ego_author_id)
-            
-            dg.get_dagster_logger().info(f"Processed {ego_author_id}: {len(works)} works")
+                # Update sync status (whether we found works or not)
+                update_uvm_profs_sync_status(conn, ego_author_id)
                 
-        except Exception as e:
-            dg.get_dagster_logger().error(f"Error fetching publications for {ego_author_id}: {str(e)}")
-    
-    # Get final statistics
-    with duckdb.get_connection() as conn:
+                dg.get_dagster_logger().info(f"Processed {ego_author_id}: {len(works)} works")
+                    
+            except Exception as e:
+                dg.get_dagster_logger().error(f"Error fetching publications for {ego_author_id}: {str(e)}")
+        
+        # Get final statistics
         final_stats = conn.execute("""
             SELECT 
                 COUNT(*) as total_publications,
@@ -447,14 +446,13 @@ def uvm_publications(
 
 @dg.asset(
     kinds={"duckdb"},
-    key=["target", "main", "uvm_profs_sync_status"],
     deps=["uvm_profs_2023"]
 )
 def uvm_profs_sync_status(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """Track when each professor was last synced with OpenAlex"""
     
     with duckdb.get_connection() as conn:
-        conn.execute("CREATE SCHEMA IF NOT EXISTS cache")
+        conn.execute("CREATE SCHEMA IF NOT EXISTS oa.cache")
 
         create_uvm_profs_sync_status_table(conn)
         

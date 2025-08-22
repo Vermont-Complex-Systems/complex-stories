@@ -7,7 +7,6 @@ import umap
 
 @dg.asset(
     deps=["embeddings"],
-    key=["umap_embeddings"],
     description="🌐 Apply UMAP dimensionality reduction to embeddings from DuckDB",
 )
 def umap_embeddings(duckdb: DuckDBResource):

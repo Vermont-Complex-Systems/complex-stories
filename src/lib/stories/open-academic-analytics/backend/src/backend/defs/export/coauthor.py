@@ -8,7 +8,6 @@ STATIC_DATA_PATH = Path("../../../../../static/data")
 @dg.asset(
     kinds={"export"},
     deps=["yearly_collaborations", "coauthor_institutions", "coauthor_cache"], 
-    key=["exports", "coauthor_parquet"]
 )
 def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """Export final coauthor collaboration data as parquet for static frontend"""

@@ -100,7 +100,6 @@ def prepare_for_deduplication(df):
 @dg.asset(
     kinds={"export"},
     deps=["uvm_publications", "umap_embeddings"],
-    key=["exports", "paper_parquet"]
 )
 def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """Export publications data as parquet for static frontend"""

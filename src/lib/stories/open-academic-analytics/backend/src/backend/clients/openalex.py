@@ -13,9 +13,8 @@ import pandas as pd
 
 
 class OpenAlexClient:
-    def __init__(self, api_key: Optional[str] = None, max_requests_per_second: int = 1, email = "jonathanstonge7@gmail.com",
-                 max_requests_per_day: int = 5000, base_url: str = "https://api.openalex.org"):
-        self.api_key = api_key
+    def __init__(self, max_requests_per_second: int = 1, email = "jonathanstonge7@gmail.com",
+                 max_requests_per_day: int = 100_000, base_url: str = "https://api.openalex.org"):
         self.max_requests_per_second = max_requests_per_second
         self.max_requests_per_day = max_requests_per_day
         self.base_url = base_url
@@ -29,13 +28,6 @@ class OpenAlexClient:
         
         # Set up headers
         self.headers = {}
-        if self.api_key:
-            self.headers["x-api-key"] = self.api_key
-            # Higher limits with API key
-            if self.max_requests_per_second == 1:  # Only if using default
-                self.max_requests_per_second = 2
-            if self.max_requests_per_day == 5000:  # Only if using default
-                self.max_requests_per_day = 10000
 
     def _check_rate_limits(self):
         """Check and enforce rate limits"""
@@ -68,7 +60,7 @@ class OpenAlexClient:
             self._daily_request_count += 1
 
     def request(self, endpoint: str, params: Optional[dict] = None, method: str = "GET", json_data: Optional[dict] = None) -> Response:
-        """Make a rate-limited request to Semantic Scholar API"""
+        """Make a rate-limited request to OpenAlex API"""
         self._check_rate_limits()
         
         # Prepare parameters
@@ -77,27 +69,29 @@ class OpenAlexClient:
         
         params["mailto"] = self.email
 
-        # Make the request
+        # Make the request with a fresh session
         url = f"{self.base_url}/{endpoint}"
         
-        if method.upper() == "POST":
-            response = requests.post(
-                url,
-                params=params,
-                json=json_data,
-                headers=self.headers
-            )
-        else:
-            response = requests.get(
-                url,
-                params=params,
-                headers=self.headers
-            )
+        # Use a session for connection reuse but create fresh for each request
+        with requests.Session() as session:
+            session.headers.update(self.headers)
+            
+            if method.upper() == "POST":
+                response = session.post(
+                    url,
+                    params=params,
+                    json=json_data
+                )
+            else:
+                response = session.get(
+                    url,
+                    params=params
+                )
         
         # Handle rate limit responses
         if response.status_code == 429:
             retry_after = int(response.headers.get("Retry-After", 5))
-            print(f"Rate limited by Semantic Scholar. Waiting {retry_after} seconds before retry.")
+            print(f"Rate limited by OpenAlex. Waiting {retry_after} seconds before retry.")
             time.sleep(retry_after)
             return self.request(endpoint, params, method, json_data)  # Retry once
         
@@ -109,8 +103,33 @@ class OpenAlexClient:
         return response
 
     def get_works(self, **params) -> dict:
-        """Helper method to get works with common parameters"""
-        return self.request("works", params).json()
+        """Helper method to get works with pagination support"""
+        # Set default per_page if not specified
+        if 'per_page' not in params:
+            params['per_page'] = 200  # Max allowed by OpenAlex
+        
+        # Get first page
+        response = self.request("works", params).json()
+        all_results = response.get('results', [])
+        
+        # Check if there are more pages
+        meta = response.get('meta', {})
+        total_count = meta.get('count', 0)
+        per_page = meta.get('per_page', 25)
+        
+        if total_count > per_page:
+            # Calculate total pages needed
+            total_pages = (total_count + per_page - 1) // per_page
+            
+            # Fetch remaining pages
+            for page in range(2, total_pages + 1):
+                params['page'] = page
+                page_response = self.request("works", params).json()
+                all_results.extend(page_response.get('results', []))
+        
+        # Return response with all results
+        response['results'] = all_results
+        return response
     
     def get_authors(self, **params) -> dict:
         """Helper method to get authors with common parameters"""
