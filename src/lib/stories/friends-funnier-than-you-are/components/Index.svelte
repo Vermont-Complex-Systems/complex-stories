@@ -17,6 +17,8 @@ import { base } from "$app/paths";
 
     <p>Spoiler: How far your joke is going depends on your friends going viral.</p>
 
+
+    
 </section>
 
 
