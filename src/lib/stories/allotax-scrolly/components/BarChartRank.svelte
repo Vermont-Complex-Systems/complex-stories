@@ -6,7 +6,7 @@
 
 <Plot 
         y={{ grid: true }}
-        x={{ tickRotate: 25 }}
+        x={{ tickRotate: 25, label: '' }}
         marginTop={25} 
         marginRight={25} 
         height={300}>
