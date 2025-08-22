@@ -5,7 +5,7 @@
         Building2, UserX
     } from '@lucide/svelte';
     
-    let { people, selectedGender, selectedEthnicity, trustworthinessColorScale } = $props();
+    let { people, selectedDemographic, trustworthinessColorScale } = $props();
     
     // Institution to icon mapping (same as People.svelte)
     const institutionIcons = {
@@ -34,47 +34,48 @@
     const barHeight = 12;
     const barSpacing = 18;
     
-    // Trust distances matching the concentric circles (same as People.svelte)
-    // Personal relationships are much closer, formal institutions are further out
-    const trustDistances = {
-        // Close personal circle
-        'friend': 0.15,
-        'relative': 0.18,
-        'medical': 0.22,
-        
-        // Semi-personal/professional
-        'acquaintance': 0.35,
-        'neighbor': 0.38,
-        'researcher': 0.42,
-        'non_profit': 0.45,
-        
-        // Formal institutions (closer)
-        'school': 0.55,
-        'employer': 0.58,
-        'worker': 0.62,
-        
-        // Formal institutions (moderate distance)
-        'financial': 0.70,
-        'government': 0.75,
-        'company_customer': 0.78,
-        
-        // Distant/untrusted institutions
-        'police': 0.85,
-        'social_media_platform': 0.90,
-        'company_not_customer': 0.95,
-        'stranger': 1.0
+    // Trust distances by demographic group (same as other components)
+    const trustDistancesByDemographic = {
+        all: {
+            'friend': 0.15, 'relative': 0.18, 'medical': 0.22,
+            'acquaintance': 0.35, 'neighbor': 0.38, 'researcher': 0.42,
+            'non_profit': 0.45, 'school': 0.55, 'employer': 0.58,
+            'worker': 0.62, 'financial': 0.70, 'government': 0.75,
+            'company_customer': 0.78, 'police': 0.85, 
+            'social_media_platform': 0.90, 'company_not_customer': 0.95,
+            'stranger': 1.0
+        },
+        white_men: {
+            'friend': 0.20, 'relative': 0.25, 'medical': 0.30,
+            'acquaintance': 0.40, 'neighbor': 0.42, 'researcher': 0.45,
+            'non_profit': 0.50, 'school': 0.48, 'employer': 0.46,
+            'worker': 0.52, 'financial': 0.55, 'government': 0.60,
+            'company_customer': 0.58, 'police': 0.65, 
+            'social_media_platform': 0.75, 'company_not_customer': 0.80,
+            'stranger': 0.85
+        },
+        black_women: {
+            'friend': 0.12, 'relative': 0.10, 'medical': 0.45,
+            'acquaintance': 0.25, 'neighbor': 0.22, 'researcher': 0.50,
+            'non_profit': 0.30, 'school': 0.55, 'employer': 0.65,
+            'worker': 0.40, 'financial': 0.80, 'government': 0.90,
+            'company_customer': 0.85, 'police': 0.95, 
+            'social_media_platform': 0.88, 'company_not_customer': 0.98,
+            'stranger': 1.0
+        }
     };
     
     // Calculate trust distribution data
     const distributionData = $derived(() => {
         if (!people || people.length === 0) return [];
         
-        // Filter people based on selected criteria
+        // Filter people based on selected demographic
         const filtered = people.filter(person => {
-            const genderMatch = selectedGender === 'all' || person.gender === selectedGender;
-            const ethnicityMatch = selectedEthnicity === 'all' || person.ethnicity === selectedEthnicity;
-            return genderMatch && ethnicityMatch;
+            return person.demographic === selectedDemographic;
         });
+        
+        // Get trust distances for current demographic
+        const trustDistances = trustDistancesByDemographic[selectedDemographic] || trustDistancesByDemographic.all;
         
         // Group by institution
         const institutionGroups = {};
@@ -173,6 +174,7 @@
                     height={barHeight}
                     fill={trustworthinessColorScale(trustLevel + 1)}
                     opacity="0.8"
+                    style="transition: all 0.6s ease-in-out;"
                 />
             {/if}
         {/each}

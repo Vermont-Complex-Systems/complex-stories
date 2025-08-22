@@ -37,6 +37,5 @@
         fill="#374151"
         font-family="var(--sans)"
     >
-        You
     </text>
 </g>

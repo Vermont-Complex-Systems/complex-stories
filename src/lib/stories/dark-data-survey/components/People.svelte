@@ -6,7 +6,7 @@
         Building2, UserX
     } from '@lucide/svelte';
     
-    let { people, selectedGender, selectedEthnicity, centerX, centerY, trustworthinessColorScale } = $props();
+    let { people, selectedDemographic, centerX, centerY, trustworthinessColorScale } = $props();
     
     // Institution to icon mapping
     const institutionIcons = {
@@ -29,49 +29,43 @@
         'stranger': UserX
     };
     
-    // Institution colors (keeping for background or accent)
-    const institutionColors = {
-        'friend': '#10b981', 'relative': '#059669', 'medical': '#3b82f6',
-        'acquaintance': '#8b5cf6', 'neighbor': '#a855f7', 'school': '#06b6d4',
-        'employer': '#0891b2', 'researcher': '#0284c7', 'non_profit': '#84cc16',
-        'worker': '#65a30d', 'financial': '#eab308', 'government': '#f59e0b',
-        'police': '#ef4444', 'social_media_platform': '#f97316',
-        'company_customer': '#ec4899', 'company_not_customer': '#be185d',
-        'stranger': '#6b7280'
+    // Define trust distance levels for each demographic group
+    const trustDistancesByDemographic = {
+        all: {
+            'friend': 0.15, 'relative': 0.18, 'medical': 0.22,
+            'acquaintance': 0.35, 'neighbor': 0.38, 'researcher': 0.42,
+            'non_profit': 0.45, 'school': 0.55, 'employer': 0.58,
+            'worker': 0.62, 'financial': 0.70, 'government': 0.75,
+            'company_customer': 0.78, 'police': 0.85, 
+            'social_media_platform': 0.90, 'company_not_customer': 0.95,
+            'stranger': 1.0
+        },
+        white_men: {
+            'friend': 0.20, 'relative': 0.25, 'medical': 0.30,
+            'acquaintance': 0.40, 'neighbor': 0.42, 'researcher': 0.45,
+            'non_profit': 0.50, 'school': 0.48, 'employer': 0.46,
+            'worker': 0.52, 'financial': 0.55, 'government': 0.60,
+            'company_customer': 0.58, 'police': 0.65, 
+            'social_media_platform': 0.75, 'company_not_customer': 0.80,
+            'stranger': 0.85
+        },
+        black_women: {
+            'friend': 0.12, 'relative': 0.10, 'medical': 0.45,
+            'acquaintance': 0.25, 'neighbor': 0.22, 'researcher': 0.50,
+            'non_profit': 0.30, 'school': 0.55, 'employer': 0.65,
+            'worker': 0.40, 'financial': 0.80, 'government': 0.90,
+            'company_customer': 0.85, 'police': 0.95, 
+            'social_media_platform': 0.88, 'company_not_customer': 0.98,
+            'stranger': 1.0
+        }
     };
     
-    // Define trust distance levels for each institution (0 = center, 1 = furthest)
-    // Personal relationships are much closer, formal institutions are further out
-    const trustDistances = {
-        // Close personal circle
-        'friend': 0.15,
-        'relative': 0.18,
-        'medical': 0.22,
-        
-        // Semi-personal/professional
-        'acquaintance': 0.35,
-        'neighbor': 0.38,
-        'researcher': 0.42,
-        'non_profit': 0.45,
-        
-        // Formal institutions (closer)
-        'school': 0.55,
-        'employer': 0.58,
-        'worker': 0.62,
-        
-        // Formal institutions (moderate distance)
-        'financial': 0.70,
-        'government': 0.75,
-        'company_customer': 0.78,
-        
-        // Distant/untrusted institutions
-        'police': 0.85,
-        'social_media_platform': 0.90,
-        'company_not_customer': 0.95,
-        'stranger': 1.0
+    // Get trust distances for current demographic
+    const getTrustDistances = (demographic) => {
+        return trustDistancesByDemographic[demographic] || trustDistancesByDemographic.all;
     };
     
-    // Calculate max radius for positioning - make it larger
+    // Calculate max radius for positioning - make it larger  
     const maxRadius = Math.min(centerX, centerY) - 50; // Less margin for larger rings
     
     // Filter and position people around trust rings
@@ -81,10 +75,10 @@
         }
         
         const filtered = people.filter(person => {
-            const genderMatch = selectedGender === 'all' || person.gender === selectedGender;
-            const ethnicityMatch = selectedEthnicity === 'all' || person.ethnicity === selectedEthnicity;
-            return genderMatch && ethnicityMatch;
+            return person.demographic === selectedDemographic;
         });
+        
+        const trustDistances = getTrustDistances(selectedDemographic);
         
         return filtered.map((person, i) => {
             // Get the trust distance for this person's institution
