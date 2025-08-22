@@ -1,4 +1,17 @@
 <script lang="ts">
+  // Example tooltip data (replace with your actual data)
+  const tooltipData = [
+    "Point 0: Origin",
+    "Point 1: Diagonal",
+    "Point 2: Offset",
+    "Point 3: Negative",
+    "Point 4: Up",
+    "Point 5: Right",
+    "Point 6: Top",
+    "Point 7: Left"
+  ];
+
+  let hoveredIndex: number | null = null;
   import { Plot, Dot } from 'svelteplot';
   import { Tween } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
@@ -86,16 +99,26 @@
 
 <div class="viz-content">
   <div class="plot-container">
-    <Plot grid maxWidth={500} height={400} 
+    <Plot grid maxWidth="500" height="400" 
           x={{ domain: [-4, 4] }} 
           y={{ domain: [-2, 4] }}>
-      <Dot data={plotData} 
-           x="x" 
-           y="y" 
-           fill="#667eea" 
-           opacity={0.8} 
-           r={6} />
+      {#each plotData as d, i}
+        <circle
+          cx={d.x}
+          cy={d.y}
+          r="6"
+          fill="#667eea"
+          opacity="0.8"
+          on:mouseenter={() => hoveredIndex = i}
+          on:mouseleave={() => hoveredIndex = null}
+        />
+      {/each}
     </Plot>
+    {#if hoveredIndex !== null}
+      <div class="tooltip" style="position: absolute; left: 20px; top: 20px; pointer-events: none; background: #fff; border: 1px solid #ccc; padding: 0.5em; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        {tooltipData[hoveredIndex]}
+      </div>
+    {/if}
   </div>
 
 </div>
