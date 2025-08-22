@@ -1,5 +1,5 @@
 <script>
-    let { people, selectedGender, selectedEthnicity, trustworthinessColorScale, x = 600, y = 450 } = $props();
+    let { people, selectedGender, selectedEthnicity, trustworthinessColorScale } = $props();
     
     // Chart dimensions
     const chartWidth = 350;
@@ -39,7 +39,7 @@
     });
 </script>
 
-<g class="trust-distribution-chart" transform="translate({x}, {y})">
+<svg width={chartWidth} height={chartHeight} class="trust-distribution-chart">
     <!-- Chart background -->
     <rect
         x="0"
@@ -66,7 +66,7 @@
     </text>
     
     <!-- Institution bars -->
-    {#each distributionData as institution, i}
+    {#each distributionData() as institution, i}
         {@const yPos = 40 + i * barSpacing}
         {@const maxBarWidth = 200}
         
@@ -149,4 +149,13 @@
             </text>
         {/each}
     </g>
-</g>
+</svg>
+
+<style>
+    .trust-distribution-chart {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+</style>

@@ -60,6 +60,25 @@ let people = $state(generatePeopleByInstitution());
 let selectedGender = $state('all');
 let selectedEthnicity = $state('all');
 
+// Track if visualization is in viewport
+let visualizationInView = $state(false);
+let visualizationContainer;
+
+// Set up intersection observer to track when visualization is in view
+$effect(() => {
+    if (!visualizationContainer) return;
+    
+    const observer = new IntersectionObserver(
+        (entries) => {
+            visualizationInView = entries[0].isIntersecting;
+        },
+        { threshold: 0.3 } // Show chart when 30% of visualization is visible
+    );
+    
+    observer.observe(visualizationContainer);
+    
+    return () => observer.disconnect();
+});
 
 // Layout calculations using D3 - take more screen space
 const width = 1000;
@@ -99,7 +118,7 @@ const trustworthinessColorScale = scaleSequential(interpolateRdYlGn)
 
     <p>Plot 1: distance with the people you want to share your data</p>
 
-    <div class="visualization-container">
+    <div class="visualization-container" bind:this={visualizationContainer}>
         <h3>Institutional Trust Landscape</h3>
         <p class="viz-description">How much do you trust different institutions with your personal data? Each institution is positioned around you, with colors showing trustworthiness levels from red (low) to green (high).</p>
         
@@ -130,8 +149,14 @@ const trustworthinessColorScale = scaleSequential(interpolateRdYlGn)
             <People {people} {selectedGender} {selectedEthnicity} {centerX} {centerY} {trustworthinessColorScale} />
             <CenterEgo {centerX} {centerY} />
             <Legend x={50} y={50} {trustworthinessColorScale} />
-            <TrustDistributionChart {people} {selectedGender} {selectedEthnicity} {trustworthinessColorScale} />
         </svg>
+        
+        <!-- Chart positioned relative to visualization container but aligned to screen edge -->
+        {#if visualizationInView}
+            <div class="chart-overlay">
+                <TrustDistributionChart {people} {selectedGender} {selectedEthnicity} {trustworthinessColorScale} />
+            </div>
+        {/if}
     </div>
 
     <p>Data</p>
@@ -198,6 +223,8 @@ const trustworthinessColorScale = scaleSequential(interpolateRdYlGn)
         margin: 3rem auto;
         text-align: center;
         padding: 2rem;
+        position: relative;
+        overflow: visible;
     }
 
     .visualization-container h3 {
@@ -217,6 +244,25 @@ const trustworthinessColorScale = scaleSequential(interpolateRdYlGn)
     .trust-visualization {
         display: block;
         margin: 0 auto;
+    }
+
+    .chart-overlay {
+        position: fixed !important;
+        bottom: 20px !important;
+        right: 20px !important;
+        z-index: 1000 !important;
+        pointer-events: auto !important;
+        /* Override any global constraints */
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        /* Smooth fade in/out */
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     .filters {
