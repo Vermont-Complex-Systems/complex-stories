@@ -1,11 +1,69 @@
 <script>
+    import { 
+        Heart, Users, Stethoscope, GraduationCap, Building, 
+        FlaskConical, Briefcase, Shield, Smartphone, Store,
+        Building2, UserX
+    } from '@lucide/svelte';
+    
     let { people, selectedGender, selectedEthnicity, trustworthinessColorScale } = $props();
+    
+    // Institution to icon mapping (same as People.svelte)
+    const institutionIcons = {
+        'friend': Heart,
+        'relative': Users, 
+        'medical': Stethoscope,
+        'school': GraduationCap,
+        'employer': Building,
+        'researcher': FlaskConical,
+        'worker': Briefcase,
+        'police': Shield,
+        'social_media_platform': Smartphone,
+        'company_customer': Store,
+        'company_not_customer': Building2,
+        'acquaintance': Users,
+        'neighbor': Users,
+        'government': Building,
+        'non_profit': Heart,
+        'financial': Building2,
+        'stranger': UserX
+    };
     
     // Chart dimensions
     const chartWidth = 350;
-    const chartHeight = 300;
+    const chartHeight = 420; // Increased to accommodate all 17 institutions and legend
     const barHeight = 12;
     const barSpacing = 18;
+    
+    // Trust distances matching the concentric circles (same as People.svelte)
+    // Personal relationships are much closer, formal institutions are further out
+    const trustDistances = {
+        // Close personal circle
+        'friend': 0.15,
+        'relative': 0.18,
+        'medical': 0.22,
+        
+        // Semi-personal/professional
+        'acquaintance': 0.35,
+        'neighbor': 0.38,
+        'researcher': 0.42,
+        'non_profit': 0.45,
+        
+        // Formal institutions (closer)
+        'school': 0.55,
+        'employer': 0.58,
+        'worker': 0.62,
+        
+        // Formal institutions (moderate distance)
+        'financial': 0.70,
+        'government': 0.75,
+        'company_customer': 0.78,
+        
+        // Distant/untrusted institutions
+        'police': 0.85,
+        'social_media_platform': 0.90,
+        'company_not_customer': 0.95,
+        'stranger': 1.0
+    };
     
     // Calculate trust distribution data
     const distributionData = $derived(() => {
@@ -32,10 +90,14 @@
             institutionGroups[person.institution].trustCounts[person.trustworthiness - 1] += 1;
         });
         
-        // Convert to array and sort by total count (descending)
-        return Object.values(institutionGroups)
-            .sort((a, b) => b.total - a.total)
-            .slice(0, 10); // Show top 10 institutions
+        // Convert to array and sort by trust distance (closest to furthest)
+        return Object.entries(institutionGroups)
+            .map(([institution, data]) => ({
+                ...data,
+                institution,
+                trustDistance: trustDistances[institution] || 1.0
+            }))
+            .sort((a, b) => a.trustDistance - b.trustDistance); // Sort by distance (closest first) - show all institutions
     });
 </script>
 
@@ -70,9 +132,22 @@
         {@const yPos = 40 + i * barSpacing}
         {@const maxBarWidth = 200}
         
+        <!-- Institution icon -->
+        {@const IconComponent = institutionIcons[institution.institution] || UserX}
+        <foreignObject
+            x="10"
+            y={yPos + barHeight / 2 - 6}
+            width="12"
+            height="12"
+        >
+            <div style="width: 12px; height: 12px; display: flex; align-items: center; justify-content: center;">
+                <IconComponent size="10" fill="#6b7280" stroke="none" />
+            </div>
+        </foreignObject>
+        
         <!-- Institution name -->
         <text
-            x="10"
+            x="26"
             y={yPos + barHeight / 2}
             text-anchor="start"
             dominant-baseline="central"
@@ -117,7 +192,7 @@
     {/each}
     
     <!-- Legend for trust levels -->
-    <g transform="translate(10, {chartHeight - 60})">
+    <g transform="translate(10, {chartHeight - 50})">
         <text
             x="0"
             y="0"

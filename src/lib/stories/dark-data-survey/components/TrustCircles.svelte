@@ -4,22 +4,32 @@
     const maxRadius = Math.min(centerX, centerY) - 50;
     
     // Use the same trust distances as the People component
+    // Personal relationships are much closer, formal institutions are further out
     const trustDistances = {
-        'friend': 0.2,
-        'medical': 0.3,
-        'relative': 0.35,
-        'researcher': 0.4,
-        'employer': 0.45,
-        'school': 0.5,
-        'non_profit': 0.55,
-        'acquaintance': 0.6,
-        'neighbor': 0.6,
-        'worker': 0.65,
-        'financial': 0.7,
+        // Close personal circle
+        'friend': 0.15,
+        'relative': 0.18,
+        'medical': 0.22,
+        
+        // Semi-personal/professional
+        'acquaintance': 0.35,
+        'neighbor': 0.38,
+        'researcher': 0.42,
+        'non_profit': 0.45,
+        
+        // Formal institutions (closer)
+        'school': 0.55,
+        'employer': 0.58,
+        'worker': 0.62,
+        
+        // Formal institutions (moderate distance)
+        'financial': 0.70,
         'government': 0.75,
-        'company_customer': 0.8,
+        'company_customer': 0.78,
+        
+        // Distant/untrusted institutions
         'police': 0.85,
-        'social_media_platform': 0.9,
+        'social_media_platform': 0.90,
         'company_not_customer': 0.95,
         'stranger': 1.0
     };
@@ -38,7 +48,7 @@
             stroke="#d1d5db"
             stroke-width="1"
             stroke-dasharray="4,4"
-            opacity="0.5"
+            opacity="0.9"
         />
     {/each}
 </g>

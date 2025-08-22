@@ -41,22 +41,32 @@
     };
     
     // Define trust distance levels for each institution (0 = center, 1 = furthest)
+    // Personal relationships are much closer, formal institutions are further out
     const trustDistances = {
-        'friend': 0.2,
-        'medical': 0.3,
-        'relative': 0.35,
-        'researcher': 0.4,
-        'employer': 0.45,
-        'school': 0.5,
-        'non_profit': 0.55,
-        'acquaintance': 0.6,
-        'neighbor': 0.6,
-        'worker': 0.65,
-        'financial': 0.7,
+        // Close personal circle
+        'friend': 0.15,
+        'relative': 0.18,
+        'medical': 0.22,
+        
+        // Semi-personal/professional
+        'acquaintance': 0.35,
+        'neighbor': 0.38,
+        'researcher': 0.42,
+        'non_profit': 0.45,
+        
+        // Formal institutions (closer)
+        'school': 0.55,
+        'employer': 0.58,
+        'worker': 0.62,
+        
+        // Formal institutions (moderate distance)
+        'financial': 0.70,
         'government': 0.75,
-        'company_customer': 0.8,
+        'company_customer': 0.78,
+        
+        // Distant/untrusted institutions
         'police': 0.85,
-        'social_media_platform': 0.9,
+        'social_media_platform': 0.90,
         'company_not_customer': 0.95,
         'stranger': 1.0
     };
@@ -151,56 +161,6 @@
         </foreignObject>
     {/each}
     
-    <!-- Institution labels for each ring - positioned clockwise -->
-    {#each Object.keys(trustDistances) as institutionName, i}
-        {@const distance = trustDistances[institutionName]}
-        {@const radius = distance * maxRadius}
-        {@const uniqueDistances = [...new Set(Object.values(trustDistances))].sort((a, b) => a - b)}
-        {@const ringIndex = uniqueDistances.indexOf(distance)}
-        {@const angle = (ringIndex / uniqueDistances.length) * 2 * Math.PI - Math.PI / 2} // Start at top, go clockwise
-        {@const labelRadius = radius} // Position labels directly on the ring
-        {@const labelX = centerX + labelRadius * Math.cos(angle)}
-        {@const labelY = centerY + labelRadius * Math.sin(angle)}
-        {@const institutionPeople = positionedPeople().filter(p => p.institution === institutionName)}
-        {#if institutionPeople.length > 0}
-            {@const IconComponent = institutionIcons[institutionName] || UserX}
-            <!-- Background rectangle for better readability -->
-            <rect
-                x={labelX - 35}
-                y={labelY - 8}
-                width="70"
-                height="16"
-                fill="rgba(255, 255, 255, 0.95)"
-                stroke="rgba(0, 0, 0, 0.15)"
-                stroke-width="1"
-                rx="3"
-            />
-            <!-- Text label -->
-            <text
-                x={labelX - 5}
-                y={labelY}
-                text-anchor="middle"
-                dominant-baseline="central"
-                font-size="9px"
-                fill="#374151"
-                font-family="var(--sans)"
-                font-weight="600"
-            >
-                {institutionPeople[0].label}
-            </text>
-            <!-- Icon after text -->
-            <foreignObject
-                x={labelX + 15}
-                y={labelY - 6}
-                width="12"
-                height="12"
-            >
-                <div style="width: 12px; height: 12px; display: flex; align-items: center; justify-content: center;">
-                    <IconComponent size="10" fill="#374151" stroke="none" />
-                </div>
-            </foreignObject>
-        {/if}
-    {/each}
     
     {#if tooltip.visible && tooltip.person}
         <g class="tooltip" transition:fade={{ duration: 200 }}>
