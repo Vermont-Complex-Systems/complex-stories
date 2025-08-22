@@ -67,7 +67,7 @@
 		</div>
 
 		<div class="spacer"></div>
-		<Scrolly bind:value={scrollyIndex} offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
+		<Scrolly bind:value={scrollyIndex}>
 			{#each steps as text, i}
 				{@const active = scrollyIndex === i}
 				<div class="scrolly-step" class:active class:mobile={isMobile} class:tablet={isTablet}>
@@ -135,7 +135,7 @@
 	}
 
 	.text-content p {
-		/* Font size now handled by global section p styling */
+		font-size: 1.375rem; /* Match global section p styling */
 		line-height: 1.3;
 		margin-top: 1rem;
 		color: var(--color-fg);
@@ -290,6 +290,10 @@
 
 		.logo {
 			max-height: 2rem;
+		}
+
+		.text-content p {
+			font-size: 1.6rem; /* Match global mobile section p styling */
 		}
 	}
 

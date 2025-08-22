@@ -564,7 +564,6 @@
         }
 
         section p {
-            font-size: 18px; /* Smaller text */
             max-width: none;
         }
 
@@ -617,7 +616,6 @@
         }
         
         section p {
-            font-size: 16px; /* Even smaller text */
             line-height: 1.4; /* Better readability */
         }
 

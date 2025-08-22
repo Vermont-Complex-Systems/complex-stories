@@ -226,8 +226,9 @@ li strong {
 }
 
 /* Global story paragraph styling */
-section p {
-    font-size: 1.375rem;
+section p,
+#story p {
+    font-size: 1.375rem !important;
     max-width: 800px;
     line-height: 1.3;
     margin: 1rem 0;
@@ -307,12 +308,34 @@ section p {
         padding: 0 0.5rem;
     }
     
+    section p,
+    #story p {
+        font-size: 1.275rem !important; /* Larger for better mobile readability */
+    }
+
+    /* Larger title sizes on mobile for better readability */
+    h1 {
+        font-size: 2.5rem !important;
+    }
+    
+    h2 {
+        font-size: 2rem !important;
+    }
+    
+    h3 {
+        font-size: 1.75rem !important;
+    }
+    
+    h4, h5, h6 {
+        font-size: 1.5rem !important;
+    }
+
     /* Larger text size on mobile for better readability */
     .scrolly-step.mobile .scrolly-markdown {
-        font-size: 1.25rem;
+        font-size: 1.35rem;
     }
     
     .scrolly-step.mobile p {
-        font-size: 1.25rem;
+        font-size: 1.35rem;
     }
 }
