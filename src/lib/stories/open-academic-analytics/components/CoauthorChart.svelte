@@ -162,13 +162,11 @@
   function formatTooltip(point) {
     const d = point.data;
     const institutionName = d.shared_institutions_normalized || d.shared_institutions || 'Unknown';
-    return `Coauthor: ${d.coauth_name || d.ego_display_name}\nYear: ${d.publication_year}\nAge difference: ${d.age_diff} years\nTotal collaborations: ${d.all_times_collabo}\nShared Institution: ${institutionName}`;
+    return `Coauthor: ${d.coauthor_display_name || d.ego_display_name}\nYear: ${d.publication_year}\nAge difference: ${d.age_diff} years\nTotal collaborations: ${d.all_times_collabo}\nShared Institution: ${institutionName}`;
   }
 
-  $inspect(coauthorData)
-
   function handleCoauthorClick(event, point) {
-    dashboardState.clickedCoauthor = point.data.coauth_name;
+    dashboardState.clickedCoauthor = point.data.coauthor_display_name;
   }
 
   function handleChartClick(event) {
@@ -184,7 +182,7 @@
       yField={'pub_date'}
       colorFunction={getCoauthorColor}
       highlightedItem={dashboardState.clickedCoauthor} 
-      highlightField={'coauth_name'}                   
+      highlightField={'coauthor_display_name'}                   
       onPointClick={handleCoauthorClick} 
       onChartClick={handleChartClick}
       {height} 

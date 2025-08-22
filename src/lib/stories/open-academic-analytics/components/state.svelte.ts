@@ -22,7 +22,11 @@ export const dashboardState = $state({
 
 export const data = $state({
     isInitializing: true,
-    error: null
+    isLoadingAuthor: false,
+    error: null,
+    paper: null,
+    coauthor: null,
+    availableAuthors: null
 });
 
 let tablesRegistered = false;
@@ -132,7 +136,7 @@ class DerivedData {
 
   coauthors = $derived.by(() => {
     if (!data.coauthor || data.coauthor.length === 0) return [];
-    const coauthors = [...new Set(data.coauthor.map(c => c.coauth_name).filter(Boolean))];
+    const coauthors = [...new Set(data.coauthor.map(c => c.coauthor_display_name).filter(Boolean))];
     return coauthors.sort();
   });
 }
