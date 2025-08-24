@@ -5,10 +5,8 @@ import dagster as dg
 from dagster_duckdb import DuckDBResource
 import numpy as np
 from pathlib import Path
+from backend.defs.resources import StaticDataPathResource
 
-# Configuration - adjust these as needed
-STATIC_DATA_PATH = Path("../../../../../static/data")
-OUTPUT_FILE = "paper.parquet"
 
 # Data filtering settings
 ACCEPTED_WORK_TYPES = ['article', 'preprint', 'book-chapter', 'book', 'report']
@@ -101,10 +99,10 @@ def prepare_for_deduplication(df):
     kinds={"export"},
     deps=["uvm_publications", "umap_embeddings"],
 )
-def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
+def paper_parquet(duckdb: DuckDBResource, static_data_path: StaticDataPathResource) -> dg.MaterializeResult:
     """Export publications data as parquet for static frontend"""
     
-    output_file = STATIC_DATA_PATH / OUTPUT_FILE
+    output_file = Path(static_data_path.get_path()) / "paper.parquet"
     
     print("🔍 Phase 1: SQL-based data extraction and joining...")
     
@@ -173,9 +171,9 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
             u.umap_1, u.umap_2, u.abstract, u.s2FieldsOfStudy, u.fieldsOfStudy
         FROM oa.raw.publications p
         JOIN oa.raw.authorships a ON p.id = a.work_id
-        JOIN oa.raw.uvm_profs_2023 prof ON a.author_id = prof.ego_author_id 
         LEFT JOIN oa.transform.umap_embeddings u ON p.doi = u.doi
-        WHERE p.doi IS NOT NULL 
+        WHERE p.ego_author_id IS NOT NULL  -- Only UVM authors
+        AND p.doi IS NOT NULL 
         AND p.title IS NOT NULL
         ORDER BY a.author_id DESC, p.publication_year
         """).df()

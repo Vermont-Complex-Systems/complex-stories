@@ -1,15 +1,13 @@
 import dagster as dg
 from dagster_duckdb import DuckDBResource
 from pathlib import Path
-
-# Path to your static data directory
-STATIC_DATA_PATH = Path("../../../../../static/data") 
+from backend.defs.resources import StaticDataPathResource 
 
 @dg.asset(
     kinds={"export"},
     deps=["yearly_collaborations", "coauthor_institutions", "coauthor_cache"], 
 )
-def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
+def coauthor_parquet(duckdb: DuckDBResource, static_data_path: StaticDataPathResource) -> dg.MaterializeResult:
     """Export final coauthor collaboration data as parquet for static frontend"""
     
     with duckdb.get_connection() as conn:
@@ -121,12 +119,12 @@ def coauthor_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
 
             FROM age_calculations
             ORDER BY publication_year
-        ) TO '{STATIC_DATA_PATH}/coauthor.parquet' (FORMAT PARQUET)
+        ) TO '{static_data_path.get_path()}/coauthor.parquet' (FORMAT PARQUET)
         """)
 
         return dg.MaterializeResult(
             metadata={
-                "export_path": str(STATIC_DATA_PATH / "coauthor.parquet"),
+                "export_path": str(Path(static_data_path.get_path()) / "coauthor.parquet"),
             }
     )
 

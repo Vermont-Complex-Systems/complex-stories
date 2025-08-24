@@ -30,10 +30,10 @@ def get_external_coauthors_to_process(conn) -> List[Tuple[str, str]]:
         a.author_id,
         a.author_display_name
     FROM oa.raw.authorships a
-    LEFT JOIN oa.raw.uvm_profs_2023 u ON a.author_id = u.ego_author_id
+    JOIN oa.raw.publications p ON a.work_id = p.id
     LEFT JOIN oa.cache.coauthor_cache c ON a.author_id = c.id
-    WHERE u.ego_author_id IS NULL 
-    AND c.id IS NULL
+    WHERE p.ego_author_id IS NULL  -- Only get external (non-UVM) coauthors
+    AND c.id IS NULL               -- Not already cached
     ORDER BY a.author_display_name
     """).fetchall()
     
@@ -91,10 +91,8 @@ def coauthor_cache(
         total_external = conn.execute("""
             SELECT COUNT(DISTINCT a.author_id) as total_external_authors
             FROM oa.raw.authorships a
-            WHERE a.author_id NOT IN (
-                SELECT ego_author_id 
-                FROM oa.raw.uvm_profs_2023
-            )
+            JOIN oa.raw.publications p ON a.work_id = p.id
+            WHERE p.ego_author_id IS NULL  -- External (non-UVM) coauthors only
         """).fetchone()[0]
         
         already_cached = conn.execute("""
@@ -192,14 +190,12 @@ def coauthor_cache_progress_check(duckdb: DuckDBResource) -> dg.AssetCheckResult
     """Check the progress of building coauthor cache"""
     
     with duckdb.get_connection() as conn:
-        # Simpler query without complex subquery
+        # Get external coauthors count using publications table
         total_external = conn.execute("""
             SELECT COUNT(DISTINCT a.author_id) as total_external_coauthors
             FROM oa.raw.authorships a
-            WHERE a.author_id NOT IN (
-                SELECT ego_author_id 
-                FROM oa.raw.uvm_profs_2023
-            )
+            JOIN oa.raw.publications p ON a.work_id = p.id
+            WHERE p.ego_author_id IS NULL  -- External (non-UVM) coauthors only
         """).fetchone()[0]
         
         cached_stats = conn.execute("""

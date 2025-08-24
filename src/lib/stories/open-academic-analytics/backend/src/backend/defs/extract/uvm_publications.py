@@ -1,4 +1,17 @@
-"""Grab all UVM 2023 faculties publications from OpenAlex"""
+"""
+Grab all UVM 2023 faculties publications from OpenAlex.
+We handle first publication years for UVM faculties we know their ground truth.
+
+Warning: Hidden loop here
+=========================
+  uvm_profs_2023 → uvm_profs_sync_status → determine who needs updating
+                      ↓
+  OpenAlex API ← clean ego_author_id (strip URL)
+                      ↓  
+  publications table ← store with ego_author_id (full URL)
+  authorships table ← store all author relationships
+
+"""
 
 import dagster as dg
 from backend.defs.resources import OpenAlexResource
@@ -91,7 +104,10 @@ def create_publications_tables(conn) -> None:
             
             -- Metadata
             updated_date TIMESTAMP,
-            created_date DATE
+            created_date DATE,
+            
+            -- UVM Professor tracking
+            ego_author_id VARCHAR  -- ego_author_id from uvm_profs_2023 if this is a UVM publication
         )
     """)
     
@@ -155,7 +171,7 @@ def get_corrected_first_pub_year(conn, ego_author_id: str) -> Optional[int]:
     result = conn.execute("""
         SELECT first_pub_year 
         FROM oa.raw.uvm_profs_2023 
-        WHERE 'https://openalex.org/' || ego_author_id = ?
+        WHERE ego_author_id = ?
     """, [ego_author_id]).fetchone()
     
     return result[0] if result and result[0] else None
@@ -246,9 +262,9 @@ def extract_publication_data(work: Dict) -> Tuple:
         work.get('updated_date'),
         work.get('created_date')
     )
-    # Total: 9 + 6 + 5 + 6 + 4 + 2 = 32 fields
+    # Total: 9 + 6 + 5 + 6 + 4 + 2 + 1 = 33 fields
 
-def process_and_insert_work(work: Dict, conn, corrected_first_year: Optional[int] = None) -> int:
+def process_and_insert_work(work: Dict, conn, corrected_first_year: Optional[int] = None, requesting_ego_author_id: str = None) -> int:
     """Process a work and insert publication + all authorships"""
     work_id = work.get('id')
     if not work_id:
@@ -259,13 +275,15 @@ def process_and_insert_work(work: Dict, conn, corrected_first_year: Optional[int
         if work.get('publication_year') < corrected_first_year:
             return 0  # Skip this paper entirely
     
-    # Insert the publication (32 parameters to match the 32 fields)
+    # Insert the publication (33 parameters to match the 33 fields)
     publication_data = extract_publication_data(work)
+    # Add the requesting ego_author_id as the 33rd parameter
+    publication_data_with_prof = publication_data + (requesting_ego_author_id,)
     
     conn.execute("""
         INSERT OR IGNORE INTO oa.raw.publications VALUES 
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, publication_data)
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, publication_data_with_prof)
     
     # Process all authorships
     authorships = work.get('authorships', [])
@@ -326,12 +344,13 @@ def determine_fetch_start_date(ego_author_id: str, conn) -> Optional[str]:
     
     # Decision logic
     if latest_existing and corrected_earliest:
-        # We have both - use whichever is later to avoid gaps
-        start_date = max(latest_existing, corrected_earliest)
+        # We have both - use whichever is later to avoid gaps (convert to strings for comparison)
+        latest_str = str(latest_existing)
+        start_date = max(latest_str, corrected_earliest)
         reason = f"latest existing ({latest_existing}) vs corrected earliest ({corrected_earliest})"
     elif latest_existing:
         # Only have existing data - continue from there
-        start_date = latest_existing
+        start_date = str(latest_existing)
         reason = f"continuing from latest existing publication"
     elif corrected_earliest:
         # Only have correction data - start from corrected year
@@ -392,7 +411,7 @@ def uvm_publications(
                     f"latest: {latest_date}, corrected first year: {corrected_first_year}"
                 )
                 
-                # Build the filter for OpenAlex API
+                # Build the filter for OpenAlex API (need to strip URL prefix for API)
                 filter_parts = [f"author.id:{ego_author_id}"]
 
                 start_date = determine_fetch_start_date(ego_author_id, conn)
@@ -410,7 +429,7 @@ def uvm_publications(
                 if works:
                     # Process each work
                     for work in works:
-                        authorships_added = process_and_insert_work(work, conn, corrected_first_year)
+                        authorships_added = process_and_insert_work(work, conn, corrected_first_year, ego_author_id)
                         total_authorships_added += authorships_added
                     
                     total_works_processed += len(works)
@@ -432,6 +451,10 @@ def uvm_publications(
             FROM oa.raw.publications p
             JOIN oa.raw.authorships a ON p.id = a.work_id
         """).fetchone()
+        
+        # Get table schemas using PyArrow
+        publications_arrow = conn.execute("SELECT * FROM oa.raw.publications LIMIT 0").arrow()
+        authorships_arrow = conn.execute("SELECT * FROM oa.raw.authorships LIMIT 0").arrow()
     
     return dg.MaterializeResult(
         metadata={
@@ -439,7 +462,23 @@ def uvm_publications(
             "works_processed": total_works_processed,
             "total_publications": final_stats[0],
             "total_authorships": final_stats[1],
-            "uvm_profs_with_data": final_stats[2]
+            "uvm_profs_with_data": final_stats[2],
+            "publications_table_schema": dg.MetadataValue.table_schema(
+                dg.TableSchema(
+                    columns=[
+                        dg.TableColumn(field.name, str(field.type))
+                        for field in publications_arrow.schema
+                    ]
+                )
+            ),
+            "authorships_table_schema": dg.MetadataValue.table_schema(
+                dg.TableSchema(
+                    columns=[
+                        dg.TableColumn(field.name, str(field.type))
+                        for field in authorships_arrow.schema
+                    ]
+                )
+            )
         }
     )
 
