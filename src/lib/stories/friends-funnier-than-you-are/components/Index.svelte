@@ -1,5 +1,6 @@
 <script>
 import { base } from "$app/paths";
+import BranchingComparison from "./BranchingComparison.svelte";
 </script>
 
 <section id="story"  class="story">
@@ -17,6 +18,7 @@ import { base } from "$app/paths";
 
     <p>Spoiler: How far your joke is going depends on your friends going viral.</p>
 
+    <BranchingComparison />
 
     
 </section>
