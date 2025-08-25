@@ -104,7 +104,7 @@
           r={point.r}
           fill={point.color}
           stroke="black"
-          stroke-width={0.8}
+          stroke-width={0.5}
           fill-opacity={point.opacity}
           class="data-point"
           onclick={(e) => handlePointClick(e, point)}

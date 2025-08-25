@@ -10,7 +10,7 @@ export const uiState = $state({
 });
 
 export const dashboardState = $state({
-    selectedAuthor: 'Jason H. T. Bates',
+    selectedAuthor: 'Peter Sheridan Dodds',
     selectedCollege: 'College of Engineering and Mathematical Sciences',
     coauthorNodeColor: 'age_diff',
     paperNodeSize: 'cited_by_count',

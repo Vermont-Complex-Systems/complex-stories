@@ -109,7 +109,7 @@
       }));
     }
     
-    return [{ color: '#888888', label: 'Coauthors' }];
+    return [{ color: '#dcdcdcff', label: 'Coauthors' }];
   });
   // Dynamic color function based on current color mode  
   const getCoauthorColor = $derived.by(() => {
@@ -150,10 +150,10 @@
       
       // Handle null/unknown values
       if (colorValue == null || colorValue === '' || colorValue === 'Unknown') {
-        return "#888888";
+        return "#dcdcdcff";
       }
       
-      return colorScale ? colorScale(colorValue) : "#888888";
+      return colorScale ? colorScale(colorValue) : "#dcdcdcff";
     };
   });
 

@@ -33,8 +33,8 @@ export const colorConstants = {
     some: '#31688EFF',
     many: '#440154FF'
   },
-  fallback: '#888888',
-  null: '#888888'
+  fallback: '#d9d9d9ff',
+  null: '#dcdcdcff'
 };
 
 // Helper function to get color for age category
