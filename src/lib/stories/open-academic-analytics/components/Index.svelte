@@ -1,25 +1,18 @@
 <script>
+    import * as d3 from 'd3';
+    import DataTable from '$lib/components/helpers/NiceTable.svelte';
+    import Spinner from '$lib/components/helpers/Spinner.svelte'
+    import {  dashboardState, uiState, data, initializeApp, loadSelectedAuthor } from './state.svelte.ts';
+    import Dashboard from './Dashboard.svelte';
     import Nav from './Nav.svelte';
     import Sidebar from './Sidebar.svelte';
-    import Dashboard from './Dashboard.svelte';
-    import TutorialPopup from './helpers/TutorialPopup.svelte';
-    import Spinner from '$lib/components/helpers/Spinner.svelte'
-    
-    import { 
-        uiState, 
-        dashboardState, 
-        dataState,
-        initializeApp,
-        loadSelectedAuthor
-    } from '../state.svelte.ts';
     
     // Initialize on component mount
     initializeApp();
-    let showTutorial = $state(true);
-    
+
     // Auto-load data when selected author or changes
     $effect(() => {
-        if (dashboardState.selectedAuthor && !dataState.isInitializing) {
+        if (dashboardState.selectedAuthor && !data.isInitializing) {
             loadSelectedAuthor();
         }
     });
@@ -28,13 +21,13 @@
 <div class="dashboard-app">    
     <div class="app-container">
         <div class="layout">
-            {#if dataState.isInitializing}
+            {#if data.isInitializing}
                 <div class="loading-container">
                     <Spinner />
                 </div>
-            {:else if dataState.error}
+            {:else if data.error}
                 <div class="error-container">
-                    <p>Error: {dataState.error}</p>
+                    <p>Error: {data.error}</p>
                     <button onclick={() => initializeApp()}>Retry</button>
                 </div>
             {:else}
@@ -45,20 +38,28 @@
                 <main class="main-content {uiState.sidebarCollapsed ? 'collapsed-sidebar' : ''}">
                     <Nav />
                     
-                    {#if dataState.isLoadingAuthor}
+                    {#if data.isLoadingAuthor}
                         <div class="author-loading">
                             <p>Loading data for {dashboardState.selectedAuthor}...</p>
                         </div>
                     {/if}
                     
                     <Dashboard />
-                </main>
-            {/if}
-        </div>
-    </div>
-</div>
+                    
+                    
+                    {#if uiState.debug == true}
+                        <h1>Paper table</h1>
+                        <DataTable data={data.paper?.filter(d=>d.ego_display_name === dashboardState.selectedAuthor).slice(0,5)}/>
+                        
+                        <h1>Coauthor table</h1>
+                        <DataTable data={data.coauthor?.filter(d=>d.ego_display_name === dashboardState.selectedAuthor).slice(0,5)}/>
+                    {/if}
+                </main>    
+            {/if}    
+        </div>    
+    </div>    
+</div>    
 
-<TutorialPopup bind:visible={showTutorial} />
 
 <style>
 

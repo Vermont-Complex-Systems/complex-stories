@@ -1,3 +1,11 @@
 {
-    "typescript.validate.enable": false
+    "typescript.validate.enable": false,
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "DuckDB",
+            "name": "academic analytics",
+            "database": "/tmp/oa.duckdb"
+        }
+    ]
 }

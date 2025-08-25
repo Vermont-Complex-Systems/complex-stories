@@ -133,7 +133,7 @@
           </g>
           
           <!-- Data points -->
-          <g transform="translate({MARGIN_LEFT}, 0)">
+          <g>
             {#each displayData as point}
               <circle
                 cx={point.x}
