@@ -8,6 +8,8 @@
 	import ScatterPlot from "./ScatterPlot.svelte";
 	import { browser } from '$app/environment';
 	import { base } from '$app/paths';
+	import letterImg from '../assets/julia-illos/Symbolmapping.png?url'
+	
 	
 	let { story, data } = $props();
 	
@@ -27,7 +29,7 @@
 	
 	const firstSectionSteps = data.firstSection;
 	const secondSectionSteps = data.secondSection;
-	const thirdSectionSteps = data.secondSection; // Reusing for now
+	const thirdSectionSteps = data.thirdSection; // Reusing for now
 	
 	// Safe window width check
 	let innerWidth = $state(browser ? window.innerWidth : 1200);
@@ -86,11 +88,11 @@
 			case 1:
 				return 1;
 			case 2:
-				return 5;
+				return 12;
 			case 3:
 				return 1;
 			default:
-				return 7;
+				return 1;
 		}
 	});
 
@@ -157,8 +159,10 @@
 	
 	<!-- Section Break -->
 	<div class="story-section-break">
+		<img src={letterImg} style="margin: 0 auto;" width="20%" alt="letter being converted to binary ones and zeros" />
 		<h2>What is a token?</h2>
 		<p>Let's explore how language models break down text into manageable pieces.</p>
+		
 	</div>
 	
 	<!-- Second Section -->
@@ -184,7 +188,7 @@
 	<!-- Section Break -->
 	<div class="story-section-break">
 		<h2>The Distributional Hypothesis</h2>
-		<p>The Distributional Hypothesis states that words that occur in the same contexts tend to have similar meanings. So how does an LLM group different words?</p>
+		<p>The Distributional Hypothesis states that words that occur in the same contexts tend to have similar meanings. So how does an LLM group different instances of the same word?</p>
 	</div>
 	
 	<!-- Third Section -->
@@ -336,12 +340,13 @@
 	}
 	
 	.step {
-		height: 80vh;
+		height: 90vh;
 		display: flex;
 		align-items: center;
 		justify-content: flex-start;
 		position: relative;
 		z-index: var(--z-top);
+		margin-bottom: 150px;
 	}
 	
 	.step-content {
@@ -416,7 +421,7 @@
 		.step-content {
 			width: 90%;
 			margin: 0 auto;
-			font-size: var(--font-size-smallish);
+			font-size: 14px;
 			padding: 1rem 1.5rem;
 		}
 		

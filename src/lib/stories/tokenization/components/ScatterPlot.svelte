@@ -1,4 +1,14 @@
 <script>
+  // Helper to get N unique random indices from an array
+  function getRandomIndices(arrLength, n) {
+    const indices = [];
+    while (indices.length < n && indices.length < arrLength) {
+      const idx = Math.floor(Math.random() * arrLength);
+      if (!indices.includes(idx)) indices.push(idx);
+    }
+    return indices;
+  }
+
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
   import data from '../data/embeddings-2d.json'; // Assuming this path is correct
@@ -49,6 +59,7 @@
   });
 
   let svgElement; // Bind this to the SVG element
+  let textGroup; // For text labels
   let tooltipElement; // Bind this to the tooltip element
 
   // Effect to update the scatter plot whenever xData or yData changes
@@ -57,6 +68,9 @@
 
     const svg = d3.select(svgElement);
     const tooltip = d3.select(tooltipElement);
+
+    // Remove previous text labels
+    svg.selectAll('.random-label').remove();
 
     // Join new data with existing circles, update positions with transition
     svg.selectAll("circle")
@@ -74,13 +88,15 @@
             tooltip.style("opacity", 1)
                    .html(data.utterances[i]);
             // Position tooltip relative to the circle
-            tooltip.style("left", (xscale(d) - 320) + "px") // Adjust for padding/offset
-                   .style("top", (yscale(yData[i]) + 20) + "px"); // Adjust for padding/offset
+            tooltip.style("left", (event.pageX + 10) + "px")
+                   .style("top", (event.pageY + 10) + "px");
+
+            console.log(event)
           })
           .on("mousemove", function(event, d) {
             // Optional: make tooltip follow mouse more precisely
-            tooltip.style("left", (event.clientX + 10) + "px")
-                   .style("top", (event.clientY + 10) + "px");
+            tooltip.style("left", (event.offsetX - 20) + "px")
+                   .style("top", (event.offsetY + 200) + "px");
           })
           .on("mouseout", function() {
             tooltip.style("opacity", 0);
@@ -90,6 +106,39 @@
           .attr("r", 5), // Animate to radius 5
         update => update
           .transition()
+          .on("end", function(_, i) {
+        // Only run once after all transitions
+        if (i === xData.length - 1) {
+          // Select 5 random indices
+          const indices = getRandomIndices(xData.length, 3);
+
+          // Add text labels for those indices
+          indices.forEach(idx => {
+            // Calculate label position with edge padding
+            const labelPadding = 12;
+            let x = xscale(xData[idx]);
+            let y = yscale(yData[idx]) - labelPadding;
+
+            // Ensure label stays within left/right bounds
+            x = Math.max(labelPadding, Math.min(x, width - labelPadding));
+            // Ensure label stays within top/bottom bounds
+            y = Math.max(labelPadding, Math.min(y, height - labelPadding));
+
+            svg.append('text')
+              .attr('class', 'random-label')
+              .attr('x', x)
+              .attr('y', y)
+              .attr('text-anchor', 'middle')
+              .attr('font-size', 14)
+              .attr('font-weight', 'bold')
+              .attr('fill', '#333')
+              .attr('stroke', '#fff')
+              .attr('stroke-width', 2)
+              .attr('paint-order', 'stroke')
+              .text(data.utterances[idx]);
+          });
+        }
+      })
           .duration(750) // Animation duration
           .attr("cx", (d) => xscale(d))
           .attr("cy", (d, i) => yscale(yData[i]))
@@ -98,12 +147,13 @@
             const i = svg.selectAll("circle").nodes().indexOf(this);
             tooltip.style("opacity", 1)
                    .html(`X: ${d.toFixed(2)}, Y: ${yData[i].toFixed(2)}`);
-            tooltip.style("left", (xscale(d) + 20) + "px")
-                   .style("top", (yscale(yData[i]) + 20) + "px");
+            tooltip.style("left", event.clientX + "px")
+                   .style("top", event.clientY + "px");
           })
           .on("mousemove", function(event, d) {
-            tooltip.style("left", (event.clientX + 10) + "px")
-                   .style("top", (event.clientY + 10) + "px");
+            
+            tooltip.style("left", event.clientX + "px")
+                   .style("top", event.clientY + "px");
           })
           .on("mouseout", function() {
             tooltip.style("opacity", 0);
