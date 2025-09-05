@@ -15,6 +15,11 @@
         "text": "#000"
     },
     {
+        "slug": "hello-sciscidb",
+        "bg": "hsl(200, 83%, 38%)",
+        "text": "#000"
+    },
+    {
         "slug": "allotax-scrolly",
         "bg": "hsl(170, 100%, 35%)",
         "text": "#000"

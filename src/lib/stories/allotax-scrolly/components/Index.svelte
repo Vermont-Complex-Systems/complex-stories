@@ -43,6 +43,11 @@
     let isDark = $state(false);
     let isGirls = $state(true);
 
+    // Responsive breakpoints using innerWidth
+    let isMobile = $derived(innerWidth.current <= 768);
+    let isTablet = $derived(innerWidth.current <= 1200 && innerWidth.current > 768);
+    let isDesktop = $derived(innerWidth.current > 1200);
+
     // Data systems
     let currentDataset = $derived(isGirls ? datasets.girls : datasets.boys);
     let sys1 = $derived(currentDataset.sys1);
@@ -94,6 +99,11 @@
                 ? maxStepReached  // We've left the scrolly section - maintain final state
                 : 0  // We're entering the scrolly section - start at step 0
     );
+
+    // Mobile image helpers  
+    let mobileImageGender = $derived(isGirls ? 'girl' : 'boy');
+    // Use the same logic as the active step: when scrollyIndex is undefined, show step 0
+    let mobileImageStep = $derived(scrollyIndex !== undefined ? Math.min(scrollyIndex, 2) : 0);
 
     // Update your renderedData to use effectiveStep:
     let renderedData = $derived.by(() => {
@@ -166,98 +176,128 @@
     <p>Allotaxonometer provides a systematic way to analyze these shifts using <a href="https://arxiv.org/abs/2008.13078">divergence metrics</a>.</p>
 
     <div class="chart-container-scrolly">
-        {#if isDataReady && renderedData}
-            <div class="visualization-container">
-                <!-- Diamond plot: show for steps 0, 1, 2 (including undefined as 0) -->
-                {#if effectiveStep >= 0}
-                <div class="diamondplot">
-                    <Diamond
-                        dat={renderedData} 
-                        {alpha} 
-                        divnorm={rtd.normalization} 
-                        {title} 
-                        {maxlog10}
-                        {DiamondHeight} 
-                        {marginInner} 
-                        {marginDiamond}
-                    />
-                </div>
-                {/if}
-                
-                <!-- Additional charts: show from step 1 onwards (no upper limit) -->
-                {#if effectiveStep >= 1}
-                    <div class="additional-charts" 
-                        in:fade={{ duration: 800, delay: 300 }}
-                    >
-                        <div class="legend-container" 
-                            in:fly={{ x: -50, duration: 600, delay: 500 }}>
-                            <Legend
-                                diamond_dat={dat.counts}
-                                DiamondHeight={DiamondHeight}
-                                max_count_log={max_count_log || 5}
-                            />
-                        </div>
-                        
-                        <!-- Balance chart: visible from step 2 onwards -->
-                        <div class="balance-container" style="opacity: {effectiveStep >= 2 ? 1 : 0};">
-                            <DivergingBarChart
-                                data={balanceData}
-                                DiamondHeight={DiamondHeight}
-                                DiamondWidth={DiamondWidth}
-                            />
-                        </div>
-                    </div>
-                {/if}
+        {#if isMobile}
+            <!-- Static image for mobile positioned like desktop chart -->
+            <div class="mobile-chart-image">
+                <img 
+                    src="{base}/common/thumbnails/screenshots/allotax-scrolly-{mobileImageGender}-{mobileImageStep}.jpg" 
+                    alt="Allotaxonometer visualization step {mobileImageStep} showing {mobileImageGender} baby names analysis from Quebec"
+                    key="{mobileImageGender}-{mobileImageStep}"
+                    loading="lazy"
+                />
             </div>
+        {:else}
+            <!-- Interactive visualization for desktop/tablet -->
+            {#if isDataReady && renderedData}
+                <div class="visualization-container">
+                    {#if effectiveStep >= 0}
+                    <div class="diamondplot">
+                        <Diamond
+                            dat={renderedData} 
+                            {alpha} 
+                            divnorm={rtd.normalization} 
+                            {title} 
+                            {maxlog10}
+                            {DiamondHeight} 
+                            {marginInner} 
+                            {marginDiamond}
+                        />
+                    </div>
+                    {/if}
+                    
+                    {#if effectiveStep >= 1}
+                        <div class="additional-charts" 
+                            in:fade={{ duration: 800, delay: 300 }}
+                        >
+                            <div class="legend-container" 
+                                in:fly={{ x: -50, duration: 600, delay: 500 }}>
+                                <Legend
+                                    diamond_dat={dat.counts}
+                                    DiamondHeight={DiamondHeight}
+                                    max_count_log={max_count_log || 5}
+                                />
+                            </div>
+                            
+                            <div class="balance-container" style="opacity: {effectiveStep >= 2 ? 1 : 0};">
+                                <DivergingBarChart
+                                    data={balanceData}
+                                    DiamondHeight={DiamondHeight}
+                                    DiamondWidth={DiamondWidth}
+                                />
+                            </div>
+                        </div>
+                    {/if}
+                </div>
+            {/if}
         {/if}
     </div>
 
 
-    <div class="spacer"></div>
-    <Scrolly bind:value={scrollyIndex} offset={innerWidth.current > 1200 ? '50vh' : '20vh'}>
-        {#each steps as text, i}
-            {@const active = scrollyIndex === i}
-            <div class="step" class:active>
+    <div class="stepContainer">
+        
+        <Scrolly bind:value={scrollyIndex} top={isMobile ? 50 : 0} bottom={isMobile ? 50 : 0}>
+            {#each steps as text, i}
+            {@const active = scrollyIndex === i || (scrollyIndex === undefined && i === 0)}
+            <div class="scrolly-step" class:active class:mobile={isMobile} class:tablet={isTablet}>
                 <p> 
                     <ScrollyMd text={text.value} {isGirls} />
                 </p>
             </div>
-        {/each}
-    </Scrolly>
-    <div class="spacer"></div>
+            {/each}
+        </Scrolly>
+    </div>
+    
 </section>
 
 <section>
     <h1>The full picture</h1>
     <p>We now add the final chart to our canvas, the wordshift plot, with our divergence metric of choice, the rank-turbulence divergence. The wordshift plot shows a more direct view of how baby names shift across pairs of systems, with the rank being shown in pale grey. For instance, {@render G(isGirls ? 'Florence' : 'Noah')} going from the {isGirls ? '409' : '855'} rank in <span class="year-1980">1980</span> to {isGirls ? '1.5' : '1'} in <span class="year-2023">2023</span>.</p>
-    <div class="dashboard-section">
-    <div class="dashboard-container">
-        <div class="math-overlay">
-            <Md text={math} />
+    {#if isMobile}
+        <!-- Mobile static image for final dashboard -->
+        <div class="mobile-dashboard-image">
+            <img 
+                src="{base}/common/thumbnails/screenshots/allotax-scrolly-{mobileImageGender}-dashboard.jpg"
+                alt="Complete allotaxonometer dashboard for {mobileImageGender} baby names analysis"
+                loading="lazy"
+            />
         </div>
-        
-        <Dashboard 
-            {dat}
-            {alpha}
-            divnorm={rtd?.normalization || 1}
-            {barData}
-            {balanceData}
-            {title}
-            {maxlog10}
-            {max_count_log}
-            width={Math.min(innerWidth.current - 40, 1400)} 
-            {DiamondHeight}
-            {DiamondWidth}
-            {marginInner}
-            {marginDiamond}
-            xDomain={[-max_shift * 1.5, max_shift * 1.5]}
-            class="dashboard"
-        />
-    </div>
-    <Slider bind:alphaIndex {alphas} />
-</div>
+    {:else}
+    <div class="dashboard-section">
+            <!-- Desktop interactive dashboard -->
+            <div class="dashboard-container">
+                <div class="math-overlay">
+                    <Md text={math} />
+                </div>
+                
+                <Dashboard 
+                    {dat}
+                    {alpha}
+                    divnorm={rtd?.normalization || 1}
+                    {barData}
+                    {balanceData}
+                    {title}
+                    {maxlog10}
+                    {max_count_log}
+                    width={Math.min(innerWidth.current - 40, 1400)} 
+                    {DiamondHeight}
+                    {DiamondWidth}
+                    {marginInner}
+                    {marginDiamond}
+                    xDomain={[-max_shift * 1.5, max_shift * 1.5]}
+                    class="dashboard"
+                />
+                
+                <div class="slider-wrapper">
+                    <Slider bind:alphaIndex {alphas} />
+                </div>
+            </div>
+        </div>
+        {/if}
 
-    
+{#if isMobile}
+    <p class="mobile-note"><em>Note: The interactive α slider is available on desktop for exploring different parameter values.</em></p>
+{/if}
+
 <p>Where the α parameter lets us tweak the relative importance of the divergence metric, as shown in the top left expression. Try α = ∞, you will see that types tend to be similarly ranked with their frequency, with {@render G(isGirls ? 'Julie' : 'Eric')} at the top. By contrast, α = 0 allows us to inspect what is happening further down in the tail. Finally, those contour lines underlying the diamond plot help guide our interpretation of the rank-divergence metric, tracking how α is varied.</p>
 
 <p>For much more detail about this tool, see the foundational <a href="https://epjdatascience.springeropen.com/articles/10.1140/epjds/s13688-023-00400-x">paper</a>. To try the tool with your own dataset, visit our <a href="{base}/allotaxonometry">web app</a>. If you are more of a coder, you might enjoy our <a href="https://github.com/car-d00r/py-allotax">Python version</a>.</p>
@@ -346,12 +386,7 @@
             font-family: var(--mono);
         }
 
-	section p {
-      font-size: 22px;
-      max-width: 800px;
-      line-height: 1.3;
-      margin: 1rem 0 1rem 0;
-  }
+	/* Global paragraph styling now handled in app.css */
 
 
     .initial-chart {
@@ -369,6 +404,53 @@
         float: right;
         margin-right: 5%;
         clear: both;
+    }
+
+    /* Mobile chart image styling - simple approach */
+    .mobile-chart-image {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        max-width: 90vw;
+        margin: 0 auto;
+        position: relative;
+        z-index: -1;
+    }
+
+    .mobile-chart-image img {
+        width: 100%;
+        height: auto;
+        max-height: 60vh;
+        object-fit: contain;
+        object-position: center;
+    }
+
+    /* Mobile dashboard image styling - full width */
+    .mobile-dashboard-image {
+        width: 100vw;
+        margin: 2rem 0;
+        /* Break out of parent constraints */
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        z-index: -1;
+        padding: 0;
+    }
+
+    .mobile-dashboard-image img {
+        width: 100%;
+        height: auto;
+        max-width: 100vw;
+        object-fit: contain;
+        object-position: center;
+        display: block;
     }
 
 	 .visualization-container {
@@ -438,51 +520,6 @@
 			opacity 700ms cubic-bezier(0.76, 0, 0.24, 1);
 	}
 
-	.spacer {
-		height: 75vh;
-	}
-
-	 .step {
-        height: 80vh;
-        display: flex;
-        place-items: center;
-        justify-content: flex-start; /* Align to left */
-        margin-right: 60%;
-    }
-
-
-	.step p {
-        padding: 0.5rem 1rem;
-        background: var(--step-bg, #f5f5f5);
-        color: var(--step-text, #ccc);
-        border-radius: 5px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        box-shadow: var(--step-shadow, 1px 1px 10px rgba(0, 0, 0, 0.2));
-        z-index: 10;
-        transition: background 500ms ease, color 500ms ease, box-shadow 500ms ease;
-    }
-
-    
-    .step.active p {
-        background: var(--step-active-bg, white);
-        color: var(--step-active-text, black);
-        box-shadow: var(--step-active-shadow, 1px 1px 10px rgba(0, 0, 0, 0.2));
-    }
-    
-    /* Dark mode overrides */
-    :global(.dark) .step p {
-        --step-bg: #2a2a2a;
-        --step-text: #888;
-        --step-shadow: 1px 1px 10px rgba(227, 227, 227, 0.5);
-    }
-
-    :global(.dark) .step.active p {
-        --step-active-bg: #383838;
-        --step-active-text: #fff;
-        --step-active-shadow: 1px 1px 10px rgba(230, 230, 230, 0.5);
-    }
 
     /* Dark mode support */
     :global(.dark) .gender-text.girls {
@@ -494,14 +531,14 @@
         color: #93c5fd;
         background: rgba(59, 130, 246, 0.2);
     }
+
     
     .math-overlay {
         position: absolute;
         top: 5rem;
         left: 3rem;
-        z-index: 10;
+        z-index: 2;
         background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
         padding: 0 0;
         border-radius: 0;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -509,6 +546,7 @@
         max-width: 200px; /* Constrain overlay width */
         overflow: hidden; /* Prevent overflow */
         line-height: 1.2; /* Tighter line spacing for math */
+        pointer-events: none; /* Allow clicks to pass through */
     }
 
     .math-overlay :global(.markdown-content) {
@@ -526,7 +564,6 @@
         }
 
         section p {
-            font-size: 18px; /* Smaller text */
             max-width: none;
         }
 
@@ -539,6 +576,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            float: none; /* Remove float on tablet */
         }
 
         .additional-charts {
@@ -548,17 +586,11 @@
             align-items: center;
         }
 
-        .step p {
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            text-align: center;
-            transform: none; /* Remove the translateX offset */
-        }
     }
 
     /* Add extra small screen support */
     @media (max-width: 768px) {
+
 
         section h1 {
             font-size: var(--font-size-xlarge); 
@@ -574,13 +606,25 @@
         }
         
         .chart-container-scrolly {
-            top: calc(50vh - 150px); /* Even less aggressive */
-            max-width: 90vw; /* Use more screen width */
+            position: sticky;
+            top: calc(50vh - 200px);
+            width: 100%;
+            max-width: 90vw;
+            margin: 1rem auto;
+            float: none;
+            min-height: 60vh;
         }
         
         section p {
-            font-size: 16px; /* Even smaller text */
             line-height: 1.4; /* Better readability */
+        }
+
+        /* Fix dashboard section on mobile */
+        .dashboard-section {
+            width: 100%;
+            margin-left: 0;
+            padding: 2rem 1rem;
+            text-align: center;
         }
     }
 
@@ -595,17 +639,41 @@
     .dashboard-section {
         width: 100vw;
         margin-left: calc(-50vw + 50%);
-        padding: 4rem 0 0 8rem;
+        padding: 4rem 2rem 2rem 2rem;
         text-align: center;
     }
 
      .dashboard-container {
         width: 100%;
         display: flex;
-        justify-content: center;
-        padding: 1rem 0;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+        padding: 2rem;
         position: relative;
-        max-width: 1400px; /* Constrain dashboard container */
-        margin: 0 auto; /* Center it */
+        max-width: 1400px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.1);
     }
+
+    .slider-wrapper {
+        width: 100%;
+        max-width: 400px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .mobile-note {
+        text-align: center;
+        font-size: 14px;
+        color: #666;
+        margin: 1rem 0;
+        padding: 0.5rem;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 4px;
+    }
+
 </style>
