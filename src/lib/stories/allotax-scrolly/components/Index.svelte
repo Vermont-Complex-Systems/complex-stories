@@ -150,7 +150,7 @@
 <Nav bind:isDark bind:isGirls />
 
 
-<section id="story"  class="story">
+<section id="allotaxonometer-story"  class="story">
     <h1>A whirlwind tour of the <a href="https://vermont-complex-systems.github.io/complex-stories/allotaxonometry" target="_blank">allotaxonometer</a></h1>
     <div class="article-meta">
         <p class="author">By <a href="{base}/author/jonathan-st-onge">Jonathan St-Onge</a></p>
@@ -310,6 +310,16 @@
 
 
 <style>
+
+    :global(body:has(#allotaxonometer-story) main#content) {
+        max-width: var(--width-column-wide);
+    }
+    
+    :global(#story) {
+        margin: 2rem auto;
+        padding: 0 2rem;
+    }
+
     .article-meta {
         margin: -1rem 0 2rem 0; /* Negative margin to pull closer to title */
         font-family: var(--sans);
@@ -367,12 +377,6 @@
         color: #374151;
         border-radius: 0.3rem;
         text-decoration-color: rgb(129, 208, 237); /* Lighter blue underline */
-    }
-
-     :global(#story) {
-        max-width: 1200px;
-        margin: 2rem auto;
-        padding: 0 2rem;
     }
 
     section h1 {

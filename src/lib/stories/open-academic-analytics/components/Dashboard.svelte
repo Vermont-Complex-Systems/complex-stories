@@ -6,7 +6,7 @@
   import Toggle from './helpers/Toggle.svelte'
   import RangeFilter from './helpers/RangeFilter.svelte'
   import CollabChart from './Collaboration.Agg.svelte'
-  import { dashboardState, dataState, uiState, unique } from '../state.svelte.ts';
+  import { dashboardState, dataState, uiState, unique } from '../state.svelte';
   import { innerWidth } from 'svelte/reactivity/window';
   import { calculateChartWidth, calculateChartHeight, spacing } from '../utils/layout.js';
 

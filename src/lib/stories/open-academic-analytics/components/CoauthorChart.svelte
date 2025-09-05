@@ -3,7 +3,7 @@
   import DodgeChart from '$lib/components/helpers/DodgeChart.svelte';
   import ChangePointChart from './ChangePointChart.svelte';
   import Legend from './Legend.svelte';
-  import { dashboardState, dataState } from '../state.svelte.ts';
+  import { dashboardState, dataState } from '../state.svelte';
   import { processCoauthorData } from '../utils/coauthorUtils.js';
   
   // ✅ Import centralized color scales

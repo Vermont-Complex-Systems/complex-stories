@@ -51,81 +51,90 @@
 
 <Nav bind:isDark />
 
-{#if dataState.isInitializing}
-  <div class="loading-container">
-    <Spinner />
-  </div>
-{:else}
+<article id="uvm-groups-story">
 
-  <div class="header-container">
-  <div class="header-text">
-    <h1>Mapping the Research Ecosystem of the University of Vermont</h1>
-    <div class="article-meta">
-      <p class="author">By <a href="{base}/author/jonathan-st-onge">Jonathan St-Onge</a></p>
-      <p class="date">May 16, 2025</p>
+  {#if dataState.isInitializing}
+    <div class="loading-container">
+      <Spinner />
+    </div>
+  {:else}
+
+    <div class="header-container">
+    <div class="header-text">
+      <h1>Mapping the Research Ecosystem of the University of Vermont</h1>
+      <div class="article-meta">
+        <p class="author">By <a href="{base}/author/jonathan-st-onge">Jonathan St-Onge</a></p>
+        <p class="date">May 16, 2025</p>
+      </div>
+    </div>
+    <div class="logo-container">
+      <img src="{base}/UVM_Seal_Gr.png" alt="Home" class="logo" />
     </div>
   </div>
-  <div class="logo-container">
-    <img src="{base}/UVM_Seal_Gr.png" alt="Home" class="logo" />
-  </div>
-</div>
 
-  <Intro data={dataState.trainingAggData}/>
-  
-  <section id="story" class="story">  
+    <Intro data={dataState.trainingAggData}/>
+    
+    <section id="story" class="story">  
 
-    <h2>Zooming in</h2>
-    <p>To better understand faculty career trajectories, we build a simple timeline plot showing how scientific productivity coevolves with social collaborations. As a faculty member advances in his career—call him Peter—it is expected that his patterns of collaborations will change. We are interested in a few relevant features to determine from the data when Peter started his research group.</p>
-      
-    <div class="scrolly-container">
-        <div class="scrolly-content">
-          <div class="spacer"></div>
-          <Scrolly bind:value={scrollyIndex}>
-            {#each doddsSection as text, i}
-              {@const active = scrollyIndex === i}
-              <div class="step" class:active>
-                {#if text.type === 'markdown'}
-                  <p><Md text={text.value}/></p>
-                {:else}
-                  <p>{@html text.value}</p>
-                {/if}
-              </div>
-            {/each}
-          </Scrolly>
-          <div class="spacer"></div>
-        </div>
+      <h2>Zooming in</h2>
+      <p>To better understand faculty career trajectories, we build a simple timeline plot showing how scientific productivity coevolves with social collaborations. As a faculty member advances in his career—call him Peter—it is expected that his patterns of collaborations will change. We are interested in a few relevant features to determine from the data when Peter started his research group.</p>
         
-        <div class="scrolly-chart">
-          <MorphingChart 
-            {scrollyIndex} 
-            DoddsCoauthorData={dataState.DoddsCoauthorData} 
-            DoddsPaperData={dataState.DoddsPaperData} 
-            {width} {height} />
+      <div class="scrolly-container">
+          <div class="scrolly-content">
+            <div class="spacer"></div>
+            <Scrolly bind:value={scrollyIndex}>
+              {#each doddsSection as text, i}
+                {@const active = scrollyIndex === i}
+                <div class="step" class:active>
+                  {#if text.type === 'markdown'}
+                    <p><Md text={text.value}/></p>
+                  {:else}
+                    <p>{@html text.value}</p>
+                  {/if}
+                </div>
+              {/each}
+            </Scrolly>
+            <div class="spacer"></div>
+          </div>
+          
+          <div class="scrolly-chart">
+            <MorphingChart 
+              {scrollyIndex} 
+              DoddsCoauthorData={dataState.DoddsCoauthorData} 
+              DoddsPaperData={dataState.DoddsPaperData} 
+              {width} {height} />
+          </div>
         </div>
-      </div>
 
+      </section>
+
+    <!-- Embedding section with intersection observer -->
+    <div bind:this={embeddingSectionElement}>
+      {#if dataState.loadingEmbeddings}
+        <div class="loading-container">
+          <Spinner />
+        </div>
+      {:else if dataState.EmbeddingsData}
+        <EmbeddingSection embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
+      {/if}
+    </div>
+
+    <section id="story" class="story">
+      <h2>Conclusion</h2>
+
+      <p>We started out by looking at the broader picture of how many groups there were at UVM. Then, we zoomed in on a particular fauculty, trying to better understand the coevolution of collaborations and productivity. Our analysis remains limited, as we didn't analyze how the patterns we noticed in the timeline plot generalized to other researchers. This is for a future post.</p>
+      <p>In the meantime, you want to carry the same analysis to other faculties at UVM? Visit <a href="{base}/open-academic-analytics">our dashboard</a> for more.</p>
     </section>
+  {/if}
 
-  <!-- Embedding section with intersection observer -->
-  <div bind:this={embeddingSectionElement}>
-    {#if dataState.loadingEmbeddings}
-      <div class="loading-container">
-        <Spinner />
-      </div>
-    {:else if dataState.EmbeddingsData}
-      <EmbeddingSection embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
-    {/if}
-  </div>
-
-  <section id="story" class="story">
-    <h2>Conclusion</h2>
-
-    <p>We started out by looking at the broader picture of how many groups there were at UVM. Then, we zoomed in on a particular fauculty, trying to better understand the coevolution of collaborations and productivity. Our analysis remains limited, as we didn't analyze how the patterns we noticed in the timeline plot generalized to other researchers. This is for a future post.</p>
-    <p>In the meantime, you want to carry the same analysis to other faculties at UVM? Visit <a href="{base}/open-academic-analytics">our dashboard</a> for more.</p>
-  </section>
-{/if}
+</article>
 
 <style>
+  	:global(body:has(#uvm-groups-story) main#content) {
+      max-width: var(--width-column-wide);
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
     /* Header Layout */
   .header-container {
     display: flex;

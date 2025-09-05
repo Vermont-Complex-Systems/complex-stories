@@ -1,6 +1,6 @@
 <script>
   import { Accordion } from "bits-ui";
-  import { dashboardState, dataState, unique } from '../../state.svelte.ts';
+  import { dashboardState, dataState, unique } from '../../state.svelte.js';
   import { UserCheck } from "@lucide/svelte";
 
   let availableAuthors = $derived(unique.authors);      // ✅ Clean

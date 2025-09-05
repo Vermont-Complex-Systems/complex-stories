@@ -53,7 +53,7 @@
 
 <Hero />
 
-<div class="story-container">
+<div class="story-container" id="networks-fast-and-slow">
 	<section id="mean-field">
 		<div class="text-content">
 			<h2>Part I: Annealing</h2>
@@ -106,14 +106,15 @@
 		<div class="spacer"></div>
 		
 	</section>
-  <div class="text-content">
-    <p>You should now have a better idea what physicists mean when they say that annealed networks are thought to be reshuffled constantly, leading to the system the relax faster than the dynamics. In contrast, quench changes slowly compared to the dynamics, meaning that local structures can strongly influence the dynamics.</p>
-  </div>
+	
+	<div class="text-content">
+		<p>You should now have a better idea what physicists mean when they say that annealed networks are thought to be reshuffled constantly, leading to the system the relax faster than the dynamics. In contrast, quench changes slowly compared to the dynamics, meaning that local structures can strongly influence the dynamics.</p>
+	</div>
 </div>
 
 <style>
 	/* Main story container - matches Hero layout */
-	.story-container {
+	:global(body:has(#networks-fast-and-slow) main#content) {
 		max-width: var(--width-column-wide);
 		margin: 0 auto;
 		padding: 0 2rem;

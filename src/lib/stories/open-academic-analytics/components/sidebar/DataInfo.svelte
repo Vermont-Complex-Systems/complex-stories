@@ -1,5 +1,5 @@
 <script>
-  import { dashboardState, dataState, unique } from '../../state.svelte.ts';
+  import { dashboardState, dataState, unique } from '../../state.svelte.js';
 </script>
 
 <div class="data-info-section">

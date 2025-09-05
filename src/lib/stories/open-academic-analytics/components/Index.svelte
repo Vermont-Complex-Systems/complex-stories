@@ -11,7 +11,7 @@
         dataState,
         initializeApp,
         loadSelectedAuthor
-    } from '../state.svelte.ts';
+    } from '../state.svelte';
     
     // Initialize on component mount
     initializeApp();

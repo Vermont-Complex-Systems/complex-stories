@@ -1,111 +1,258 @@
-<!-- BranchingNetwork.svelte -->
 <script>
-  // Define nodes with manual positions
-  const nodes = [
-    // Level 0: 1 node
-    { id: 0, x: 200, y: 50, level: 0 },
-    
-    // Level 1: 2 nodes
-    { id: 1, x: 100, y: 150, level: 1 },
-    { id: 2, x: 300, y: 150, level: 1 },
-    
-    // Level 2: 4 nodes
-    { id: 3, x: 50, y: 250, level: 2 },
-    { id: 4, x: 150, y: 250, level: 2 },
-    { id: 5, x: 250, y: 250, level: 2 },
-    { id: 6, x: 350, y: 250, level: 2 },
-    
-    // Level 3: 8 nodes
-    { id: 7, x: 25, y: 350, level: 3 },
-    { id: 8, x: 75, y: 350, level: 3 },
-    { id: 9, x: 125, y: 350, level: 3 },
-    { id: 10, x: 175, y: 350, level: 3 },
-    { id: 11, x: 225, y: 350, level: 3 },
-    { id: 12, x: 275, y: 350, level: 3 },
-    { id: 13, x: 325, y: 350, level: 3 },
-    { id: 14, x: 375, y: 350, level: 3 }
-  ];
+  import * as d3 from 'd3';
+  import { Leaf } from '@lucide/svelte';
+  import { innerWidth, innerHeight } from 'svelte/reactivity/window';
 
-  // Define links manually
-  const links = [
-    // Level 0 to Level 1
-    { source: 0, target: 1 },
-    { source: 0, target: 2 },
-    
-    // Level 1 to Level 2
-    { source: 1, target: 3 },
-    { source: 1, target: 4 },
-    { source: 2, target: 5 },
-    { source: 2, target: 6 },
-    
-    // Level 2 to Level 3
-    { source: 3, target: 7 },
-    { source: 3, target: 8 },
-    { source: 4, target: 9 },
-    { source: 4, target: 10 },
-    { source: 5, target: 11 },
-    { source: 5, target: 12 },
-    { source: 6, target: 13 },
-    { source: 6, target: 14 }
-  ];
+  // Fixed parameters - exactly like original
+  const treeDepth = 6;
+  const numTrees = 6;
+  const numLayers = 3;
+  const fogOpacity = 0.8;
+  const backgroundColor = '#f8f5e6';
+  let width = $state(innerWidth.current);
+  let height = 500;
 
-  const width = 400;
-  const height = 400;
+  let allBranches = [];
+  let allBlossoms = [];
+  let uniqueId = 0;
+
+  function makeTree(a, orientation, scaleRatio, maxDepth = 5, isTopLayer = false, layerIndex = 0) {
+    const FULL_LENGTH = 300;
+    
+    const traverse = (a, orientation, scaleRatio, currentDepth = 0) => {
+      const scale = scaleRatio * FULL_LENGTH;
+      const linearDepth = (maxDepth - currentDepth) / maxDepth;
+      const thickness = scaleRatio * linearDepth * 15;
+      const numBranches = Math.max(d3.randomNormal(1, 1.5)(), 2);
+      const length = Math.max(d3.randomNormal(scale, scale * 0.2)() + 30, 30);
+      const angle = d3.randomNormal(orientation, 0.25)();
+      const curvature = d3.randomNormal(0, 0.1)();
+      
+      const b = {
+        x: Math.cos(angle) * length + a.x,
+        y: Math.sin(angle) * length + a.y
+      };
+      
+      const cp = midOffset(a, b, curvature);
+      const bPrime = getQuadraticXY(0.99, a.x, a.y, cp.x, cp.y, b.x, b.y);
+      const endAngle = Math.atan2(b.y - bPrime.y, b.x - bPrime.x);
+
+      function getQuadraticXY(t, sx, sy, cp1x, cp1y, ex, ey) {
+        return {
+          x: (1 - t) * (1 - t) * sx + 2 * (1 - t) * t * cp1x + t * t * ex,
+          y: (1 - t) * (1 - t) * sy + 2 * (1 - t) * t * cp1y + t * t * ey
+        };
+      }
+
+      const tree = {
+        a, b, curvature, linearDepth, thickness,
+        color: '#333',
+        layerIndex: layerIndex
+      };
+
+      const isTwig = !(maxDepth !== currentDepth && numBranches);
+
+      if (!isTwig) {
+        tree.branches = [];
+        for (let i = 0; i < numBranches; i++) {
+          tree.branches.push(
+            traverse(b, endAngle, (length / FULL_LENGTH) * 0.6, currentDepth + 1)
+          );
+        }
+
+        if (Math.random() > 0.9) { // Removed && isTopLayer
+          // Distribute small clusters along the branch
+          tree.blossoms = [];
+          const numClusters = Math.floor(Math.random() * 2) + 1;
+          for (let c = 0; c < numClusters; c++) {
+            const t = 0.6 + (c / numClusters) * 0.4; // From 60% to 100% along branch
+            const clusterPoint = {
+              x: a.x + (b.x - a.x) * t,
+              y: a.y + (b.y - a.y) * t
+            };
+            const cluster = makeBlossomCluster(
+              clusterPoint,
+              Math.max(d3.randomNormal(0, 1)(), 5), // Smaller spread
+              Math.max(d3.randomNormal(0, 1)(), 2), // 2-12 leaves per cluster (8±4, min 2)
+              getAutumnLeafColor()
+            );
+            tree.blossoms.push(...cluster);
+          }
+        }
+      } else {
+        if (Math.random() > 0.9) {
+          tree.blossoms = makeBlossomCluster(
+            tree.b,
+            Math.max(d3.randomNormal(0, 8)(), 3),
+            Math.max(d3.randomNormal(0, 3)(), 1), // 1-9 leaves per cluster (6±3, min 1)
+            getAutumnLeafColor()
+          );
+        }
+      }
+
+      return tree;
+    };
+
+    return traverse(a, orientation, scaleRatio);
+  }
+
+  function makeBlossomCluster(p, radius, amount, color) {
+    const cluster = [];
+    for (let i = 0; i < amount; i++) {
+      cluster.push({
+        x: d3.randomNormal(p.x, radius)(),
+        y: d3.randomNormal(p.y, radius)(),
+        radius: Math.max(d3.randomNormal(20, 8)(), 5),
+        color: varyColor(color)
+      });
+    }
+    return cluster;
+  }
+
+  function getAutumnLeafColor() {
+    const colors = ['#FF6B35', '#F7931E', '#FFD23F', '#FF4500', '#DC143C', '#DAA520', '#CD853F', '#228B22'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  }
+
+  function varyColor(color) {
+    const hsl = d3.hsl(color);
+    hsl.s = Math.min(Math.max(d3.randomNormal(hsl.s, 0.05)(), 0), 1);
+    hsl.l = Math.min(Math.max(d3.randomNormal(hsl.l, 0.1)(), 0), 1);
+    return hsl.toString();
+  }
+
+  function midOffset(a, b, curvature = 0) {
+    const mx = (a.x + b.x) / 2;
+    const my = (a.y + b.y) / 2;
+    const px = a.x - b.x;
+    const py = a.y - b.y;
+    let nx = -py;
+    let ny = px;
+    const normalizedLength = Math.sqrt(nx * nx + ny * ny);
+    const distance = Math.sqrt(px * px + py * py);
+    if (normalizedLength === 0) return { x: mx, y: my };
+    nx /= normalizedLength;
+    ny /= normalizedLength;
+    return {
+      x: mx + curvature * distance * nx,
+      y: my + curvature * distance * ny
+    };
+  }
+
+  function drawTree(tree) {
+    const traverse = t => {
+      const opacity = t.layerIndex === 0 ? 0.9 : (t.layerIndex === 1 ? 0.8 : 0.4);
+      
+      allBranches.push({
+        id: uniqueId++,
+        path: `M ${t.a.x} ${t.a.y} Q ${midOffset(t.a, t.b, t.curvature).x} ${midOffset(t.a, t.b, t.curvature).y} ${t.b.x} ${t.b.y}`,
+        thickness: Math.max(10 * t.linearDepth, 0.5),
+        color: t.color,
+        opacity: opacity
+      });
+
+      if (t.blossoms) {
+        t.blossoms.forEach(blossom => {
+          allBlossoms.push({
+            id: uniqueId++,
+            x: blossom.x,
+            y: blossom.y,
+            scale: blossom.radius / 80,
+            color: blossom.color,
+            rotation: Math.random() * 360,
+            opacity: opacity
+          });
+        });
+      }
+
+      if (t.branches) {
+        t.branches.forEach(traverse);
+      }
+    };
+    traverse(tree);
+  }
+
+  function generateForest() {
+    uniqueId = 0;
+    allBranches = [];
+    allBlossoms = [];
+    
+    for (let j = 0; j < numLayers; j++) {
+      for (let i = 0; i < numTrees; i++) {
+        const tree = makeTree(
+          {
+            x: d3.randomUniform(-width, width * 2)(),
+            y: d3.randomUniform(
+              height + 10,
+              height + (1000 * j) / numLayers + 100
+            )()
+          },
+          -Math.PI / 4,
+          j / numLayers + 0.4,
+          treeDepth,
+          true, // Always true - all trees can have leaves
+          j
+        );
+        drawTree(tree);
+      }
+    }
+  }
+
+  generateForest();
 </script>
 
-<svg {width} {height}>
-  <!-- Links -->
-  {#each links as link}
-    {@const sourceNode = nodes.find(n => n.id === link.source)}
-    {@const targetNode = nodes.find(n => n.id === link.target)}
-    <line
-      x1={sourceNode.x}
-      y1={sourceNode.y}
-      x2={targetNode.x}
-      y2={targetNode.y}
-      stroke="#999"
-      stroke-width="2"
-    />
-  {/each}
+<div
+  class="chart-container"
+  bind:clientWidth={width}
+>
+    <svg {width} {height}>
+    <!-- Fog layers -->
+    {#each Array(numLayers) as _, layerIndex}
+      <rect 
+        x="0" 
+        y="0" 
+        width={width * 2} 
+        height={height}
+        fill={backgroundColor}
+        opacity={fogOpacity}
+      />
+    {/each}
 
-  <!-- Nodes as rabbits -->
-  {#each nodes as node}
-    <g transform="translate({node.x}, {node.y})">
-      <!-- Rabbit body (ellipse) -->
-      <ellipse
-        cx="0"
-        cy="0"
-        rx="12"
-        ry="8"
-        fill="white"
-        stroke="#e76f51"
-        stroke-width="1"
+    <!-- Tree branches -->
+    {#each allBranches as branch (branch.id)}
+      <path
+        d={branch.path}
+        stroke={branch.color}
+        stroke-width={branch.thickness}
+        stroke-linecap="round"
+        fillOpacity={branch.opacity}
+        fill="none"
       />
-      
-      <!-- Rabbit ears -->
-      <ellipse
-        cx="-6"
-        cy="-12"
-        rx="3"
-        ry="8"
-        fill="white"
-        stroke="#e76f51"
-        stroke-width="1"
-      />
-      <ellipse
-        cx="6"
-        cy="-12"
-        rx="3"
-        ry="8"
-        fill="white"
-        stroke="#e76f51"
-        stroke-width="1"
-      />
-      
-      <!-- Rabbit face -->
-      <circle cx="-4" cy="-2" r="1.5" fill="#2a9d8f" />
-      <circle cx="4" cy="-2" r="1.5" fill="#2a9d8f" />
-      <circle cx="0" cy="2" r="1" fill="#e76f51" />
-    </g>
-  {/each}
-</svg>
+    {/each}
+
+    <!-- Leaves -->
+    {#each allBlossoms as leaf (leaf.id)}
+      <g 
+        transform="translate({leaf.x}, {leaf.y}) rotate({leaf.rotation}) scale({leaf.scale})"
+        opacity={leaf.opacity}
+      >
+        <Leaf 
+          size={100} 
+          color="black" 
+          fill={leaf.color}
+          strokeWidth={0.5}
+        />
+      </g>
+    {/each}
+  </svg>
+</div>
+
+<style>
+  .chart-container {
+    width: 99vw;
+    margin-bottom: 3rem;
+    margin-top: 3rem;
+    border:1px solid black;
+  }
+  
+</style>
