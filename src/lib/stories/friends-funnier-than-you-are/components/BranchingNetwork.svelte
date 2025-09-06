@@ -110,7 +110,7 @@
   }
 
   function getAutumnLeafColor() {
-    const colors = ['#FF6B35', '#F7931E', '#FFD23F', '#FF4500', '#DC143C', '#DAA520', '#CD853F', '#228B22'];
+    const colors = ['#606c38', '#283618', '#FFC41A', '#dda15e', '#bc6c25', '#F9A80E', '#BD0C0F'];
     return colors[Math.floor(Math.random() * colors.length)];
   }
 
@@ -141,14 +141,14 @@
 
   function drawTree(tree) {
     const traverse = t => {
-      const opacity = t.layerIndex === 0 ? 0.9 : (t.layerIndex === 1 ? 0.8 : 0.4);
+      const opacity = t.layerIndex === 0 ? 1 : (t.layerIndex === 1 ? 0.8 : 0.4);
       
       allBranches.push({
         id: uniqueId++,
         path: `M ${t.a.x} ${t.a.y} Q ${midOffset(t.a, t.b, t.curvature).x} ${midOffset(t.a, t.b, t.curvature).y} ${t.b.x} ${t.b.y}`,
         thickness: Math.max(10 * t.linearDepth, 0.5),
         color: t.color,
-        opacity: opacity
+        layerIndex: t.layerIndex  
       });
 
       if (t.blossoms) {
@@ -160,7 +160,8 @@
             scale: blossom.radius / 80,
             color: blossom.color,
             rotation: Math.random() * 360,
-            opacity: opacity
+            opacity: opacity,
+            layerIndex: t.layerIndex  // Add this back
           });
         });
       }
@@ -205,46 +206,34 @@
   class="chart-container"
   bind:clientWidth={width}
 >
-    <svg {width} {height}>
-    <!-- Fog layers -->
-    {#each Array(numLayers) as _, layerIndex}
-      <rect 
-        x="0" 
-        y="0" 
-        width={width * 2} 
-        height={height}
-        fill={backgroundColor}
-        opacity={fogOpacity}
-      />
-    {/each}
-
-    <!-- Tree branches -->
-    {#each allBranches as branch (branch.id)}
-      <path
-        d={branch.path}
-        stroke={branch.color}
-        stroke-width={branch.thickness}
-        stroke-linecap="round"
-        fillOpacity={branch.opacity}
-        fill="none"
-      />
-    {/each}
-
-    <!-- Leaves -->
-    {#each allBlossoms as leaf (leaf.id)}
-      <g 
-        transform="translate({leaf.x}, {leaf.y}) rotate({leaf.rotation}) scale({leaf.scale})"
-        opacity={leaf.opacity}
-      >
-        <Leaf 
-          size={100} 
-          color="black" 
-          fill={leaf.color}
-          strokeWidth={0.5}
+  <svg {width} {height}>
+  {#each Array(numLayers) as _, layerIndex}
+    <g opacity={layerIndex === 0 ? 1 : (layerIndex === 1 ? 0.3 : 0.4)}>
+      <!-- Tree branches for this layer -->
+      {#each allBranches.filter(b => b.layerIndex === layerIndex) as branch (branch.id)}
+        <path
+          d={branch.path}
+          stroke={branch.color}
+          stroke-width={branch.thickness}
+          stroke-linecap="round"
+          fill="none"
         />
-      </g>
-    {/each}
-  </svg>
+      {/each}
+
+      <!-- Leaves for this layer -->
+      {#each allBlossoms.filter(l => l.layerIndex === layerIndex) as leaf (leaf.id)}
+        <g transform="translate({leaf.x}, {leaf.y}) rotate({leaf.rotation}) scale({leaf.scale})">
+          <Leaf 
+            size={100} 
+            color="black" 
+            fill={leaf.color}
+            strokeWidth={0.5}
+          />
+        </g>∂
+      {/each}
+    </g>
+  {/each}
+</svg>
 </div>
 
 <style>
