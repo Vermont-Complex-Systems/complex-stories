@@ -1,298 +1,272 @@
 <script>
   import * as d3 from 'd3';
 
-  let width = $state(500);
-  const height = 425;
-  const treeDepth = 6;
-
-  let allBranches = $state([]);
-  let generationCircles = $state([]);
-  let uniqueId = 0;
-
-  function makeTree(a, orientation, scaleRatio, maxDepth = 5) {
-    const p = 0.6;
-    let generationIntensities = {}; // Track max intensity per generation
-    
-    const traverse = (a, orientation, scaleRatio, currentDepth = 0, intensity = 1, isAbsorbed = false, wasReceptive = true) => {
-  if (currentDepth > maxDepth) return null;
+  let width = $state(600);
+  const height = 475;
+  const maxDepth = 5;
+  const p = 0.6; // Probability of being receptive
   
-  // Track max intensity for this generation
-  if (!generationIntensities[currentDepth] || intensity > generationIntensities[currentDepth]) {
-    generationIntensities[currentDepth] = intensity;
-  }
+  let regenerateFlag = $state(0);
   
-  const scale = scaleRatio * 100;
-  const length = 34;
-  const angle = orientation + d3.randomNormal(0, 0.3)();
-  
-  const b = {
-    x: Math.cos(angle) * length + a.x,
-    y: Math.sin(angle) * length + a.y
-  };
-
-  const tree = {
-  a, b,
-  color: isAbsorbed ? '#ccc' : (wasReceptive ? '#f97316' : '#3b82f6'), // Changed parentWasReceptive to wasReceptive
-  opacity: isAbsorbed ? 0.3 : 1.0,
-  depth: currentDepth,
-  intensity: intensity,
-  isAbsorbed: isAbsorbed,
-  wasReceptive: wasReceptive // Changed parentWasReceptive to wasReceptive
-};
-
-  // const numBranches = Math.min(Math.max(d3.randomPoisson(1.5)(), 1), 3);
-  const numBranches = 1;
-
-
-  if (numBranches > 0 && currentDepth < maxDepth && !isAbsorbed) {
-    tree.branches = [];
+  let treeData = $derived.by(() => {
+    regenerateFlag;
     
-    for (let i = 0; i < numBranches; i++) {
-      // Each child is independently receptive or not
-      const childIsReceptive = Math.random() < p;
-      
-      // Child's intensity is based on THIS node's intensity and child's receptivity
-      const childIntensity = childIsReceptive ? intensity + 1 : intensity - 1;
-      
-      const childAngle = angle + (i - (numBranches - 1) / 2) * (Math.PI / 6);
-      
-      if (childIntensity <= 0) {
-  // Create absorbed child
-  const absorbingNode = {
-    a: b,
-    b: {
-      x: Math.cos(childAngle) * length * 0.5 + b.x,
-      y: Math.sin(childAngle) * length * 0.5 + b.y
-    },
-    color: '#999',
-    opacity: 0.5,
-    depth: currentDepth + 1,
-    intensity: 0,
-    isAbsorbed: true,
-    wasReceptive: false,
-    branches: []
-  };
-  tree.branches.push(absorbingNode);
-} else {
-  // Create normal child with calculated intensity
-  const branch = traverse(b, childAngle, 0.8, currentDepth + 1, childIntensity, false, childIsReceptive);
-  if (branch) tree.branches.push(branch);
-}
-    }
-  }
-
-  return tree;
-};
-
-    const tree = traverse(a, 0, scaleRatio, 0, 1, false, true);
+    let allNodes = [];
+    let allEdges = [];
+    let maxIntensityByGen = {};
+    let nodeCounter = 0;
     
-    // Create generation circles based on max intensities
-    const circles = [];
-    const centerX = a.x;
-    const centerY = a.y;
-    const baseRadius = 40; // Base radius for generation 0
+    const centerX = width / 2;
+    const centerY = height / 2;
     
-    for (let gen = 0; gen <= maxDepth; gen++) {
-      if (generationIntensities[gen]) {
-        const radius = baseRadius + (gen * 30); // 30px per generation
-        const maxIntensity = generationIntensities[gen];
-        
-        circles.push({
-          x: centerX,
-          y: centerY,
-          radius: radius,
-          generation: gen,
-          maxIntensity: maxIntensity,
-          color: getIntensityColor(maxIntensity)
-        });
-      }
-    }
-    
-    generationCircles = circles;
-    
-    // Find and highlight the cascade path (highest intensity path)
-    function findCascadePath(node) {
-      if (!node.branches || node.branches.length === 0) return [node];
-      
-      // Find the branch with highest intensity
-      const maxIntensityBranch = node.branches.reduce((max, branch) => 
-        branch.intensity > max.intensity ? branch : max
-      );
-      
-      // Only highlight if intensity is building up (>= 3)
-      if (maxIntensityBranch.intensity >= 3) {
-        const cascadePath = [node, ...findCascadePath(maxIntensityBranch)];
-        return cascadePath;
-      }
-      
-      return [node];
-    }
-    
-    const cascadePath = findCascadePath(tree);
-    
-    // Mark cascade nodes
-    function markCascade(node) {
-      if (cascadePath.includes(node)) {
-        node.isCascade = true;
-        node.opacity = 1.0;
-      }
-      
-      if (node.branches) {
-        node.branches.forEach(markCascade);
-      }
-    }
-    
-    markCascade(tree);
-    
-    return tree;
-  }
-
-  function getIntensityColor(intensity) {
-    // Color scale based on intensity
-    const colors = ['#64748b', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', 'midnightblue', "green", "purple"];
-    const index = Math.min(intensity - 1, colors.length - 1);
-    return colors[Math.max(index, 0)];
-  }
-
-  function drawTree(tree) {
-    const branches = [];
-    const nodes = new Map();
-    
-    if (!tree) return branches;
-    
-    const traverse = t => {
-      const nodeAKey = `${t.a.x.toFixed(1)},${t.a.y.toFixed(1)}`;
-      const nodeBKey = `${t.b.x.toFixed(1)},${t.b.y.toFixed(1)}`;
-      
-      nodes.set(nodeAKey, { 
-        x: t.a.x, y: t.a.y, 
-        color: t.color,
-        opacity: t.opacity,
-        isAbsorbed: t.isAbsorbed,
-        isCascade: t.isCascade,
-        intensity: t.intensity // Add this
-      });
-      nodes.set(nodeBKey, { 
-        x: t.b.x, y: t.b.y, 
-        color: t.color,
-        opacity: t.opacity,
-        isAbsorbed: t.isAbsorbed,
-        isCascade: t.isCascade,
-        intensity: t.intensity // Add this
-      });
-
-      branches.push({
-        id: uniqueId++,
-        nodeA: { x: t.a.x, y: t.a.y },
-        nodeB: { x: t.b.x, y: t.b.y },
-        thickness: t.isAbsorbed ? 1 : 2,
-        color: t.color,
-        opacity: t.opacity,
-        isAbsorbed: t.isAbsorbed,
-        isCascade: t.isCascade
-      });
-
-      if (t.branches) {
-        t.branches.forEach(traverse);
-      }
+    // Create seed node
+    const seed = {
+      id: nodeCounter++,
+      x: centerX,
+      y: centerY,
+      intensity: 1,
+      generation: 0,
+      isAbsorbed: false,
+      wasReceptive: true, // Seed is considered receptive
+      color: '#f97316' // Orange
     };
     
-    traverse(tree);
+    allNodes.push(seed);
+    maxIntensityByGen[0] = 1;
     
-    const uniqueNodes = Array.from(nodes.values()).map(node => ({
-      id: uniqueId++,
-      ...node,
-      isNode: true
-    }));
+    const queue = [seed];
     
-    return [...branches, ...uniqueNodes];
-  }
-
-  function generateTree() {
-    uniqueId = 0;
+    while (queue.length > 0) {
+      const currentNode = queue.shift();
+      
+      // Skip if at max depth or absorbed
+      if (currentNode.generation >= maxDepth || currentNode.isAbsorbed) {
+        continue;
+      }
+      
+      const numChildren = Math.min(Math.max(d3.randomPoisson(1.5)(), 1), 3);
+      
+      for (let i = 0; i < numChildren; i++) {
+        const childIsReceptive = Math.random() < p;
+        const childIntensity = childIsReceptive ? 
+          currentNode.intensity + 1 : 
+          currentNode.intensity - 1;
+        
+        const childGeneration = currentNode.generation + 1;
+        
+        // Position child
+        let branchAngle;
+        if (currentNode.generation === 0) {
+          const baseAngle = (i / numChildren) * 2 * Math.PI;
+          const randomOffset = d3.randomNormal(0, 0.3)();
+          branchAngle = baseAngle + randomOffset;
+        } else {
+          const parentDirection = Math.atan2(currentNode.y - centerY, currentNode.x - centerX);
+          const maxSpread = Math.PI / 3;
+          const spreadAngle = (i - (numChildren - 1) / 2) * (maxSpread / Math.max(numChildren - 1, 1));
+          const randomVariation = d3.randomNormal(0, 0.2)();
+          branchAngle = parentDirection + spreadAngle + randomVariation;
+        }
+        
+        // If intensity would be 0 or negative, create absorbing boundary
+        const isAbsorbingBoundary = childIntensity <= 0;
+        const branchLength = isAbsorbingBoundary ? 25 : 34;
+        
+        const childX = currentNode.x + Math.cos(branchAngle) * branchLength;
+        const childY = currentNode.y + Math.sin(branchAngle) * branchLength;
+        
+        // Create child node
+        const child = {
+          id: nodeCounter++,
+          x: childX,
+          y: childY,
+          intensity: childIntensity, // Keep the actual calculated intensity (can be 0)
+          generation: childGeneration,
+          isAbsorbed: false, // Don't mark as absorbed yet
+          wasReceptive: childIsReceptive,
+          // Color based on receptiveness, not intensity:
+          // - Receptive nodes are orange
+          // - Non-receptive nodes are blue
+          // We'll handle absorbing boundaries separately
+          color: childIsReceptive ? '#f97316' : '#3b82f6'
+        };
+        
+        // If this child has intensity 0, it will create absorbing boundary children
+        // but the child itself is still blue (non-receptive) or orange (receptive)
+        
+        allNodes.push(child);
+        
+        // Track max intensity for this generation
+        if (maxIntensityByGen[childGeneration] === undefined) {
+          maxIntensityByGen[childGeneration] = Math.max(0, child.intensity);
+        } else {
+          maxIntensityByGen[childGeneration] = Math.max(maxIntensityByGen[childGeneration], Math.max(0, child.intensity));
+        }
+        
+        // Create edge
+        allEdges.push({
+          id: nodeCounter++,
+          x1: currentNode.x,
+          y1: currentNode.y,
+          x2: child.x,
+          y2: child.y,
+          isAbsorbed: false
+        });
+        
+        // If child has intensity 0 or negative, it should create an absorbing boundary child
+        if (childIntensity <= 0) {
+          // Create absorbing boundary node
+          const absorbingBoundaryAngle = branchAngle; // Same direction
+          const absorbingBoundaryLength = 42; // Short distance
+          const absorbingX = child.x + Math.cos(absorbingBoundaryAngle) * absorbingBoundaryLength;
+          const absorbingY = child.y + Math.sin(absorbingBoundaryAngle) * absorbingBoundaryLength;
+          
+          const absorbingBoundary = {
+            id: nodeCounter++,
+            x: absorbingX,
+            y: absorbingY,
+            intensity: 0,
+            generation: childGeneration + 1,
+            isAbsorbed: true,
+            wasReceptive: false,
+            color: '#ccc' // Gray for absorbing boundary
+          };
+          
+          allNodes.push(absorbingBoundary);
+          
+          // Create dashed edge to absorbing boundary
+          allEdges.push({
+            id: nodeCounter++,
+            x1: child.x,
+            y1: child.y,
+            x2: absorbingBoundary.x,
+            y2: absorbingBoundary.y,
+            isAbsorbed: true
+          });
+          
+          // Update max intensity for absorbing boundary generation
+          const absorbingGen = childGeneration + 1;
+          if (maxIntensityByGen[absorbingGen] === undefined) {
+            maxIntensityByGen[absorbingGen] = 0;
+          } else {
+            maxIntensityByGen[absorbingGen] = Math.max(maxIntensityByGen[absorbingGen], 0);
+          }
+        } else {
+          // Only add to queue if intensity > 0
+          queue.push(child);
+        }
+      }
+    }
     
-    const tree = makeTree(
-      { x: width / 2, y: height / 2 },
-      0,
-      1.0,
-      treeDepth
-    );
-    allBranches = drawTree(tree);
-  }
-
-  $effect(() => {
-    generateTree();
+    // Calculate generation circles based on actual node positions
+    const generationCircles = [];
+    for (let gen = 0; gen <= maxDepth; gen++) {
+      if (maxIntensityByGen[gen] !== undefined) {
+        const nodesAtGeneration = allNodes.filter(node => node.generation === gen);
+        
+        if (nodesAtGeneration.length > 0) {
+          let totalDistance = 0;
+          nodesAtGeneration.forEach(node => {
+            const distance = Math.sqrt(
+              Math.pow(node.x - centerX, 2) + Math.pow(node.y - centerY, 2)
+            );
+            totalDistance += distance;
+          });
+          
+          const averageRadius = totalDistance / nodesAtGeneration.length;
+          
+          generationCircles.push({
+            generation: gen,
+            x: centerX,
+            y: centerY,
+            radius: averageRadius,
+            maxIntensity: maxIntensityByGen[gen]
+          });
+        }
+      }
+    }
+    
+    return { allNodes, allEdges, generationCircles };
   });
+
+  function regenerateTree() {
+    regenerateFlag++;
+  }
 </script>
 
 <div class="chart-container" bind:clientWidth={width}>
   <svg {width} {height} class="src-network">
-    <!-- Generation circles (background) -->
+    <!-- Generation circles -->
     <g opacity="0.3">
-      {#each generationCircles as circle (circle.generation)}
+      {#each treeData.generationCircles as circle}
         <circle 
           cx={circle.x} 
           cy={circle.y} 
           r={circle.radius} 
           fill="none" 
-          stroke={circle.color} 
+          stroke="grey" 
           stroke-width="2"
           stroke-dasharray="5,3"
         />
-        <!-- Generation label -->
+        {#if circle.radius > 5}
+          <text 
+            x={circle.x} 
+            y={circle.y - circle.radius - 8} 
+            text-anchor="middle" 
+            font-size="12" 
+            font-weight="bold"
+          >
+            n={circle.generation}: I_max = {circle.maxIntensity}
+          </text>
+        {/if}
+      {/each}
+    </g>
+
+    <!-- Edges -->
+    <g opacity="0.5">
+      {#each treeData.allEdges as edge}
+        <line 
+          x1={edge.x1} 
+          y1={edge.y1} 
+          x2={edge.x2} 
+          y2={edge.y2} 
+          stroke={edge.isAbsorbed ? '#999' : '#666'}
+          stroke-width={edge.isAbsorbed ? '0.5' : '1'}
+        />
+      {/each}
+    </g>
+
+    <!-- Nodes -->
+    <g>
+      {#each treeData.allNodes as node}
+        <circle 
+          cx={node.x} 
+          cy={node.y} 
+          r={node.isAbsorbed ? 5 : 6}
+          fill={node.color}
+          stroke="black"
+          stroke-width="0.5"
+          opacity={node.isAbsorbed ? 0.3 : 1}
+        />
+        
+        <!-- Intensity labels -->
         <text 
-          x={circle.x} 
-          y={circle.y - circle.radius - 8} 
-          text-anchor="middle" 
-          font-size="12" 
-          font-weight="bold"
-          fill={circle.color}
+          x={node.x} 
+          y={node.y}
+          dx={-3}
+          dy={3}
+          font-size={node.isAbsorbed ? 0 : 10}
+          stroke={'black'}
+          stroke-width="0.5"
         >
-          n={circle.generation}: I_max = {circle.maxIntensity}
+          {node.intensity}
         </text>
-      {/each}
-    </g>
-
-    <!-- Normal branches -->
-    <g opacity="0.5">
-      {#each allBranches.filter(b => !b.isNode  && !b.isAbsorbed) as branch (branch.id)}
-        <line x1={branch.nodeA.x} y1={branch.nodeA.y} x2={branch.nodeB.x} y2={branch.nodeB.y} 
-              stroke={branch.color} stroke-width="1" />
-      {/each}
-      
-      {#each allBranches.filter(b => b.isNode && !b.isAbsorbed) as node (node.id)}
-        <circle cx={node.x} cy={node.y} r="6" fill={node.color} stroke="white"/>
-        <text x={node.x} y={node.y} stroke="black" dx={-3} dy={3} font-size="10">{node.intensity}</text>
-      {/each}
-    </g>
-
-    <!-- Cascade path (highlighted)
-    <g opacity="1.0">
-      {#each allBranches.filter(b => !b.isNode && b.isCascade) as branch (branch.id)}
-        <line x1={branch.nodeA.x} y1={branch.nodeA.y} x2={branch.nodeB.x} y2={branch.nodeB.y} 
-              stroke={"yellow"} stroke-width="1"/>
-      {/each}
-      
-      {#each allBranches.filter(b => b.isNode && b.isCascade) as node (node.id)}
-        <circle cx={node.x} cy={node.y} r="4" fill={node.color} stroke="white" stroke-width="1" />
-      {/each}
-    </g> -->
-
-    <!-- Absorbed branches -->
-    <g opacity="0.5">
-      {#each allBranches.filter(b => !b.isNode && b.isAbsorbed) as branch (branch.id)}
-        <line x1={branch.nodeA.x} y1={branch.nodeA.y} x2={branch.nodeB.x} y2={branch.nodeB.y} 
-              stroke={branch.color} stroke-width="1" />
-      {/each}
-      
-      {#each allBranches.filter(b => b.isNode && b.isAbsorbed) as node (node.id)}
-        <circle cx={node.x} cy={node.y} r="4" fill={node.color} />
       {/each}
     </g>
   </svg>
   
   <div class="button-ctn">
-    <button onclick={generateTree} class="regenerate-btn">
+    <button onclick={regenerateTree} class="regenerate-btn">
       Generate New Network
     </button>
   </div>

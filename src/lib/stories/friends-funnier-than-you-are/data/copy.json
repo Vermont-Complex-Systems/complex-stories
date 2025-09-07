@@ -1,3 +1,68 @@
 {
-  "steps": []
+    "title": "Your friends are funnier than you are",
+    "subtitle": "probably",
+     "author1": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/jonathan-st-onge>Jonathan St-Onge</a>",
+    "author2": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/juniper-lisa-lovato>Juniper Lovato</a>",
+    "author3": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/laurent-hébert-dufresne>Laurent Hébert-Dufresne</a>",
+    "story": [
+      {
+        "type": "markdown",
+        "value": "Spoiler: How far your joke is going depends on your friends going viral."
+      },
+  {
+      "type": "markdown",
+      "value": "The spread of stories or beliefs are often compared to viruses. But stories, like jokes, differ in how their quality can change as a result of the propagation. That is, assume there is a chance _p_ that the joke quality gets improve or degrade as a result of transmission. But before getting there, lets talk about branching process. "
+    },
+    {
+      "type": "markdown",
+      "value": "From a theoretical perspective, [branching process](https://en.wikipedia.org/wiki/Branching_process) have been the backbones of complex systems study, letting researchers draw analogy between natural and social systems for a long time. Scaling is a feature of branching process that has excited natural scientists (in particular physicists) for a long time, as it hints at some universal principles underlying how parts of complex systems, such as river networks or leaf size distribution but also family names and memes, scale in particular, self-organized ways. "
+    },
+    {
+      "type": "Component"
+    },
+    {
+      "type": "markdown",
+      "value": "There are many interrelated meaning of the idea of scaling; how organisms grow in size (so-called allometric scaling), self-similarity (fractal), algorithmic (how long does it takes to sort a list of objects). With branching process, we are interested in the <em>cascade size distribution</em>, or simply put, the probability of big, large events happening compared to smaller cascades. Mathematically, this idea is neatly has been summarized by that simple relationship: "
+    },
+    {
+      "type": "markdown",
+      "value": "$$s^{-\\tau}$$ "
+    },
+    {
+      "type": "markdown",
+      "value": "In plain english, this expression states that the size of a cascade scale with exponent $\\tau$, where a larger negative exponent means a steeper decline in the likelihood of large events—popularized as black swan events—occuring. This relationship typically works again our evolved chimp instincts that expect a 'typical scale', such as height or brain size within a species. With power-laws, we are in the realm of 'heavy tail' systems, referring to the fact that we keep being surprised by large cascade events that we fail to foresee."
+    },
+    {
+      "type": "markdown",
+      "value": "But the exciting part concerns a specific value of the scaling exponent, τ = 3/2, which emerges universally in systems at criticality - the precise mathematical point where branching processes transition between extinction and explosive growth. This universal exponent appears across diverse phenomena from neural avalanches to nuclear chain reactions, suggesting deep underlying principles.\n\nThis is where our story deviates from classical branching processes, where each step follows identical rules, and moves into _self-reinforcing cascades_, where the spreading process itself modifies the content being spread. Empirical studies of social media cascades consistently show much steeper decay than the 3/2 prediction, with scaling exponents ranging from τ = 2 to 4. This means large cascades are much rarer than critical branching theory would predict, which begs the question: 'why?'\n\nOne mechanism we will explore is that in social media epidemics, the content of the cascade itself evolves as it spreads, leading to fundamentally new dynamics that break the assumptions of classical branching processes."
+    },
+    {
+      "type": "Component"
+    },
+    {
+      "type": "markdown",
+      "value": "Think of our above trees as a network now, where it can be a forest or a joke that upon hitting a particular nodes, produces a large reaction (dark). Now, lets add the element of quality of the content influencing the dynamics of the spread.'/>"
+    },
+    {
+      "type": "Component"
+    },
+    {  
+      "type": "markdown",
+      "value" : "Unlike traditional epidemic models where a virus remains unchanged as it spreads, here the 'content' can get stronger (reinforced) or weaker as it moves from person to person. A completely random process would give us exponential distribution"
+    },
+    {
+      "type": "markdown",
+      "value": "Unlike classical branching processes that predict explosive growth at criticality, self-reinforcing cascades create much steeper size distributions (higher τ values) because content quality varies. Weak content dies out quickly, while only exceptional content survives to create large cascades. This matches what we observe in social media, where most posts fade quickly while a few go viral"
+    },
+    {
+      "type": "markdown",
+      "value": "Below we show a log-log plot where we show the distribution of fraction of cascades that reach a certain size _s_ for a varying _p_."
+    },
+    {
+      "type": "Component"
+    }
+
+
+    
+  ]
 }

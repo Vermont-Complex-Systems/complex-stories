@@ -84,7 +84,7 @@
           tree.blossoms = makeBlossomCluster(
             tree.b,
             Math.max(d3.randomNormal(0, 8)(), 3),
-            Math.max(d3.randomNormal(0, 3)(), 1), // 1-9 leaves per cluster (6±3, min 1)
+            Math.max(d3.randomNormal(0, 3)(), 2), // 1-9 leaves per cluster (6±3, min 1)
             getAutumnLeafColor()
           );
         }
