@@ -1,9 +1,10 @@
 {
     "title": "Your friends are funnier than you are",
-    "subtitle": "probably",
-     "author1": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/jonathan-st-onge>Jonathan St-Onge</a>",
+    "subtitle": "on average",
+    "author1": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/jonathan-st-onge>Jonathan St-Onge</a>",
     "author2": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/juniper-lisa-lovato>Juniper Lovato</a>",
     "author3": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/laurent-hébert-dufresne>Laurent Hébert-Dufresne</a>",
+    "date": "Aug 15, 2025",
     "story": [
       {
         "type": "markdown",
@@ -18,15 +19,16 @@
       "value": "From a theoretical perspective, [branching process](https://en.wikipedia.org/wiki/Branching_process) have been the backbones of complex systems study, letting researchers draw analogy between natural and social systems for a long time. Scaling is a feature of branching process that has excited natural scientists (in particular physicists) for a long time, as it hints at some universal principles underlying how parts of complex systems, such as river networks or leaf size distribution but also family names and memes, scale in particular, self-organized ways. "
     },
     {
-      "type": "Component"
+      "type": "Component",
+      "component": "BranchingNetwork"
     },
     {
       "type": "markdown",
       "value": "There are many interrelated meaning of the idea of scaling; how organisms grow in size (so-called allometric scaling), self-similarity (fractal), algorithmic (how long does it takes to sort a list of objects). With branching process, we are interested in the <em>cascade size distribution</em>, or simply put, the probability of big, large events happening compared to smaller cascades. Mathematically, this idea is neatly has been summarized by that simple relationship: "
     },
     {
-      "type": "markdown",
-      "value": "$$s^{-\\tau}$$ "
+      "type": "math",
+      "value": "$s^{-\\tau}$"
     },
     {
       "type": "markdown",
@@ -37,18 +39,24 @@
       "value": "But the exciting part concerns a specific value of the scaling exponent, τ = 3/2, which emerges universally in systems at criticality - the precise mathematical point where branching processes transition between extinction and explosive growth. This universal exponent appears across diverse phenomena from neural avalanches to nuclear chain reactions, suggesting deep underlying principles.\n\nThis is where our story deviates from classical branching processes, where each step follows identical rules, and moves into _self-reinforcing cascades_, where the spreading process itself modifies the content being spread. Empirical studies of social media cascades consistently show much steeper decay than the 3/2 prediction, with scaling exponents ranging from τ = 2 to 4. This means large cascades are much rarer than critical branching theory would predict, which begs the question: 'why?'\n\nOne mechanism we will explore is that in social media epidemics, the content of the cascade itself evolves as it spreads, leading to fundamentally new dynamics that break the assumptions of classical branching processes."
     },
     {
-      "type": "Component"
+      "type": "Component",
+      "component": "InteractiveFig1"
     },
     {
       "type": "markdown",
       "value": "Think of our above trees as a network now, where it can be a forest or a joke that upon hitting a particular nodes, produces a large reaction (dark). Now, lets add the element of quality of the content influencing the dynamics of the spread.'/>"
     },
     {
-      "type": "Component"
+      "type": "Component",
+      "component": "SelfReinforcingNetwork"
     },
     {  
       "type": "markdown",
       "value" : "Unlike traditional epidemic models where a virus remains unchanged as it spreads, here the 'content' can get stronger (reinforced) or weaker as it moves from person to person. A completely random process would give us exponential distribution"
+    },
+    {  
+      "type": "html",
+      "value" : "<ul><li>Orange circles: People who are 'receptive' - they strengthen or improve the content when they encounter it (intensity increases)</li><li>Blue circles: People who are 'non-receptive' - they weaken or dilute the content (intensity decreases)</li><li>Gray circles: 'Absorbing boundaries' where the content has weakened to zero and the cascade path dies out</li><li>Dashed lines: Connect to dead-end states where spreading stops</li><li>Concentric circles: Show generation boundaries, with 'I_max' indicating the strongest version of the content that reached each level</li></ul>"
     },
     {
       "type": "markdown",
@@ -59,7 +67,8 @@
       "value": "Below we show a log-log plot where we show the distribution of fraction of cascades that reach a certain size _s_ for a varying _p_."
     },
     {
-      "type": "Component"
+      "type": "Component",
+      "component": "LogLogPlot"
     }
 
 
