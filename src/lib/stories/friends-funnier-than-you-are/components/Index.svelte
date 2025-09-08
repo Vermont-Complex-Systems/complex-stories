@@ -85,6 +85,7 @@ const model = data.model;
 <style>
     :global(body:has(#cascade-story)) {
         background-color: #f8f5e6;
+        overflow-x: hidden; /* Prevent horizontal scroll from full-width components */
     }
     
     :global(body:has(#cascade-story)) h1, h2 {
@@ -110,10 +111,17 @@ const model = data.model;
     }
     
     .branching-container {
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
         display: flex;
         justify-content: center;
         align-items: center;
         flex-direction: column;
+        box-sizing: border-box;
     }
 
     .plot-container {

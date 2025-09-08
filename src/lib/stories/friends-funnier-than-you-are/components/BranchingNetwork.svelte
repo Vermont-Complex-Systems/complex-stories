@@ -10,8 +10,25 @@
   const numLayers = 3;
   const fogOpacity = 0.8;
   const backgroundColor = '#f8f5e6';
-  let width = $state(innerWidth.current);
   let height = 500;
+  let width = $state(1200); // Default width
+  let lastWidth = $state(1200);
+  
+  // Watch for significant width changes when component resizes
+  $effect(() => {
+    const widthChange = Math.abs(width - lastWidth);
+    
+    if (isVisible && widthChange > 100) {
+      generateForest();
+      lastWidth = width;
+      
+      // Maintain tree visibility state if animation was complete  
+      if (animationComplete) {
+        visibleTrees = totalTrees;
+        treeDepths = Array(totalTrees).fill(maxTreeDepth);
+      }
+    }
+  });
 
   let allBranches = $state([]);
   let allBlossoms = $state([]);
@@ -336,11 +353,20 @@
 
 <style>
   .chart-container {
-    width: 99vw;
+    width: 100%;
+    max-width: none;
     margin-bottom: 3rem;
     margin-top: 3rem;
-    border:1px solid black;
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
     position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .chart-container svg {
+    width: 100%;
+    height: auto;
   }
   
   .button-ctn {
