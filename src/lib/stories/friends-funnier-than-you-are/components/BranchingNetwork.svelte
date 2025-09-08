@@ -2,6 +2,7 @@
   import * as d3 from 'd3';
   import { Leaf } from '@lucide/svelte';
   import { innerWidth, innerHeight } from 'svelte/reactivity/window';
+  import { onMount } from 'svelte';
 
   // Fixed parameters - exactly like original
   const treeDepth = 6;
@@ -12,9 +13,15 @@
   let width = $state(innerWidth.current);
   let height = 500;
 
-  let allBranches = [];
-  let allBlossoms = [];
+  let allBranches = $state([]);
+  let allBlossoms = $state([]);
   let uniqueId = 0;
+
+  // Animation state
+  let isVisible = $state(false);
+  let container;
+  let visibleTrees = $state(0);
+  const totalTrees = numTrees * numLayers;
 
   function makeTree(a, orientation, scaleRatio, maxDepth = 5, isTopLayer = false, layerIndex = 0) {
     const FULL_LENGTH = 300;
@@ -139,7 +146,7 @@
     };
   }
 
-  function drawTree(tree) {
+  function drawTree(tree, treeIndex) {
     const traverse = t => {
       const opacity = t.layerIndex === 0 ? 1 : (t.layerIndex === 1 ? 0.8 : 0.4);
       
@@ -148,7 +155,8 @@
         path: `M ${t.a.x} ${t.a.y} Q ${midOffset(t.a, t.b, t.curvature).x} ${midOffset(t.a, t.b, t.curvature).y} ${t.b.x} ${t.b.y}`,
         thickness: Math.max(10 * t.linearDepth, 0.5),
         color: t.color,
-        layerIndex: t.layerIndex  
+        layerIndex: t.layerIndex,
+        treeIndex: treeIndex
       });
 
       if (t.blossoms) {
@@ -161,7 +169,8 @@
             color: blossom.color,
             rotation: Math.random() * 360,
             opacity: opacity,
-            layerIndex: t.layerIndex  // Add this back
+            layerIndex: t.layerIndex,
+            treeIndex: treeIndex
           });
         });
       }
@@ -178,6 +187,7 @@
     allBranches = [];
     allBlossoms = [];
     
+    let treeIndex = 0;
     for (let j = 0; j < numLayers; j++) {
       for (let i = 0; i < numTrees; i++) {
         const tree = makeTree(
@@ -194,23 +204,61 @@
           true, // Always true - all trees can have leaves
           j
         );
-        drawTree(tree);
+        drawTree(tree, treeIndex);
+        treeIndex++;
       }
     }
   }
 
+  // Animation function
+  function animateTreesIn() {
+    const animateNext = () => {
+      if (visibleTrees < totalTrees) {
+        visibleTrees += 1;
+        setTimeout(animateNext, 150); // 150ms between each tree
+      }
+    };
+    animateNext();
+  }
+
+  // Set up intersection observer
+  onMount(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !isVisible) {
+          console.log('BranchingNetwork is now visible! Starting animation...');
+          isVisible = true;
+          animateTreesIn();
+        }
+      });
+    }, { 
+      threshold: 0.3,
+      rootMargin: '50px'
+    });
+    
+    if (container) {
+      observer.observe(container);
+    }
+    
+    return () => {
+      if (container) observer.unobserve(container);
+    };
+  });
+
+  // Generate forest data once on component initialization
   generateForest();
 </script>
 
 <div
   class="chart-container"
   bind:clientWidth={width}
+  bind:this={container}
 >
   <svg {width} {height}>
   {#each Array(numLayers) as _, layerIndex}
     <g opacity={layerIndex === 0 ? 1 : (layerIndex === 1 ? 0.3 : 0.4)}>
       <!-- Tree branches for this layer -->
-      {#each allBranches.filter(b => b.layerIndex === layerIndex) as branch (branch.id)}
+      {#each allBranches.filter(b => b.layerIndex === layerIndex && b.treeIndex < visibleTrees) as branch (branch.id)}
         <path
           d={branch.path}
           stroke={branch.color}
@@ -221,7 +269,7 @@
       {/each}
 
       <!-- Leaves for this layer -->
-      {#each allBlossoms.filter(l => l.layerIndex === layerIndex) as leaf (leaf.id)}
+      {#each allBlossoms.filter(l => l.layerIndex === layerIndex && l.treeIndex < visibleTrees) as leaf (leaf.id)}
         <g transform="translate({leaf.x}, {leaf.y}) rotate({leaf.rotation}) scale({leaf.scale})">
           <Leaf 
             size={100} 

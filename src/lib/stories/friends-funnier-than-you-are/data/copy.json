@@ -5,7 +5,7 @@
     "author2": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/juniper-lisa-lovato>Juniper Lovato</a>",
     "author3": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/laurent-hébert-dufresne>Laurent Hébert-Dufresne</a>",
     "date": "Aug 15, 2025",
-    "story": [
+    "intro": [
       {
         "type": "markdown",
         "value": "Spoiler: How far your joke is going depends on your friends going viral."
@@ -36,7 +36,14 @@
     },
     {
       "type": "markdown",
-      "value": "But the exciting part concerns a specific value of the scaling exponent, τ = 3/2, which emerges universally in systems at criticality - the precise mathematical point where branching processes transition between extinction and explosive growth. This universal exponent appears across diverse phenomena from neural avalanches to nuclear chain reactions, suggesting deep underlying principles.\n\nThis is where our story deviates from classical branching processes, where each step follows identical rules, and moves into _self-reinforcing cascades_, where the spreading process itself modifies the content being spread. Empirical studies of social media cascades consistently show much steeper decay than the 3/2 prediction, with scaling exponents ranging from τ = 2 to 4. This means large cascades are much rarer than critical branching theory would predict, which begs the question: 'why?'\n\nOne mechanism we will explore is that in social media epidemics, the content of the cascade itself evolves as it spreads, leading to fundamentally new dynamics that break the assumptions of classical branching processes."
+      "value": "But the exciting part concerns a specific value of the scaling exponent, τ = 3/2, which emerges universally in systems at criticality - the precise mathematical point where branching processes transition between extinction and explosive growth. This universal exponent appears across diverse phenomena from neural avalanches to nuclear chain reactions, suggesting deep underlying principles.\n\nThis is where our story deviates from classical branching processes, where each step follows identical rules, and moves into _self-reinforcing cascades_, where the spreading process itself modifies the content being spread. Empirical studies of social media cascades consistently show much steeper decay than the 3/2 prediction, with scaling exponents ranging from τ = 2 to 4. This means large cascades are much rarer than critical branching theory would predict, which begs the question: 'why?'"
+    }
+  ],
+  "ModelSectionTitle": "The model",
+  "model": [
+    {
+      "type": "markdown",
+      "value": "One mechanism we will explore is that in social media epidemics, the content of the cascade itself evolves as it spreads, leading to fundamentally new dynamics that break the assumptions of classical branching processes."
     },
     {
       "type": "Component",

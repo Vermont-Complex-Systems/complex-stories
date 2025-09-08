@@ -10,12 +10,14 @@ import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 
 let { story, data } = $props();
 
-const steps = data.story;
+const intro = data.intro;
+const model = data.model;
 
 </script>
 
 
 <article id="cascade-story">
+    
     <div class="logo-container">
                 <a href="{base}/" class="logo-link">
                     <img src="{base}/octopus-swim-right.png" alt="Home" class="logo" width="200" />
@@ -37,27 +39,46 @@ const steps = data.story;
     
     </div>
 
-    {#each data.story as { type, value, component }, i}
-        {#if type === "Component"}
-            {#if component === "BranchingNetwork"}
-                <div class="branching-container"><BranchingNetwork /></div>
-            {:else if component === "InteractiveFig1"}
-                <div class="plot-container"><InteractiveFig1 /></div>
-            {:else if component === "SelfReinforcingNetwork"}
-                <div class="plot-container"><SelfReinforcingNetwork /></div>
-            {:else if component === "LogLogPlot"}
-                <div class="plot-container"><LogLogPlot /></div>
+    <section id="model">
+        {#each data.intro as { type, value, component }, i}
+            {#if type === "Component"}
+                {#if component === "BranchingNetwork"}
+                    <div class="branching-container"><BranchingNetwork /></div>
+                {/if}
+            {:else if type === "html" }
+                <p>{@html value}</p>
+            {:else if type === "math" }
+                <div class="plot-container">
+                    <Md text={value}/>
+                </div>
+                {:else}
+                    <p><Md text={value}/></p>
+                {/if}
+        {/each}
+    </section>
+
+    <section id="model">
+        <h2>{data.ModelSectionTitle}</h2>
+        {#each data.model as { type, value, component }, i}
+            {#if type === "Component"}
+                {#if component === "InteractiveFig1"}
+                    <div class="plot-container"><InteractiveFig1 /></div>
+                {:else if component === "SelfReinforcingNetwork"}
+                    <div class="plot-container"><SelfReinforcingNetwork /></div>
+                {:else if component === "LogLogPlot"}
+                    <div class="plot-container"><LogLogPlot /></div>
+                {/if}
+            {:else if type === "html" }
+                <p>{@html value}</p>
+            {:else if type === "math" }
+                <div class="plot-container">
+                    <Md text={value}/>
+                </div>
+            {:else}
+                <p><Md text={value}/></p>
             {/if}
-        {:else if type === "html" }
-            <p>{@html value}</p>
-        {:else if type === "math" }
-            <div class="plot-container">
-                <Md text={value}/>
-            </div>
-        {:else}
-            <p><Md text={value}/></p>
-        {/if}
-    {/each}
+        {/each}
+    </section>
 </article>
 
 
@@ -122,5 +143,9 @@ const steps = data.story;
         margin: 0;
         font-weight: 400;
         text-align: center !important;
+    }
+
+    .article {
+
     }
 </style>
