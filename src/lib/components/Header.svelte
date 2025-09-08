@@ -2,7 +2,7 @@
 	import { base } from '$app/paths';
 	import { ModeWatcher, setMode } from "mode-watcher";
 	import { Sun, Moon, Menu as MenuIcon } from "@lucide/svelte";
-  import ConstructionBanner from '$lib/components/helpers/ConstructionBanner.svelte'
+  // import ConstructionBanner from '$lib/components/helpers/ConstructionBanner.svelte'
 	import Menu from "./Header.Menu.svelte";
 	
 	let isDark = $state(false);
@@ -77,7 +77,7 @@
 
 <Menu visible={isMenuOpen} close={closeMenu} />
 
-<ConstructionBanner />
+<!-- <ConstructionBanner /> -->
 
 <style>
   .header {
