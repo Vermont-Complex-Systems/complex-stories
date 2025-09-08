@@ -88,7 +88,11 @@
     {
       "type": "Component",
       "component": "LogLogPlot"
-    }
+    },
+    {
+      "type": "markdown",
+      "value": "It was found that different scaling regimes aries from those very simple assumptions of, that is, how having the quality of a joke changing while spreading can produce different scaling exponents blahblah. "
+    },
 
 
     
