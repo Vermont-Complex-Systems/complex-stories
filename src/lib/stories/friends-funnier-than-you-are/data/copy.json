@@ -1,0 +1,98 @@
+{
+    "title": "Your friends are funnier than you are",
+    "subtitle": "on average",
+    "author1": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/jonathan-st-onge>Jonathan St-Onge</a>",
+    "author2": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/juniper-lisa-lovato>Juniper Lovato</a>",
+    "author3": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/laurent-hébert-dufresne>Laurent Hébert-Dufresne</a>",
+    "date": "Aug 15, 2025",
+    "intro": [
+       {
+        "type": "markdown",
+        "value": "Spoiler: How far your joke is going depends on your friends going viral."
+      },
+      {
+        "type": "markdown",
+        "value": "The spread of stories or beliefs are often compared to viruses. But stories, like jokes, differ from biological viruses in at least one key aspect: their 'infectiousness' can change as a result of the propagation itself. A joke might get funnier (or less funny) as it spreads, or a rumor might become more sensational with each retelling."
+      },
+      {
+        "type": "markdown",
+        "value": "From a theoretical perspective, [branching process](https://en.wikipedia.org/wiki/Branching_process) mathematics has a surprisingly long history, beginning over 180 years ago with practical demographic concerns. In 1845, French mathematician [Irénée-Jules Bienaymé](https://fr.wikipedia.org/wiki/Ir%C3%A9n%C3%A9e-Jules_Bienaym%C3%A9) studied aristocratic family extinction during Victorian times, developing the mathematical framework to answer whether noble bloodlines would survive. His work, largely forgotten, was later rediscovered through the famous collaboration between [Francis Galton and Henry Watson](https://en.wikipedia.org/wiki/Galton%E2%80%93Watson_process) in the 1870s, who posed the question: what proportion of family surnames would become extinct after many generations?"
+      },
+      {
+        "type": "Component",
+        "component": "BranchingNetwork"
+      },
+      {
+        "type": "markdown", 
+        "value": "These early concerns about family names gave rise to a more mathematical question: if we start many independent cascades, what sizes will they reach? Some will die out immediately, others will grow modestly, and a few might explode into massive cascades. The distribution of these cascade sizes reveals deep patterns about how parts of the system _scale_ together."
+      },
+      {
+        "type": "markdown", 
+        "value": "The mathematical language for describing these relationships is known as *scaling laws*. Throughout the 20th century, scaling concepts appeared across science: how organisms grow (allometric scaling), self-repeating patterns in nature (fractals), and computational complexity. But it was the explosion of digital social data in the 2000s that revealed how cascade size distributions in online systems follow these same scaling principles, opening entirely new questions about social contagion."
+      },
+      {
+        "type": "markdown",
+        "value": "With branching processes, we focus specifically on *cascade size distributions*, which follow a remarkably simple mathematical relationship:"
+      },
+      {
+        "type": "math",
+        "value": "$s^{-\\tau}$"
+      },
+      {
+        "type": "markdown",
+        "value": "This expression states that the probability of a cascade of size *s* scales with exponent τ. A larger τ means a steeper decline—massive cascades become exponentially rarer. This creates 'heavy-tailed' distributions, where, unlike human height or brain size which cluster around typical values, cascade sizes have no characteristic scale—there's always the possibility of something orders of magnitude larger. This is the mathematics of systems by which we're repeatedly surprised by events much larger than we expect. "
+      },
+      {
+        "type": "markdown",
+        "value": "Across vastly different systems—neural avalanches in the brain, forest fire sizes, earthquake aftershocks, and neutron chain reactions—the same specific value keeps appearing: **τ = 3/2**. Why this particular number? It emerges in systems poised at *criticality*, the precise mathematical point where branching processes balance between dying out and growing explosively. Systems with completely different mechanisms—neurons firing, trees burning, neutrons splitting—somehow converge on this same mathematical signature when they operate near this critical threshold."
+      },
+      {
+        "type": "markdown",
+        "value": "The scaling exponent τ dramatically affects how cascades spread through networks:"
+      },
+      {
+        "type": "Component",
+        "component": "SelfReinforcingNetwork"
+      },
+      {
+        "type": "markdown",
+        "value": "But here's where reality deviates from theory. Empirical studies of social media cascades consistently show much steeper decay than the 3/2 prediction, with scaling exponents ranging from τ = 2 to 4. Twitter retweets, Facebook shares, and viral content all decay faster than critical branching processes predict, meaning massive viral events are rarer than the theory suggests. This systematic deviation points to something fundamental: real social cascades aren't simply branching processes with fixed rules. Instead, they represent *self-reinforcing cascades* where the content itself evolves as it spreads, creating entirely new dynamics that break the classical assumptions."
+      }
+    ],
+  "ModelSectionTitle": "The model",
+  "model": [
+    {
+      "type": "markdown",
+      "value": "One mechanism we will explore is that in social media epidemics, the content of the cascade itself evolves as it spreads, leading to fundamentally new dynamics that break the assumptions of classical branching processes."
+    },
+    {
+      "type": "Component",
+      "component": "InteractiveFig1"
+    },
+    {  
+      "type": "markdown",
+      "value" : "Unlike traditional epidemic models where a virus remains unchanged as it spreads, here the 'content' can get stronger (reinforced) or weaker as it moves from person to person. Each concentric circle indicates a new generation $n$, with maximum cascade intensity $I_{max}$. Then, we have that "
+    },
+    {  
+      "type": "html",
+      "value" : "<small><ul><li>Orange circles: People who are 'receptive' - they strengthen or improve the content when they encounter it (intensity increases)</li><li>Blue circles: People who are 'non-receptive' - they weaken or dilute the content (intensity decreases)</li><li>Gray circles: 'Absorbing boundaries' where the content has weakened to zero and the cascade path dies out"
+    },
+    {
+      "type": "markdown",
+      "value": "Unlike classical branching processes that predict explosive growth at criticality, self-reinforcing cascades create much steeper size distributions (higher τ values) because content quality varies. Weak content dies out quickly, while only exceptional content survives to create large cascades. This matches what we observe in social media, where most posts fade quickly while a few go viral"
+    },
+    {
+      "type": "markdown",
+      "value": "Below we show a log-log plot where we show the distribution of fraction of cascades that reach a certain size _s_ for a varying _p_."
+    },
+    {
+      "type": "Component",
+      "component": "LogLogPlot"
+    },
+    {
+      "type": "markdown",
+      "value": "It was found that different scaling regimes aries from those very simple assumptions of, that is, how having the quality of a joke changing while spreading can produce different scaling exponents. "
+    }
+    
+  ]
+}
