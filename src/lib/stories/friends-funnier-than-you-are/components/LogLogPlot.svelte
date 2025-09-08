@@ -1,7 +1,7 @@
 <script>
-    import { Plot, Dot, Line } from 'svelteplot';
+    import { Plot, Dot, Line, RuleY, RuleX, Text } from 'svelteplot';
     import cascadeData from '../data/cascadeDistributions.json';
-    
+    import InsetPlot from './LogLogPlot.Inset.svelte'
     // Critical point
     const pc = 0.0286;
     
@@ -23,17 +23,18 @@
     let dataset1Key = $derived(`l3_p${p1}`);
     let dataset2Key = $derived(`l3_p${p2}`);
     
+    const tauData = [
+        { p: 0.001, tau: 4.2 }, { p: 0.002, tau: 4.0 }, { p: 0.003, tau: 3.8 },
+        { p: 0.005, tau: 3.6 }, { p: 0.0075, tau: 3.4 }, { p: 0.01, tau: 3.5 },
+        { p: 0.0125, tau: 3.2 }, { p: 0.015, tau: 3.0 }, { p: 0.0175, tau: 2.8 },
+        { p: 0.02, tau: 2.7 }, { p: 0.025, tau: 2.4 }, { p: 0.02859548, tau: 2.0 },
+        { p: 0.032, tau: 1.9 }, { p: 0.035, tau: 1.9 }, { p: 0.04, tau: 1.9 },
+        { p: 0.045, tau: 1.9 }, { p: 0.05, tau: 1.9 }, { p: 0.06, tau: 1.9 },
+        { p: 0.07, tau: 1.9 }, { p: 0.08, tau: 1.9 }, { p: 0.09, tau: 1.9 }
+    ];
+
     // τ lookup from Figure 1b
     function getTauFromP(p) {
-        const tauData = [
-            { p: 0.001, tau: 4.2 }, { p: 0.002, tau: 4.0 }, { p: 0.003, tau: 3.8 },
-            { p: 0.005, tau: 3.6 }, { p: 0.0075, tau: 3.4 }, { p: 0.01, tau: 3.5 },
-            { p: 0.0125, tau: 3.2 }, { p: 0.015, tau: 3.0 }, { p: 0.0175, tau: 2.8 },
-            { p: 0.02, tau: 2.7 }, { p: 0.025, tau: 2.4 }, { p: 0.02859548, tau: 2.0 },
-            { p: 0.032, tau: 1.9 }, { p: 0.035, tau: 1.9 }, { p: 0.04, tau: 1.9 },
-            { p: 0.045, tau: 1.9 }, { p: 0.05, tau: 1.9 }, { p: 0.06, tau: 1.9 },
-            { p: 0.07, tau: 1.9 }, { p: 0.08, tau: 1.9 }, { p: 0.09, tau: 1.9 }
-        ];
         
         const exact = tauData.find(d => Math.abs(d.p - p) < 0.0001);
         if (exact) return exact.tau;
@@ -132,6 +133,11 @@
         </div>
     </div>
 
+    <div class="plot-wrapper">
+        <div class="inset-loglog">
+            <InsetPlot data={tauData} {p1} {p2}/>
+        </div>
+
     <Plot 
         x={{
             type: 'log',
@@ -181,11 +187,38 @@
             strokeWidth={4}
         />
     </Plot>
+    </div>
 </div>
 
 <style>
     .container {
         width: 100%;
+    }
+    
+    .plot-wrapper {
+        position: relative;
+    }
+    
+    .inset-loglog {
+        position: absolute;
+        top: 30px;
+        right: 43px;
+        width: 220px;
+        height: 170px;
+        background: #f8f5e6;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        overflow: hidden;
+    }
+    
+    .inset-loglog :global(svg) {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
     }
     
     .controls {

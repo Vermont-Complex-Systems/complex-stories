@@ -219,8 +219,8 @@
       uniqueId = 0;
       
       tree = makeTree(
-        { x: width * 0.1, y: height / 2 },
-        -Math.PI / 6,
+        { x: width * 0.1, y: height - 50},
+        -Math.PI / 2,
         1.0,
         treeDepth
       );

@@ -19,9 +19,9 @@ const model = data.model;
 <article id="cascade-story">
     
     <div class="logo-container">
-                <a href="{base}/" class="logo-link">
-                    <img src="{base}/octopus-swim-right.png" alt="Home" class="logo" width="200" />
-                </a>
+        <a href="{base}/" class="logo-link">
+            <img src="{base}/octopus-swim-right.png" alt="Home" class="logo" width="200" />
+        </a>
     </div>
 
     <div class="title">
@@ -36,37 +36,27 @@ const model = data.model;
                 {data.date}
             </p>
         </div>
-    
     </div>
 
-    <section id="model">
-        {#each data.intro as { type, value, component }, i}
+    {#snippet renderContent(contentArray)}
+        {#each contentArray as { type, value, component }, i}
             {#if type === "Component"}
                 {#if component === "BranchingNetwork"}
-                    <div class="branching-container"><BranchingNetwork /></div>
-                {/if}
-            {:else if type === "html" }
-                <p>{@html value}</p>
-            {:else if type === "math" }
-                <div class="plot-container">
-                    <Md text={value}/>
-                </div>
-                {:else}
-                    <p><Md text={value}/></p>
-                {/if}
-        {/each}
-    </section>
-
-    <section id="model">
-        <h2>{data.ModelSectionTitle}</h2>
-        {#each data.model as { type, value, component }, i}
-            {#if type === "Component"}
-                {#if component === "InteractiveFig1"}
-                    <div class="plot-container"><InteractiveFig1 /></div>
+                    <div class="branching-container">
+                        <BranchingNetwork />
+                    </div>
+                {:else if component === "InteractiveFig1"}
+                    <div class="plot-container">
+                        <InteractiveFig1 />
+                    </div>
                 {:else if component === "SelfReinforcingNetwork"}
-                    <div class="plot-container"><SelfReinforcingNetwork /></div>
+                    <div class="plot-container">
+                        <SelfReinforcingNetwork />
+                    </div>
                 {:else if component === "LogLogPlot"}
-                    <div class="plot-container"><LogLogPlot /></div>
+                    <div class="plot-container">
+                        <LogLogPlot />
+                    </div>
                 {/if}
             {:else if type === "html" }
                 <p>{@html value}</p>
@@ -78,6 +68,15 @@ const model = data.model;
                 <p><Md text={value}/></p>
             {/if}
         {/each}
+    {/snippet}
+
+    <section id="intro">
+        {@render renderContent(data.intro)}
+    </section>
+
+    <section id="model">
+        <h2>{data.ModelSectionTitle}</h2>
+        {@render renderContent(data.model)}
     </section>
 </article>
 
@@ -95,6 +94,10 @@ const model = data.model;
         margin: 0 auto 1rem auto;
         text-align: center;
     }    
+
+    section h2 {
+        margin-top: 3rem !important;
+    }
     
     :global(body:has(#cascade-story)) h2 {
         font-size: var(--font-size-medium);
