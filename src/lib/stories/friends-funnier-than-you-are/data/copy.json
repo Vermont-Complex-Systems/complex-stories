@@ -40,7 +40,7 @@
       },
       {
         "type": "markdown",
-        "value": "This expression states that the probability of a cascade of size *s* scales with exponent τ. A larger τ means a steeper decline—massive cascades become exponentially rarer. This creates what statisticians call 'heavy-tailed' distributions, where we're repeatedly surprised by events much larger than we expect. Unlike human height or brain size, which cluster around typical values, cascade sizes have no characteristic scale—there's always the possibility of something orders of magnitude larger."
+        "value": "This expression states that the probability of a cascade of size *s* scales with exponent τ. A larger τ means a steeper decline—massive cascades become exponentially rarer. This creates 'heavy-tailed' distributions, where, unlike human height or brain size which cluster around typical values, cascade sizes have no characteristic scale—there's always the possibility of something orders of magnitude larger. This is the mathematics of systems by which we're repeatedly surprised by events much larger than we expect. "
       },
       {
         "type": "markdown",

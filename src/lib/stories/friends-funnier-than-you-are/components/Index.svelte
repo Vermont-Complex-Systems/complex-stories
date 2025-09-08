@@ -131,6 +131,8 @@ const model = data.model;
         display: flex;
         justify-content: center;
         align-items: center;
+        margin: 1rem 0;
+        padding: 0;
     }        
     
     .article-meta {

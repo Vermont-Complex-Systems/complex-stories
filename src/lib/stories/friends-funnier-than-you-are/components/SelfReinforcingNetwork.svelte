@@ -1,16 +1,18 @@
 <script>
   import * as d3 from 'd3';
+  import { Plot, Dot, Line } from 'svelteplot';
 
-  let width = $state(500);
-  const height = 500;
+  let width = $state(400);
+  const height = 350;
   const treeDepth = 6;
   let tauValue = $state(1.5); // Power law parameter
 
   let allBranches = $state([]);
+  let cascadeSizes = $state([]); // Track all cascade sizes
   let uniqueId = 0;
 
   // Power law distribution function
-  function powerLawSample(tau = 2.5, xMin = 1, xMax = 50) {
+  function powerLawSample(tau = 2.5, xMin = 1, xMax = 5000) {
     const u = Math.random();
     const exponent = 1 - tau;
     
@@ -23,151 +25,70 @@
     }
   }
 
-  function makeTree(a, orientation, scaleRatio, maxDepth = 5) {
-    const FULL_LENGTH = 200;
-    const MIN_Y = 100;
+  // Simple branching process cascade
+  function makeBranchingCascade(root, maxDepth = 4) {
+    let cascadeSize = 0;
     
-    const traverse = (a, orientation, scaleRatio, currentDepth = 0) => {
-      if (a.y < MIN_Y) return null;
+    const traverse = (node, depth = 0) => {
+      cascadeSize++;
+      node.cascadeNode = true;
       
-      const scale = scaleRatio * FULL_LENGTH;
-      const linearDepth = (maxDepth - currentDepth) / maxDepth;
-      const thickness = scaleRatio * linearDepth * 20;
+      if (depth >= maxDepth) return;
       
-      const numBranches = Math.max(d3.randomNormal(1.3, 0.5)(), 1);
+      // Simple branching: each node has probability p of reproducing
+      // Number of offspring follows truncated power law when reproducing
+      let offspring = 0;
+      const reproductionProb = 0.6 / tauValue; // Higher tau = lower reproduction
       
-      const length = Math.max(d3.randomNormal(scale * 0.6, scale * 0.1)() + 20, 20);
-      let angle = d3.randomNormal(orientation, 0.4)(); // Back to original
-      
-      const b = {
-        x: Math.cos(angle) * length + a.x,
-        y: Math.sin(angle) * length + a.y
-      };
-
-      const tree = {
-        a, b, linearDepth, thickness,
-        color: '#333',
-        opacity: 0.3,
-        depth: currentDepth
-      };
-
-      if (b.y < MIN_Y) return tree;
-
-      if (currentDepth < maxDepth) {
-        tree.branches = [];
-        
-        // Back to original simple branching
-        for (let i = 0; i < numBranches; i++) {
-          const branch = traverse(b, angle + d3.randomNormal(0, 0.3)(), (length / FULL_LENGTH) * 0.7, currentDepth + 1);
-          if (branch) tree.branches.push(branch);
-        }
+      if (Math.random() < reproductionProb) {
+        offspring = Math.max(1, Math.round(powerLawSample(tauValue, 1, 8)));
       }
-
-      return tree;
+      node.branches = [];
+      
+      for (let i = 0; i < offspring; i++) {
+        const angle = -Math.PI/2 + (Math.random() - 0.5) * Math.PI/3;
+        const length = 40 + Math.random() * 30;
+        
+        const child = {
+          a: node.b,
+          b: {
+            x: node.b.x + Math.cos(angle) * length,
+            y: node.b.y + Math.sin(angle) * length
+          },
+          linearDepth: (maxDepth - depth) / maxDepth,
+          thickness: Math.max(3 - depth, 0.5),
+          color: '#333',
+          opacity: 1.0,
+          depth: depth + 1
+        };
+        
+        node.branches.push(child);
+        traverse(child, depth + 1);
+      }
     };
-
-    const tree = traverse(a, orientation, scaleRatio);
     
-    function countBranches(node) {
-      let count = 1;
-      if (node.branches) {
-        node.branches.forEach(branch => count += countBranches(branch));
-      }
-      return count;
-    }
+    traverse(root);
+    return cascadeSize;
+  }
 
-    const totalBranches = countBranches(tree);
+  function makeTree() {
+    // Simple base structure
+    const root = {
+      a: { x: width * 0.3, y: height - 10 },
+      b: { x: width * 0.3, y: height - 50},
+      linearDepth: 1.0,
+      thickness: 3,
+      color: '#333',
+      opacity: 0.3,
+      depth: 0,
+      branches: []
+    };
     
-    if (totalBranches >= 20 && totalBranches <= 200) { // Back to original thresholds
-      const CASCADE_DEPTH = 1;
-      const branchesAtDepth = [];
-      
-      function findBranchesAtDepth(node) {
-        if (node.depth === CASCADE_DEPTH) {
-          branchesAtDepth.push(node);
-        }
-        if (node.branches) {
-          node.branches.forEach(findBranchesAtDepth);
-        }
-      }
-      
-      findBranchesAtDepth(tree);
-      
-      if (branchesAtDepth.length > 0) {
-        const cascadeBranch = branchesAtDepth.reduce((topmost, current) => 
-          current.b.y < topmost.b.y ? current : topmost
-        );
-        
-        function colorCascadePath(node, depth = 0) {
-          if (depth >= 1) {
-            node.opacity = 1.0;
-          }
-          
-          if (depth < 2 && node.branches) {
-            node.branches.forEach(branch => colorCascadePath(branch, depth + 1));
-          }
-        }
-        
-        colorCascadePath(cascadeBranch);
-        
-        // Use power law distribution with slider value
-        const numCascadeBranches = Math.round(powerLawSample(tauValue, 3, 25));
-        cascadeBranch.branches = [];
-        
-        console.log(`Power law cascade (α=${tauValue}): ${numCascadeBranches} branches`);
-        
-        for (let i = 0; i < numCascadeBranches; i++) {
-          const originalBranchLength = Math.sqrt(
-            Math.pow(cascadeBranch.b.x - cascadeBranch.a.x, 2) + 
-            Math.pow(cascadeBranch.b.y - cascadeBranch.a.y, 2)
-          );
-
-          const cascadeAngle = d3.randomNormal(-Math.PI/2, 0.4)();
-          const cascadeLength = Math.max(d3.randomNormal(originalBranchLength * 0.8, originalBranchLength * 0.2)(), 20);
-          
-          const cascadeEnd = {
-            x: Math.cos(cascadeAngle) * cascadeLength + cascadeBranch.b.x,
-            y: Math.sin(cascadeAngle) * cascadeLength + cascadeBranch.b.y
-          };
-          
-          const cascadeChild = {
-            a: cascadeBranch.b,
-            b: cascadeEnd,
-            linearDepth: 0.4,
-            thickness: 2,
-            color: '#333',
-            opacity: 1.0,
-            depth: CASCADE_DEPTH + 1,
-            branches: []
-          };
-          
-          const numSecondLevel = Math.max(d3.randomNormal(2, 1)(), 1);
-          for (let j = 0; j < numSecondLevel; j++) {
-            const secondAngle = d3.randomNormal(cascadeAngle, 0.4)();
-            const secondLength = Math.max(d3.randomNormal(originalBranchLength * 0.5, originalBranchLength * 0.15)(), 15);
-            
-            const secondEnd = {
-              x: Math.cos(secondAngle) * secondLength + cascadeEnd.x,
-              y: Math.sin(secondAngle) * secondLength + cascadeEnd.y
-            };
-            
-            cascadeChild.branches.push({
-              a: cascadeEnd,
-              b: secondEnd,
-              linearDepth: 0.3,
-              thickness: 1,
-              color: '#333',
-              opacity: 1.0,
-              depth: CASCADE_DEPTH + 2
-            });
-          }
-          
-          cascadeBranch.branches.push(cascadeChild);
-        }
-      }
-    }
+    // Generate cascade and track size
+    const cascadeSize = makeBranchingCascade(root);
+    cascadeSizes.push(cascadeSize);
     
-    return tree;
+    return root;
   }
 
   // Rest of the functions stay the same...
@@ -211,102 +132,198 @@
 
   function generateTree() {
     uniqueId = 0;
-    let attempts = 0;
-    let tree;
-    
-    do {
-      attempts++;
-      uniqueId = 0;
-      
-      tree = makeTree(
-        { x: width * 0.1, y: height - 50},
-        -Math.PI / 2,
-        1.0,
-        treeDepth
-      );
-      
-      function countBranches(node) {
-        let count = 1;
-        if (node.branches) {
-          node.branches.forEach(branch => count += countBranches(branch));
-        }
-        return count;
-      }
-      
-      const totalBranches = countBranches(tree);
-      
-      if (totalBranches >= 20 && totalBranches <= 200) {
-        break;
-      }
-      
-      if (attempts > 50) {
-        break;
-      }
-    } while (true);
-    
+    const tree = makeTree();
     allBranches = drawTree(tree);
   }
-
-  $effect(() => {
+  
+  function generateBulk(count) {
+    for (let i = 0; i < count; i++) {
+      const tree = makeTree(); // Just make the tree to track cascade sizes
+    }
+    // Update visualization with the last tree
     generateTree();
+  }
+  
+  // Calculate size distribution for log-log plot
+  let sizeDistribution = $derived(() => {
+    if (cascadeSizes.length < 3) return [];
+    
+    const sizeCounts = {};
+    cascadeSizes.forEach(size => {
+      sizeCounts[size] = (sizeCounts[size] || 0) + 1;
+    });
+    
+    return Object.entries(sizeCounts)
+      .map(([size, count]) => ({
+        size: parseInt(size),
+        frequency: count / cascadeSizes.length
+      }))
+      .filter(d => d.size > 0) // Remove size 0 for log scale
+      .sort((a, b) => a.size - b.size);
   });
+
+  function formatTicks(d) {
+        const exp = Math.round(Math.log10(d));
+        return `10^${exp}`;
+    }
+    
+  // Clear data when tau changes
+  $effect(() => {
+    tauValue; // Track tauValue changes
+    cascadeSizes = [];
+  });
+
+  // Generate initial tree
+  generateTree();
 </script>
 
-<div class="chart-container" bind:clientWidth={width}>
+<div class="container">
+  <div class="main-layout">
+    <div class="network-section">
+      <svg {width} {height} class="src-network">
+        <g opacity="0.3">
+          {#each allBranches.filter(b => !b.isNode && b.opacity !== 1.0) as branch (branch.id)}
+            <line x1={branch.nodeA.x} y1={branch.nodeA.y} x2={branch.nodeB.x} y2={branch.nodeB.y} 
+                  stroke={branch.color} stroke-width={branch.thickness} />
+          {/each}
+        </g>
 
-  <svg {width} {height} class="src-network">
-    <g opacity="0.3">
-      {#each allBranches.filter(b => !b.isNode && b.opacity !== 1.0) as branch (branch.id)}
-        <line x1={branch.nodeA.x} y1={branch.nodeA.y} x2={branch.nodeB.x} y2={branch.nodeB.y} 
-              stroke={branch.color} stroke-width={branch.thickness} />
-      {/each}
-    </g>
+        <g opacity="1.0">
+          {#each allBranches.filter(b => !b.isNode && b.opacity === 1.0) as branch (branch.id)}
+            <line x1={branch.nodeA.x} y1={branch.nodeA.y} x2={branch.nodeB.x} y2={branch.nodeB.y} 
+                  stroke={branch.color} stroke-width={branch.thickness} />
+          {/each}
+        </g>
 
-    <g opacity="1.0">
-      {#each allBranches.filter(b => !b.isNode && b.opacity === 1.0) as branch (branch.id)}
-        <line x1={branch.nodeA.x} y1={branch.nodeA.y} x2={branch.nodeB.x} y2={branch.nodeB.y} 
-              stroke={branch.color} stroke-width={branch.thickness} />
-      {/each}
-    </g>
+        <g opacity="0.3">
+          {#each allBranches.filter(b => b.isNode && b.opacity !== 1.0) as node (node.id)}
+            <circle cx={node.x} cy={node.y} r="3" fill={node.color} stroke="white"/>
+          {/each}
+        </g>
 
-    <g opacity="0.3">
-      {#each allBranches.filter(b => b.isNode && b.opacity !== 1.0) as node (node.id)}
-        <circle cx={node.x} cy={node.y} r="3" fill={node.color} stroke="white"/>
-      {/each}
-    </g>
-
-    <g opacity="1.0">
-      {#each allBranches.filter(b => b.isNode && b.opacity === 1.0) as node (node.id)}
-        <circle cx={node.x} cy={node.y} r="4" fill={node.color} stroke="white" />
-      {/each}
-    </g>
-  </svg>
-  
-  <div class="button-ctn">
-  <div class="controls">
-    <input 
-    type="range" 
-    bind:value={tauValue} 
-    min="1.0" 
-    max="4.0" 
-    step="0.1"
-    class="tau-slider"
-    />
-    <label>τ = {tauValue.toFixed(1)}</label>
+        <g opacity="1.0">
+          {#each allBranches.filter(b => b.isNode && b.opacity === 1.0) as node (node.id)}
+            <circle cx={node.x} cy={node.y} r="4" fill={node.color} stroke="white" />
+          {/each}
+        </g>
+      </svg>
+      
+    </div>
+    
+    <div class="right-section">
+      <div class="plot-area">
+        <h4>Cascade Size Distribution (τ = {tauValue.toFixed(1)})</h4>
+        <Plot 
+          x={{
+            type: 'log',
+            label: "Cascade size s →"
+          }} 
+          y={{
+            type: 'log',
+            tickFormat: formatTicks,
+            label: "↑ Frequency"
+          }} 
+          grid 
+          frame
+          width={340}
+          height={280}
+          marginLeft={33}
+          marginRight={10}
+          marginBottom={30}
+        >
+          <Dot
+            data={sizeDistribution()}
+            x="size"
+            y="frequency" 
+            fill="#4a5c3a"
+            r={3}
+          />
+          
+        </Plot>
+      </div>
+      
+      <div class="button-ctn">
+        <div class="controls">
+          <input 
+          type="range" 
+          bind:value={tauValue} 
+          min="1.0" 
+          max="4.0" 
+          step="0.1"
+          class="tau-slider"
+          />
+          <label>τ = {tauValue.toFixed(1)}</label>
+        </div>
+        
+        <button onclick={generateTree} class="regenerate-btn">
+          Generate New
+        </button>
+        
+        <button onclick={() => generateBulk(100)} class="bulk-btn">
+          Generate 100
+        </button>
+      </div>
+    </div>
   </div>
-  
-  <button onclick={generateTree} class="regenerate-btn">
-    Generate New Network
-  </button>
-</div>
 </div>
 
 <style>
-  .chart-container {
+  .container {
     width: 100%;
-    max-width: 800px;
-    position: relative;
+    max-width: 700px;
+    margin: 0;
+    padding: 0;
   }
+  
+  .main-layout {
+    display: flex;
+    gap: 5px;
+    align-items: flex-start;
+  }
+  
+  .network-section {
+    flex: 0.8;
+    position: relative;
+    margin: 50px 0 0 0;
+    padding: 0;
+  }
+  
+  .right-section {
+    flex: 1.2;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 30px; /* Align with seed node area */
+  }
+  
+  @media (max-width: 768px) {
+    .main-layout {
+      flex-direction: column;
+    }
+    
+    .network-section {
+      flex: none;
+      width: 100%;
+      margin: 0;
+    }
+    
+    .right-section {
+      flex: none;
+      width: 100%;
+      margin-top: 20px;
+    }
+  }
+  
+  .plot-area {
+    text-align: left;
+  }
+  
+  .plot-area h4 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #333;
+  }
+  
   
   .controls {
   display: flex;
@@ -369,30 +386,23 @@
   border-radius: 3px;
 }
 
-  .controls small {
-    color: #666;
-    font-style: italic;
-  }
-  
   .src-network {
     overflow: visible;
   }
 
- .chart-container .button-ctn {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
+ .button-ctn {
   display: flex;
+  justify-content: center;
   align-items: flex-end;
-  gap: 15px;
-  margin: 0;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 
-  .regenerate-btn {
+  .regenerate-btn, .bulk-btn {
   cursor: pointer;
   padding: 8px 16px;
-  margin: 0;
+  margin: 0 0 0 10px;
   background: #4a5c3a;
   color: white;
   border: none;
@@ -400,7 +410,13 @@
   font-size: 14px;
 }
 
-.regenerate-btn:hover {
+.regenerate-btn:hover, .bulk-btn:hover {
   background: #3a4c2a;
+}
+
+.bulk-btn {
+  margin: 0 0 0 10px;
+  padding: 8px 16px;
+  font-size: 14px;
 }
 </style>
