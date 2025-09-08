@@ -22,6 +22,9 @@
   let container;
   let visibleTrees = $state(0);
   const totalTrees = numTrees * numLayers;
+  let treeDepths = $state(Array(totalTrees).fill(0)); // Track depth per tree
+  const maxTreeDepth = 6; // Match treeDepth
+  let animationComplete = $state(false);
 
   function makeTree(a, orientation, scaleRatio, maxDepth = 5, isTopLayer = false, layerIndex = 0) {
     const FULL_LENGTH = 300;
@@ -54,7 +57,8 @@
       const tree = {
         a, b, curvature, linearDepth, thickness,
         color: '#333',
-        layerIndex: layerIndex
+        layerIndex: layerIndex,
+        depth: currentDepth
       };
 
       const isTwig = !(maxDepth !== currentDepth && numBranches);
@@ -156,7 +160,8 @@
         thickness: Math.max(10 * t.linearDepth, 0.5),
         color: t.color,
         layerIndex: t.layerIndex,
-        treeIndex: treeIndex
+        treeIndex: treeIndex,
+        depth: t.depth
       });
 
       if (t.blossoms) {
@@ -210,15 +215,50 @@
     }
   }
 
-  // Animation function
+  // Animation function - progressive branch-by-branch growth (faster & smoother)
   function animateTreesIn() {
-    const animateNext = () => {
-      if (visibleTrees < totalTrees) {
-        visibleTrees += 1;
-        setTimeout(animateNext, 150); // 150ms between each tree
+    let currentTree = 0;
+    
+    const animateNextTree = () => {
+      if (currentTree >= totalTrees) {
+        // All trees are complete - show the replay button
+        animationComplete = true;
+        return;
       }
+      
+      visibleTrees = currentTree + 1; // Show this tree
+      treeDepths[currentTree] = 0; // Start with depth 0 (trunk)
+      
+      // Animate depth progression for current tree
+      const animateDepth = () => {
+        if (treeDepths[currentTree] < maxTreeDepth) {
+          treeDepths[currentTree] += 1;
+          setTimeout(animateDepth, 120); // Faster: 120ms per depth level (was 200ms)
+        } else {
+          // Tree is fully grown, move to next tree
+          currentTree += 1;
+          setTimeout(animateNextTree, 80); // Faster overlap: 80ms pause (was 300ms)
+        }
+      };
+      
+      animateDepth();
     };
-    animateNext();
+    
+    animateNextTree();
+  }
+
+  // Restart animation function
+  function restartAnimation() {
+    // Reset all animation state
+    visibleTrees = 0;
+    treeDepths = Array(totalTrees).fill(0);
+    animationComplete = false; // Hide button during animation
+    
+    // Regenerate forest with new random positions
+    generateForest();
+    
+    // Start animation
+    setTimeout(animateTreesIn, 100); // Small delay to let DOM update
   }
 
   // Set up intersection observer
@@ -258,19 +298,21 @@
   {#each Array(numLayers) as _, layerIndex}
     <g opacity={layerIndex === 0 ? 1 : (layerIndex === 1 ? 0.3 : 0.4)}>
       <!-- Tree branches for this layer -->
-      {#each allBranches.filter(b => b.layerIndex === layerIndex && b.treeIndex < visibleTrees) as branch (branch.id)}
+      {#each allBranches.filter(b => b.layerIndex === layerIndex && b.treeIndex < visibleTrees && b.depth <= (treeDepths[b.treeIndex] || 0)) as branch (branch.id)}
         <path
           d={branch.path}
           stroke={branch.color}
           stroke-width={branch.thickness}
           stroke-linecap="round"
           fill="none"
+          style="transition: opacity 0.3s ease-in-out;"
         />
       {/each}
 
-      <!-- Leaves for this layer -->
-      {#each allBlossoms.filter(l => l.layerIndex === layerIndex && l.treeIndex < visibleTrees) as leaf (leaf.id)}
-        <g transform="translate({leaf.x}, {leaf.y}) rotate({leaf.rotation}) scale({leaf.scale})">
+      <!-- Leaves for this layer - only show after tree is fully grown -->
+      {#each allBlossoms.filter(l => l.layerIndex === layerIndex && l.treeIndex < visibleTrees && (treeDepths[l.treeIndex] || 0) >= maxTreeDepth) as leaf (leaf.id)}
+        <g transform="translate({leaf.x}, {leaf.y}) rotate({leaf.rotation}) scale({leaf.scale})" 
+           style="transition: opacity 0.4s ease-in-out;">
           <Leaf 
             size={100} 
             color="black" 
@@ -282,6 +324,14 @@
     </g>
   {/each}
 </svg>
+  
+  {#if animationComplete}
+    <div class="button-ctn" style="animation: fadeIn 0.5s ease-in;">
+      <button onclick={restartAnimation} class="regenerate-btn">
+        Replay
+      </button>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -290,6 +340,42 @@
     margin-bottom: 3rem;
     margin-top: 3rem;
     border:1px solid black;
+    position: relative;
+  }
+  
+  .button-ctn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    max-width: fit-content;
+    margin: 0;
+  }
+
+  .regenerate-btn {
+    cursor: pointer;
+    padding: 8px 16px;
+    margin: 0;
+    background: #4a5c3a;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .regenerate-btn:hover {
+    background: #3a4c2a;
+  }
+
+  @keyframes fadeIn {
+    from { 
+      opacity: 0; 
+      transform: translateY(10px);
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0);
+    }
   }
   
 </style>
