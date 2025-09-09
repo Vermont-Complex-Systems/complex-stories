@@ -136,6 +136,7 @@
     font-family: var(--mono);
     font-size: var(--font-size-small);
     text-transform: uppercase;
+    margin-top: 2.5rem;
   }
 
   /* Responsive */

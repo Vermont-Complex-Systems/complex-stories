@@ -72,6 +72,16 @@
 			<span class="sr-only">Toggle theme</span>
 		</button>
 
+		<!-- Mobile hamburger menu -->
+		<button 
+			onclick={() => isMenuOpen = !isMenuOpen}
+			bind:this={menuButtonRef}
+			class="icon-button mobile-menu-button"
+		>
+			<MenuIcon class="icon" size={28} />
+			<span class="sr-only">Open menu</span>
+		</button>
+
 	</div>
 </header>
 
@@ -96,7 +106,7 @@
 
   .header-left {
     position: absolute;
-    left: 2.5rem;
+    left: 3.5rem;
     top: 2.5rem;
   }
   
@@ -154,7 +164,7 @@
   .header-right {
     position: absolute;
     top: 2.5rem;
-    right: 2.5rem;
+    right: 2.8rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -222,11 +232,21 @@
     background: rgba(255, 255, 255, 0.1);
   }
   
+  /* Hide mobile menu button on desktop */
+  .mobile-menu-button {
+    display: none;
+  }
+
   /* Mobile styles */
   @media (max-width: 768px) {
     .icon-button,
     .text-button {
       display: none;
+    }
+
+    /* Show mobile menu button on mobile */
+    .mobile-menu-button {
+      display: flex;
     }
 
     .header {
@@ -240,7 +260,7 @@
     }
     
     .site-title {
-      font-size: clamp(1.25rem, 4vw, 1.5rem);
+      font-size: clamp(2rem, 3.5vw, 1.25rem) !important;
     }
     
     .site-subtitle {
@@ -248,13 +268,12 @@
     }
     
     .logo-container {
-      max-width: 9.375rem;
-      margin-left: 3.5rem;
+      display: none;
     }
     
     .header-right {
-      top: 1rem;
-      right: 1rem;
+      top: 2rem;
+      right: 2rem;
     }
     
     .logo {

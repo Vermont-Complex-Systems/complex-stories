@@ -8,7 +8,7 @@
 
 <section class="blog-posts">
   {#if posts && posts.length > 0}
-    <div class="posts-grid">
+    <div class="posts-grid wide-layout">
       {#each posts as post}
         <article class="post-card">
 
@@ -58,21 +58,33 @@
   .posts-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 2rem;
-    max-width: var(--width-column-wide);
+    gap: 3rem 1.5rem;
     margin: 0 auto;
-    padding: 0 1rem;
+    max-width: 1400px !important;
+    padding: 0 2rem;
+  }
+  
+  .wide-layout {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
   }
 
   @media (min-width: 768px) {
     .posts-grid {
       grid-template-columns: repeat(2, 1fr);
+      gap: 3.5rem 2rem;
     }
   }
 
   @media (min-width: 1200px) {
     .posts-grid {
       grid-template-columns: repeat(3, 1fr);
+      gap: 4rem 2.5rem;
+      max-width: 1600px !important;
     }
   }
 

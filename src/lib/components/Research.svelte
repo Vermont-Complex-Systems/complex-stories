@@ -79,6 +79,11 @@
 </div>
 
 <style>
+  /* Override main element constraints for full-width layout */
+  :global(main:has(.blog-container)) {
+    max-width: none;
+  }
+
   .blog-container {
     position: relative;
     min-height: 100vh;
