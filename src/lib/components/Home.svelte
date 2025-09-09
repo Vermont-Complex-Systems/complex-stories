@@ -22,6 +22,7 @@
     return Array.from(filterSet).sort();
   });
 
+  
   let filtered = $derived.by(() => {
     const f = stories.filter((d) => {
       // Simplified: if no active filter, show all; otherwise check if story has the filter
@@ -91,6 +92,8 @@
     z-index: var(--z-overlay);
     pointer-events: none;
   }
+
+
 
   .load-more-btn {
     /* Reset button defaults first */
