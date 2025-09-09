@@ -34,7 +34,7 @@
 		</a>
 	</div>
 
-	<div>
+	<div class="logo-container">
 		<a href="{base}/" class="logo-link">
 			<img src="{base}/octopus-swim-right.png" alt="Home" class="logo" />
 		</a>
@@ -72,6 +72,17 @@
 			<span class="sr-only">Toggle theme</span>
 		</button>
 
+    		<!-- Mobile hamburger menu -->
+		<button 
+			onclick={() => isMenuOpen = !isMenuOpen}
+			bind:this={menuButtonRef}
+			class="icon-button mobile-menu-button"
+		>
+			<MenuIcon class="icon" size={28} />
+			<span class="sr-only">Open menu</span>
+		</button>
+
+
 	</div>
 </header>
 
@@ -96,7 +107,7 @@
 
   .header-left {
     position: absolute;
-    left: 2.5rem;
+    left: 3.5rem;
     top: 2.5rem;
   }
   
@@ -154,10 +165,22 @@
   .header-right {
     position: absolute;
     top: 2.5rem;
-    right: 2.5rem;
+    right: 2.8rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+
+   /* Hide mobile menu button on desktop */
+  .mobile-menu-button {
+    display: none !important;
+  }
+  
+  /* Only show on mobile */
+  @media (max-width: 768px) {
+    .mobile-menu-button {
+      display: flex !important;
+    }
   }
 
   /* Text buttons (Blog and Datasets) */
@@ -229,6 +252,12 @@
       display: none;
     }
 
+    /* Hide logo on mobile */
+    .logo-container {
+      display: none;
+    }
+
+
     .header {
       padding: 1rem 0 0 0;
       min-height: 5rem;
@@ -240,25 +269,16 @@
     }
     
     .site-title {
-      font-size: clamp(1.25rem, 4vw, 1.5rem);
+        font-size: clamp(2rem, 3.5vw, 1.25rem) !important;
     }
     
     .site-subtitle {
       font-size: var(--font-size-xsmall);
     }
     
-    .logo-container {
-      max-width: 9.375rem;
-      margin-left: 3.5rem;
-    }
-    
     .header-right {
-      top: 1rem;
+      top: 2rem;
       right: 1rem;
-    }
-    
-    .logo {
-      max-height: 4rem;
     }
   }
   
