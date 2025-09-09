@@ -56,14 +56,14 @@
       },
       {
         "type": "markdown",
-        "value": "But here's where reality deviates from theory. Empirical studies of social media cascades consistently show much steeper decay than the 3/2 prediction, with scaling exponents ranging from τ = 2 to 4. Twitter retweets, Facebook shares, and viral content all decay faster than critical branching processes predict, meaning massive viral events are rarer than the theory suggests. This systematic deviation points to something fundamental: real social cascades aren't simply branching processes with fixed rules. Instead, they represent *self-reinforcing cascades* where the content itself evolves as it spreads, creating entirely new dynamics that break the classical assumptions."
+        "value": "But here's where reality deviates from theory. Empirical studies of social media cascades consistently show much steeper decay than the 3/2 prediction, with scaling exponents ranging from τ = 2 to 4. Twitter retweets, Facebook shares, and viral content all decay faster than critical branching processes predict, meaning massive viral events are rarer than the theory suggests. This systematic deviation points to something fundamental: real social cascades aren't simply branching processes with fixed rules. Instead, they hint at another mechanism lacking in classical branching processes: *self-reinforcing cascade*."
       }
     ],
   "ModelSectionTitle": "The model",
   "model": [
     {
       "type": "markdown",
-      "value": "One mechanism we will explore is that in social media epidemics, the content of the cascade itself evolves as it spreads, leading to fundamentally new dynamics that break the assumptions of classical branching processes."
+      "value": "In social media epidemics, one key difference is that the content of the cascade itself evolves as it spreads, leading to fundamentally new dynamics that break the assumptions of classical branching processes."
     },
     {
       "type": "Component",
@@ -71,7 +71,7 @@
     },
     {  
       "type": "markdown",
-      "value" : "Unlike traditional epidemic models where a virus remains unchanged as it spreads, here the 'content' can get stronger (reinforced) or weaker as it moves from person to person. Each concentric circle indicates a new generation $n$, with maximum cascade intensity $I_{max}$. Then, we have that "
+      "value" : "Unlike traditional epidemic models where a virus remains unchanged as it spreads, the Self-Reinforcing Model (SRC) model assumes that the 'content' can get stronger (reinforced) or weaker as it moves from person to person. Above, each concentric circle indicates a new generation $n$, with maximum cascade intensity $I_{max}$. Then, we have that"
     },
     {  
       "type": "html",
@@ -79,11 +79,19 @@
     },
     {
       "type": "markdown",
-      "value": "Unlike classical branching processes that predict explosive growth at criticality, self-reinforcing cascades create much steeper size distributions (higher τ values) because content quality varies. Weak content dies out quickly, while only exceptional content survives to create large cascades. This matches what we observe in social media, where most posts fade quickly while a few go viral"
+      "value": "Unlike classical branching processes that predict explosive growth at criticality, self-reinforcing cascades create much steeper size distributions (higher τ values) because content quality varies. Weak content dies out quickly, while only exceptional content survives to create large cascades. This matches what we observe in social media, where most posts fade quickly while a few go viral."
     },
     {
       "type": "markdown",
-      "value": "Below we show a log-log plot where we show the distribution of fraction of cascades that reach a certain size _s_ for a varying _p_."
+      "value": "This is why your friends are funnier than you are. Since most people are average funny, they tell jokes of moderate quality, which fails to create large cascade. A few people are exceptionally funny — their jokes (high intensity k) spread much further, so they reach many more listeners. When we ask ourselves how many people total are gonna hear the joke you might have told first, the odds are much higher that it came from one of those “exceptionally funny” people, simply because their jokes dominate the total audience."
+    }
+
+  ],
+  "ResultSectionTitle": "Result",
+  "result": [
+    {
+      "type": "markdown",
+      "value": "The log-log plot below demonstates that cascade size distributions follow power laws with different scaling exponents depending on the parameter values, with steeper power-law decays as you move further from criticality:"
     },
     {
       "type": "Component",
@@ -91,8 +99,15 @@
     },
     {
       "type": "markdown",
-      "value": "It was found that different scaling regimes aries from those very simple assumptions of, that is, how having the quality of a joke changing while spreading can produce different scaling exponents. "
+      "value": "Below the critical point, the cascade size distributions of the SRC exhibits steep power-law tails with tunable scaling exponents. The key insight is that subcritical SRC are short but very broad compared to classic cascade models, meaning they produce power-law distributions even when not at criticality. This contrasts sharply with traditional cascade models that only exhibit power-law behavior at a precise critical point."
+    }, 
+    {
+      "type": "markdown",
+      "value": "This result is exciting because it helps explain the ubiquity of power-law distributions in empirical social data, since real-world cascades don't need to be precisely tuned to a critical point to exhibit this behavior—they can show power-law scaling across a range of conditions."
+    },
+    {
+      "type": "markdown",
+      "value": "Compare that to the classical branching process, where each person passes on the item (joke, belief, virus) to a random number of others, with some fixed reproduction distribution. At the critical point (where $R_0 = 1$) the size distribution of cascades is a power law. Away from criticality, the cascade size distribution has an exponential cutoff. That's why in ordinary branching models, heavy tails are fragile: they only appear exactly at criticality."
     }
-    
-  ]
+    ]
 }
