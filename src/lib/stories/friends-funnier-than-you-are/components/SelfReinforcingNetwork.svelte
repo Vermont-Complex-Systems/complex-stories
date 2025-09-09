@@ -136,12 +136,16 @@
     allBranches = drawTree(tree);
   }
   
-  function generateBulk(count) {
+  async function generateBulk(count) {
     for (let i = 0; i < count; i++) {
-      const tree = makeTree(); // Just make the tree to track cascade sizes
+      const tree = makeTree(); // Make the tree to track cascade sizes
+      // Update visualization with each tree
+      uniqueId = 0;
+      allBranches = drawTree(tree);
+      
+      // Small delay to see the network flash by
+      await new Promise(resolve => setTimeout(resolve, 50)); // 50ms delay
     }
-    // Update visualization with the last tree
-    generateTree();
   }
   
   // Calculate size distribution for log-log plot

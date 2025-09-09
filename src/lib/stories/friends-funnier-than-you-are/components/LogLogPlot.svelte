@@ -1,28 +1,49 @@
 <script>
     import { Plot, Dot, Line, RuleY, RuleX, Text } from 'svelteplot';
-    import cascadeData from '../data/cascadeDistributions.json';
+    import cascadeData from '../data/cascades.json';
     import InsetPlot from './LogLogPlot.Inset.svelte'
-    // Critical point
-    const pc = 0.0286;
     
-    // Split p-values by regime
-    let allPValues = Object.values(cascadeData.datasets)
-        .map(d => d.metadata.p)
-        .sort((a, b) => a - b);
+    // Group datasets by their pc (critical point) and model
+    const groupedByModel = {};
+    Object.entries(cascadeData.datasets).forEach(([key, dataset]) => {
+        const pc = dataset.metadata.pc;
+        const model = dataset.metadata.model || "Unknown Model";
+        const modelKey = `${model} (pc=${pc})`;
+        if (!groupedByModel[modelKey]) {
+            groupedByModel[modelKey] = {
+                pc: pc,
+                model: model,
+                datasets: []
+            };
+        }
+        groupedByModel[modelKey].datasets.push({key, ...dataset});
+    });
     
-    let subcriticalPValues = allPValues.filter(p => p < pc);
-    let supercriticalPValues = allPValues.filter(p => p >= pc);
+    // Get available models
+    const availableModels = Object.keys(groupedByModel).sort();
+    
+    // Current model state
+    let currentModelIndex = $state(1);
+    let currentModelKey = $derived(availableModels[currentModelIndex]);
+    let currentModel = $derived(groupedByModel[currentModelKey]);
+    let currentPc = $derived(currentModel?.pc || 0);
+    let currentDatasets = $derived(currentModel?.datasets || []);
+    
+    // Split p-values by regime for current directory
+    let allPValues = $derived(currentDatasets.map(d => d.metadata.p).sort((a, b) => a - b));
+    let subcriticalPValues = $derived(allPValues.filter(p => p < currentPc));
+    let supercriticalPValues = $derived(allPValues.filter(p => p >= currentPc));
     
     // Slider state
-    let subcriticalIndex = $state(Math.floor(subcriticalPValues.length * 0.6));
-    let supercriticalIndex = $state(Math.floor(supercriticalPValues.length * 0.3));
+    let subcriticalIndex = $state(0);
+    let supercriticalIndex = $state(0);
     
-    // Current p-values
-    let p1 = $derived(subcriticalPValues[subcriticalIndex]);
-    let p2 = $derived(supercriticalPValues[supercriticalIndex]);
-    let dataset1Key = $derived(`l3_p${p1}`);
-    let dataset2Key = $derived(`l3_p${p2}`);
-    
+    // Current p-values and datasets with safety checks
+    let p1 = $derived(subcriticalPValues[subcriticalIndex] || subcriticalPValues[0] || allPValues[0]);
+    let p2 = $derived(supercriticalPValues[supercriticalIndex] || supercriticalPValues[0] || allPValues[Math.min(1, allPValues.length - 1)]);
+    let dataset1 = $derived(currentDatasets.find(d => d.metadata.p === p1));
+    let dataset2 = $derived(currentDatasets.find(d => d.metadata.p === p2));
+
     const tauData = [
         { p: 0.001, tau: 4.2 }, { p: 0.002, tau: 4.0 }, { p: 0.003, tau: 3.8 },
         { p: 0.005, tau: 3.6 }, { p: 0.0075, tau: 3.4 }, { p: 0.01, tau: 3.5 },
@@ -32,6 +53,17 @@
         { p: 0.045, tau: 1.9 }, { p: 0.05, tau: 1.9 }, { p: 0.06, tau: 1.9 },
         { p: 0.07, tau: 1.9 }, { p: 0.08, tau: 1.9 }, { p: 0.09, tau: 1.9 }
     ];
+    
+    // Reset slider indices when model changes
+    $effect(() => {
+        currentModelKey; // Track model changes
+        if (subcriticalPValues.length > 0) {
+            subcriticalIndex = Math.floor(subcriticalPValues.length * 0.6);
+        }
+        if (supercriticalPValues.length > 0) {
+            supercriticalIndex = Math.floor(supercriticalPValues.length * 0.3);
+        }
+    });
 
     // τ lookup from Figure 1b
     function getTauFromP(p) {
@@ -45,15 +77,15 @@
                 return tauData[i].tau + t * (tauData[i + 1].tau - tauData[i].tau);
             }
         }
-        return p < pc ? 3.0 : 1.9;
+        return p < currentPc ? 3.0 : 1.9;
     }
     
     let tau1 = $derived(getTauFromP(p1));
     let tau2 = $derived(getTauFromP(p2));
     
     // Data processing with subsampling
-    function getData(datasetKey) {
-        const dataset = cascadeData.datasets[datasetKey];
+    function getData(dataset) {
+        if (!dataset) return [];
         const fullData = dataset.data
             .slice(0, 10000)
             .map((value, index) => ({ value, index }))
@@ -73,8 +105,8 @@
         return sampledData;
     }
     
-    let data1 = $derived(getData(dataset1Key));
-    let data2 = $derived(getData(dataset2Key));
+    let data1 = $derived(getData(dataset1));
+    let data2 = $derived(getData(dataset2));
     
     // Power law with adaptive range based on data
     function createPowerLaw(data, tau) {
@@ -109,34 +141,65 @@
 </script>
 
 <div class="container">
+    <div class="model-header">
+        <h3>{currentModel?.model || "Unknown Model"}</h3>
+        <button 
+            onclick={() => currentModelIndex = (currentModelIndex + 1) % availableModels.length}
+            class="toggle-btn"
+        >
+            Toggle Model
+        </button>
+    </div>
+
+    
     <div class="controls">
-        <div class="slider-container">
-            <label>Subcritical: p = {p1} (τ = {tau1.toFixed(1)})</label>
-            <input 
-                type="range" 
-                bind:value={subcriticalIndex}
-                min="0" 
-                max={subcriticalPValues.length - 1}
-                class="slider blue"
-            />
-        </div>
+        {#if subcriticalPValues.length > 0}
+            <div class="slider-container">
+                <label>Subcritical: p = {p1}{#if currentModel?.model !== "Classical BP"} (τ = {tau1.toFixed(1)}){/if}</label>
+                {#if subcriticalPValues.length > 1}
+                    <input 
+                        type="range" 
+                        bind:value={subcriticalIndex}
+                        min="0" 
+                        max={subcriticalPValues.length - 1}
+                        class="slider blue"
+                    />
+                {:else}
+                    <div class="single-value">Only one value available</div>
+                {/if}
+            </div>
+        {/if}
         
-        <div class="slider-container">
-            <label>Supercritical: p = {p2} (τ = {tau2.toFixed(1)})</label>
-            <input 
-                type="range" 
-                bind:value={supercriticalIndex}
-                min="0" 
-                max={supercriticalPValues.length - 1}
-                class="slider orange"
-            />
-        </div>
+        {#if supercriticalPValues.length > 0}
+            <div class="slider-container">
+                <label>Supercritical: p = {p2}{#if currentModel?.model !== "Classical BP"} (τ = {tau2.toFixed(1)}){/if}</label>
+                {#if supercriticalPValues.length > 1}
+                    <input 
+                        type="range" 
+                        bind:value={supercriticalIndex}
+                        min="0" 
+                        max={supercriticalPValues.length - 1}
+                        class="slider orange"
+                    />
+                {:else}
+                    <div class="single-value">Only one value available</div>
+                {/if}
+            </div>
+        {/if}
+        
+        {#if subcriticalPValues.length === 0 && supercriticalPValues.length === 0}
+            <div class="no-data-message">
+                <p>No data available for current model</p>
+            </div>
+        {/if}
     </div>
 
     <div class="plot-wrapper">
-        <div class="inset-loglog">
-            <InsetPlot data={tauData} {p1} {p2}/>
-        </div>
+        {#if currentModel?.model !== "Classical BP"}
+            <div class="inset-loglog">
+                <InsetPlot data={tauData} {p1} {p2}/>
+            </div>
+        {/if}
 
     <Plot 
         x={{
@@ -171,21 +234,23 @@
             r={2}
         />
         
-        <Line
-            data={powerLaw1}
-            x="s"
-            y="y"
-            stroke="grey"
-            strokeWidth={4}
-            strokeDasharray="3,3"
-        />
-        <Line
-            data={powerLaw2}
-            x="s"
-            y="y"
-            stroke="grey"
-            strokeWidth={4}
-        />
+        {#if currentModel?.model !== "Classical BP"}
+            <Line
+                data={powerLaw1}
+                x="s"
+                y="y"
+                stroke="grey"
+                strokeWidth={4}
+                strokeDasharray="3,3"
+            />
+            <Line
+                data={powerLaw2}
+                x="s"
+                y="y"
+                stroke="grey"
+                strokeWidth={4}
+            />
+        {/if}
     </Plot>
     </div>
 </div>
@@ -195,14 +260,44 @@
         width: 100%;
     }
     
+    .model-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding: 0 -20px;
+    }
+    
+    .model-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .toggle-btn {
+        padding: 8px 16px;
+        background: #4a5c3a;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+    
+    .toggle-btn:hover {
+        background: #3a4c2a;
+    }
+    
     .plot-wrapper {
         position: relative;
     }
     
     .inset-loglog {
         position: absolute;
-        top: 30px;
-        right: 43px;
+        top: 20px;
+        right: 45px;
         width: 220px;
         height: 170px;
         background: #f8f5e6;
@@ -278,5 +373,24 @@
         background: whitesmoke;
         border: 1px solid black;
         cursor: pointer;
+    }
+    
+    .no-data-message {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+        font-style: italic;
+    }
+    
+    .no-data-message p {
+        margin: 0;
+    }
+    
+    .single-value {
+        font-size: 12px;
+        color: #666;
+        font-style: italic;
+        text-align: center;
+        padding: 8px;
     }
 </style>

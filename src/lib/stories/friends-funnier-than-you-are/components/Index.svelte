@@ -78,6 +78,11 @@ const model = data.model;
         <h2>{data.ModelSectionTitle}</h2>
         {@render renderContent(data.model)}
     </section>
+    
+    <section id="result">
+        <h2>{data.ResultSectionTitle}</h2>
+        {@render renderContent(data.result)}
+    </section>
 </article>
 
 
@@ -131,7 +136,7 @@ const model = data.model;
         display: flex;
         justify-content: center;
         align-items: center;
-        margin: 1rem 0;
+        margin: 0 0;
         padding: 0;
     }        
     
@@ -156,9 +161,5 @@ const model = data.model;
         margin: 0;
         font-weight: 400;
         text-align: center !important;
-    }
-
-    .article {
-
     }
 </style>
