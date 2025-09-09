@@ -34,7 +34,7 @@
 		</a>
 	</div>
 
-	<div class="logo-container">
+	<div>
 		<a href="{base}/" class="logo-link">
 			<img src="{base}/octopus-swim-right.png" alt="Home" class="logo" />
 		</a>
@@ -72,16 +72,6 @@
 			<span class="sr-only">Toggle theme</span>
 		</button>
 
-		<!-- Mobile hamburger menu -->
-		<button 
-			onclick={() => isMenuOpen = !isMenuOpen}
-			bind:this={menuButtonRef}
-			class="icon-button mobile-menu-button"
-		>
-			<MenuIcon class="icon" size={28} />
-			<span class="sr-only">Open menu</span>
-		</button>
-
 	</div>
 </header>
 
@@ -106,7 +96,7 @@
 
   .header-left {
     position: absolute;
-    left: 3.5rem;
+    left: 2.5rem;
     top: 2.5rem;
   }
   
@@ -140,7 +130,7 @@
   }
   
   .logo-container {
-    max-width: 15.625rem;
+    max-width: 18.625rem;
     transition: transform var(--transition-medium) ease;
   }
   
@@ -164,7 +154,7 @@
   .header-right {
     position: absolute;
     top: 2.5rem;
-    right: 2.8rem;
+    right: 2.5rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -232,21 +222,11 @@
     background: rgba(255, 255, 255, 0.1);
   }
   
-  /* Hide mobile menu button on desktop */
-  .mobile-menu-button {
-    display: none;
-  }
-
   /* Mobile styles */
   @media (max-width: 768px) {
     .icon-button,
     .text-button {
       display: none;
-    }
-
-    /* Show mobile menu button on mobile */
-    .mobile-menu-button {
-      display: flex;
     }
 
     .header {
@@ -260,7 +240,7 @@
     }
     
     .site-title {
-      font-size: clamp(2rem, 3.5vw, 1.25rem) !important;
+      font-size: clamp(1.25rem, 4vw, 1.5rem);
     }
     
     .site-subtitle {
@@ -268,12 +248,13 @@
     }
     
     .logo-container {
-      display: none;
+      max-width: 9.375rem;
+      margin-left: 3.5rem;
     }
     
     .header-right {
-      top: 2rem;
-      right: 2rem;
+      top: 1rem;
+      right: 1rem;
     }
     
     .logo {
@@ -282,7 +263,6 @@
   }
   
   :global(.dark) .logo {
-    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
     padding: 0.25rem;
     border-radius: var(--border-radius);
   }

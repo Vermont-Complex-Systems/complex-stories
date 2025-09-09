@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { Youtube, Github, Linkedin, MessageCircle } from "@lucide/svelte";
+	import { Youtube, Github, Linkedin, MessageCircle, ExternalLink } from "@lucide/svelte";
 </script>
 
 <footer class="footer">
@@ -44,7 +44,17 @@
 		</div>
 		
 		<div class="footer-logo">
-			<img src="{base}/Roboctopus_transparent.png" alt="Logo" class="footer-logo-img" />
+			<img src="{base}/UVM_Logo_Primary_Horiz_W_PunchOut.png" alt="UVM Logo" class="uvm-logo-img" />
+			<img src="{base}/Roboctopus_2024.png" alt="Roboctopus Logo" class="roboctopus-logo-img" />
+			<a class="cc-footer-copy" href="https://www.uvm.edu/equal-opportunity/americans-disabilities-act-and-reasonable-accommodations" target="_blank" rel="noreferrer">
+				<span>Accessibility</span>
+				<ExternalLink class="icon" size={14} />
+			</a>
+			<a class="cc-footer-copy" href="https://www.uvm.edu/compliance/website-privacy-policy/terms-use" target="_blank" rel="noreferrer">
+				<span>Privacy/Terms of Use</span>
+				<ExternalLink class="icon" size={14} />
+			</a>
+			<div class="cc-footer-copy">© 2025, Vermont Complex Systems Institute at UVM</div>
 		</div>
 	</div>
 </footer>
@@ -109,7 +119,7 @@
 	}
 	
 	:global(.dark) .footer-section a {
-		color: var(--color-gray-300);
+		color: var(--color-gray-gold);
 	}
 	
 	.footer-section a:hover {
@@ -122,22 +132,72 @@
 	
 	.footer-logo {
 		display: flex;
-		align-items: center;
-		justify-content: center;
-		max-width: 10rem; /* Convert 160px to rem */
+		flex-direction: column;
+		align-items: flex-start;
+		justify-content: flex-start;
+		max-width: 12rem; /* Increased from 10rem to accommodate both logos */
+		gap: 0.5rem;
+	}
+
+	.footer-logo a {
+		color: var(--color-uvm-gold);
 	}
 	
-	.footer-logo-img {
+	.uvm-logo-img {
 		width: 100%;
 		height: auto;
-		max-height: 7.5rem; /* Convert 120px to rem */
+		max-height: 4rem; /* Smaller for UVM logo */
 		border-radius: var(--border-radius);
-		transform: rotate(var(--left-tilt));
 		transition: transform var(--transition-medium);
 	}
 	
-	.footer-logo-img:hover {
-		transform: rotate(0deg);
+	.roboctopus-logo-img {
+		width: auto;
+		height: 10rem; /* Set fixed height instead of max-height */
+		min-width: 8rem; /* Ensure minimum width */
+		border-radius: var(--border-radius);
+		transition: transform var(--transition-medium);
+		object-fit: contain; /* Maintain aspect ratio */
+	}
+	
+	.roboctopus-logo-img:hover {
+		transform: rotate(var(--left-tilt));
+	}
+	
+	.cc-footer-copy {
+		color: var(--color-white);
+		text-decoration: underline;
+		font-weight: 500;
+		font-size: var(--font-size-smallish);
+		transition: color var(--transition-medium);
+		text-align: left;
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		flex-wrap: wrap;
+	}
+	
+	:global(.dark) .cc-footer-copy {
+		color: var(--color-gray-300);
+	}
+	
+	.cc-footer-copy:hover {
+		color: var(--color-gray-300);
+	}
+	
+	:global(.dark) .cc-footer-copy:hover {
+		color: var(--color-gray-100);
+	}
+	
+	/* Copyright div styling - no hover effects, no yellow color */
+	.cc-footer-copy:not(a) {
+		color: var(--color-white);
+		text-decoration: none;
+		justify-content: flex-start;
+	}
+	
+	:global(.dark) .cc-footer-copy:not(a) {
+		color: var(--color-gray-300);
 	}
 
 	
