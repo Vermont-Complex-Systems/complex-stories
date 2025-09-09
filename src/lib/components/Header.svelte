@@ -106,7 +106,7 @@
 
   .header-left {
     position: absolute;
-    left: 2.5rem;
+    left: 3.5rem;
     top: 2.5rem;
   }
   
@@ -164,7 +164,7 @@
   .header-right {
     position: absolute;
     top: 2.5rem;
-    right: 2.5rem;
+    right: 2.8rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
