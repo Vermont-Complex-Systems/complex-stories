@@ -25,9 +25,13 @@
 
   let filtered = $derived.by(() => {
     const f = posts.filter((post) => {
-      const inFilter = activeFilter ? 
-        post.tags?.includes(activeFilter.replace(/_/g, ' ')) : true;
-      return inFilter;
+      if (!activeFilter) return true;
+      
+      // Convert post tags to slugs and check if any match the active filter
+      return post.tags?.some(tag => {
+        const tagSlug = tag?.toLowerCase()?.replace(/[^a-z]/g, "_");
+        return tagSlug === activeFilter;
+      }) || false;
     });
     f.sort((a, b) => descending(a.date, b.date)); // Most recent first
     return f;
@@ -80,6 +84,11 @@
 </div>
 
 <style>
+  /* Override main element constraints for full-width layout */
+  :global(main:has(.blog-container)) {
+    max-width: none;
+  }
+
   .blog-container {
     position: relative;
     min-height: 100vh;

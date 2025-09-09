@@ -10,8 +10,6 @@ import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 
 let { story, data } = $props();
 
-const intro = data.intro;
-const model = data.model;
 
 </script>
 
@@ -82,6 +80,11 @@ const model = data.model;
     <section id="result">
         <h2>{data.ResultSectionTitle}</h2>
         {@render renderContent(data.result)}
+    </section>
+    
+    <section id="conclusion">
+        <h2>{data.ConclusionSectionTitle}</h2>
+        {@render renderContent(data.conclusion)}
     </section>
 </article>
 
