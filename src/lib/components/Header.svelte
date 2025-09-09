@@ -248,8 +248,7 @@
     }
     
     .logo-container {
-      max-width: 9.375rem;
-      margin-left: 3.5rem;
+      display: none;
     }
     
     .header-right {
