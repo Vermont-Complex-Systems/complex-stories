@@ -81,7 +81,6 @@
 
   .post-card {
     background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
     overflow: hidden;
@@ -153,7 +152,6 @@
 
   .tag {
     background: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 0.25rem 0.5rem;
     border-radius: calc(var(--border-radius) / 2);

@@ -143,10 +143,14 @@
   .logo-container {
     max-width: 18.625rem;
     transition: transform var(--transition-medium) ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateX(-0.5rem);
   }
   
   .logo-container:hover {
-    transform: rotate(var(--left-tilt)) scale(1.05);
+    transform: translateX(-0.5rem) rotate(var(--left-tilt)) scale(1.05);
   }
   
   .logo-link {

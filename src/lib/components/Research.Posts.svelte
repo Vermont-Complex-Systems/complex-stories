@@ -141,13 +141,6 @@
     margin-left: 0.5rem;
   }
 
-  .post-excerpt p {
-    color: var(--color-secondary-gray);
-    margin: 0;
-    line-height: 1.5;
-    font-size: var(--font-size-small);
-  }
-
   .post-tags {
     margin-top: 1rem;
     display: flex;
