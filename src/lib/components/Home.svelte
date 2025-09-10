@@ -93,8 +93,6 @@
     pointer-events: none;
   }
 
-
-
   .load-more-btn {
     /* Reset button defaults first */
     border: none;

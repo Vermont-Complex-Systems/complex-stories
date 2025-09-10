@@ -47,12 +47,10 @@
 			<img src="{base}/UVM_Logo_Primary_Horiz_W_PunchOut.png" alt="UVM Logo" class="uvm-logo-img" />
 			<img src="{base}/Roboctopus_2024.png" alt="Roboctopus Logo" class="roboctopus-logo-img" />
 			<a class="cc-footer-copy" href="https://www.uvm.edu/equal-opportunity/americans-disabilities-act-and-reasonable-accommodations" target="_blank" rel="noreferrer">
-				<span>Accessibility</span>
-				<ExternalLink class="icon" size={14} />
+				<span class="link-text">Accessibility <ExternalLink class="icon" size={14} /></span>
 			</a>
 			<a class="cc-footer-copy" href="https://www.uvm.edu/compliance/website-privacy-policy/terms-use" target="_blank" rel="noreferrer">
-				<span>Privacy/Terms of Use</span>
-				<ExternalLink class="icon" size={14} />
+				<span class="privacy-text">Privacy/<br>Terms of Use <ExternalLink class="icon" size={14} /></span>
 			</a>
 			<div class="cc-footer-copy">© 2025, Vermont Complex Systems Institute at UVM</div>
 		</div>
@@ -64,7 +62,9 @@
 		margin-top: auto;
 		background-color: var(--color-uvm-green);
 		border-top: 1px solid var(--color-border);
-		padding: 3rem 2rem 2rem;
+		padding: 3rem 1rem 2rem;
+		width: 100%;
+		box-sizing: border-box;
 	}
 	
 	:global(.dark) .footer {
@@ -78,7 +78,9 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-start;
-		gap: 2rem;
+		gap: 1rem;
+		width: 100%;
+		box-sizing: border-box;
 	}
 	
 	.footer-section {
@@ -89,9 +91,10 @@
 		font-family: var(--mono);
 		font-weight: var(--font-weight-bold);
 		text-transform: uppercase;
-		font-size: var(--font-size-xsmall);
-		margin-bottom: 1rem;
+		font-size: var(--font-size-small) !important;
+		margin-bottom: 0.75rem;
 		color: var(--color-uvm-gold);
+		margin-top: 0;
 	}
 	
 	:global(.dark) .footer-section h3 {
@@ -112,6 +115,7 @@
 		color: var(--color-white);
 		text-decoration: underline;
 		font-weight: 500;
+		font-size: 0.95rem !important;
 		transition: color var(--transition-medium);
 		display: flex;
 		align-items: center;
@@ -135,8 +139,11 @@
 		flex-direction: column;
 		align-items: flex-start;
 		justify-content: flex-start;
-		max-width: 12rem; /* Increased from 10rem to accommodate both logos */
+		max-width: 12rem;
+		min-width: 0;
 		gap: 0.5rem;
+		flex-shrink: 1;
+		overflow: hidden;
 	}
 
 	.footer-logo a {
@@ -153,11 +160,13 @@
 	
 	.roboctopus-logo-img {
 		width: auto;
-		height: 10rem; /* Set fixed height instead of max-height */
-		min-width: 8rem; /* Ensure minimum width */
+		max-width: 100%;
+		height: auto;
+		max-height: 8rem;
 		border-radius: var(--border-radius);
 		transition: transform var(--transition-medium);
-		object-fit: contain; /* Maintain aspect ratio */
+		object-fit: contain;
+		align-self: flex-start; /* Force left alignment */
 	}
 	
 	.roboctopus-logo-img:hover {
@@ -166,15 +175,35 @@
 	
 	.cc-footer-copy {
 		color: var(--color-white);
-		text-decoration: underline;
 		font-weight: 500;
-		font-size: var(--font-size-smallish);
+		font-size: 1rem;
 		transition: color var(--transition-medium);
 		text-align: left;
-		display: flex;
+		display: block;
+		max-width: 100%;
+	}
+
+	.link-text {
+		display: inline-flex;
 		align-items: center;
 		gap: 0.25rem;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
+	}
+
+	.link-text :global(.icon),
+	.privacy-text :global(.icon) {
+		width: 14px !important;
+		height: 14px !important;
+		flex-shrink: 0;
+		transform: translateY(-0.1rem); 
+	}
+
+	.privacy-text {
+		display: inline-flex;
+		align-items: flex-end;
+		gap: 0.25rem;
+		flex-wrap: nowrap;
+		line-height: 1.2;
 	}
 	
 	:global(.dark) .cc-footer-copy {
@@ -227,9 +256,9 @@
 		.footer-logo {
 			max-width: 6.25rem; /* Convert 100px to rem */
 		}
-		
-		.footer-logo-img {
-			max-height: 5rem; /* Convert 80px to rem */
+
+		.cc-footer-copy {
+			font-size: 0.95rem;
 		}
 	
 	}

@@ -107,7 +107,7 @@
 
   .header-left {
     position: absolute;
-    left: 3.5rem;
+    left: 6.4rem;
     top: 2.5rem;
   }
   
@@ -134,7 +134,7 @@
   .site-subtitle {
     font-family: var(--mono);
     font-size: var(--font-size-small);
-    margin: 0.25rem 0 0 0;
+    margin: 0.25rem 0 0 0.25rem;
     color: var(--color-secondary-gray);
     text-transform: uppercase;
     letter-spacing: 0.03em;
@@ -165,7 +165,7 @@
   .header-right {
     position: absolute;
     top: 2.5rem;
-    right: 2.8rem;
+    right: 6rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;

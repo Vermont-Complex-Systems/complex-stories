@@ -50,6 +50,13 @@
 <style>
   .blog-posts {
     margin: 2rem 0;
+    padding: 0 6.4rem;
+  }
+
+  @media (max-width: 768px) {
+    .blog-posts {
+      padding: 0 2rem;
+    }
   }
 
   .posts-grid {
@@ -58,7 +65,6 @@
     gap: 2rem;
     max-width: var(--width-column-wide);
     margin: 0 auto;
-    padding: 0 1rem;
   }
 
   @media (min-width: 768px) {
