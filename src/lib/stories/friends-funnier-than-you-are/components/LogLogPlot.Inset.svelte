@@ -10,8 +10,8 @@
     x={{domain:[0,0.05]}} 
     marginTop={10}
     marginBottom={20}
-    marginLeft={30}
-    marginRight={10}
+    marginLeft={0}
+    marginRight={20}
     width={200}
     height={150}
 >

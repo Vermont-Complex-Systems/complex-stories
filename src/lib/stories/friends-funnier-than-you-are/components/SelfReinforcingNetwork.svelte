@@ -229,7 +229,7 @@
     
     <div class="right-section">
       <div class="plot-area">
-        <h4>Cascade Size Distribution (τ = {tauValue.toFixed(1)})</h4>
+        <p>Cascade Size Distribution (τ = {tauValue.toFixed(1)})</p>
         <Plot 
           x={{
             type: 'log',
@@ -317,32 +317,47 @@
   @media (max-width: 768px) {
     .main-layout {
       flex-direction: column;
+      position: relative;
     }
     
     .network-section {
-      flex: none;
-      width: 100%;
+      position: absolute;
+      top: 60px;
+      right: 10px;
+      width: 110px;
+      height: 170px;
+      z-index: 10;
       margin: 0;
+      background: #f8f5e6;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 4px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1)
+    }
+    
+    .network-section svg {
+      width: 400px !important;
+      height: 350px !important;
+      transform: scale(0.32) translate(-60%, -60%);
+      transform-origin: center center;
     }
     
     .right-section {
       flex: none;
       width: 100%;
-      margin-top: 20px;
+      margin-top: 0;
+    }
+    
+    .plot-area {
+      margin-top: 0;
     }
   }
   
   .plot-area {
     text-align: left;
   }
-  
-  .plot-area h4 {
-    margin: 0 0 10px 0;
-    font-size: 16px;
-    color: #333;
-  }
-  
-  
+   
   .controls {
     display: flex;
     flex-direction: column;
@@ -354,87 +369,85 @@
   }
 
   
+  .controls label {
+    font-size: 12px;
+    color: #666;
+    margin: 0 0 3px 0;
+    font-weight: normal;
+  }
 
-.controls label {
-  font-size: 12px;
-  color: #666;
-  margin: 0 0 3px 0;
-  font-weight: normal;
-}
+  .tau-slider {
+    width: 120px;
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: #ddd;
+    outline: none;
+  }
 
-.tau-slider {
-  width: 120px;
-  margin: 0;
-  -webkit-appearance: none;
-  appearance: none;
-  height: 6px;
-  border-radius: 3px;
-  background: #ddd;
-  outline: none;
-}
+  .tau-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #4a5c3a;
+    cursor: pointer;
+  }
 
-.tau-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #4a5c3a;
-  cursor: pointer;
-}
+  .tau-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #4a5c3a;
+    cursor: pointer;
+    border: none;
+  }
 
-.tau-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #4a5c3a;
-  cursor: pointer;
-  border: none;
-}
+  .tau-slider::-moz-range-progress {
+    background: #4a5c3a;
+    height: 6px;
+    border-radius: 3px;
+  }
 
-.tau-slider::-moz-range-progress {
-  background: #4a5c3a;
-  height: 6px;
-  border-radius: 3px;
-}
-
-.tau-slider::-webkit-slider-runnable-track {
-  background: #ddd;
-  height: 6px;
-  border-radius: 3px;
-}
+  .tau-slider::-webkit-slider-runnable-track {
+    background: #ddd;
+    height: 6px;
+    border-radius: 3px;
+  }
 
   .src-network {
     overflow: visible;
   }
 
  .button-ctn {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 10px;
-  margin-top: 10px;
-}
-
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+  }
 
   .regenerate-btn, .bulk-btn {
-  cursor: pointer;
-  padding: 8px 16px;
-  margin: 0 0 0 10px;
-  background: #4a5c3a;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-}
+    cursor: pointer;
+    padding: 8px 16px;
+    margin: 0 0 0 10px;
+    background: #4a5c3a;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+  }
 
-.regenerate-btn:hover, .bulk-btn:hover {
-  background: #3a4c2a;
-}
+  .regenerate-btn:hover, .bulk-btn:hover {
+    background: #3a4c2a;
+  }
 
-.bulk-btn {
-  margin: 0 0 0 10px;
-  padding: 8px 16px;
-  font-size: 14px;
-}
+  .bulk-btn {
+    margin: 0 0 0 10px;
+    padding: 8px 16px;
+    font-size: 14px;
+  }
 </style>
