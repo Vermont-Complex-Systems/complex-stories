@@ -36,6 +36,7 @@ let { story, data } = $props();
         </div>
     </div>
 
+    <!-- a bit clunky to do it like like -->
     {#snippet renderContent(contentArray)}
         {#each contentArray as { type, value, component }, i}
             {#if type === "Component"}
@@ -93,6 +94,12 @@ let { story, data } = $props();
     :global(body:has(#cascade-story)) {
         background-color: #f8f5e6;
         overflow-x: hidden; /* Prevent horizontal scroll from full-width components */
+    }
+    
+    /* Dark mode support */
+    :global(.dark body:has(#cascade-story)) {
+        background-color: var(--color-bg);
+        color: var(--color-fg);
     }
     
     :global(body:has(#cascade-story)) h1, h2 {
