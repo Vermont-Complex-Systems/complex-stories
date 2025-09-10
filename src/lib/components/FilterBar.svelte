@@ -21,7 +21,7 @@
 </script>
 
 <div class="filter-bar">
-  <div class="filter-content">
+  <div class="filter-content column-screen">
     <div class="spacer"></div>
     <div class="filters-wrapper">
       <!-- Desktop filters -->
@@ -68,7 +68,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 2rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
     max-width: 100%;
     position: relative;
   }
@@ -152,7 +153,6 @@
   
   @media (max-width: 768px) {
     .filter-content {
-      padding: 0.5rem 1rem;
       justify-content: center;
     }
     
