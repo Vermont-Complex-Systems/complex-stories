@@ -238,6 +238,13 @@
 		
 		.footer-content {
 			gap: 1rem;
+			justify-content: space-between;
+			align-items: flex-start;
+		}
+		
+		.footer-section {
+			flex: 1;
+			min-width: 0;
 		}
 		
 		.footer-section h3 {
@@ -254,7 +261,9 @@
 		}
 		
 		.footer-logo {
-			max-width: 6.25rem; /* Convert 100px to rem */
+			max-width: 6.5rem; /* Give more space for accessibility links */
+			min-width: 0;
+			margin-right: 0.5rem; Move content left by adding right margin
 		}
 
 		.cc-footer-copy {

@@ -7,7 +7,6 @@
 	
 	let { children } = $props();
 	
-	// Check if we're on a story page (individual story route) or blog post
 	let isStoryPage = $derived(page.route.id === '/[slug]');
 	let isBlogPost = $derived(page.route.id === '/blog/[slug]');
 	let showHeader = $derived(!isStoryPage && !isBlogPost);
