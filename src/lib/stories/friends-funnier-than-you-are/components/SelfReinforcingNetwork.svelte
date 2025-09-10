@@ -25,50 +25,63 @@
     }
   }
 
-  // Simple branching process cascade
-  function makeBranchingCascade(root, maxDepth = 4) {
-    let cascadeSize = 0;
+  // Generate cascade with specified size using power law distribution
+  function makeBranchingCascade(root, maxDepth = 6) {
+    // First, determine target cascade size from power law
+    const targetSize = Math.max(1, Math.round(powerLawSample(tauValue, 1, 1000)));
+    let nodesCreated = 0;
+    const nodesToProcess = [root];
     
-    const traverse = (node, depth = 0) => {
-      cascadeSize++;
-      node.cascadeNode = true;
+    root.cascadeNode = true;
+    nodesCreated++;
+    
+    // Build cascade by breadth-first expansion until we reach target size
+    while (nodesToProcess.length > 0 && nodesCreated < targetSize) {
+      const currentNode = nodesToProcess.shift();
       
-      if (depth >= maxDepth) return;
+      // Stop if we've reached max depth
+      if (currentNode.depth >= maxDepth) continue;
       
-      // Simple branching: each node has probability p of reproducing
-      // Number of offspring follows truncated power law when reproducing
-      let offspring = 0;
-      const reproductionProb = 0.6 / tauValue; // Higher tau = lower reproduction
+      // Determine how many children this node should have
+      const remainingNodes = targetSize - nodesCreated;
+      const remainingCapacity = Math.min(remainingNodes, 4); // Max 4 children per node
       
-      if (Math.random() < reproductionProb) {
-        offspring = Math.max(1, Math.round(powerLawSample(tauValue, 1, 8)));
-      }
-      node.branches = [];
+      if (remainingCapacity <= 0) break;
       
-      for (let i = 0; i < offspring; i++) {
+      // Distribute remaining nodes among potential children
+      const numChildren = Math.min(
+        remainingCapacity,
+        1 + Math.floor(Math.random() * Math.min(3, remainingCapacity))
+      );
+      
+      currentNode.branches = [];
+      
+      for (let i = 0; i < numChildren && nodesCreated < targetSize; i++) {
         const angle = -Math.PI/2 + (Math.random() - 0.5) * Math.PI/3;
         const length = 40 + Math.random() * 30;
         
         const child = {
-          a: node.b,
+          a: currentNode.b,
           b: {
-            x: node.b.x + Math.cos(angle) * length,
-            y: node.b.y + Math.sin(angle) * length
+            x: currentNode.b.x + Math.cos(angle) * length,
+            y: currentNode.b.y + Math.sin(angle) * length
           },
-          linearDepth: (maxDepth - depth) / maxDepth,
-          thickness: Math.max(3 - depth, 0.5),
+          linearDepth: (maxDepth - (currentNode.depth || 0)) / maxDepth,
+          thickness: Math.max(3 - (currentNode.depth || 0), 0.5),
           color: '#333',
           opacity: 1.0,
-          depth: depth + 1
+          depth: (currentNode.depth || 0) + 1,
+          cascadeNode: true,
+          branches: []
         };
         
-        node.branches.push(child);
-        traverse(child, depth + 1);
+        currentNode.branches.push(child);
+        nodesToProcess.push(child);
+        nodesCreated++;
       }
-    };
+    }
     
-    traverse(root);
-    return cascadeSize;
+    return nodesCreated;
   }
 
   function makeTree() {
@@ -256,7 +269,7 @@
           step="0.1"
           class="tau-slider"
           />
-          <label>τ = {tauValue.toFixed(1)}</label>
+          <label for="id">τ = {tauValue.toFixed(1)}</label>
         </div>
         
         <button onclick={generateTree} class="regenerate-btn">
@@ -269,6 +282,7 @@
       </div>
     </div>
   </div>
+  <small>Notes: cascade sizes are sampled from power law distribution, then visualized as tree networks (max depth: 6, cutoff: 1,000)</small>
 </div>
 
 <style>
@@ -330,14 +344,14 @@
   
   
   .controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 0;
-  padding: 0;
-  background: none;
-  border-radius: 0;
-}
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border-radius: 0;
+  }
 
   
 
