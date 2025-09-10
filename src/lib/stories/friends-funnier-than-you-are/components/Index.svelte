@@ -10,8 +10,6 @@ import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 
 let { story, data } = $props();
 
-const intro = data.intro;
-const model = data.model;
 
 </script>
 
@@ -38,6 +36,7 @@ const model = data.model;
         </div>
     </div>
 
+    <!-- a bit clunky to do it like like -->
     {#snippet renderContent(contentArray)}
         {#each contentArray as { type, value, component }, i}
             {#if type === "Component"}
@@ -83,6 +82,11 @@ const model = data.model;
         <h2>{data.ResultSectionTitle}</h2>
         {@render renderContent(data.result)}
     </section>
+    
+    <section id="conclusion">
+        <h2>{data.ConclusionSectionTitle}</h2>
+        {@render renderContent(data.conclusion)}
+    </section>
 </article>
 
 
@@ -90,6 +94,12 @@ const model = data.model;
     :global(body:has(#cascade-story)) {
         background-color: #f8f5e6;
         overflow-x: hidden; /* Prevent horizontal scroll from full-width components */
+    }
+    
+    /* Dark mode support */
+    :global(.dark body:has(#cascade-story)) {
+        background-color: var(--color-bg);
+        color: var(--color-fg);
     }
     
     :global(body:has(#cascade-story)) h1, h2 {

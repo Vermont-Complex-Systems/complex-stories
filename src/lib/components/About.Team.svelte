@@ -26,6 +26,14 @@
     margin-bottom: 2rem; /* Use our spacing token instead of hardcoded 32px */
   }
 
+  /* 2-column grid on mobile */
+  @media (max-width: 768px) {
+    ul {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
   li {
     max-width: 10.1em;
     line-height: 1.25;

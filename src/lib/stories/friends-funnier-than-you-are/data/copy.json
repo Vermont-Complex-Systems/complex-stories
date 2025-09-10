@@ -8,11 +8,11 @@
     "intro": [
        {
         "type": "markdown",
-        "value": "Spoiler: How far your joke is going depends on your friends going viral."
+        "value": "Spoiler: How far your joke might reach depends on your friends going viral."
       },
       {
         "type": "markdown",
-        "value": "The spread of stories or beliefs are often compared to viruses. But stories, like jokes, differ from biological viruses in at least one key aspect: their 'infectiousness' can change as a result of the propagation itself. A joke might get funnier (or less funny) as it spreads, or a rumor might become more sensational with each retelling."
+        "value": "The spread of stories or beliefs are often compared to viruses and modeled as branching processes: one case becomes two, two becomes four, four becomes eight, and so on. But stories, like jokes, differ from branching processes in at least one key aspect: their 'infectiousness' can change as a result of the propagation itself. A joke might get funnier (or less funny) as it spreads, or a rumor might become more sensational with each retelling."
       },
       {
         "type": "markdown",
@@ -40,7 +40,7 @@
       },
       {
         "type": "markdown",
-        "value": "This expression states that the probability of a cascade of size *s* scales with exponent τ. A larger τ means a steeper decline—massive cascades become exponentially rarer. This creates 'heavy-tailed' distributions, where, unlike human height or brain size which cluster around typical values, cascade sizes have no characteristic scale—there's always the possibility of something orders of magnitude larger. This is the mathematics of systems by which we're repeatedly surprised by events much larger than we expect. "
+        "value": "This expression states that the probability of a cascade of size *s* scales with exponent τ. A larger τ means a steeper decline—massive cascades become much rarer. This creates 'heavy-tailed' distributions, where, unlike human height or brain size which cluster around typical values, cascade sizes have no characteristic scale—there's always the possibility of something orders of magnitude larger. This is the mathematics of systems by which we're repeatedly surprised by events much larger than we expect. "
       },
       {
         "type": "markdown",
@@ -108,6 +108,13 @@
     {
       "type": "markdown",
       "value": "Compare that to the classical branching process, where each person passes on the item (joke, belief, virus) to a random number of others, with some fixed reproduction distribution. At the critical point (where $R_0 = 1$) the size distribution of cascades is a power law. Away from criticality, the cascade size distribution has an exponential cutoff. That's why in ordinary branching models, heavy tails are fragile: they only appear exactly at criticality."
+    }
+    ],
+    "ConclusionSectionTitle": "Conclusion",
+    "conclusion": [
+    {
+      "type": "markdown",
+      "value": "The bottom line is that, if the spread of jokes and stories is better described by SRC than classic branching process, than the person who told you a joke is likely one of the rare superspreader who made it funnier. And you on the other hand are probably an average person likely to make the joke worse. Statistically speaking, in these cascades, your friends are funnier than you are."
     }
     ]
 }
