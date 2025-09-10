@@ -80,6 +80,12 @@
 </div>
 
 <style>
+  /* Override main element constraints for full-width layout */
+  :global(main:has(.blog-container)) {
+    max-width: none;
+    padding: 0; /* Remove default padding to let column-screen handle spacing */
+  }
+
   .blog-container {
     position: relative;
     min-height: 100vh;
