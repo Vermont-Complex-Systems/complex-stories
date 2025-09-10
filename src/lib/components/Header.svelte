@@ -29,14 +29,13 @@
 <header class="header">
 	<div class="header-left">
 		<a href="{base}/" class="title-link">
-			<h1 class="site-title">Complex Stories</h1>
-			<p class="site-subtitle">Describe, Explain, Create, Share.</p>
-		</a>
-	</div>
-
-	<div class="logo-container">
-		<a href="{base}/" class="logo-link">
-			<img src="{base}/octopus-swim-right.png" alt="Home" class="logo" />
+			<div class="title-container">
+				<div class="title-with-octopus">
+					<h1 class="site-title">Complex Stories</h1>
+					<img src="{base}/octopus-swim-right.png" alt="Octopus" class="octopus-icon" />
+				</div>
+				<p class="site-subtitle">Describe, Explain, Create, Share.</p>
+			</div>
 		</a>
 	</div>
 
@@ -72,6 +71,12 @@
 			<span class="sr-only">Toggle theme</span>
 		</button>
 
+		<div class="logo-container">
+			<a href="{base}/" class="logo-link">
+				<img src="{base}/vcsi-bumper-sticker-horizontal.jpg" alt="Home" class="logo" />
+			</a>
+		</div>
+
     		<!-- Mobile hamburger menu -->
 		<button 
 			onclick={() => isMenuOpen = !isMenuOpen}
@@ -81,7 +86,6 @@
 			<MenuIcon class="icon" size={28} />
 			<span class="sr-only">Open menu</span>
 		</button>
-
 
 	</div>
 </header>
@@ -121,6 +125,25 @@
   .title-link:hover {
     transform: translateY(-0.125rem);
   }
+
+  .title-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .title-with-octopus {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .octopus-icon {
+    height: 2.5rem;
+    object-fit: contain;
+    transition: transform var(--transition-medium) ease;
+    transform: translateY(0.5rem);
+  }
+
   
   .site-title {
     font-family: var(--sans);
@@ -141,16 +164,14 @@
   }
   
   .logo-container {
-    max-width: 18.625rem;
     transition: transform var(--transition-medium) ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    transform: translateX(-0.5rem);
   }
   
   .logo-container:hover {
-    transform: translateX(-0.5rem) rotate(var(--left-tilt)) scale(1.05);
+    transform: rotate(var(--right-tilt)) scale(1.05);
   }
   
   .logo-link {
@@ -162,14 +183,14 @@
     width: 100%;
     height: auto;
     border-radius: var(--border-radius);
-    max-height: 8rem;
+    max-height: 2rem;
     object-fit: contain;
   }
   
   .header-right {
     position: absolute;
     top: 2.5rem;
-    right: 6rem;
+    right: 6.5rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
