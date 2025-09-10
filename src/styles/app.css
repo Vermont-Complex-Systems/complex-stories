@@ -115,6 +115,18 @@ main {
     text-align: center;
 }
 
+.column-screen {
+    width: 100%;
+    padding: 0 2rem;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .column-screen {
+        padding: 0 2rem;
+    }
+}
+
 /* =============================================================================
    ACCESSIBILITY UTILITIES
    ============================================================================= */

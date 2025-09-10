@@ -54,9 +54,9 @@
 
 <div class="blog-container">
   <!-- Hero section -->
-  <section class="blog-hero column-wide">
+  <section class="blog-hero">
     <HeroText>
-      <h1>Blog</h1>
+      <h1>Behind the Scenes</h1>
       <p>
         Insights, tutorials, and thoughts on complex systems, data visualization, 
         and the stories that emerge from data.
@@ -87,6 +87,7 @@
   /* Override main element constraints for full-width layout */
   :global(main:has(.blog-container)) {
     max-width: none;
+    padding: 0; /* Remove default padding to let column-screen handle spacing */
   }
 
   .blog-container {
@@ -95,7 +96,34 @@
   }
 
   .blog-hero {
-    padding: 2rem 0;
+    padding: 2rem 4.5rem;
+    text-align: center;
+  }
+
+  .blog-hero :global(h1) {
+    font-family: var(--mono);
+  }
+
+  .blog-hero :global(h1)::after {
+    content: '|';
+    animation: blink 1s infinite;
+    margin-left: 0.1em;
+  }
+
+  @keyframes blink {
+    0%, 50% {
+      opacity: 1;
+    }
+    51%, 100% {
+      opacity: 0;
+    }
+  }
+
+  .blog-hero :global(p) {
+    font-family: var(--mono);
+    max-width: var(--width-column-regular);
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .blog-content {
@@ -162,7 +190,8 @@
 
   @media (max-width: 768px) {
     .blog-hero {
-      padding: 1rem 0;
+      padding: 1rem 2rem;
+      text-align: center;
     }
 
     .load-more-btn {

@@ -29,14 +29,13 @@
 <header class="header">
 	<div class="header-left">
 		<a href="{base}/" class="title-link">
-			<h1 class="site-title">Complex Stories</h1>
-			<p class="site-subtitle">Describe, Explain, Create, Share.</p>
-		</a>
-	</div>
-
-	<div class="logo-container">
-		<a href="{base}/" class="logo-link">
-			<img src="{base}/octopus-swim-right.png" alt="Home" class="logo" />
+			<div class="title-container">
+				<div class="title-with-octopus">
+					<h1 class="site-title">Complex Stories</h1>
+					<img src="{base}/octopus-swim-right.png" alt="Octopus" class="octopus-icon" />
+				</div>
+				<p class="site-subtitle">Describe, Explain, Create, Share.</p>
+			</div>
 		</a>
 	</div>
 
@@ -72,7 +71,13 @@
 			<span class="sr-only">Toggle theme</span>
 		</button>
 
-		<!-- Mobile hamburger menu -->
+		<div class="logo-container">
+			<a href="{base}/" class="logo-link">
+				<img src="{base}/vcsi-bumper-sticker-horizontal.jpg" alt="Home" class="logo" />
+			</a>
+		</div>
+
+    		<!-- Mobile hamburger menu -->
 		<button 
 			onclick={() => isMenuOpen = !isMenuOpen}
 			bind:this={menuButtonRef}
@@ -106,7 +111,7 @@
 
   .header-left {
     position: absolute;
-    left: 3.5rem;
+    left: 6.4rem;
     top: 2.5rem;
   }
   
@@ -120,6 +125,25 @@
   .title-link:hover {
     transform: translateY(-0.125rem);
   }
+
+  .title-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .title-with-octopus {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .octopus-icon {
+    height: 2.5rem;
+    object-fit: contain;
+    transition: transform var(--transition-medium) ease;
+    transform: translateY(0.5rem);
+  }
+
   
   .site-title {
     font-family: var(--sans);
@@ -133,19 +157,21 @@
   .site-subtitle {
     font-family: var(--mono);
     font-size: var(--font-size-small);
-    margin: 0.25rem 0 0 0;
+    margin: 0.25rem 0 0 0.25rem;
     color: var(--color-secondary-gray);
     text-transform: uppercase;
     letter-spacing: 0.03em;
   }
   
   .logo-container {
-    max-width: 15.625rem;
     transition: transform var(--transition-medium) ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .logo-container:hover {
-    transform: rotate(var(--left-tilt)) scale(1.05);
+    transform: rotate(var(--right-tilt)) scale(1.05);
   }
   
   .logo-link {
@@ -157,17 +183,29 @@
     width: 100%;
     height: auto;
     border-radius: var(--border-radius);
-    max-height: 8rem;
+    max-height: 2rem;
     object-fit: contain;
   }
   
   .header-right {
     position: absolute;
     top: 2.5rem;
-    right: 2.8rem;
+    right: 6.5rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+
+   /* Hide mobile menu button on desktop */
+  .mobile-menu-button {
+    display: none !important;
+  }
+  
+  /* Only show on mobile */
+  @media (max-width: 768px) {
+    .mobile-menu-button {
+      display: flex !important;
+    }
   }
 
   /* Text buttons (Blog and Datasets) */
@@ -232,11 +270,6 @@
     background: rgba(255, 255, 255, 0.1);
   }
   
-  /* Hide mobile menu button on desktop */
-  .mobile-menu-button {
-    display: none;
-  }
-
   /* Mobile styles */
   @media (max-width: 768px) {
     .icon-button,
@@ -244,10 +277,11 @@
       display: none;
     }
 
-    /* Show mobile menu button on mobile */
-    .mobile-menu-button {
-      display: flex;
+    /* Hide logo on mobile */
+    .logo-container {
+      display: none;
     }
+
 
     .header {
       padding: 1rem 0 0 0;
@@ -260,29 +294,20 @@
     }
     
     .site-title {
-      font-size: clamp(2rem, 3.5vw, 1.25rem) !important;
+        font-size: clamp(2rem, 3.5vw, 1.25rem) !important;
     }
     
     .site-subtitle {
       font-size: var(--font-size-xsmall);
     }
     
-    .logo-container {
-      display: none;
-    }
-    
     .header-right {
       top: 2rem;
-      right: 2rem;
-    }
-    
-    .logo {
-      max-height: 4rem;
+      right: 1rem;
     }
   }
   
   :global(.dark) .logo {
-    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
     padding: 0.25rem;
     border-radius: var(--border-radius);
   }
