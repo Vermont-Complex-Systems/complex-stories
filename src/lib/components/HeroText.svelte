@@ -30,6 +30,12 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  @media (max-width: 959px) {
+    .hero-text {
+      padding: 5rem 0 1rem 0; /* Add more top padding on mobile */
+    }
+  }
+
   @media (min-width: 960px) {
     .hero-text {
       padding: 4rem 0 2rem 0; /* Convert 4em 2em to rem */
