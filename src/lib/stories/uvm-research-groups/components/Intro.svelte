@@ -178,21 +178,6 @@
   gap: 1rem;
 }
 
-
-  /* Story-wide settings */
-  :global(#story) {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem;
-  }
-
-  :global(#story h1) {
-    font-size: var(--font-size-xlarge);
-    margin: 2rem 0 3rem 0;
-    text-align: left;
-    font-family: var(--serif);
-  }
-
   
   .grouping-controls {
   display: inline;

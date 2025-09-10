@@ -19,7 +19,7 @@
   });
 </script>
 
-<section id="intro" class="column-regular">
+<section id="intro" class="column-wide">
   <HeroText>
     <h1>{copy.title}</h1>
     <p>{@html copy.dek}</p>
@@ -27,7 +27,7 @@
 </section>
 
 {#each sections as { id, hed }}
-  <section {id} class="column-regular below">
+  <section {id} class="column-wide below">
     {#if hed}
       <h2 class="section-heading">{hed}</h2>
     {/if}
@@ -63,6 +63,16 @@
 {/each}
 
 <style>
+  :global(main:has(.column-wide)) {
+    max-width: none;
+  }
+
+  :global(main:has(.blog-container)) {
+    max-width: none;
+    padding: 0; /* Remove default padding to let column-screen handle spacing */
+  }
+
+  
   .section-heading {
     line-height: 1.2;
     margin-top: 3rem;      /* Add space above section headings */
@@ -114,6 +124,7 @@
     :global(#contributors li) {
       width: calc(50% - 0.5rem);
     }
+    
   }
 
   @media (max-width: 400px) {

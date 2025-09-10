@@ -40,21 +40,6 @@
     font-size: var(--font-size-medium); /* Increased from small */
     cursor: pointer;
     transition: transform calc(var(--1s) * 0.25);
-    list-style: none;
-  }
-
-  /* Custom triangle for summary */
-  summary::before {
-    content: '▶';
-    display: inline-block;
-    margin-right: 0.5rem;
-    transition: transform calc(var(--1s) * 0.25);
-    font-size: 0.8em;
-    color: var(--color-secondary-gray);
-  }
-
-  details[open] summary::before {
-    transform: rotate(90deg);
   }
 
   summary:hover {

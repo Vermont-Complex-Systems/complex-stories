@@ -149,8 +149,9 @@
 
 <Nav bind:isDark bind:isGirls />
 
+<article id="allotaxonometer-story">
 
-<section id="story"  class="story">
+<section class="story">
     <h1>A whirlwind tour of the <a href="https://vermont-complex-systems.github.io/complex-stories/allotaxonometry" target="_blank">allotaxonometer</a></h1>
     <div class="article-meta">
         <p class="author">By <a href="{base}/author/jonathan-st-onge">Jonathan St-Onge</a></p>
@@ -308,8 +309,23 @@
     <em>Appendix: Data can be found <a href="https://www.donneesquebec.ca/recherche/dataset/banque-de-prenoms-garcons/resource/c35c6bc3-fbc1-47bd-bfa9-90be087f954a">here</a>, La Presse trend analysis can be found <a href="https://www.lapresse.ca/societe/2025-06-22/palmares-des-prenoms/pres-d-un-demi-siecle-en-modes-et-tendances.php">here</a>. </em>
 </section>
 
+</article>
 
 <style>
+
+    /* =============================================================================
+	                    STORY THEME SCOPE
+	   ============================================================================= */
+       
+       :global(main#content:has(#allotaxonometer-story)) {
+        /* overide regular column width */
+        max-width: var(--width-column-wide);
+    }
+    
+    /* =============================================================================
+	                    ARTICLE HEADER
+	============================================================================= */
+    
     .article-meta {
         margin: -1rem 0 2rem 0; /* Negative margin to pull closer to title */
         font-family: var(--sans);
@@ -329,18 +345,19 @@
         font-weight: 400;
     }
 
-    /* Sticky container for the toggle */
-.year-1980,
-.year-2023,
-.gender-text {
-        font-weight: 600;
-        text-decoration: underline;
-        text-decoration-thickness: 2px;
-        text-underline-offset: 3px;
-        transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
-        padding: 0.1rem 0.2rem;
-        border-radius: 0.25rem;
-    }
+    
+
+    .year-1980,
+    .year-2023,
+    .gender-text {
+            font-weight: 600;
+            text-decoration: underline;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 3px;
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0.1rem 0.2rem;
+            border-radius: 0.25rem;
+        }
 
     .gender-text.girls {
         color: #be185d; /* Dark pink */
@@ -369,11 +386,9 @@
         text-decoration-color: rgb(129, 208, 237); /* Lighter blue underline */
     }
 
-     :global(#story) {
-        max-width: 1200px;
-        margin: 2rem auto;
-        padding: 0 2rem;
-    }
+    /* =============================================================================
+	                STORY SECTIONS
+	   ============================================================================= */
 
     section h1 {
         font-size: var(--font-size-xlarge);
@@ -386,7 +401,9 @@
             font-family: var(--mono);
         }
 
-	/* Global paragraph styling now handled in app.css */
+	/* =============================================================================
+	                SCROLLY-SPECIFIC
+	   ============================================================================= */
 
 
     .initial-chart {
@@ -406,7 +423,11 @@
         clear: both;
     }
 
-    /* Mobile chart image styling - simple approach */
+    /* =============================================================================
+	                MOBILE SPECIFIC
+	   ============================================================================= */
+
+
     .mobile-chart-image {
         display: flex;
         justify-content: center;
@@ -452,6 +473,11 @@
         object-position: center;
         display: block;
     }
+
+    /* =============================================================================
+	                           CHARTING 
+	    ============================================================================= */
+
 
 	 .visualization-container {
         display: flex;

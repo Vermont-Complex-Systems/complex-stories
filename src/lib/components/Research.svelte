@@ -8,7 +8,7 @@
 
   let { posts } = $props();
 
-  const initMax = 27; // Show 6 blog posts initially
+  const initMax = 27;
   let maxPosts = $state(initMax);
   let activeFilter = $state(undefined);
 
@@ -25,9 +25,13 @@
 
   let filtered = $derived.by(() => {
     const f = posts.filter((post) => {
-      const inFilter = activeFilter ? 
-        post.tags?.includes(activeFilter.replace(/_/g, ' ')) : true;
-      return inFilter;
+      if (!activeFilter) return true;
+      
+      // Convert post tags to slugs and check if any match the active filter
+      return post.tags?.some(tag => {
+        const tagSlug = tag?.toLowerCase()?.replace(/[^a-z]/g, "_");
+        return tagSlug === activeFilter;
+      }) || false;
     });
     f.sort((a, b) => descending(a.date, b.date)); // Most recent first
     return f;
@@ -50,7 +54,7 @@
 
 <div class="blog-container">
   <!-- Hero section -->
-  <section class="blog-hero column-wide">
+  <section class="blog-hero">
     <HeroText>
       <h1>Research groups at UVM</h1>
       <p>
@@ -79,14 +83,21 @@
 </div>
 
 <style>
+  /* Override main element constraints for full-width layout */
+  :global(main:has(.blog-container)) {
+    max-width: none;
+    padding: 0; /* Remove default padding to let column-screen handle spacing */
+  }
+
   .blog-container {
     position: relative;
     min-height: 100vh;
   }
 
   .blog-hero {
-    padding: 2rem 0;
+    padding: 2rem 4.5rem;
   }
+
 
   .blog-content {
     margin-top: 0;
@@ -152,7 +163,7 @@
 
   @media (max-width: 768px) {
     .blog-hero {
-      padding: 1rem 0;
+      padding: 1rem 2rem;
     }
 
     .load-more-btn {

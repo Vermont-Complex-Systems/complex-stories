@@ -53,26 +53,33 @@
 <style>
   .blog-posts {
     margin: 2rem 0;
+    padding: 0 4.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .blog-posts {
+      padding: 0 2rem;
+    }
   }
 
   .posts-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: 2rem;
-    max-width: var(--width-column-wide);
-    margin: 0 auto;
-    padding: 0 1rem;
   }
 
   @media (min-width: 768px) {
     .posts-grid {
       grid-template-columns: repeat(2, 1fr);
+      gap: 3.5rem 2rem;
     }
   }
 
   @media (min-width: 1200px) {
     .posts-grid {
       grid-template-columns: repeat(3, 1fr);
+      gap: 4rem 2.5rem;
+      max-width: 1600px !important;
     }
   }
 
@@ -132,13 +139,6 @@
 
   .author {
     margin-left: 0.5rem;
-  }
-
-  .post-excerpt p {
-    color: var(--color-secondary-gray);
-    margin: 0;
-    line-height: 1.5;
-    font-size: var(--font-size-small);
   }
 
   .post-tags {

@@ -50,32 +50,39 @@
 <style>
   .blog-posts {
     margin: 2rem 0;
+    padding: 0 6.4rem;
+  }
+
+  @media (max-width: 768px) {
+    .blog-posts {
+      padding: 0 2rem;
+    }
   }
 
   .posts-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 2rem;
-    max-width: var(--width-column-wide);
+    gap: 3rem 1.5rem;
     margin: 0 auto;
-    padding: 0 1rem;
   }
 
   @media (min-width: 768px) {
     .posts-grid {
       grid-template-columns: repeat(2, 1fr);
+      gap: 3.5rem 2rem;
     }
   }
 
   @media (min-width: 1200px) {
     .posts-grid {
       grid-template-columns: repeat(3, 1fr);
+      gap: 4rem 2.5rem;
+      max-width: 1600px !important;
     }
   }
 
   .post-card {
     background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
     overflow: hidden;
@@ -147,7 +154,6 @@
 
   .tag {
     background: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 0.25rem 0.5rem;
     border-radius: calc(var(--border-radius) / 2);

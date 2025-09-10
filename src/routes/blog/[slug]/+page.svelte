@@ -167,7 +167,7 @@
   .post-header h1 {
     font-family: var(--sans);
     font-weight: var(--font-weight-bold);
-    font-size: var(--font-size-giant);
+    font-size: var(--font-size-xlarge);
     margin: 0 0 1rem 0;
     line-height: 1.1;
     text-transform: capitalize;

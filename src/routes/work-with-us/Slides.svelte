@@ -6,7 +6,7 @@
 </script>
 
 <!-- Slide 1: Title -->
-<section class="slide slide-title">
+<section class="slide slide-title column-wide">
 	<h1>How to work with us!</h1>
 	<h3>Let's work together to write sustainable and reproducible software.</h3>
 	<div class="author-info">
@@ -18,7 +18,7 @@
 <Divider />
 
 <!-- Slide 2: Who am I -->
-<section class="slide slide-two-column"  use:reveal={{ delay: 100  }}>
+<section class="slide slide-two-column column-wide"  use:reveal={{ delay: 100  }}>
 	<div class="content-section">
 	<Label>Who am I?</Label>
         <ul>
@@ -44,7 +44,7 @@
 <Divider />
 
 <!-- Slide 3a: Short Projects -->
-<section class="slide slide-three-column"  use:reveal={{ delay: 100  }}>
+<section class="slide slide-three-column column-wide"  use:reveal={{ delay: 100  }}>
 	<div class="content-section">
         <Label variant="secondary">"1-2" months projects</Label>
         <p>We can write code to help you accomplish specific research tasks — fast. These are short, high-impact collaborations that can be funded through fee-for-service mechanisms or grants.</p>
@@ -75,7 +75,7 @@
 <Divider />
 
 <!-- Slide 3b: Medium Projects -->
-<section class="slide slide-three-column" use:reveal={{ delay: 100  }}>
+<section class="slide slide-three-column column-wide" use:reveal={{ delay: 100  }}>
 	<div class="content-section">
         <Label variant="secondary">"6" months projects</Label>
         <p>We collaborate to build reusable software components and infrastructure tailored to your research workflows — helping your group move faster while ensuring sustainability.</p>
@@ -106,7 +106,7 @@
 <Divider />
 
 <!-- Slide 3c: Long-term Projects -->
-<section class="slide slide-three-column" use:reveal={{ delay: 100  }}>
+<section class="slide slide-three-column column-wide" use:reveal={{ delay: 100  }}>
 	<div class="content-section">
 	<Label variant="secondary">Longer-term partnerships</Label>
         <p>These are deep collaborations where we anticipate complexity and co-create innovative research tools. While the future is hard to predict, our experienced team helps you stay on course and avoid costly pitfalls.</p>
@@ -132,7 +132,7 @@
 <Divider />
 
 <!-- Slide 4: Community -->
-<section class="slide slide-two-column slide-community" use:reveal={{ delay: 100  }}>
+<section class="slide slide-two-column slide-community column-wide" use:reveal={{ delay: 100  }}>
 	<div class="content-section">
 		<Label variant="success">Our community</Label>
         <p>We're not alone, we bring expertise from all over the place.</p>
@@ -176,7 +176,7 @@
 <Divider />
 
 <!-- Slide 5: Why Work With Us -->
-<section class="slide slide-two-column slide-value-proposition" use:reveal={{ delay: 100  }}>
+<section class="slide slide-two-column slide-value-proposition column-wide" use:reveal={{ delay: 100  }}>
 	<div class="content-section">
 		<Label variant="primary">Why work with us?</Label>
 		<ul>
@@ -193,14 +193,19 @@
 
 <style>
 	/* ===== GLOBAL STYLES ===== */
+	:global(main:has(.column-wide)) {
+		max-width: none;
+	}
+
 	:global(p) {
 		line-height: 1.5rem;
 	}
 
 	/* ===== SLIDE LAYOUTS ===== */
 	.slide {
-		padding-bottom: 2rem;
+		padding: 2rem 4.5rem 2rem 4.5rem !important;
 		margin-bottom: 2rem;
+		max-width: none !important;
 	}
 
 	/* Title slide layout */
@@ -454,6 +459,10 @@
 	}
 
 	@media (max-width: 768px) {
+		.slide {
+			padding: 1rem 2rem 2rem 2rem !important;
+		}
+
 		.slide-title h1 {
 			font-size: 2rem;
 		}
