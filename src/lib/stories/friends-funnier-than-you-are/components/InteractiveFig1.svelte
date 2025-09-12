@@ -204,7 +204,7 @@
           cy={circle.y} 
           r={circle.radius} 
           fill="none" 
-          stroke="grey" 
+          stroke="var(--circle-stroke, lightgrey)" 
           stroke-width="2"
           stroke-dasharray="5,3"
         />
@@ -215,6 +215,7 @@
             text-anchor="middle" 
             font-size="12" 
             font-weight="bold"
+            fill="var(--text-color, black)"
           >
             n={circle.generation}: I_max = {circle.maxIntensity}
           </text>
@@ -256,7 +257,8 @@
           dx={-3}
           dy={3}
           font-size={node.isAbsorbed ? 0 : 10}
-          stroke={'black'}
+          fill="var(--text-color, white)"
+          stroke="var(--text-color, white)"
           stroke-width="0.5"
         >
           {node.intensity}
@@ -277,6 +279,15 @@
     width: 100%;
     max-width: 800px;
     position: relative;
+    --circle-stroke: #999;
+    --text-color: black;
+    --text-stroke: white;
+  }
+  
+  :global(.dark) .chart-container {
+    --circle-stroke: #d1d5db;
+    --text-color: white;
+    --text-stroke: black;
   }
   
   .src-network {
@@ -295,7 +306,7 @@
     cursor: pointer;
     padding: 8px 16px;
     margin: 0;
-    background: #4a5c3a;
+    background: #7a8c6a;
     color: white;
     border: none;
     border-radius: 4px;
@@ -303,6 +314,6 @@
   }
   
   .regenerate-btn:hover {
-    background: #3a4c2a;
+    background: #6a7c5a;
   }
 </style>

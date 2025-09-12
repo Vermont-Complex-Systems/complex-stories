@@ -68,7 +68,7 @@
           },
           linearDepth: (maxDepth - (currentNode.depth || 0)) / maxDepth,
           thickness: Math.max(3 - (currentNode.depth || 0), 0.5),
-          color: '#333',
+          color: 'var(--edge-color, #333)',
           opacity: 1.0,
           depth: (currentNode.depth || 0) + 1,
           cascadeNode: true,
@@ -91,7 +91,7 @@
       b: { x: width * 0.3, y: height - 50},
       linearDepth: 1.0,
       thickness: 3,
-      color: '#333',
+      color: 'var(--edge-color, #333)',
       opacity: 0.3,
       depth: 0,
       branches: []
@@ -214,13 +214,13 @@
 
         <g opacity="0.3">
           {#each allBranches.filter(b => b.isNode && b.opacity !== 1.0) as node (node.id)}
-            <circle cx={node.x} cy={node.y} r="3" fill={node.color} stroke="white"/>
+            <circle cx={node.x} cy={node.y} r="3" fill={node.color} stroke="grey"/>
           {/each}
         </g>
 
         <g opacity="1.0">
           {#each allBranches.filter(b => b.isNode && b.opacity === 1.0) as node (node.id)}
-            <circle cx={node.x} cy={node.y} r="4" fill={node.color} stroke="white" />
+            <circle cx={node.x} cy={node.y} r="4" fill={node.color} stroke="grey" />
           {/each}
         </g>
       </svg>
@@ -252,7 +252,7 @@
             data={sizeDistribution()}
             x="size"
             y="frequency" 
-            fill="#4a5c3a"
+            fill="#7a8c6a"
             r={3}
           />
           
@@ -291,6 +291,11 @@
     max-width: 700px;
     margin: 0;
     padding: 0;
+    --edge-color: #333;
+  }
+  
+  :global(.dark) .container {
+    --edge-color: whitesmoke;
   }
   
   .main-layout {
@@ -313,6 +318,8 @@
     gap: 0;
     margin-top: 30px; /* Align with seed node area */
   }
+
+
   
   @media (max-width: 768px) {
     .main-layout {
@@ -393,7 +400,7 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: #4a5c3a;
+    background: #7a8c6a;
     cursor: pointer;
   }
 
@@ -401,13 +408,13 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: #4a5c3a;
+    background: #7a8c6a;
     cursor: pointer;
     border: none;
   }
 
   .tau-slider::-moz-range-progress {
-    background: #4a5c3a;
+    background: #7a8c6a;
     height: 6px;
     border-radius: 3px;
   }
@@ -434,7 +441,7 @@
     cursor: pointer;
     padding: 8px 16px;
     margin: 0 0 0 10px;
-    background: #4a5c3a;
+    background: #7a8c6a;
     color: white;
     border: none;
     border-radius: 4px;
@@ -442,7 +449,7 @@
   }
 
   .regenerate-btn:hover, .bulk-btn:hover {
-    background: #3a4c2a;
+    background: #6a7c5a;
   }
 
   .bulk-btn {

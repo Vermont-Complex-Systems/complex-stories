@@ -258,6 +258,15 @@
 <style>
     .container {
         width: 100%;
+        --text-color: #333;
+        --inset-bg: #f8f5e6;
+        --inset-border: #ddd;
+    }
+    
+    :global(.dark) .container {
+        --text-color: white;
+        --inset-bg: #2d2d2d;
+        --inset-border: #555;
     }
     
     .model-header {
@@ -272,12 +281,12 @@
         margin: 0;
         font-size: 18px;
         font-weight: 600;
-        color: #333;
+        color: var(--text-color);
     }
     
     .toggle-btn {
         padding: 8px 16px;
-        background: #4a5c3a;
+        background: #7a8c6a;
         color: white;
         border: none;
         border-radius: 4px;
@@ -287,7 +296,7 @@
     }
     
     .toggle-btn:hover {
-        background: #3a4c2a;
+        background: #6a7c5a;
     }
     
     .plot-wrapper {
@@ -296,12 +305,12 @@
     
     .inset-loglog {
         position: absolute;
-        top: 20px;
+        top: 30px;
         right: 45px;
         width: 180px;
         height: 140px;
-        background: #f8f5e6;
-        border: 1px solid #ddd;
+        background: var(--inset-bg);
+        border: 1px solid var(--inset-border);
         border-radius: 4px;
         padding: 4px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -314,7 +323,7 @@
         height: 100% !important;
         max-width: none !important;
         max-height: none !important;
-        transform: scale(0.82);
+        transform: scale(0.86) translateY(-10px);
         transform-origin: center center;
     }
     
@@ -338,7 +347,7 @@
     .slider-container label {
         font-size: 14px;
         font-weight: 600;
-        color: #333;
+        color: var(--text-color);
     }
     
     .slider {
@@ -380,7 +389,8 @@
     .no-data-message {
         text-align: center;
         padding: 20px;
-        color: #666;
+        color: var(--text-color);
+        opacity: 0.7;
         font-style: italic;
     }
     
@@ -390,7 +400,8 @@
     
     .single-value {
         font-size: 12px;
-        color: #666;
+        color: var(--text-color);
+        opacity: 0.7;
         font-style: italic;
         text-align: center;
         padding: 8px;
