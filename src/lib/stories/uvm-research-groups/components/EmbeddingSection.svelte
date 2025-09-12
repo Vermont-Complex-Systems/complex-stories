@@ -113,11 +113,6 @@
 </script>
 
 <section id="embeddings" class="story">
-   <h3>Embeddings</h3>
-  <p>Instead of using time to position papers, we can also use embeddings to position similar papers closer together in space. To do so, we use the <a href="https://allenai.org/blog/specter2-adapting-scientific-document-embeddings-to-multiple-fields-and-task-formats-c95686c06567">Specter2 model</a>, accessible via Semantic Scholar's API, which has the benefit of taking into account the similarity of paper titles and abstracts, but also the relative proximity in citation space. That is, a paper can be similar in terms of content but pushed apart by virtue of being cited by different communities. We use <a href="https://umap-learn.readthedocs.io/en/latest/">UMAP</a> to project down the high-dimensional embedding space onto a two-dimensional cartesian plane.</p>
-    
-  <p>Taking Peter again as our example, what is of interest to us is how his exploration of this embedding space might have been modified by his diverse coauthors. We situate Peter's papers within the backdrop of papers written by the UVM 2023 faculty (the papers themselves can be older than that):</p>
-
 
   <div class="charts-container">
     <EmbeddingDotPlot 
@@ -138,35 +133,11 @@
     <small>brush to filter</small>
   </div>
 
-  <p>Brushing the bottom chart over the years, it seems that Peter focused on a mixed bag of computational sciences early on (2015-2016), which makes sense. Starting in 2020-2021, he made incursions into health science. From ground truth, we know that this corresponds to different periods for his lab, with the Mass Mutual funding coming in later on.</p>
-
-  <p>There are a few issues with this plot, such as reducing the high-dimensionality of papers onto two dimensions. Another issue is that earlier papers have worse embedding coverage, which is too bad (we might fix that later on by running the embedding model ourselves).</p>
-
-  <p>All that being said, this plot remains highly informative for getting a glimpse of the UVM ecosystem, and exploring how different periods in collaboration are reflected in how faculty might explore topics.</p>
 </section>
 
 <style>
-  /* Story-wide settings */
- :global(#embeddings) {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
-}
-
-  :global(#embeddings h1) {
-    font-size: var(--font-size-xlarge);
-    margin: 2rem 0 3rem 0;
-    text-align: left;
-    font-family: var(--serif);
-  }
-
-
-section p {
-    font-size: 22px;
-    max-width: 800px;
-    line-height: 1.3;
-    margin-top: 2rem; /* Add more space after paragraphs */
-    margin-bottom: 2rem; /* Add more space after paragraphs */
+  section#embeddings .charts-container {
+    transform: translate(10%) !important;
   }
 </style>
 

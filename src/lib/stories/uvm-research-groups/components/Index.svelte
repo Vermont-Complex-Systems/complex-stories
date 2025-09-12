@@ -108,21 +108,32 @@
               {width} {height} />
           </div>
         </div>
-
       </section>
 
   <!-- Embedding section with intersection observer -->
-  <section class="embeddings" bind:this={embeddingSectionElement}>
-    {#if dataState.loadingEmbeddings}
-      <div class="loading-container">
-        <Spinner />
-      </div>
-    {:else if dataState.EmbeddingsData}
-      <EmbeddingSection embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
+  <section class="embeddings" id="embeddings" bind:this={embeddingSectionElement}>
+    <h2>Embeddings</h2>
+    <p>Instead of using time to position papers, we can also use embeddings to position similar papers closer together in space. To do so, we use the <a href="https://allenai.org/blog/specter2-adapting-scientific-document-embeddings-to-multiple-fields-and-task-formats-c95686c06567">Specter2 model</a>, accessible via Semantic Scholar's API, which has the benefit of taking into account the similarity of paper titles and abstracts, but also the relative proximity in citation space. That is, a paper can be similar in terms of content but pushed apart by virtue of being cited by different communities. We use <a href="https://umap-learn.readthedocs.io/en/latest/">UMAP</a> to project down the high-dimensional embedding space onto a two-dimensional cartesian plane.</p>
+    
+    <p>Taking Peter again as our example, what is of interest to us is how his exploration of this embedding space might have been modified by his diverse coauthors. We situate Peter's papers within the backdrop of papers written by the UVM 2023 faculty (the papers themselves can be older than that):</p>
+
+    <div class="embeddings-container">
+      {#if dataState.loadingEmbeddings}
+        <div class="loading-container">
+          <Spinner />
+        </div>
+      {:else if dataState.EmbeddingsData}
+        <EmbeddingSection embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
     {/if}
+    </div>
+    <p>Brushing the bottom chart over the years, it seems that Peter focused on a mixed bag of computational sciences early on (2015-2016), which makes sense. Starting in 2020-2021, he made incursions into health science. From ground truth, we know that this corresponds to different periods for his lab, with the Mass Mutual funding coming in later on.</p>
+
+    <p>There are a few issues with this plot, such as reducing the high-dimensionality of papers onto two dimensions. Another issue is that earlier papers have worse embedding coverage, which is too bad (we might fix that later on by running the embedding model ourselves).</p>
+
+    <p>All that being said, this plot remains highly informative for getting a glimpse of the UVM ecosystem, and exploring how different periods in collaboration are reflected in how faculty might explore topics.</p>
   </section>
 
-  <section class="conclusion">
+  <section class="introduction">
     <h2>Conclusion</h2>
     <p>We started out by looking at the broader picture of how many groups there were at UVM. Then, we zoomed in on a particular faculty, trying to better understand the coevolution of collaborations and productivity. Our analysis remains limited, as we didn't analyze how the patterns we noticed in the timeline plot generalized to other researchers. This is for a future post.</p>
     <p>In the meantime, you want to carry the same analysis to other faculties at UVM? Visit <a href="{base}/open-academic-analytics">our dashboard</a> for more.</p>
@@ -221,8 +232,26 @@
 
   
   /* Allow story section (with scrolly) to use full wide width */
-  section#story {
+  section#story .scrolly-container {
     width: var(--width-column-wide) !important;
+    max-width: none !important;
+    margin-left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+
+  section#embeddings .embeddings-container{
+    width: var(--width-column-wide) !important;
+    max-width: none !important;
+    margin-left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+  
+  section#embeddings > p{
+      font-size: 22px;
+      max-width: 800px !important;
+      line-height: 1.3 !important;
+      margin-top: 2rem; /* Add more space after paragraphs */
+      margin-bottom: 2rem; /* Add more space after paragraphs */
   }
 
   section h2 {
@@ -237,7 +266,7 @@
     max-width: 600px;
     line-height: 1.3;
     margin: 2rem auto;
-    text-align: center;
+    text-align: left;
     color: var(--color-fg);
   }
 
