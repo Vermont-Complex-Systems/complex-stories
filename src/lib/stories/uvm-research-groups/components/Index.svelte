@@ -1,5 +1,6 @@
 <script>
   import { base } from '$app/paths';
+  import { innerWidth } from 'svelte/reactivity/window';
   import Scrolly from '$lib/components/helpers/Scrolly.svelte';
   import MorphingChart from './MorphingChart.svelte';
   import WaffleChart from './Waffle.svelte';
@@ -19,6 +20,7 @@
   const doddsSection = data.zoomingIn;
   
   let isDark = $state(false);
+  
   let width = $state(950);
   let height = 1800;
   let scrollyIndex = $state();
@@ -83,6 +85,14 @@
       <p>To better understand faculty career trajectories, we build a simple timeline plot showing how scientific productivity coevolves with social collaborations. As a faculty member advances in his career—call him Peter—it is expected that his patterns of collaborations will change. We are interested in a few relevant features to determine from the data when Peter started his research group.</p>
         
       <div class="scrolly-container">
+          <div class="scrolly-chart">
+            <MorphingChart 
+              {scrollyIndex} 
+              DoddsCoauthorData={dataState.DoddsCoauthorData} 
+              DoddsPaperData={dataState.DoddsPaperData} 
+              {width} {height} />
+          </div>
+
           <div class="scrolly-content">
             <div class="spacer"></div>
             <Scrolly bind:value={scrollyIndex}>
@@ -98,14 +108,6 @@
               {/each}
             </Scrolly>
             <div class="spacer"></div>
-          </div>
-          
-          <div class="scrolly-chart">
-            <MorphingChart 
-              {scrollyIndex} 
-              DoddsCoauthorData={dataState.DoddsCoauthorData} 
-              DoddsPaperData={dataState.DoddsPaperData} 
-              {width} {height} />
           </div>
         </div>
       </section>
@@ -231,19 +233,21 @@
   }
 
   
-  /* Allow story section (with scrolly) to use full wide width */
-  section#story .scrolly-container {
-    width: var(--width-column-wide) !important;
-    max-width: none !important;
-    margin-left: 50% !important;
-    transform: translateX(-50%) !important;
-  }
+  /* Allow story section (with scrolly) to use full wide width - desktop only */
+  @media (min-width: 1200px) {
+    section#story .scrolly-container {
+      width: var(--width-column-wide) !important;
+      max-width: none !important;
+      margin-left: 50% !important;
+      transform: translateX(-50%) !important;
+    }
 
-  section#embeddings .embeddings-container{
-    width: var(--width-column-wide) !important;
-    max-width: none !important;
-    margin-left: 50% !important;
-    transform: translateX(-50%) !important;
+    section#embeddings .embeddings-container{
+      width: var(--width-column-wide) !important;
+      max-width: none !important;
+      margin-left: 50% !important;
+      transform: translateX(-50%) !important;
+    }
   }
   
   section#embeddings > p{
@@ -293,9 +297,13 @@
     top: calc(50vh - 350px);
     height: fit-content;
     overflow: visible;
+    grid-column: 2;
+    grid-row: 1;
   }
 
   .scrolly-content {
+    grid-column: 1;
+    grid-row: 1;
     width: 100%;
     max-width: 500px;
   }
@@ -385,8 +393,7 @@
     }
 
     .scrolly-container {
-      grid-template-columns: 1fr;
-      gap: 1rem;
+      display: block;
       margin-top: 2rem;
     }
 
@@ -394,20 +401,44 @@
       position: sticky;
       top: calc(50vh - 200px);
       width: 100%;
-      max-width: 600px;
-      margin: 0 auto;
+      max-width: 90vw;
+      margin: 1rem auto;
+      z-index: -1;
     }
 
     .scrolly-content {
       max-width: none;
+      position: relative;
+      z-index: 10;
+    }
+
+    .step {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .step p {
-      width: 100%;
-      max-width: 600px;
+      width: 90vw;
+      max-width: 90vw;
       margin: 0 auto;
       text-align: center;
       transform: none;
+      background: rgba(255, 255, 255, 0.95) !important;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      position: relative;
+      z-index: 100;
+    }
+
+    .step.active p {
+      background: rgba(255, 255, 255, 0.98) !important;
+    }
+
+    /* Hide legend on mobile */
+    .scrolly-chart :global(.legend) {
+      display: none;
     }
   }
 

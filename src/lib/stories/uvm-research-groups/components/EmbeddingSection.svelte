@@ -3,11 +3,13 @@
   import EmbeddingDotPlot from './EmbeddingDotPlot.svelte';
   import BrushableCoauthorChart from './BrushableCoauthorChart.svelte';
   import * as d3 from 'd3';
-    
+  import { innerWidth } from 'svelte/reactivity/window';
   import { dashboardState } from '../state.svelte';
   import { ageColorScale, processCoauthorData, getCombinedDateRange, parseDate } from '../utils/combinedChartUtils2'
-
+  
   let { embeddingData, coauthorData } = $props();
+  
+  let isMobile = $derived(innerWidth.current <= 1200);
 
   // Process coauthor data into positioned points
   let processedCoauthorData = $derived.by(() => {
@@ -117,20 +119,22 @@
   <div class="charts-container">
     <EmbeddingDotPlot 
       {embeddingData}
-      width={1200} 
-      height={650}
+      width={isMobile ? innerWidth.current : 1200} 
+      height={isMobile ? 350 : 650}
       {selectedCoauthors}
       timeRange={timeRange}
     />
 
-    <BrushableCoauthorChart 
-        displayData={styledCoauthorData}
-        width={chartWidth}
-        height={chartHeight}
-        {timeScale}
-        onBrushSelection={handleBrushSelection}
-    />    
-    <small>brush to filter</small>
+    {#if !isMobile}
+      <BrushableCoauthorChart 
+          displayData={styledCoauthorData}
+          width={chartWidth}
+          height={chartHeight}
+          {timeScale}
+          onBrushSelection={handleBrushSelection}
+      />    
+      <small>brush to filter</small>
+    {/if}
   </div>
 
 </section>
@@ -138,6 +142,12 @@
 <style>
   section#embeddings .charts-container {
     transform: translate(10%) !important;
+  }
+
+  @media (max-width: 1200px) {
+    section#embeddings .charts-container {
+      transform: none !important;
+    }
   }
 </style>
 

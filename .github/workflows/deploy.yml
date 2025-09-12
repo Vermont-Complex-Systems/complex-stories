@@ -48,6 +48,8 @@ jobs:
           # Install dependencies
           npm ci --only=production
           
+          npm install
+          
           # Build the application
           npm run build
           
