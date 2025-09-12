@@ -77,6 +77,7 @@ export async function EmbeddingsData() {
         ORDER BY 
             CASE WHEN ego_aid = 'A5040821463' THEN 1 ELSE 0 END,  -- Peter's papers last
             pub_date  -- Then by date within each group
+        LIMIT 1000
         `);
     return result;
 }

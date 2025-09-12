@@ -1,5 +1,6 @@
 <script>
   import { base } from '$app/paths';
+  import { innerWidth } from 'svelte/reactivity/window';
   import Scrolly from '$lib/components/helpers/Scrolly.svelte';
   import MorphingChart from './MorphingChart.svelte';
   import WaffleChart from './Waffle.svelte';
@@ -19,6 +20,7 @@
   const doddsSection = data.zoomingIn;
   
   let isDark = $state(false);
+  
   let width = $state(950);
   let height = 1800;
   let scrollyIndex = $state();
@@ -83,6 +85,14 @@
       <p>To better understand faculty career trajectories, we build a simple timeline plot showing how scientific productivity coevolves with social collaborations. As a faculty member advances in his career—call him Peter—it is expected that his patterns of collaborations will change. We are interested in a few relevant features to determine from the data when Peter started his research group.</p>
         
       <div class="scrolly-container">
+          <div class="scrolly-chart">
+            <MorphingChart 
+              {scrollyIndex} 
+              DoddsCoauthorData={dataState.DoddsCoauthorData} 
+              DoddsPaperData={dataState.DoddsPaperData} 
+              {width} {height} />
+          </div>
+
           <div class="scrolly-content">
             <div class="spacer"></div>
             <Scrolly bind:value={scrollyIndex}>
@@ -99,30 +109,33 @@
             </Scrolly>
             <div class="spacer"></div>
           </div>
-          
-          <div class="scrolly-chart">
-            <MorphingChart 
-              {scrollyIndex} 
-              DoddsCoauthorData={dataState.DoddsCoauthorData} 
-              DoddsPaperData={dataState.DoddsPaperData} 
-              {width} {height} />
-          </div>
         </div>
-
       </section>
 
   <!-- Embedding section with intersection observer -->
-  <section class="embeddings" bind:this={embeddingSectionElement}>
-    {#if dataState.loadingEmbeddings}
-      <div class="loading-container">
-        <Spinner />
-      </div>
-    {:else if dataState.EmbeddingsData}
-      <EmbeddingSection embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
+  <section class="embeddings" id="embeddings" bind:this={embeddingSectionElement}>
+    <h2>Embeddings</h2>
+    <p>Instead of using time to position papers, we can also use embeddings to position similar papers closer together in space. To do so, we use the <a href="https://allenai.org/blog/specter2-adapting-scientific-document-embeddings-to-multiple-fields-and-task-formats-c95686c06567">Specter2 model</a>, accessible via Semantic Scholar's API, which has the benefit of taking into account the similarity of paper titles and abstracts, but also the relative proximity in citation space. That is, a paper can be similar in terms of content but pushed apart by virtue of being cited by different communities. We use <a href="https://umap-learn.readthedocs.io/en/latest/">UMAP</a> to project down the high-dimensional embedding space onto a two-dimensional cartesian plane.</p>
+    
+    <p>Taking Peter again as our example, what is of interest to us is how his exploration of this embedding space might have been modified by his diverse coauthors. We situate Peter's papers within the backdrop of papers written by the UVM 2023 faculty (the papers themselves can be older than that):</p>
+
+    <div class="embeddings-container">
+      {#if dataState.loadingEmbeddings}
+        <div class="loading-container">
+          <Spinner />
+        </div>
+      {:else if dataState.EmbeddingsData}
+        <EmbeddingSection embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
     {/if}
+    </div>
+    <p>Brushing the bottom chart over the years, it seems that Peter focused on a mixed bag of computational sciences early on (2015-2016), which makes sense. Starting in 2020-2021, he made incursions into health science. From ground truth, we know that this corresponds to different periods for his lab, with the Mass Mutual funding coming in later on.</p>
+
+    <p>There are a few issues with this plot, such as reducing the high-dimensionality of papers onto two dimensions. Another issue is that earlier papers have worse embedding coverage, which is too bad (we might fix that later on by running the embedding model ourselves).</p>
+
+    <p>All that being said, this plot remains highly informative for getting a glimpse of the UVM ecosystem, and exploring how different periods in collaboration are reflected in how faculty might explore topics.</p>
   </section>
 
-  <section class="conclusion">
+  <section class="introduction">
     <h2>Conclusion</h2>
     <p>We started out by looking at the broader picture of how many groups there were at UVM. Then, we zoomed in on a particular faculty, trying to better understand the coevolution of collaborations and productivity. Our analysis remains limited, as we didn't analyze how the patterns we noticed in the timeline plot generalized to other researchers. This is for a future post.</p>
     <p>In the meantime, you want to carry the same analysis to other faculties at UVM? Visit <a href="{base}/open-academic-analytics">our dashboard</a> for more.</p>
@@ -220,9 +233,29 @@
   }
 
   
-  /* Allow story section (with scrolly) to use full wide width */
-  section#story {
-    width: var(--width-column-wide) !important;
+  /* Allow story section (with scrolly) to use full wide width - desktop only */
+  @media (min-width: 1200px) {
+    section#story .scrolly-container {
+      width: var(--width-column-wide) !important;
+      max-width: none !important;
+      margin-left: 50% !important;
+      transform: translateX(-50%) !important;
+    }
+
+    section#embeddings .embeddings-container{
+      width: var(--width-column-wide) !important;
+      max-width: none !important;
+      margin-left: 50% !important;
+      transform: translateX(-50%) !important;
+    }
+  }
+  
+  section#embeddings > p{
+      font-size: 22px;
+      max-width: 800px !important;
+      line-height: 1.3 !important;
+      margin-top: 2rem; /* Add more space after paragraphs */
+      margin-bottom: 2rem; /* Add more space after paragraphs */
   }
 
   section h2 {
@@ -237,7 +270,7 @@
     max-width: 600px;
     line-height: 1.3;
     margin: 2rem auto;
-    text-align: center;
+    text-align: left;
     color: var(--color-fg);
   }
 
@@ -264,9 +297,13 @@
     top: calc(50vh - 350px);
     height: fit-content;
     overflow: visible;
+    grid-column: 2;
+    grid-row: 1;
   }
 
   .scrolly-content {
+    grid-column: 1;
+    grid-row: 1;
     width: 100%;
     max-width: 500px;
   }
@@ -356,8 +393,7 @@
     }
 
     .scrolly-container {
-      grid-template-columns: 1fr;
-      gap: 1rem;
+      display: block;
       margin-top: 2rem;
     }
 
@@ -365,20 +401,44 @@
       position: sticky;
       top: calc(50vh - 200px);
       width: 100%;
-      max-width: 600px;
-      margin: 0 auto;
+      max-width: 90vw;
+      margin: 1rem auto;
+      z-index: -1;
     }
 
     .scrolly-content {
       max-width: none;
+      position: relative;
+      z-index: 10;
+    }
+
+    .step {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .step p {
-      width: 100%;
-      max-width: 600px;
+      width: 90vw;
+      max-width: 90vw;
       margin: 0 auto;
       text-align: center;
       transform: none;
+      background: rgba(255, 255, 255, 0.95) !important;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      position: relative;
+      z-index: 100;
+    }
+
+    .step.active p {
+      background: rgba(255, 255, 255, 0.98) !important;
+    }
+
+    /* Hide legend on mobile */
+    .scrolly-chart :global(.legend) {
+      display: none;
     }
   }
 
