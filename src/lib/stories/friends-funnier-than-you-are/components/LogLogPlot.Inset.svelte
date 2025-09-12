@@ -8,21 +8,21 @@
     frame 
     y={{domain:[0,6], label: "↑ τ"}} 
     x={{domain:[0,0.05]}} 
-    marginTop={10}
+    marginTop={18}
     marginBottom={20}
     marginLeft={0}
     marginRight={20}
     width={200}
-    height={150}
+    height={170}
 >
     <Dot
         {data}
         x = "p"
         y = "tau"
-        fill = {(d) => d.p === p1 ? '#1976d2' : d.p === p2 ? '#f57c00' : 'grey'}
-        stroke = "black"
+        fill = {(d) => d.p === p1 ? '#64b5f6' : d.p === p2 ? '#ffb74d' : '#ddd'}
+        stroke = "grey"
         strokeWidth = 0.5
-        fillOpacity = {(d) => d.p === p1 ? '1.0' : d.p === p2 ? '1.0' : '0.6'}
+        fillOpacity = {(d) => d.p === p1 ? '0.7' : d.p === p2 ? '0.7' : '0.2'}
         r = {3}
     />
     <RuleY
