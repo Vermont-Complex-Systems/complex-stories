@@ -15,8 +15,9 @@
   } = $props();
 
   const style = bgColor ? `--story-bg: ${bgColor};` : "";
-  const imagePath = `${base}/common/thumbnails/screenshots`;
   const finalHref = isExternal ? href : `${base}${href}`;
+  
+  const imagePath = `${base}/common/thumbnails/screenshots`;
 </script>
 
 <div class="story" {style} class:external={isExternal} class:resource class:footer>
