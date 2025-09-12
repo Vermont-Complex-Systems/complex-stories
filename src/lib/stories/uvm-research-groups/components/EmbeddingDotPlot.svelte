@@ -13,6 +13,12 @@
     timeRange = null // [startpub_Year, endpub_Year] or null for no time filtering
   } = $props();
 
+  // Adjust margin for mobile
+  let adjustedMargin = $derived(
+    width <= 500 ? { ...margin, right: 20 } : margin
+  );
+
+
   // Step 1: Extract coauthor names from selection
   let selectedCoauthorNames = $derived(
     new Set(selectedCoauthors.map(c => c.ego_display_name))
@@ -51,8 +57,8 @@
   });
 
   // Calculate inner dimensions
-  let innerWidth = $derived(width - margin.left - margin.right);
-  let innerHeight = $derived(height - margin.top - margin.bottom);
+  let innerWidth = $derived(width - adjustedMargin.left - adjustedMargin.right);
+  let innerHeight = $derived(height - adjustedMargin.top - adjustedMargin.bottom);
 
   let colorFOS = $state('college')
 
@@ -192,7 +198,7 @@
     <rect width={width} height={height} fill="var(--color-bg)" />
     
     <!-- Main plot area -->
-    <g transform="translate({margin.left},{margin.top})">
+    <g transform="translate({adjustedMargin.left},{adjustedMargin.top})">
       
       <!-- Grid lines -->
       {#each xTicks as tick}
