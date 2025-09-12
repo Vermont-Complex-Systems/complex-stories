@@ -68,7 +68,8 @@
         </div>
       </div>
       <div class="logo-container">
-        <img src="{base}/UVM_Seal_Gr.png" alt="University of Vermont Seal" class="logo" />
+        <img src="{base}/UVM_Seal_Gr.png" alt="University of Vermont Seal" class="logo light-seal" />
+        <img src="{base}/UVM_Seal_Gold.png" alt="University of Vermont Seal" class="logo dark-seal" />
       </div>
     </div>
   </header>
@@ -131,11 +132,7 @@
 {/if}
 
 <style>
-    /* Single source of truth for layout */
-     :global(body:has(#uvm-groups-story) main#content) {
-        max-width: var(--width-column-wide);
-    }
-  
+    
   /* Header styling - no layout overrides */
   .story-header {
     margin: 4rem 0 3rem 0;
@@ -162,6 +159,23 @@
     object-fit: contain;
     max-width: 400px;
     transform: translateY(-30px);
+  }
+  
+  /* Dark mode seal switching */
+  .light-seal {
+    display: block;
+  }
+  
+  .dark-seal {
+    display: none;
+  }
+  
+  :global(.dark) .light-seal {
+    display: none;
+  }
+  
+  :global(.dark) .dark-seal {
+    display: block;
   }
 
   /* Typography and basic styling */
@@ -205,6 +219,12 @@
     margin: 3rem 0;
   }
 
+  
+  /* Allow story section (with scrolly) to use full wide width */
+  section#story {
+    width: var(--width-column-wide) !important;
+  }
+
   section h2 {
     font-size: 1.8rem;
     margin: 2rem 0 1rem 0;
@@ -214,9 +234,10 @@
   
   section p {
     font-size: 22px;
-    max-width: 800px;
+    max-width: 600px;
     line-height: 1.3;
-    margin: 2rem 0;
+    margin: 2rem auto;
+    text-align: center;
     color: var(--color-fg);
   }
 
@@ -232,7 +253,7 @@
   /* Scrolly - no layout constraints */
   .scrolly-container {
     display: grid;
-    grid-template-columns: 3fr 7fr;
+    grid-template-columns: 4fr 6fr;
     min-height: 100vh;
     gap: 2rem;
     margin-top: 3rem;
@@ -247,7 +268,7 @@
 
   .scrolly-content {
     width: 100%;
-    max-width: 400px;
+    max-width: 500px;
   }
 
   .spacer {
