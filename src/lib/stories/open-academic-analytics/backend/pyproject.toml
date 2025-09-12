@@ -1,15 +1,16 @@
 [project]
 name = "backend"
-requires-python = ">=3.9,<=3.13.3"
 version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
 dependencies = [
-    "dagster==1.11.2",
-]
-
-[dependency-groups]
-dev = [
-    "dagster-webserver",
-    "dagster-dg-cli",
+    "dagster>=1.11.9",
+    "dagster-dg-cli>=1.11.9",
+    "dagster-duckdb>=0.27.9",
+    "dagster-webserver>=1.11.9",
+    "pandas>=2.3.2",
+    "umap-learn>=0.5.9.post2",
 ]
 
 [build-system]
@@ -24,5 +25,3 @@ root_module = "backend"
 registry_modules = [
     "backend.components.*",
 ]
-
-
