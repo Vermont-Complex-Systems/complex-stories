@@ -27,15 +27,18 @@ jobs:
     - name: Build application
       run: npm run build
 
+    - name: Setup SSH Key
+      if: github.ref == 'refs/heads/main'
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
+
     - name: Deploy to VM
       if: github.ref == 'refs/heads/main'
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.VM_HOST }}
-        username: ${{ secrets.VM_USERNAME }}
-        key: ${{ secrets.VM_SSH_KEY }}
-        port: 22
-        script: |
+      run: |
+        ssh -i ~/.ssh/deploy_key ${{ secrets.VM_USERNAME }}@${{ secrets.VM_HOST }} << 'EOF'
           # Navigate to project directory
           cd ~/complex-stories
           
@@ -55,3 +58,4 @@ jobs:
           pm2 status
           
           echo "Deployment completed successfully!"
+        EOF
