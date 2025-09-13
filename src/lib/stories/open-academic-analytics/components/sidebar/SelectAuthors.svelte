@@ -1,17 +1,15 @@
 <script>
   import { Accordion } from "bits-ui";
-  import { dashboardState, dataState, unique } from '../../state.svelte.js';
+  import { dashboardState, unique } from '../state.svelte.ts';
   import { UserCheck } from "@lucide/svelte";
-
-  let availableAuthors = $derived(unique.authors);      // ✅ Clean
 
   // Filter authors by age if filter is active
   let filteredAuthors = $derived.by(() => {
-    if (!dashboardState.authorAgeFilter) return availableAuthors;
+    if (!dashboardState.authorAgeFilter) return unique.authors;
     
     const [minAge, maxAge] = dashboardState.authorAgeFilter;
-    return availableAuthors.filter(author => {
-      // Now availableAuthors contains objects with current_age
+    return unique.authors.filter(author => {
+      // Now unique.authors contains objects with current_age
       const age = author.current_age || 0;
       return age >= minAge && age <= maxAge;
     });
@@ -20,12 +18,7 @@
   // Extract author names from filtered authors
   let authorNames = $derived.by(() => {
     if (!filteredAuthors || filteredAuthors.length === 0) return [];
-    return filteredAuthors.map(author => author.name);
-  });
-
-  // Convert single selection to array for multiple select, and back
-  let selectedAuthors = $derived.by(() => {
-    return dashboardState.selectedAuthor ? [dashboardState.selectedAuthor] : [];
+    return filteredAuthors.map(author => author.ego_display_name);
   });
 
   function handleSelectionChange(event) {
@@ -37,7 +30,7 @@
   // Show filter status
   let filterStatus = $derived.by(() => {
     if (!dashboardState.authorAgeFilter) return '';
-    const total = availableAuthors.length;
+    const total = unique.authors.length;
     const filtered = filteredAuthors.length;
     return `(${filtered} of ${total} authors)`;
   });
@@ -57,7 +50,7 @@
         multiple 
         class="filter-select-multiple"
         onchange={handleSelectionChange}
-        value={selectedAuthors}
+        value={dashboardState.selectedAuthor}
       >
         {#each authorNames as authorName}
           <option value={authorName} selected={dashboardState.selectedAuthor === authorName}>

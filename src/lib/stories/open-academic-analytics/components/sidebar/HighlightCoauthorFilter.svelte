@@ -1,9 +1,9 @@
 <script>
   import { Accordion } from "bits-ui";
-  import { dashboardState, dataState, unique } from '../../state.svelte.js';
+  import { dashboardState, data, unique } from '../state.svelte.ts';
 
-  let coauthorData = $derived(dataState.coauthorData);
-  let uniqueCoauthor = $derived(unique.coauthors);
+  let coauthorData = $derived(data.coauthor);
+  let uniqueCoauthors = $derived(unique.coauthors);
 
 </script>
 
@@ -30,30 +30,6 @@
       </select>
       
 
-      <!-- Test buttons for debugging -->
-      <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
-        <button 
-          style="padding: 0.25rem 0.5rem; font-size: 0.8em; border: 1px solid #ccc; background: white;"
-          onclick={() => {
-            if (uniqueCoauthors.length > 0) {
-              dashboardState.clickedCoauthor = uniqueCoauthors[0];
-              console.log('🧪 Test set to first coauthor:', uniqueCoauthors[0]);
-            }
-          }}
-        >
-          Test: Select First
-        </button>
-        
-        <button 
-          style="padding: 0.25rem 0.5rem; font-size: 0.8em; border: 1px solid #ccc; background: white;"
-          onclick={() => {
-            dashboardState.clickedCoauthor = '';
-            console.log('🧪 Test cleared');
-          }}
-        >
-          Clear
-        </button>
-      </div>
     </div>
   </Accordion.Content>
 </Accordion.Item>
