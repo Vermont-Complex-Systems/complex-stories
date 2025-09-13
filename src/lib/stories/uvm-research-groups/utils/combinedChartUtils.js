@@ -183,8 +183,8 @@ export function processCombinedDataPoints(coauthorData, paperData, width, height
     .domain([0, 1])
     .range([0, width]);
   
-  const leftCenterX = xScale(0.25);  // Coauthors on left quarter
-  const rightCenterX = xScale(0.6);  // Papers closer to center
+  const leftCenterX = xScale(0.33);  // Coauthors on left quarter
+  const rightCenterX = xScale(0.75);  // Papers closer to center
 
   const parseDate = (dateStr) => {
     // Handle both YYYY-MM-DD and YYYY formats

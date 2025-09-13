@@ -6,7 +6,7 @@ import { paperUrl, coauthorUrl } from '../data/loader.js';
 export const uiState = $state({
     sidebarCollapsed: false,
     isDarkMode: false,
-    debug: true
+    debug: false
 });
 
 export const dashboardState = $state({

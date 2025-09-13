@@ -127,14 +127,12 @@
   .chart-wrapper {
     --chart-grid-color: var(--color-border);
     --chart-text-color: var(--color-secondary-gray);
-    width: 100%;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .chart-svg {
     display: block;
     overflow: visible;
-    max-width: 100%;
   }
 
   .chart-wrapper :global(.year-label) {

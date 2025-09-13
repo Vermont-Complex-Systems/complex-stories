@@ -207,7 +207,9 @@
 <style>
   .coauthor-chart {
     width: 100%;
-    overflow: hidden;
+    overflow: visible;
+    z-index: 10;
+    position: relative;
   }
 
   .chart-container {

@@ -59,6 +59,7 @@
 
   .charts-container {
     margin-bottom: 30px;
+    overflow: visible;
   }
 
   .charts-grid {
@@ -75,7 +76,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .chart-panel h2 {

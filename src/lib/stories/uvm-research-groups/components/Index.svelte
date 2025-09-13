@@ -1,6 +1,8 @@
 <script>
   import { base } from '$app/paths';
+  
   import { innerWidth } from 'svelte/reactivity/window';
+  
   import PersonIcon from './PersonIcon.svelte';
 
   import Scrolly from '$lib/components/helpers/Scrolly.svelte';
@@ -23,7 +25,8 @@
   
   let isDark = $state(false);
   
-  let width = $state(950);
+  let width = $state(innerWidth.current);
+  
   let height = 1800;
   let scrollyIndex = $state();
   
@@ -62,6 +65,7 @@
 {:else}
 
 <article id="uvm-groups-story">
+  
   <header class="story-header">
     <div class="header-content">
       <div class="header-text">
@@ -78,41 +82,42 @@
     </div>
   </header>
 
-  <section class="introduction">
+  <section id="introduction">
     <Intro data={dataState.trainingAggData}/>
-    
-    <section id="story" class="story">  
+  </section>
+  
+  <section id="story" class="story">  
 
-      <h2>Zooming in</h2>
-      <p>To better understand faculty career trajectories, we build a simple timeline plot showing how scientific productivity coevolves with social collaborations. As a faculty member advances in his career—call him Peter—it is expected that his patterns of collaborations will change. We are interested in a few relevant features to determine from the data when Peter started his research group.</p>
-        
-      <div class="scrolly-container">
-          <div class="scrolly-chart">
-            <MorphingChart 
-              {scrollyIndex} 
-              DoddsCoauthorData={dataState.DoddsCoauthorData} 
-              DoddsPaperData={dataState.DoddsPaperData} 
-              {width} {height} />
-          </div>
-
-          <div class="scrolly-content">
-            <div class="spacer"></div>
-            <Scrolly bind:value={scrollyIndex}>
-              {#each doddsSection as text, i}
-                {@const active = scrollyIndex === i}
-                <div class="step" class:active>
-                  {#if text.type === 'markdown'}
-                    <p><Md text={text.value}/></p>
-                  {:else}
-                    <p>{@html text.value}</p>
-                  {/if}
-                </div>
-              {/each}
-            </Scrolly>
-            <div class="spacer"></div>
-          </div>
+    <h2>Zooming in</h2>
+    <p>To better understand faculty career trajectories, we build a simple timeline plot showing how scientific productivity coevolves withsocial collaborations. As a faculty member advances in his career—call him Peter—it is expected that his patterns of collaborations willchange. We are interested in a few relevant features to determine from the data when Peter started his research group.</p>
+      
+    <div class="scrolly-container">
+        <div class="scrolly-chart">
+          <MorphingChart 
+            {scrollyIndex} 
+            DoddsCoauthorData={dataState.DoddsCoauthorData} 
+            DoddsPaperData={dataState.DoddsPaperData} 
+            {width} {height} />
         </div>
-      </section>
+
+        <div class="scrolly-content">
+          <div class="spacer"></div>
+          <Scrolly bind:value={scrollyIndex}>
+            {#each doddsSection as text, i}
+              {@const active = scrollyIndex === i}
+              <div class="step" class:active>
+                {#if text.type === 'markdown'}
+                  <p><Md text={text.value}/></p>
+                {:else}
+                  <p>{@html text.value}</p>
+                {/if}
+              </div>
+            {/each}
+          </Scrolly>
+          <div class="spacer"></div>
+        </div>
+      </div>
+  </section>
 
   <!-- Embedding section with intersection observer -->
   <section class="embeddings" id="embeddings" bind:this={embeddingSectionElement}>
@@ -130,14 +135,14 @@
         <EmbeddingSection embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
     {/if}
     </div>
-    <p>Brushing the bottom chart over the years, it seems that Peter focused on a mixed bag of computational sciences early on (2015-2016), which makes sense. Starting in 2020-2021, he made incursions into health science. From ground truth, we know that this corresponds to different periods for his lab, with the Mass Mutual funding coming in later on.</p>
+    <p>On desktop, we show that by brushing over the years we can see that Peter focused on a mixed bag of computational sciences early on (2015-2016), which makes sense. Starting in 2020-2021, he made incursions into health science. From ground truth, we know that this corresponds to different periods for his lab, with the Mass Mutual funding coming in later on.</p>
 
     <p>There are a few issues with this plot, such as reducing the high-dimensionality of papers onto two dimensions. Another issue is that earlier papers have worse embedding coverage, which is too bad (we might fix that later on by running the embedding model ourselves).</p>
 
     <p>All that being said, this plot remains highly informative for getting a glimpse of the UVM ecosystem, and exploring how different periods in collaboration are reflected in how faculty might explore topics.</p>
   </section>
 
-  <section class="introduction">
+  <section id="conclusion">
     <h2>Conclusion</h2>
     <p>We started out by looking at the broader picture of how many groups there were at UVM. Then, we zoomed in on a particular faculty, trying to better understand the coevolution of collaborations and productivity. Our analysis remains limited, as we didn't analyze how the patterns we noticed in the timeline plot generalized to other researchers. This is for a future post.</p>
     <p>In the meantime, you want to carry the same analysis to other faculties at UVM? Visit <a href="{base}/open-academic-analytics">our dashboard</a> for more.</p>
@@ -194,6 +199,7 @@
   }
 
   /* Typography and basic styling */
+  
   .story-header h1 {
     margin: 0 0 1rem 0;
     font-size: var(--font-size-xlarge);
@@ -230,9 +236,9 @@
   }
 
   /* Sections - no layout constraints */
-  section {
+  /* section {
     margin: 3rem 0;
-  }
+  } */
 
   
   /* Allow story section (with scrolly) to use full wide width - desktop only */
@@ -241,7 +247,7 @@
       width: var(--width-column-wide) !important;
       max-width: none !important;
       margin-left: 50% !important;
-      transform: translateX(-50%) !important;
+      transform: translateX(-45%) !important;
     }
 
     section#embeddings .embeddings-container{
@@ -252,7 +258,7 @@
     }
   }
   
-  section#embeddings > p{
+  section#embeddings > p {
       font-size: 22px;
       max-width: 800px !important;
       line-height: 1.3 !important;
@@ -268,11 +274,6 @@
   }
   
   section p {
-    font-size: 22px;
-    max-width: 600px;
-    line-height: 1.3;
-    margin: 2rem auto;
-    text-align: left;
     color: var(--color-fg);
   }
 
@@ -285,33 +286,39 @@
     text-decoration: underline;
   }
 
-  /* Scrolly - no layout constraints */
+  /* -----------------------------
+
+  Scrolly 
+
+  ----------------------------- */
+
+  /* enforce the left-right layout for text and plot */
   .scrolly-container {
     display: grid;
     grid-template-columns: 4fr 6fr;
     min-height: 100vh;
-    gap: 2rem;
+    gap: 6rem;
     margin-top: 3rem;
   }
-
+  
+  /* make the plot sticky */
   .scrolly-chart {
     position: sticky;
     top: calc(50vh - 350px);
     height: fit-content;
-    overflow: visible;
     grid-column: 2;
     grid-row: 1;
   }
 
+  /* Fix size of sticky text */
   .scrolly-content {
     grid-column: 1;
     grid-row: 1;
     width: 100%;
-    max-width: 500px;
   }
 
   .spacer {
-    height: 75vh;
+    height: 35vh;
   }
 
   .step {
@@ -320,19 +327,17 @@
     align-items: center;
   }
 
+  /* esthetics of sticky text */
   .step p {
     padding: 1rem;
     background: #f5f5f5;
     color: #ccc;
     border-radius: 5px;
-    transform: translateX(-4rem);
     box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
     transition: all 500ms ease;
-    font-size: 18px;
-    line-height: 1.4;
-    margin: 0;
   }
 
+  /* esthetics of sticky text _when active_ */
   .step.active p {
     background: white;
     color: black;

@@ -104,7 +104,7 @@
     if (!plotData.length) return [];
     
     return plotData.map(point => {
-      const pointYear = parseInt(point.year);
+      const pointYear = parseInt(point.publication_year);
       const inYearRange = pointYear >= chartState.yearFilterMin && pointYear <= chartState.yearFilterMax;
       const yearOpacity = inYearRange ? 1 : 0.2;
       
@@ -156,15 +156,16 @@
   }
 </script>
 
-<div class="chart-wrapper">
+<div bind:clientWidth={width} class="chart-wrapper">
   <div class="viz-content">
     <div class="plot-container">
       <svg {width} {height} 
            style="transform: scaleX({chartState.scaleX}) scaleY({chartState.scaleY}) translateY({chartState.translateY}px); transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);">
         
         <g>
-          <text x={width * 0.25} y={MARGIN_TOP - 30} text-anchor="middle" class="chart-label">Coauthors</text>
-          <text x={width * 0.6} y={MARGIN_TOP - 30} text-anchor="middle" class="chart-label">Papers</text>
+          <!-- Match the positioning in combinedChartUtils.js, a bit slopppy -->
+          <text x={width * 0.33} y={MARGIN_TOP - 30} text-anchor="middle" class="chart-label">Coauthors</text>
+          <text x={width * 0.75} y={MARGIN_TOP - 30} text-anchor="middle" class="chart-label">Papers</text>
 
           {#each yearTicks as year}
             {@const yearDate = new Date(year, 0, 1)}
@@ -174,7 +175,6 @@
           {/each}
         </g>
         
-        <!-- FIXED: Updated accessibility labels to use correct column names -->
         {#each displayData as point, index}
           <circle
             cx={point.x}
@@ -223,6 +223,11 @@
     display: flex;
     justify-content: center;
     position: relative;
+    overflow: hidden;
+  }
+  
+  .plot-container svg {
+    transform-origin: center center;
   }
 
   /* SVG element styling using design tokens */
