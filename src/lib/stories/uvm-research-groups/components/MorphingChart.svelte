@@ -14,14 +14,14 @@
   const MARGIN_TOP = 50;
   const MAX_CIRCLE_RADIUS = 15;
 
-  // Step configurations
+  // Step configurations - FIXED: Updated to use correct coauthor IDs
   const stepConfigs = {
     0: { yearRange: [1999, 2025], colorMode: 'age_diff', highlightedAuthor: null, viewMode: 'normal' },
     1: { yearRange: [1999, 2006], colorMode: 'age_diff', highlightedAuthor: null, viewMode: 'normal', translateToYear: 2016 },
     2: { yearRange: [1999, 2025], colorMode: 'shared_institutions', highlightedAuthor: null, viewMode: 'normal', translateToYear: 2017 },
     3: { yearRange: [2006, 2017], colorMode: 'age_diff', highlightedAuthor: null, viewMode: 'normal', translateToYear: 2023 },
-    4: { yearRange: [1999, 2025], colorMode: 'age_diff', highlightedAuthor: 'A5002034958', viewMode: 'overview' },
-    5: { yearRange: [1999, 2025], colorMode: 'age_diff', highlightedAuthor: 'A5078987306', viewMode: 'overview' },
+    4: { yearRange: [1999, 2025], colorMode: 'age_diff', highlightedAuthor: 'https://openalex.org/A5002034958', viewMode: 'overview' },
+    5: { yearRange: [1999, 2025], colorMode: 'age_diff', highlightedAuthor: 'https://openalex.org/A5078987306', viewMode: 'overview' },
     6: { yearRange: [2006, 2025], colorMode: 'age_diff', highlightedAuthor: null, viewMode: 'normal', translateToYear: 2012 },
   };
 
@@ -79,7 +79,7 @@
       yearFilterMax: config.yearRange[1],
       colorMode: config.colorMode,
       highlightedAuthor: config.highlightedAuthor,
-      marginBottom, // Include marginBottom for completeness
+      marginBottom,
       ...viewTransform
     };
   });
@@ -104,11 +104,12 @@
     if (!plotData.length) return [];
     
     return plotData.map(point => {
-      const pointYear = parseInt(point.year);
+      const pointYear = parseInt(point.publication_year);
       const inYearRange = pointYear >= chartState.yearFilterMin && pointYear <= chartState.yearFilterMax;
       const yearOpacity = inYearRange ? 1 : 0.2;
       
-      const isHighlightedAuthor = chartState.highlightedAuthor && point.coauth_aid === chartState.highlightedAuthor;
+      // FIXED: Updated to use correct coauthor_id field
+      const isHighlightedAuthor = chartState.highlightedAuthor && point.coauthor_id === chartState.highlightedAuthor;
       const authorOpacity = chartState.highlightedAuthor ? (isHighlightedAuthor ? 1 : 0.2) : 1;
       
       return {
@@ -132,9 +133,9 @@
     mouseY = event.clientY;
     
     if (point.type === 'paper') {
-      tooltipContent = `Title: ${point.title}\nYear: ${point.year}\nCitations: ${point.cited_by_count}\nCoauthors: ${point.nb_coauthors}`;
+      tooltipContent = `Title: ${point.title}\nYear: ${point.publication_year}\nCitations: ${point.cited_by_count}\nCoauthors: ${point.nb_coauthors}`;
     } else {
-      tooltipContent = `Coauthor: ${point.name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nCollaborations: ${point.collabs}`;
+      tooltipContent = `Coauthor: ${point.coauthor_display_name}\nYear: ${point.publication_year}\nAge difference: ${point.age_diff} years\nCollaborations: ${point.collabs}`;
     }
     
     showTooltip = true;
@@ -155,16 +156,16 @@
   }
 </script>
 
-
-<div class="chart-wrapper">
+<div bind:clientWidth={width} class="chart-wrapper">
   <div class="viz-content">
     <div class="plot-container">
       <svg {width} {height} 
            style="transform: scaleX({chartState.scaleX}) scaleY({chartState.scaleY}) translateY({chartState.translateY}px); transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);">
         
         <g>
-          <text x={width * 0.25} y={MARGIN_TOP - 30} text-anchor="middle" class="chart-label">Coauthors</text>
-          <text x={width * 0.6} y={MARGIN_TOP - 30} text-anchor="middle" class="chart-label">Papers</text>
+          <!-- Match the positioning in combinedChartUtils.js, a bit slopppy -->
+          <text x={width * 0.33} y={MARGIN_TOP - 30} text-anchor="middle" class="chart-label">Coauthors</text>
+          <text x={width * 0.75} y={MARGIN_TOP - 30} text-anchor="middle" class="chart-label">Papers</text>
 
           {#each yearTicks as year}
             {@const yearDate = new Date(year, 0, 1)}
@@ -174,7 +175,6 @@
           {/each}
         </g>
         
-        <!-- Data points with proper accessibility -->
         {#each displayData as point, index}
           <circle
             cx={point.x}
@@ -189,7 +189,7 @@
             tabindex="0"
             aria-label={point.type === 'paper' ? 
               `Paper: ${point.title}, Year: ${point.year}` : 
-              `Coauthor: ${point.name}, Year: ${point.year}`}
+              `Coauthor: ${point.coauthor_display_name}, Year: ${point.year}`}
             onmouseenter={(e) => showPointTooltip(e, point)}
             onmouseleave={hideTooltip}
             onkeydown={(e) => handlePointKeydown(e, point)}
@@ -223,6 +223,11 @@
     display: flex;
     justify-content: center;
     position: relative;
+    overflow: hidden;
+  }
+  
+  .plot-container svg {
+    transform-origin: center center;
   }
 
   /* SVG element styling using design tokens */

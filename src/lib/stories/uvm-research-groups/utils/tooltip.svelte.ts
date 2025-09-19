@@ -12,7 +12,7 @@ export function createTooltipState() {
     if (point.type === 'paper') {
       tooltipContent = `${point.title}\nYear: ${point.year}\nCitations: ${point.cited_by_count}\nCoauthors: ${point.nb_coauthors}`;
     } else {
-      tooltipContent = `${point.name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nCollaborations: ${point.collabs}`;
+      tooltipContent = `${point.coauthor_display_name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nCollaborations: ${point.collabs}`;
     }
     
     showTooltip = true;

@@ -9,8 +9,8 @@
 </script>
 
 <Meta 
-  title="Blog - Complex Stories"
-  description="Insights, tutorials, and thoughts on complex systems, data visualization, and the stories that emerge from data."
+  title="Groups at UVM"
+  description="Research groups at the University of Vermont."
 />
 
 <Research {posts} />

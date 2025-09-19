@@ -12,6 +12,7 @@
     onBrushSelection = () => {} // Callback for brush selection
   } = $props();
 
+  
   // Check if we have training data
   let hasTrainingData = $derived(trainingData && trainingData.length > 0);
   let hasData = $derived(displayData && displayData.length > 0);
@@ -75,8 +76,8 @@
 
   // Coauthor-specific tooltip formatter
   function formatCoauthorTooltip(point) {
-    const institutionName = point.shared_institutions_normalized || point.shared_institutions || 'Unknown';
-    return `Coauthor: ${point.name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nShared Institution: ${institutionName}`;
+    const institutionName = point.shared_institutions || 'Unknown';
+    return `Coauthor: ${point.coauthor_display_name}\nYear: ${point.publication_year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nShared Institution: ${institutionName}`;
   }
 
   function handleChartClick(event) {
@@ -145,7 +146,7 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: rotate(270deg) translate(-45%, -50.3%);
+    transform: rotate(270deg) translate(-45%, -56.4%);
     transform-origin: 0 0;
     border: 2px solid rgb(237, 237, 237);
     width: var(--chart-width);

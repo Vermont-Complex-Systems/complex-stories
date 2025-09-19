@@ -28,14 +28,14 @@ export function createCoauthorPoint(d, targetY) {
     r: radius,
     color: color,
     type: 'coauthor',
-    name: d.coauth_name,
-    year: d.pub_year,
+    coauthor_display_name: d.coauthor_display_name,
+    publication_year: d.publication_year,
     date: d.pub_date,
     age_diff: d.age_diff,
     collabs: d.all_times_collabo,
-    faculty: d.name,
+    ego_display_name: d.ego_display_name,
     shared_institutions: d.shared_institutions,
-    coauth_aid: d.coauth_aid
+    coauthor_id: d.coauthor_id
   };
 }
 
@@ -60,7 +60,7 @@ export function createPaperPoint(d, targetY) {
     color: color,
     type: 'paper',
     title: d.title,
-    year: d.pub_year,
+    publication_year: d.publication_year,
     date: d.pub_date,
     cited_by_count: citedBy,
     nb_coauthors: nbCoauthors,
@@ -183,8 +183,8 @@ export function processCombinedDataPoints(coauthorData, paperData, width, height
     .domain([0, 1])
     .range([0, width]);
   
-  const leftCenterX = xScale(0.25);  // Coauthors on left quarter
-  const rightCenterX = xScale(0.6);  // Papers closer to center
+  const leftCenterX = xScale(0.33);  // Coauthors on left quarter
+  const rightCenterX = xScale(0.75);  // Papers closer to center
 
   const parseDate = (dateStr) => {
     // Handle both YYYY-MM-DD and YYYY formats
@@ -229,7 +229,7 @@ export function processCombinedDataPoints(coauthorData, paperData, width, height
     if (placePoint(point, placedPoints, leftCenterX, coauthorPoints)) {
       placedPoints.push(point);
     } else {
-      console.warn('Could not place coauthor point:', point.name);
+      console.warn('Could not place coauthor point:', point.coauthor_display_name);
       point.x = leftCenterX;
       placedPoints.push(point);
     }

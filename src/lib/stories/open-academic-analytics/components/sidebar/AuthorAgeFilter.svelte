@@ -1,6 +1,6 @@
 <script>
   import * as d3 from 'd3';
-  import { dashboardState, dataState, unique } from '../../state.svelte.ts';
+  import { dashboardState, unique } from '../state.svelte.ts';
 
   let availableAuthors = $derived(unique.authors);      // ✅ Clean
   
