@@ -1,0 +1,54 @@
+{
+	"survey": [
+		{
+			"type": "markdown",
+			"value": "Do you have private or public settings on your social media?"
+		},
+		{
+			"type": "markdown",
+			"value": "Does the platform matter?"
+		},
+		{
+			"type": "markdown",
+			"value": "Maybe this is just one context; what if people preferences vary across institutions?"
+		},
+		{
+			"type": "markdown",
+			"value": "Maybe it matters who you are?"
+		}
+	],
+	"title": "A taste for privacy",
+	"subtitle": "When do people give up their privacy?",
+	"author1": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/jonathan-st-onge>Jonathan St-Onge</a>",
+	"author2": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/juniper-lisa-lovato>Juniper Lovato</a>",
+	"date": "Aug 15, 2025",
+	"intro": [
+		{
+			"type": "markdown",
+			"value": "Spoiler: Privacy depends on who you are and and context."
+		},
+		{
+			"type": "markdown",
+			"value": "Privacy depends on who you are and context. Your willingness to share data varies dramatically across different institutions and relationships."
+		}
+	],
+	"ScrolylSectionTitle": "Zooming out",
+	"steps": [
+		{
+			"type": "markdown",
+			"value": "Question: How comfortable do you feel sharing PII with the following institution?"
+		},
+		{
+			"type": "markdown",
+			"value": "Your personal relationship with institutions varies greatly. Each institution sits at a different distance from you, representing how much you trust them with your personal data."
+		},
+		{
+			"type": "markdown",
+			"value": "But you're not alone in this landscape. Hundreds of others navigate the same institutional relationships, each with their own trust levels and patterns."
+		},
+		{
+			"type": "markdown",
+			"value": "Different demographic groups show strikingly different patterns of institutional trust, reflecting lived experiences and historical relationships with institutions."
+		}
+	]
+}

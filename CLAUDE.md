@@ -76,14 +76,17 @@ story-slug/
 - **Enhanced Images** for optimized image handling
 - **Rehype/Remark** plugins for markdown processing with math and syntax highlighting
 - **Sharp** for image optimization
-- **Reveal.js** for presentation components
+- **Reveal.js** for presentation components  
+- **Additional libraries**: P5.js integration, DOM-to-image conversion, PDF generation (jsPDF), Lucide icons, advanced data analysis tools
 
 ### Build Configuration
 - **Vite** config includes custom path aliases: `$data` → `src/data`, `$styles` → `src/styles`
 - **DSV plugin** for loading CSV/TSV files directly in components
 - **Version/timestamp injection** via `__VERSION__` and `__TIMESTAMP__` globals
-- **Static adapter** with 404.html fallback for SPA routing
-- **Prerendering** with graceful HTTP error handling
+- **Node adapter** is currently configured (not static adapter)
+- **DuckDB WASM** excluded from optimization, with d3-regression included in SSR
+- **Worker format** set to 'es' for modern browser support
+- **Experimental features** enabled: remote functions and async compiler options
 
 ## Adding New Stories
 
@@ -104,5 +107,16 @@ story-slug/
 - Use Svelte 5 runes syntax (`$state`, `$derived`, `$props`) instead of legacy reactive statements
 - Story positioning decisions should be made by parent components
 - The project uses `BASE_PATH` environment variable for deployment path configuration
-- DuckDB is excluded from SSR optimization in vite config
-- Worker format is set to 'es' for modern browser support
+- **Key Utilities**: 
+  - `storyRegistry.js` - Dynamic story component loading system
+  - `duckdb.js` - DuckDB WASM initialization and query utilities
+  - `filterStoryProps.js` - Story metadata filtering for display
+  - Various data processing utilities (slugify, tokenize, numberAsText, etc.)
+
+## Story Development Workflow
+
+1. Check existing stories in `src/lib/stories/` for patterns and conventions
+2. Use the GitHub issue template for story proposals and planning
+3. Follow the story structure with required `components/Index.svelte` and `data/copy.json`
+4. Test stories thoroughly in development mode before adding to `stories.csv`
+5. Consider technical features that showcase best practices in data science and software development
