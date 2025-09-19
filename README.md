@@ -1,6 +1,6 @@
 # Complex Stories
 
-A scientific data storytelling platform built with SvelteKit, showcasing interactive visualizations and computational science research from the Vermont Complex Systems Institute. Inspired by [The Pudding](https://pudding.cool/), 
+A scientific data storytelling platform built with SvelteKit, showcasing interactive visualizations and computational science research from the Vermont Complex Systems Institute. Inspired by [The Pudding](https://pudding.cool/).
 
 ## 🚀 Features
 
@@ -182,14 +182,6 @@ npm run build
 
 Built files will be in the `build/` directory.
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/new-story`
-3. Make your changes following the project structure
-4. Test your changes: `npm run check && npm run build`
-5. Submit a pull request
-
 ### Story Guidelines
 - Focus on scientific accuracy and engaging presentation
 - Include interactive elements where appropriate
@@ -197,19 +189,8 @@ Built files will be in the `build/` directory.
 - Follow accessibility best practices
 - Test on both desktop and mobile devices
 
-## 📄 License
-
-[Add your license information here]
-
 ## 🙏 Acknowledgments
 
 - Inspired by [The Pudding](https://pudding.cool/)
 - Built by the [Vermont Complex Systems Institute](https://vermontcomplexsystems.org/)
 - Powered by the Svelte ecosystem
-
-## 📞 Support
-
-For questions or issues:
-- Open an issue on GitHub
-- Contact the Vermont Complex Systems Institute
-- Review the documentation in `CLAUDE.md` for development guidance
