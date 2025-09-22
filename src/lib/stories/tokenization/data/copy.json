@@ -57,15 +57,11 @@
     },
     {
       "type": "markdown",
-      "value": "In this way"
+      "value": "Here's another layer. Is the model starting to understand the different meanings of 'bank'? Hover over the dots to see the sentences."
     },
     {
       "type": "markdown",
-      "value": "We might understand"
-    },
-    {
-      "type": "markdown",
-      "value": "How the LLM 'understands' the word 'bank'."
+      "value": "And another layer! "
     }
   ]
 }

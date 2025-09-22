@@ -27,11 +27,15 @@
 	
 	let thirdSectionIndex = $state(undefined);
 	let thirdSectionProgress = $state(0);
-	
+
+	let fourthSectionIndex = $state(undefined);
+	let fourthSectionProgress = $state(0);
+
 	const firstSectionSteps = data.firstSection;
 	const secondSectionSteps = data.secondSection;
 	const thirdSectionSteps = data.thirdSection; // Reusing for now
-	
+	const fourthSectionSteps = data.fourthSection; // Reusing for now
+
 	// Safe window width check
 	let innerWidth = $state(browser ? window.innerWidth : 1200);
 	
@@ -55,6 +59,7 @@
 	
 	// Update active section based on which section has an active step
 	$effect(() => {
+		
 		if (firstSectionIndex !== undefined) {
 			activeSection = 'first';
 			activeSectionData = {
@@ -72,6 +77,12 @@
 			activeSectionData = {
 				index: thirdSectionIndex,
 				progress: thirdSectionProgress
+			};
+		} else if (fourthSectionIndex !== undefined) {
+			activeSection = 'fourth';
+			activeSectionData = {
+				index: fourthSectionIndex,
+				progress: fourthSectionProgress
 			};
 		} else {
 			activeSection = 'none';
@@ -141,6 +152,11 @@
 				<ScatterPlot
 					stepCount={activeSectionData.index ?? 0}
 					/>
+			</div>
+		{:else if activeSection === 'fourth'}
+			<div>
+				<p>Some text that will nicely conclude.</p>
+				<p>With future thoughts for future considerations.</p>
 			</div>
 		{/if}
 	</div>
@@ -218,13 +234,24 @@
 		</Scrolly>
 		<div class="spacer"></div>
 	</section>
+
+	<div class="conclusion">
+		<h2>Where do we go from here?</h2>
+		<p>The world's a stage, and we are actors.</p>
+		<p>What role will LLM's play? Do they know something?</p>
+		<p>Time will tell dear ones!</p>
+	</div>
 </div>
 
 <style>
 	/* =============================================================================
 	   STORY THEME SCOPE
 	   ============================================================================= */
-	
+	.conclusion {
+		max-width: 700px;
+		margin: 0 auto;
+		font-size: var(--font-size-medium);
+	}
 	.story-theme {
 		/* Override semantic color tokens for parchment theme */
 		--color-bg: #f8ecd4;
