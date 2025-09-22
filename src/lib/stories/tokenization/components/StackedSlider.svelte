@@ -1,12 +1,14 @@
 <svelte:options runes />
 <script>
+  import trollImg from '../assets/julia-illos/troll.png?url'
+
   // Number of divs/words to highlight
   let value = $state(1);
   const min = 1;
-  const max = 10;
+  const max = 25;
 
   // define value of slider as local variable for binding
-  let {sliderValue, renderMode: renderModeProp, scrollyIndex} = $props();
+  let {sliderValue=1, renderMode: renderModeProp, scrollyIndex} = $props();
   
   
   // if scrollyIndex is greater than 2 change renderMode to 'chars'
@@ -14,8 +16,12 @@
     scrollyIndex > 2 ? 'chars' : (renderModeProp ?? 'words')
   );
 
+  let charCheck = $derived(
+    scrollyIndex > 2 ? true : false
+  )
+
   // Example text
-  const text = "We certainly do not forget you so soon as you forget us. It is perhaps our fate rather than our merit. We cannot help ourselves. We live at home, quiet, confined, and our feelings prey upon us. You are forced on exertion. You have always a profession, pursuits, business of some sort or other, to take you back into the world immediately; and continual occupation and change soon weaken impressions.";
+  const text = "We certainly do not forget you so soon as you forget us. It is perhaps our fate rather than our merit. We cannot help ourselves. We live at home, quiet, confined, and our feelings prey upon us. You are forced on exertion.";
   const words = text.split(" ");
   const chars = text.split("");
 
@@ -37,11 +43,14 @@
   ];
 </script>
 
-
-<div style="margin-bottom: 1.5rem; display: flex; gap: 2rem; align-items: center;">
+<h3>How big is a token?</h3>
+<div style="margin-bottom: 1.5rem; margin-top: 15%;display: flex; gap: 2rem; align-items: center;">
   <div>
     <label for="slider">Number: {sliderValue}</label>
-    <input id="slider" type="range" min={min} max={renderMode === 'words' ? words.length : chars.length} bind:value={sliderValue} />
+    <input id="slider" type="range" min={1} max={25} bind:value={sliderValue} />
+  </div>
+  <div>
+    <img src={trollImg} alt="Troll" style="width: 200px; height: auto;" />
   </div>
 </div>
 
@@ -74,12 +83,22 @@
 {/if}
 
 <!-- Stacked divs -->
-<div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 1.5rem;">
-    {#each Array(Math.ceil(sliderValue / 10)) as _, colIdx}
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-            {#each Array(Math.min(10, sliderValue - colIdx * 10)) as _, rowIdx}
-                <div style="width: 100px; height: 12px; border: 2px solid #888; border-radius: 6px; background: #faf9f6;"></div>
-            {/each}
-        </div>
+ <h4>size of model</h4>
+ 
+{#if !charCheck}
+  <div id="slider" style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; margin-bottom: 1.5rem; max-height: 250px; max-width: 400px; overflow-y: auto;">
+    {#each Array(Math.max(1, max - sliderValue + 1)) as _, i}
+      <div style="width: 50px; height: 12px; border: 2px solid #888; border-radius: 4px; background: #faf9f6; margin-bottom: 8px;"></div>
     {/each}
-</div>
+  </div>
+{/if}
+
+{#if charCheck}
+  <div id="slider" style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; margin-bottom: 1.5rem; max-height: 250px; overflow-y: auto;">
+    {#each Array(Math.max(1, 100)) as _, i}
+      <div style="width: 50px; height: 12px; border: 2px solid #888; border-radius: 4px; background: #faf9f6; margin-bottom: 8px;"></div>
+    {/each}
+  </div>
+{/if}
+
+

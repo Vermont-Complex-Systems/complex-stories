@@ -5,7 +5,11 @@
 	import Hero from './Hero.svelte';
 	import StackedSlider from "./StackedSlider.svelte";
 	import Scatter from "./Scatter.svelte";
+	import ScatterPlot from "./ScatterPlot.svelte";
 	import { browser } from '$app/environment';
+	import { base } from '$app/paths';
+	import letterImg from '../assets/julia-illos/Symbolmapping.png?url'
+	
 	
 	let { story, data } = $props();
 	
@@ -25,7 +29,7 @@
 	
 	const firstSectionSteps = data.firstSection;
 	const secondSectionSteps = data.secondSection;
-	const thirdSectionSteps = data.secondSection; // Reusing for now
+	const thirdSectionSteps = data.thirdSection; // Reusing for now
 	
 	// Safe window width check
 	let innerWidth = $state(browser ? window.innerWidth : 1200);
@@ -84,11 +88,11 @@
 			case 1:
 				return 1;
 			case 2:
-				return 5;
+				return 12;
 			case 3:
 				return 1;
 			default:
-				return 7;
+				return 1;
 		}
 	});
 
@@ -122,10 +126,13 @@
 			</div>
 		{:else if activeSection === 'third'}
 			<div class="chart-content" key="third">
-				<Scatter 
+				<!-- <Scatter 
 					value={activeSectionData.index ?? 0} 
 					steps={thirdSectionSteps} 
-				/>
+				/> -->
+				<ScatterPlot
+					stepCount={activeSectionData.index ?? 0}
+					/>
 			</div>
 		{/if}
 	</div>
@@ -152,8 +159,10 @@
 	
 	<!-- Section Break -->
 	<div class="story-section-break">
+		<img src={letterImg} style="margin: 0 auto;" width="20%" alt="letter being converted to binary ones and zeros" />
 		<h2>What is a token?</h2>
 		<p>Let's explore how language models break down text into manageable pieces.</p>
+		
 	</div>
 	
 	<!-- Second Section -->
@@ -179,7 +188,7 @@
 	<!-- Section Break -->
 	<div class="story-section-break">
 		<h2>The Distributional Hypothesis</h2>
-		<p>The Distributional Hypothesis states that words that occur in the same contexts tend to have similar meanings. So how does an LLM group different words?</p>
+		<p>The Distributional Hypothesis states that words that occur in the same contexts tend to have similar meanings. So how does an LLM group different instances of the same word?</p>
 	</div>
 	
 	<!-- Third Section -->
@@ -253,17 +262,23 @@
 	.global-chart-container {
 		position: fixed;
 		top: calc(50vh - 375px);
-		right: 5%;
-		width: 45%;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 80%;
+		max-width: 1200px;
 		height: 750px;
 		z-index: var(--z-middle);
 		pointer-events: none; /* Allow scrolling through it */
+	}
+
+	/* need to add this so user can click on slider in third section */
+	.story-section {
+		pointer-events: none;
 	}
 	
 	.chart-content {
 		width: 100%;
 		height: 100%;
-		display: flex;
 		align-items: center;
 		justify-content: center;
 		pointer-events: auto; /* Re-enable for chart interactions */
@@ -325,18 +340,19 @@
 	}
 	
 	.step {
-		height: 80vh;
+		height: 90vh;
 		display: flex;
 		align-items: center;
 		justify-content: flex-start;
 		position: relative;
 		z-index: var(--z-top);
+		margin-bottom: 150px;
 	}
 	
 	.step-content {
 		width: 40%;
 		max-width: 500px;
-		margin-left: 5%;
+		margin: 0 auto;
 		padding: 1.5rem 2rem;
 		
 		/* Parchment-themed step styling */
@@ -387,12 +403,10 @@
 	
 	@media (max-width: 768px) {
 		.global-chart-container {
-			position: relative;
-			top: auto;
-			right: auto;
 			width: 100%;
 			height: 400px;
-			margin: 2rem auto;
+			margin: 4rem auto;
+			padding: 0 2rem;
 		}
 		
 		.story-section {
@@ -400,14 +414,14 @@
 		}
 		
 		.step {
-			height: 60vh;
+			height: 120vh;
 			justify-content: center;
 		}
 		
 		.step-content {
 			width: 90%;
 			margin: 0 auto;
-			font-size: var(--font-size-smallish);
+			font-size: 14px;
 			padding: 1rem 1.5rem;
 		}
 		

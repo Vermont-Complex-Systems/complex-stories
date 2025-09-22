@@ -1,3 +1,8 @@
+<script>
+	import { base } from '$app/paths';
+	import imgUrl from '../assets/julia-illos/Tbook1.png?url'
+</script>
+
 <div class="hero-banner">
 	<a
 		class="github-link"
@@ -25,9 +30,9 @@
 				</div>
 			</div>
 			<div class="hero-visual">
-				<div class="placeholder-content">
+				<div>
 					<!-- Your visualization component will go here -->
-					hello
+					<img src={imgUrl} alt="Hero Visual" />
 				</div>
 			</div>
 		</div>
