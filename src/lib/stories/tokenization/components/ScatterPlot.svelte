@@ -18,20 +18,25 @@
 
   const { stepCount, height = 600 } = $props();
 
-  // Responsive width: 100% of window, max 1000px
-  const widthStore = writable(Math.min(window.innerWidth, 1000));
-  let width = Math.min(window.innerWidth, 1000);
-
-  function updateWidth() {
-    width = Math.min(window.innerWidth, 1000);
-    widthStore.set(width);
-  }
-
-  onMount(() => {
-    window.addEventListener('resize', updateWidth);
+  // Responsive width: set based on window size breakpoints
+  import { onDestroy } from 'svelte';
+  let windowWidth = window.innerWidth;
+  function handleResize() {
+    windowWidth = window.innerWidth;
     updateWidth();
-    return () => window.removeEventListener('resize', updateWidth);
+  }
+  onMount(() => {
+    window.addEventListener('resize', handleResize);
+    updateWidth();
   });
+  onDestroy(() => {
+    window.removeEventListener('resize', handleResize);
+  });
+  let width = $state(600);
+  function updateWidth() {
+    console.log('Window width:', windowWidth);
+    width = Math.max(300, windowWidth - 100);
+  }
 
   // Reactive console log for stepCount changes
   $effect(() => {
@@ -62,9 +67,17 @@
     // Handle cases where xData might be empty to prevent Math.min/max errors
     const minX = xData.length > 0 ? Math.min(...xData) : 0;
     const maxX = xData.length > 0 ? Math.max(...xData) : 1;
-    return d3.scaleLinear()
-      .domain([minX, maxX])
-      .range([15, width - 25]);
+
+    // if window width is small, reduce the range
+    if (windowWidth < 500) {
+      return d3.scaleLinear()
+        .domain([minX, maxX])
+        .range([15, width-45]);
+    } else {
+      return d3.scaleLinear()
+        .domain([minX, maxX])
+        .range([15, (width/1.5)-85]);
+    }
   });
 
   const yscale = $derived.by(() => {
@@ -99,7 +112,7 @@
           .attr("cy", (d, i) => yscale(yData[i]))
           .attr("r", 0) // Start with radius 0 for enter animation
           .attr('opacity', 0.9)
-          .style("fill", "steelblue")
+          .style("fill", "#164734")
           .on("mouseover", function(event, d) {
             const i = svg.selectAll("circle").nodes().indexOf(this);
 
@@ -136,22 +149,27 @@
 
           // Add text labels for those indices
           indices.forEach(idx => {
-            // Calculate label position with edge padding
+            // Consistent padding for both circles and labels
+            const paddingLeft = 15;
+            const paddingRight = 25;
             const labelPadding = 12;
             let x = xscale(xData[idx]);
             let y = yscale(yData[idx]) - labelPadding;
 
-            // Ensure label stays within left/right bounds
-            x = Math.max(labelPadding, Math.min(x, width - labelPadding));
-            // Ensure label stays within top/bottom bounds
+            // Clamp x to same range as scale
+            x = Math.max(paddingLeft, Math.min(x, width - paddingRight));
+            // Clamp y to same range as scale
             y = Math.max(labelPadding, Math.min(y, height - labelPadding));
+
+            // Debug log for x positions
+            console.log('Label idx', idx, 'x:', x, 'width:', width);
 
             // Calculate SVG coordinates for the point
             const svgRect = svgElement.getBoundingClientRect();
             const containerRect = document.querySelector('.viz-content').getBoundingClientRect();
 
             // Convert SVG coordinates to container-relative coordinates
-            const labelX = svgRect.left - containerRect.left + xscale(xData[idx]);
+            const labelX = svgRect.left - containerRect.left + x;
             const labelY = svgRect.top - containerRect.top + yscale(yData[idx]);
 
             // Position label above the point
@@ -179,9 +197,9 @@
             d3.select(svgElement)
               .append("line")
               .attr("class", `random-label-line random-label-line-${idx}`)
-              .attr("x1", xscale(xData[idx]))
+              .attr("x1", x)
               .attr("y1", yscale(yData[idx]) - labelOffsetY + 8) // 8px fudge for label height
-              .attr("x2", xscale(xData[idx]))
+              .attr("x2", x)
               .attr("y2", yscale(yData[idx]))
               .attr("stroke", "#333")
               .attr("stroke-width", 1.5)
@@ -243,7 +261,7 @@
     position: relative; /* Needed for absolute positioning of tooltip */
   }
   #plot-container {
-    border: 1px solid #ccc;
+    /* border: 1px solid #ccc; */
   }
   svg {
     display: block;
