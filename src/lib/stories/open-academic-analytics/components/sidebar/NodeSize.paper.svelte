@@ -1,5 +1,5 @@
 <script>
-  import { dashboardState } from '../../state.svelte.ts';
+  import { dashboardState } from '../state.svelte.ts';
 </script>
 
 <div class="color-mode-section">

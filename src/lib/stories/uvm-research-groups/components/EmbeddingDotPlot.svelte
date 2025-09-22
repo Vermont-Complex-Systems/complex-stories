@@ -9,21 +9,28 @@
     width = 800, 
     height = 600,
     margin = { top: 10, right: 155, bottom: 20, left: 0 },
-    selectedCoauthors = [], // Array of ego_aid values to highlight
+    selectedCoauthors = [], // Array of ego_author_id values to highlight
     timeRange = null // [startpub_Year, endpub_Year] or null for no time filtering
   } = $props();
 
+  // Adjust margin for mobile
+  let adjustedMargin = $derived(
+    width <= 500 ? { ...margin, right: 20 } : margin
+  );
 
-    // Step 1: Extract coauthor names from selection
+
+  // Step 1: Extract coauthor names from selection
   let selectedCoauthorNames = $derived(
-    new Set(selectedCoauthors.map(c => c.name))
+    new Set(selectedCoauthors.map(c => c.ego_display_name))
   );
 
-  // Step 2: Filter embedding data to only Peter's papers
+  
+  // Step 2: Filter embedding data to only Peter's papers - FIXED: Use full URL format
   let petersPapers = $derived(
-    embeddingData.filter(point => point.ego_aid === 'A5040821463')
+    embeddingData.filter(point => point.ego_author_id === 'https://openalex.org/A5040821463')
   );
-
+  
+  
   // Step 3: From Peter's papers, find which ones have selected coauthors
   let highlightedPaperIndices = $derived.by(() => {
     if (selectedCoauthors.length === 0) return new Set();
@@ -32,11 +39,12 @@
     
     petersPapers.forEach((paper, originalIndex) => {
       const hasSelectedCoauthor = [...selectedCoauthorNames].some(name => 
-        paper.authors?.includes(name)
+        paper.coauthor_names?.includes(name)
       );
       
+      // FIXED: Use publication_year instead of pub_year
       const isInTimeRange = !timeRange || 
-        (paper.pub_year >= timeRange[0] && paper.pub_year <= timeRange[1]);
+        (paper.publication_year >= timeRange[0] && paper.publication_year <= timeRange[1]);
       
       if (hasSelectedCoauthor && isInTimeRange) {
         // Find the original index in embeddingData
@@ -49,8 +57,8 @@
   });
 
   // Calculate inner dimensions
-  let innerWidth = $derived(width - margin.left - margin.right);
-  let innerHeight = $derived(height - margin.top - margin.bottom);
+  let innerWidth = $derived(width - adjustedMargin.left - adjustedMargin.right);
+  let innerHeight = $derived(height - adjustedMargin.top - adjustedMargin.bottom);
 
   let colorFOS = $state('college')
 
@@ -68,7 +76,8 @@
     }))].filter(Boolean));
 
   const fieldToIndex = $derived(new Map(uniqueFields.map((field, index) => [field, index])));
-
+  
+  
   // Create scales
   let zScale = $derived.by(() => {
     if (!embeddingData.length) return d3.scaleOrdinal();
@@ -119,79 +128,49 @@
   let mouseY = $state(0);
 
   function handleMouseEnter(event, point, i) {
-    const isPeterDodds = point.ego_aid === 'A5040821463';
+    // FIXED: Use full URL format consistently
+    const isPeterDodds = point.ego_author_id === 'https://openalex.org/A5040821463';
     const shouldHighlight = isPeterDodds && highlightedPaperIndices.has(i);
   
-  const shouldShowTooltip = (selectedCoauthors.length === 0 && !timeRange) || shouldHighlight;
+    const shouldShowTooltip = (selectedCoauthors.length === 0 && !timeRange) || shouldHighlight;
   
-  if (shouldShowTooltip) {
-    mouseX = event.clientX;
-    mouseY = event.clientY;
-    tooltipContent = `title: ${point.title.toUpperCase()}\nfos (MAG): ${point.fieldsOfStudy}\nfos (S2): ${point.s2FieldsOfStudy?.split("; ")[1]}\nFaculty main department: ${point.department} (${point.college})\nabstract: ${point.abstract}\nauthors: ${point.authors}\ndoi: ${point.doi}\npub_year: ${point.pub_year}`;
-    showTooltip = true;
+    if (shouldShowTooltip) {
+      mouseX = event.clientX;
+      mouseY = event.clientY;
+      
+      // FIXED: Updated tooltip to use correct column names
+      tooltipContent = `title: ${point.title.toUpperCase()}\nfos (MAG): ${point.fieldsOfStudy || 'N/A'}\nfos (S2): ${point.s2FieldsOfStudy?.split("; ")[1] || 'N/A'}\nFaculty main department: ${point.host_dept || 'N/A'} (${point.college || 'N/A'})\nabstract: ${point.abstract || 'N/A'}\ncoauthors: ${point.coauthor_names || 'N/A'}\ndoi: ${point.doi || 'N/A'}\npub_year: ${point.publication_year || 'N/A'}`;
+      showTooltip = true;
+    }
   }
-}
 
   function handleMouseLeave() {
     showTooltip = false;
   }
 
   const getFieldValue = $derived.by(() => {
-  return (point) => {
-    const fieldValue = colorFOS === 's2FieldsOfStudy' 
-      ? point[colorFOS]?.split("; ")[1] 
-      : point[colorFOS];
-    
-    return fieldValue ? fieldToIndex.get(fieldValue) : null;
-  };
-});
+    return (point) => {
+      const fieldValue = colorFOS === 's2FieldsOfStudy' 
+        ? point[colorFOS]?.split("; ")[1] 
+        : point[colorFOS];
+      
+      return fieldValue ? fieldToIndex.get(fieldValue) : null;
+    };
+  });
 
-  const annotations = [
-    {
-      x: 4.2,  
-      y: 7, 
-      text: "Biomedical",
-      style: {
-        color: "red",
-        fontSize: "14px",
-        fontWeight: "bold",
-        textAnchor: "middle"
-      },
-    },
-    {
-      x: 11.2,  
-      y: 11.5, 
-      text: "Health sciences",
-      style: {
-        color: "red",
-        fontSize: "14px",
-        fontWeight: "bold",
-        textAnchor: "middle"
-      },
-    },
-    {
-      x: 15.2,  
-      y: 6.5, 
-      text: "Social sciences",
-      style: {
-        color: "red",
-        fontSize: "14px",
-        fontWeight: "bold",
-        textAnchor: "middle"
-      },
-    },
-    {
-      x: 11.2,  
-      y: 4.2, 
-      text: "STEM",
-      style: {
-        color: "red",
-        fontSize: "14px",
-        fontWeight: "bold",
-        textAnchor: "middle"
-      },
-    }
-  ]
+  // const annotations = [
+  //   {
+  //     x: 4.2,  
+  //     y: 7, 
+  //     text: "Biomedical",
+  //     style: {
+  //       color: "red",
+  //       fontSize: "14px",
+  //       fontWeight: "bold",
+  //       textAnchor: "middle"
+  //     }
+  //   }
+  // ]
 
 </script>
 
@@ -219,7 +198,7 @@
     <rect width={width} height={height} fill="var(--color-bg)" />
     
     <!-- Main plot area -->
-    <g transform="translate({margin.left},{margin.top})">
+    <g transform="translate({adjustedMargin.left},{adjustedMargin.top})">
       
       <!-- Grid lines -->
       {#each xTicks as tick}
@@ -248,7 +227,7 @@
       
       <!-- Data points -->
       {#each embeddingData as point, i}
-        {@const isPeterDodds = point.ego_aid === 'A5040821463'}
+        {@const isPeterDodds = point.ego_author_id === 'https://openalex.org/A5040821463'}
         {@const shouldHighlight = isPeterDodds && highlightedPaperIndices.has(i)}
         {@const fieldValue = getFieldValue(point)}
         {@const isNullField = fieldValue === null}
@@ -270,7 +249,7 @@
         />
       {/each}
 
-      {#each annotations as annotation}
+      <!-- {#each annotations as annotation}
         <text
           x={xScale(annotation.x)}
           y={yScale(annotation.y)}
@@ -284,7 +263,7 @@
         >
           {annotation.text}
         </text>
-      {/each}
+      {/each} -->
     </g>
   </svg>
 

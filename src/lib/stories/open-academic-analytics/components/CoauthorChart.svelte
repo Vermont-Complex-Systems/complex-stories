@@ -1,68 +1,46 @@
 <script>
   import * as d3 from 'd3';
-  import DodgeChart from '$lib/components/helpers/DodgeChart.svelte';
-  import ChangePointChart from './ChangePointChart.svelte';
-  import Legend from './Legend.svelte';
-  import { dashboardState, dataState } from '../state.svelte.ts';
-  import { processCoauthorData } from '../utils/coauthorUtils.js';
-  
-  // ✅ Import centralized color scales
+  import DodgeChart2 from '$lib/components/helpers/DodgeChart2.svelte';
+  import Legend from './CoauthorChart.Legend.svelte';
+  import { dashboardState, data } from './state.svelte.ts';
   import { 
     ageColorScale, 
     acquaintanceColorScale, 
     createInstitutionColorScale,
     createSharedInstitutionColorScale 
-  } from '../utils/colorScales.js';
-
+  } from './utils/colorScales.js';
+  
   let { width, height, timeScale } = $props();
   
-  let coauthorData = $derived(dataState.coauthorData);
-  let trainingData = $derived(dataState.trainingData);
-
-  // Create radius scale based on collaboration counts
+  let coauthorData = $derived(data.coauthor);
+  
   let radiusScale = $derived.by(() => {
-    if (!coauthorData || coauthorData.length === 0) return null;
+    if (!coauthorData?.length) return null;
     
     const collaborationCounts = coauthorData.map(d => +d.all_times_collabo || 1);
     const [minCollabs, maxCollabs] = d3.extent(collaborationCounts);
     
-    if (minCollabs === maxCollabs) {
-      return () => 5;
-    }
+    if (minCollabs === maxCollabs) return () => 5;
     
     const scale = d3.scaleSqrt()
       .domain([minCollabs, maxCollabs])
-      .range([2.5, 12])
+      .range([2, 14])
       .clamp(true);
     
     return (d) => scale(+d.all_times_collabo || 1);
   });
 
-  // ✅ Fixed: Use correct property name
-  let filteredCoauthorData = $derived.by(() => {
-    if (!coauthorData || !dashboardState.ageFilter) return coauthorData;
-    
-    const [minAge, maxAge] = dashboardState.ageFilter;
-    return coauthorData.filter(d => {
-      const age = +d.author_age || 0;
-      return age >= minAge && age <= maxAge;
-    });
-  });
-
-  // Process coauthor data into positioned points
-  let processedCoauthorData = $derived.by(() => {
-    if (!filteredCoauthorData || filteredCoauthorData.length === 0) return [];
-    return processCoauthorData(filteredCoauthorData, width, height, timeScale, radiusScale);
-  });
-
+  // Create color scale for legend generation
   let colorScale = $derived.by(() => {
-    if (!coauthorData || coauthorData.length === 0) return null;
+    if (!coauthorData?.length) return null;
     
-    if (dashboardState.coauthorNodeColor === 'age_diff') {
+    const colorMode = dashboardState.coauthorNodeColor;
+    
+    if (colorMode === 'age_diff' || colorMode === 'age_category') {
       return ageColorScale;
-    } else if (dashboardState.coauthorNodeColor === 'acquaintance') {
+    } else if (colorMode === 'acquaintance') {
       return acquaintanceColorScale;
-    } else if (dashboardState.coauthorNodeColor === 'institutions') {
+    } else if (colorMode === 'institutions') {
       const institutionField = coauthorData.some(d => d.institution_normalized) 
         ? 'institution_normalized' 
         : 'institution';
@@ -71,7 +49,7 @@
         .filter(inst => inst != null && inst !== '' && inst !== 'Unknown');
       
       return createInstitutionColorScale(uniqueInstitutions);
-    } else if (dashboardState.coauthorNodeColor === 'shared_institutions') {
+    } else if (colorMode === 'shared_institutions') {
       const sharedField = coauthorData.some(d => d.shared_institutions_normalized) 
         ? 'shared_institutions_normalized' 
         : 'shared_institutions';
@@ -85,28 +63,13 @@
     return null;
   });
 
-  // Coauthor-specific tooltip formatter
-  function formatCoauthorTooltip(point) {
-    const institutionName = point.shared_institutions_normalized || point.shared_institutions || 'Unknown';
-    return `Coauthor: ${point.name}\nYear: ${point.year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nShared Institution: ${institutionName}`;
-  }
-
-  // Coauthor-specific click handlers
-  function handleCoauthorClick(event, point) {
-    dashboardState.clickedCoauthor = point.name;
-  }
-
-  function handleChartClick(event) {
-    dashboardState.clickedCoauthor = null;
-  }
-
   // Create legend items based on current color mode and scale
   let legendItems = $derived.by(() => {
     if (!colorScale) return [{ color: '#888888', label: 'Coauthors' }];
     
     const colorMode = dashboardState.coauthorNodeColor;
     
-    if (colorMode === 'age_diff') {
+    if (colorMode === 'age_diff' || colorMode === 'age_category') {
       return [
         { color: colorScale('older'), label: 'Older coauthor (+7 years)' },
         { color: colorScale('same'), label: 'Similar age (±7 years)' },
@@ -125,7 +88,7 @@
       
       const uniqueInstitutions = [...new Set(coauthorData.map(d => d[institutionField]))]
         .filter(inst => inst != null && inst !== '' && inst !== 'Unknown')
-        .slice(0, 8);
+        .slice(0, 8); // Limit to 8 items for display
       
       return uniqueInstitutions.map(inst => ({
         color: colorScale(inst),
@@ -138,7 +101,7 @@
       
       const uniqueSharedInstitutions = [...new Set(coauthorData.map(d => d[sharedField]))]
         .filter(inst => inst != null && inst !== '' && inst !== 'Unknown')
-        .slice(0, 8);
+        .slice(0, 8); // Limit to 8 items for display
       
       return uniqueSharedInstitutions.map(inst => ({
         color: colorScale(inst),
@@ -146,105 +109,97 @@
       }));
     }
     
-    return [{ color: '#888888', label: 'Coauthors' }];
+    return [{ color: '#dcdcdcff', label: 'Coauthors' }];
   });
-
-  // Apply styling and highlighting to coauthor data
-  let displayData = $derived.by(() => {
-    if (!processedCoauthorData.length) return [];
+  // Dynamic color function based on current color mode  
+  const getCoauthorColor = $derived.by(() => {
+    const colorMode = dashboardState.coauthorNodeColor;
     
-    return processedCoauthorData.map(point => {
-      // Get the value for coloring
+    return (d) => {
       let colorValue;
-      const colorMode = dashboardState.coauthorNodeColor;
-      if (colorMode === 'age_diff') {
-        colorValue = point.age_category;
-      } else if (colorMode === 'acquaintance') {
-        colorValue = point.acquaintance;
-      } else if (colorMode === 'institutions') {
-        colorValue = point.institution_normalized || point.institution;
-      } else if (colorMode === 'shared_institutions') {
-        colorValue = point.shared_institutions_normalized || point.shared_institutions;
-      }
-
-      // Styling logic
-      const isNull = colorValue == null || colorValue === '' || colorValue === 'Unknown';
-      let displayColor, opacity, strokeWidth;
-
-      if (isNull) {
-        displayColor = "#888888";
-        opacity = 0.3;
-        strokeWidth = 0.1;
-      } else {
-        // Use the color scale
-        if (colorScale) {
-          if (colorMode === 'acquaintance') {
-            const collabCount = +point.all_times_collabo || 0;
-            displayColor = colorScale(collabCount);
-          } else {
-            displayColor = colorScale(colorValue);
-          }
-        } else {
-          displayColor = "#888888";
-        }
-        opacity = 0.9;
-        strokeWidth = 0.3;
+      
+      switch (colorMode) {
+        case 'age_category':
+        case 'age_diff':
+          colorValue = d.age_category;
+          break;
+          
+        case 'acquaintance':
+          colorValue = +d.all_times_collabo || 0; // Use the actual collaboration count
+          break;
+          
+        case 'institutions': // Note: plural like in your old code
+          // Check which field exists and use it
+          const institutionField = coauthorData.some(item => item.institution_normalized) 
+            ? 'institution_normalized' 
+            : 'institution';
+          colorValue = d[institutionField];
+          break;
+          
+        case 'shared_institutions':
+          // Check which field exists and use it
+          const sharedField = coauthorData.some(item => item.shared_institutions_normalized) 
+            ? 'shared_institutions_normalized' 
+            : 'shared_institutions';
+          colorValue = d[sharedField];
+          break;
+          
+        default:
+          colorValue = d.age_category;
       }
       
-      // ✅ Fixed: Use correct property name
-      if (dashboardState.clickedCoauthor) {
-        const isHighlightedCoauthor = point.name === dashboardState.clickedCoauthor;
-        opacity *= isHighlightedCoauthor ? 1 : 0.2;
+      // Handle null/unknown values
+      if (colorValue == null || colorValue === '' || colorValue === 'Unknown') {
+        return "#dcdcdcff";
       }
       
-      return {
-        ...point,
-        displayColor,
-        opacity,
-        strokeWidth
-      };
-    });
+      return colorScale ? colorScale(colorValue) : "#dcdcdcff";
+    };
   });
 
-  // Check if we have training data and display data
-  let hasTrainingData = $derived(trainingData && trainingData.length > 0);
-  let hasData = $derived(displayData && displayData.length > 0);
+  let hasData = $derived(coauthorData && coauthorData.length > 0);
 
+  function formatTooltip(point) {
+    const d = point.data;
+    const institutionName = d.shared_institutions_normalized || d.shared_institutions || 'Unknown';
+    return `Coauthor: ${d.coauthor_display_name || d.ego_display_name}\nYear: ${d.publication_year}\nAge difference: ${d.age_diff} years\nTotal collaborations: ${d.all_times_collabo}\nShared Institution: ${institutionName}`;
+  }
+
+  function handleCoauthorClick(event, point) {
+    dashboardState.clickedCoauthor = point.data.coauthor_display_name;
+  }
+
+  function handleChartClick(event) {
+    dashboardState.clickedCoauthor = null;
+  }
 </script>
 
 <div class="coauthor-chart">
   <div class="chart-container">
     <!-- Main dodge chart -->
-    <DodgeChart 
-      {displayData}
-      {width}
-      {height}
-      {timeScale}
-      gridStyle="full"
-      formatTooltip={formatCoauthorTooltip}
-      onPointClick={handleCoauthorClick}
+    <DodgeChart2 
+      data={coauthorData} 
+      yField={'pub_date'}
+      colorFunction={getCoauthorColor}
+      highlightedItem={dashboardState.clickedCoauthor} 
+      highlightField={'coauthor_display_name'}                   
+      onPointClick={handleCoauthorClick} 
       onChartClick={handleChartClick}
+      {height} 
+      {width} 
+      {timeScale} 
+      {radiusScale}
+      {formatTooltip}
     />
 
-    <!-- Right side overlay container for Legend and ChangePoint Chart -->
+    <!-- Right side overlay container for Legend -->
     <div class="right-overlay-container">
-      <!-- Legend positioned on the right -->
       <div class="legend-container">
         <Legend 
           {legendItems}
           visible={hasData}
         />
       </div>
-      
-      <!-- ChangePoint Chart positioned underneath legend -->
-      {#if hasTrainingData && dashboardState.coauthorNodeColor === 'age_diff'}
-        <div class="changepoint-container">
-          <ChangePointChart 
-            data={trainingData} 
-            visible={hasTrainingData && dashboardState.coauthorNodeColor === 'age_diff'} 
-          />
-        </div>
-      {/if}
     </div>
   </div>
 </div>
@@ -252,7 +207,9 @@
 <style>
   .coauthor-chart {
     width: 100%;
-    overflow: hidden;
+    overflow: visible;
+    z-index: 10;
+    position: relative;
   }
 
   .chart-container {
@@ -273,18 +230,13 @@
     align-items: flex-end;
   }
 
-  /* Legend positioning - now relative within container */
+  /* Legend positioning */
   .legend-container {
     pointer-events: none;
   }
 
   .legend-container :global(.legend) {
     pointer-events: auto;
-  }
-
-  /* ChangePoint Chart positioning - now relative within container */
-  .changepoint-container {
-    /* No positioning needed - handled by flex container */
   }
 
   /* Responsive design */

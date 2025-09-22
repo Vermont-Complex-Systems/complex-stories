@@ -1,4 +1,4 @@
-ego_aid,paper_id,title,doi,original_file,umap_1,umap_2
+ego_author_id,paper_id,title,doi,original_file,umap_1,umap_2
 A5066791342,cce2e6e1ad3655c5f84aca6119449462fbab1fa5,The Legion System: A Novel Approach to Evolving Hetrogeneity for Collective Problem Solving,https://doi.org/10.1007/978-3-540-46239-2_2,embeddings_A5066791342,15.038102,4.9310794
 A5066791342,3bce6f20190e6b46674065e174828517bb000138,AN EXPLORATION-ESTIMATION ALGORITHM FOR SYNTHESIS AND ANALYSIS OF ENGINEERING SYSTEMS USING MINIMAL PHYSICAL TESTING,https://doi.org/10.1115/detc2004-57574,embeddings_A5066791342,14.633377,6.4621086
 A5066791342,9331784b56e01596f6d11dadea6763b92c18781f,Resilient Machines Through Continuous Self-Modeling,https://doi.org/10.1126/science.1133687,embeddings_A5066791342,15.226418,4.964209

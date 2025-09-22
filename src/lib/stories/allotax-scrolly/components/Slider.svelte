@@ -32,25 +32,25 @@
     .alpha-value {
         font-size: 0.9rem;
         font-weight: 500;
-        color: var(--text-primary);
+        color: #333;
         margin-bottom: 0.25rem;
     }
 
     .slider-container {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-
-        max-width: 300px;
+        display: flex;
         flex-direction: column;
-        gap: 0.25rem;
+        align-items: center;
+        width: 100%;
+        max-width: 300px;
+        gap: 0.5rem;
+        padding: 1rem;
     }
 
     .alpha-slider {
         width: 100%;
-        height: 3px;
-        background-color: var(--border-color);
-        border-radius: 2px;
+        height: 6px;
+        background-color: #ddd;
+        border-radius: 3px;
         outline: none;
         cursor: pointer;
         -webkit-appearance: none;
@@ -60,17 +60,17 @@
     .alpha-slider::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
-        width: 12px;
-        height: 12px;
-        background: var(--accent-color);
+        width: 20px;
+        height: 20px;
+        background: #007cba;
         border-radius: 50%;
         cursor: pointer;
     }
 
     .alpha-slider::-moz-range-thumb {
-        width: 12px;
-        height: 12px;
-        background: var(--accent-color);
+        width: 20px;
+        height: 20px;
+        background: #007cba;
         border-radius: 50%;
         cursor: pointer;
         border: none;
@@ -80,7 +80,7 @@
         display: flex;
         justify-content: space-between;
         font-size: 0.7rem;
-        color: var(--text-muted);
+        color: #666;
         opacity: 0.6;
     }
 </style>

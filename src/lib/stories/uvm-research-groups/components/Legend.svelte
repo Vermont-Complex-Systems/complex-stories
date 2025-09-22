@@ -12,15 +12,15 @@
         {#if colorMode === 'age_diff'}
           <div class="legend-item">
             <div class="legend-dot" style="background: #404788FF;"></div>
-            <span>Older coauthor (+7 years)</span>
+            <span>Older coauthor<br>(+7 years)</span>
           </div>
           <div class="legend-item">
             <div class="legend-dot" style="background: #20A387FF;"></div>
-            <span>Similar age (±7 years)</span>
+            <span>Similar age<br>(±7 years)</span>
           </div>
           <div class="legend-item">
             <div class="legend-dot" style="background: #FDE725FF;"></div>
-            <span>Younger coauthor (-7 years)</span>
+            <span>Younger coauthor<br>(-7 years)</span>
           </div>
         {:else if colorMode === 'shared_institutions'}
           <div class="legend-item">
@@ -58,7 +58,7 @@
 <style>
   .legend {
     position: absolute;
-    right: -200px;
+    right: 0rem;
     top: 2rem;
     background: var(--step-bg);
     border: 1px solid #ddd;
@@ -68,11 +68,10 @@
     font-size: 11px;
     z-index: 100;
     backdrop-filter: blur(10px);
-    min-width: 180px;
+    width: 8rem;
     
     /* Transition properties */
     opacity: 0;
-    transform: translateX(20px);
     transition: opacity 0.6s ease, transform 0.6s ease;
     pointer-events: none;
   }

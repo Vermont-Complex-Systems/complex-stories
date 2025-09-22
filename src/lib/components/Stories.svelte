@@ -20,13 +20,12 @@
   }
 
   ul {
-    padding: 0;
+    padding: 0 4.5rem;
     display: grid;
     grid-template-columns: 1fr;
     gap: 3rem 1.5rem; /* Convert px to rem: 48px = 3rem, 24px = 1.5rem */
     margin: 0 auto;
     max-width: 1400px;
-    padding: 0 1.5rem; /* Convert 24px to rem */
   }
 
   li {
@@ -34,6 +33,12 @@
     list-style-type: none;
     padding: 0;
     --padding: clamp(1.25rem, 3vw, 3.5rem); /* Convert px to rem: 20px=1.25rem, 56px=3.5rem */
+  }
+
+  @media (max-width: 768px) {
+    ul {
+      padding: 0 2rem;
+    }
   }
 
   @media only screen and (min-width: 600px) {

@@ -74,25 +74,22 @@ export function createCoauthorPoint(d, targetY, collaborationScale) {
     y: targetY,
     r: radius,
     type: 'coauthor',
-    name: d.coauth_name,
-    year: d.pub_year,
+    coauthor_name: d.coauthor_name,
+    publication_year: d.publication_year,
     date: d.pub_date,
     age_diff: d.age_diff,
     age_category: ageCategory, // Now using pre-computed value
     all_times_collabo: d.all_times_collabo,
     yearly_collabo: d.yearly_collabo,
     acquaintance: d.acquaintance,
-    coauth_aid: d.coauth_aid,
-    aid: d.aid,
-    author_name: d.name,
-    author_age: d.author_age,
-    coauth_age: d.coauth_age,
-    institution: d.institution,
+    coauthor_id: d.coauthor_id,
+    ego_author_id: d.ego_author_id,
+    ego_display_name: d.ego_display_name,
+    ego_age: d.ego_age,
+    coauthor_age: d.coauthor_age,
+    coauthor_institution: d.coauthor_institution,
     shared_institutions: d.shared_institutions,
-    collaboration_intensity: d.collaboration_intensity,
-    institution_normalized: d.institution_normalized,
-    coauth_institution_normalized: d.coauth_institution_normalized,
-    shared_institutions_normalized: d.shared_institutions_normalized
+    collaboration_intensity: d.collaboration_intensity
   };
 }
 
@@ -119,7 +116,7 @@ export function createPaperPoint(d, targetY, citationScale) {
     work_type: d.work_type,
     doi: d.doi,
     authors: d.authors,
-    ego_aid: d.ego_aid,
+    ego_author_id: d.ego_author_id,
     // Add new pre-computed fields (removed institution_normalized)
     citation_percentile: d.citation_percentile,
     citation_category: d.citation_category
