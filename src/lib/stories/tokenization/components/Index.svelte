@@ -116,7 +116,7 @@
 </script>
 
 <!-- Story wrapper with parchment theme -->
-<div class="story-theme">
+<article id="tokenization-story" class="story-theme">
 	<Hero />
 	
 	<!-- Global sticky chart container -->
@@ -248,7 +248,7 @@
 		<br>
 		<br>
 	</div>
-</div>
+</article>
 
 <style>
 	/* =============================================================================
@@ -259,6 +259,19 @@
 		margin: 0 auto;
 		font-size: var(--font-size-medium);
 	}
+	/* Apply parchment background to body when this story is loaded */
+	:global(body:has(#tokenization-story)) {
+		background-color: #f8ecd4;
+		background-image:
+			url("data:image/svg+xml;utf8,<svg width='400' height='400' xmlns='http://www.w3.org/2000/svg'><filter id='parchment-noise'><feTurbulence type='fractalNoise' baseFrequency='0.055' numOctaves='2' seed='7'/><feColorMatrix type='saturate' values='0.1'/></filter><rect width='100%' height='100%' filter='url(%23parchment-noise)' opacity='0.22'/></svg>"),
+			radial-gradient(ellipse at center, rgba(0,0,0,0) 20%, rgba(80,60,30,0.4) 100%);
+		background-blend-mode: multiply, normal;
+		background-size: 400px 400px, 100% 100%;
+		background-repeat: repeat, no-repeat;
+		background-attachment: fixed;
+		overflow-x: hidden;
+	}
+
 	.story-theme {
 		/* Override semantic color tokens for parchment theme */
 		--color-bg: #f8ecd4;
@@ -276,22 +289,12 @@
 		--story-texture-opacity: 0.22;
 		--story-vignette-strength: 0.4;
 		
-		/* Force full screen coverage */
+		/* Restore full-width layout properties */
 		position: relative;
 		width: 100vw;
 		margin-left: calc(-50vw + 50%);
 		padding: 0;
 		box-sizing: border-box;
-		
-		/* Apply the theme */
-		background-color: var(--color-bg);
-		background-image:
-			url("data:image/svg+xml;utf8,<svg width='400' height='400' xmlns='http://www.w3.org/2000/svg'><filter id='parchment-noise'><feTurbulence type='fractalNoise' baseFrequency='0.055' numOctaves='2' seed='7'/><feColorMatrix type='saturate' values='0.1'/></filter><rect width='100%' height='100%' filter='url(%23parchment-noise)' opacity='0.22'/></svg>"),
-			radial-gradient(ellipse at center, rgba(0,0,0,0) 20%, rgba(80,60,30,0.4) 100%);
-		background-blend-mode: multiply, normal;
-		background-size: 400px 400px, 100% 100%;
-		background-repeat: repeat, no-repeat;
-		background-attachment: fixed;
 		color: var(--color-fg);
 		font-family: var(--font-body);
 		min-height: 100vh;

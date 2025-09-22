@@ -118,16 +118,27 @@
 
             tooltip.style("opacity", 1)
                    .html(data.utterances[i]);
-            // Position tooltip relative to the circle
-            tooltip.style("left", (event.pageX + 10) + "px")
-                   .style("top", (event.pageY + 10) + "px");
-
-            console.log(event)
+            
+            // Get the SVG container bounds for proper positioning
+            const containerRect = document.querySelector('.viz-content').getBoundingClientRect();
+            
+            // Calculate position relative to the container
+            const relativeX = event.clientX - containerRect.left;
+            const relativeY = event.clientY - containerRect.top;
+            
+            tooltip.style("left", (relativeX + 10) + "px")
+                   .style("top", (relativeY - 25) + "px");
           })
           .on("mousemove", function(event, d) {
-            // Optional: make tooltip follow mouse more precisely
-            tooltip.style("left", (event.offsetX - 10) + "px")
-                   .style("top", (event.offsetY + 30) + "px");
+            // Get the SVG container bounds for proper positioning
+            const containerRect = document.querySelector('.viz-content').getBoundingClientRect();
+            
+            // Calculate position relative to the container
+            const relativeX = event.clientX - containerRect.left;
+            const relativeY = event.clientY - containerRect.top;
+            
+            tooltip.style("left", (relativeX + 10) + "px")
+                   .style("top", (relativeY - 25) + "px");
           })
           .on("mouseout", function() {
             tooltip.style("opacity", 0);
@@ -210,24 +221,7 @@
           .duration(750) // Animation duration
           .attr("cx", (d) => xscale(d))
           .attr("cy", (d, i) => yscale(yData[i]))
-          .attr("r", 4)
-            .on("mouseover", function(event, d) {
-            const i = svg.selectAll("circle").nodes().indexOf(this);
-            tooltip.style("opacity", 1)
-                 .html(`X: ${d.toFixed(2)}, Y: ${yData[i].toFixed(2)}`);
-            // Center tooltip vertically over mouse
-            const tooltipRect = tooltip.node().getBoundingClientRect();
-            tooltip.style("left", (event.clientX + 10) + "px")
-                 .style("top", (event.clientY - tooltipRect.height / 2) + "px");
-            })
-            .on("mousemove", function(event, d) {
-            const tooltipRect = tooltip.node().getBoundingClientRect();
-            tooltip.style("left", (event.clientX + 10) + "px")
-                 .style("top", (event.clientY - tooltipRect.height / 2) + "px");
-            })
-            .on("mouseout", function() {
-            tooltip.style("opacity", 0);
-            }),
+          .attr("r", 4),
         exit => exit
           .transition()
           .duration(750) // Animation duration
