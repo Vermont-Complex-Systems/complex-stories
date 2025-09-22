@@ -6,9 +6,7 @@ import { innerWidth } from 'svelte/reactivity/window';
 
 import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 import Scrolly from '$lib/components/helpers/Scrolly.svelte';
-import MobileSettings from './MobileSettings.svelte';
-import OpenAIPolicy from './OpenAIPolicy.svelte';
-import GovernmentApp from './GovernmentApp.svelte';
+import UnifiedPhone from './UnifiedPhone.svelte';
 
 import TrustEvo from './TrustEvo.svelte';
 
@@ -53,22 +51,34 @@ const height = 800;
                         ScrollyIndex: {scrollyIndex}
                     </div>
                     
+                    <!-- Fixed phone that stays in position -->
+                    <div class="fixed-phone-container">
+                        <UnifiedPhone scrollyIndex={scrollyIndex} />
+                    </div>
+                    
+                    <!-- Scrolly steps that trigger content changes -->
                     <Scrolly bind:value={scrollyIndex}>
                         <div class="step">
                             <div class="step-content">
-                                <MobileSettings title="Settings & privacy" />
+                                <!-- This step triggers Facebook settings (scrollyIndex = 0) -->
                             </div>
                         </div>
                         
                         <div class="step">
                             <div class="step-content">
-                                <OpenAIPolicy />
+                                <!-- This step triggers Safari/OpenAI (scrollyIndex = 1) -->
                             </div>
                         </div>
                         
                         <div class="step">
                             <div class="step-content">
-                                <GovernmentApp />
+                                <!-- This step triggers Government app (scrollyIndex = 2) -->
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <div class="step-content">
+                                <!-- This step triggers Demographics (scrollyIndex = 3) -->
                             </div>
                         </div>
                     </Scrolly>
@@ -109,10 +119,17 @@ const height = 800;
     }
     
     .content {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
+        position: relative;
+        min-height: 400vh; /* Make it tall enough for 4 scroll steps */
+    }
+    
+    .fixed-phone-container {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 10;
+        pointer-events: auto;
     }
 
 
@@ -127,81 +144,32 @@ const height = 800;
     }
 
     @media (max-width: 768px) {
-        
-        .logo-container {
-            max-width: 6rem;
-        }
-
-        /* Mobile survey layout */
-        #survey {
-            position: relative;
-        }
-
-        #survey .survey-chart {
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            width: 95vw !important;
-            height: 95vh !important;
-            z-index: 0 !important;
-            max-width: none !important;
-            max-height: none !important;
-            float: none !important;
-        }
-
-
-        #survey .survey-scrolly {
-            position: relative;
-            z-index: 1;
-        }
-
-        .survey-scrolly .scrolly-content {
+        .fixed-phone-container {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 45vw;
-            height: 60vh;
-            z-index: 3;
-            pointer-events: none;
-        }
-
-        .survey-scrolly .scrolly-content .step {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            z-index: 10;
+            width: 100vw;
+            height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            opacity: 0;
-            transition: opacity 500ms ease;
         }
-
-        .survey-scrolly .scrolly-content .step.active {
-            opacity: 1;
-        }
-
-        .survey-scrolly .scrolly-content .step-content {
-            max-width: 220px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-            border-radius: 8px;
-            padding: 1rem;
-            pointer-events: auto;
-            text-align: center;
+        
+        .content {
+            min-height: 400vh; /* Keep the scroll height for step detection */
         }
     }
 
-    /* Step styling */
+    /* Step styling - invisible but trigger scroll changes */
     .step {
         width: 100%;
         height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
+        /* Make steps invisible since we only need them for scroll detection */
     }
 
     .step-content {
@@ -209,8 +177,11 @@ const height = 800;
         max-width: 800px;
         display: flex;
         align-items: center;
-        justify-content: flex-start;
-        text-align: left;
+        justify-content: center;
+        text-align: center;
+        /* Steps are now just scroll triggers, no content needed */
+        opacity: 0;
+        pointer-events: none;
     }
 
     .chart-image {

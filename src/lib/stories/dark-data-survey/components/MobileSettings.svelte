@@ -1,11 +1,16 @@
 <script>
 	import { onMount } from 'svelte';
 
-	let { title = "Settings & privacy", onAnswer = () => {} } = $props();
-	let selectedAnswer = $state('');
+	let { title = "Settings & privacy", stepIndex = 0, onAnswer = () => {} } = $props();
+	let answers = $state({
+		step0: '',
+		step1: '',
+		step2: '',
+		step3: ''
+	});
 
 	function handleAnswerSelect(answer) {
-		selectedAnswer = answer;
+		answers[`step${stepIndex}`] = answer;
 		onAnswer(answer);
 	}
 </script>
@@ -31,86 +36,292 @@
 			<input type="text" placeholder="Search settings" />
 		</div>
 
-		<div class="card">
-			<div class="card-header">
-				<div class="meta-logo">
-					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#1877F2"/>
-					</svg>
-					<span>Meta</span>
+		{#if stepIndex === 0}
+			<!-- Step 0: Facebook Privacy Settings -->
+			<div class="card">
+				<div class="card-header">
+					<div class="meta-logo">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#1877F2"/>
+						</svg>
+						<span>Meta</span>
+					</div>
+				</div>
+				
+				<h2 class="card-title">Privacy Settings</h2>
+				<p class="card-description">
+					How do you typically set your social media privacy?
+				</p>
+
+				<div class="menu-items">
+					<button class="menu-item" class:selected={answers.step0 === 'private'} onclick={() => handleAnswerSelect('private')}>
+						<div class="menu-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="1.5"/>
+								<circle cx="12" cy="16" r="1" stroke="currentColor" stroke-width="1.5"/>
+								<path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+						<span>Private</span>
+						<div class="chevron">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+					</button>
+
+					<button class="menu-item" class:selected={answers.step0 === 'mixed'} onclick={() => handleAnswerSelect('mixed')}>
+						<div class="menu-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+								<circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+						<span>Mixed</span>
+						<div class="chevron">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+					</button>
+
+					<button class="menu-item" class:selected={answers.step0 === 'public'} onclick={() => handleAnswerSelect('public')}>
+						<div class="menu-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+								<path d="M2 12h20" stroke="currentColor" stroke-width="1.5"/>
+								<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="1.5"/>
+							</svg>
+						</div>
+						<span>Public</span>
+						<div class="chevron">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+					</button>
+
+					<button class="menu-item" class:selected={answers.step0 === 'depends'} onclick={() => handleAnswerSelect('depends')}>
+						<div class="menu-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/>
+								<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.5"/>
+							</svg>
+						</div>
+						<span>It depends</span>
+						<div class="chevron">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+					</button>
 				</div>
 			</div>
 			
-			<h2 class="card-title">Privacy Settings</h2>
-			<p class="card-description">
-				How do you typically set your social media privacy?
-			</p>
-
-			<div class="menu-items">
-				<button class="menu-item" class:selected={selectedAnswer === 'private'} onclick={() => handleAnswerSelect('private')}>
-					<div class="menu-icon">
+		{:else if stepIndex === 1}
+			<!-- Step 1: Platform Preference -->
+			<div class="card">
+				<div class="card-header">
+					<div class="meta-logo">
 						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="1.5"/>
-							<circle cx="12" cy="16" r="1" stroke="currentColor" stroke-width="1.5"/>
-							<path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+							<circle cx="12" cy="12" r="10" stroke="#1877F2" stroke-width="2"/>
+							<path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="#1877F2" stroke-width="2" stroke-linecap="round"/>
+							<path d="M9 9h.01" stroke="#1877F2" stroke-width="2" stroke-linecap="round"/>
+							<path d="M15 9h.01" stroke="#1877F2" stroke-width="2" stroke-linecap="round"/>
 						</svg>
+						<span>Platform Settings</span>
 					</div>
-					<span>Private</span>
-					<div class="chevron">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
-					</div>
-				</button>
+				</div>
+				
+				<h2 class="card-title">Platform Preferences</h2>
+				<p class="card-description">
+					Does the platform matter for your privacy decisions?
+				</p>
 
-				<button class="menu-item" class:selected={selectedAnswer === 'mixed'} onclick={() => handleAnswerSelect('mixed')}>
-					<div class="menu-icon">
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-							<circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
-					</div>
-					<span>Mixed</span>
-					<div class="chevron">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
-					</div>
-				</button>
+				<div class="menu-items">
+					<button class="menu-item" class:selected={answers.step1 === 'yes'} onclick={() => handleAnswerSelect('yes')}>
+						<div class="menu-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+								<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+							</svg>
+						</div>
+						<span>Yes, platform matters</span>
+						<div class="chevron">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+					</button>
 
-				<button class="menu-item" class:selected={selectedAnswer === 'public'} onclick={() => handleAnswerSelect('public')}>
-					<div class="menu-icon">
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
-							<path d="M2 12h20" stroke="currentColor" stroke-width="1.5"/>
-							<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="1.5"/>
-						</svg>
-					</div>
-					<span>Public</span>
-					<div class="chevron">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
-					</div>
-				</button>
+					<button class="menu-item" class:selected={answers.step1 === 'no'} onclick={() => handleAnswerSelect('no')}>
+						<div class="menu-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+								<path d="M15 9l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+								<path d="M9 9l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+							</svg>
+						</div>
+						<span>No, same across platforms</span>
+						<div class="chevron">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+					</button>
 
-				<button class="menu-item" class:selected={selectedAnswer === 'depends'} onclick={() => handleAnswerSelect('depends')}>
-					<div class="menu-icon">
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/>
-							<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.5"/>
-						</svg>
-					</div>
-					<span>It depends</span>
-					<div class="chevron">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
-					</div>
-				</button>
+					<button class="menu-item" class:selected={answers.step1 === 'sometimes'} onclick={() => handleAnswerSelect('sometimes')}>
+						<div class="menu-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+								<path d="M8 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+							</svg>
+						</div>
+						<span>Sometimes</span>
+						<div class="chevron">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+					</button>
+				</div>
 			</div>
 
-		</div>
+		{:else if stepIndex === 2}
+			<!-- Step 2: Institution Type -->
+			<div class="card">
+				<div class="card-header">
+					<div class="meta-logo">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z" stroke="#1877F2" stroke-width="1.5" fill="none"/>
+						</svg>
+						<span>Institution Privacy</span>
+					</div>
+				</div>
+				
+				<h2 class="card-title">Institution Preferences</h2>
+				<p class="card-description">
+					Do your privacy preferences vary by institution type?
+				</p>
+
+				<div class="menu-items">
+					<button class="menu-item" class:selected={answers.step2 === 'vary-greatly'} onclick={() => handleAnswerSelect('vary-greatly')}>
+						<div class="menu-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M3 3l18 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+								<path d="M3 21l18-18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+							</svg>
+						</div>
+						<span>Vary greatly</span>
+						<div class="chevron">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+					</button>
+
+					<button class="menu-item" class:selected={answers.step2 === 'mostly-same'} onclick={() => handleAnswerSelect('mostly-same')}>
+						<div class="menu-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+						<span>Mostly the same</span>
+						<div class="chevron">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+					</button>
+
+					<button class="menu-item" class:selected={answers.step2 === 'depends-context'} onclick={() => handleAnswerSelect('depends-context')}>
+						<div class="menu-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<circle cx="12" cy="12" r="1" stroke="currentColor" stroke-width="1.5"/>
+								<circle cx="19" cy="12" r="1" stroke="currentColor" stroke-width="1.5"/>
+								<circle cx="5" cy="12" r="1" stroke="currentColor" stroke-width="1.5"/>
+							</svg>
+						</div>
+						<span>Depends on context</span>
+						<div class="chevron">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+					</button>
+				</div>
+			</div>
+
+		{:else}
+			<!-- Step 3: Demographics -->
+			<div class="card">
+				<div class="card-header">
+					<div class="meta-logo">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#1877F2" stroke-width="1.5"/>
+							<circle cx="9" cy="7" r="4" stroke="#1877F2" stroke-width="1.5"/>
+							<path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="#1877F2" stroke-width="1.5"/>
+							<path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="#1877F2" stroke-width="1.5"/>
+						</svg>
+						<span>Demographics</span>
+					</div>
+				</div>
+				
+				<h2 class="card-title">Personal Demographics</h2>
+				<p class="card-description">
+					Do demographics (who you are) influence your privacy preferences?
+				</p>
+
+				<div class="menu-items">
+					<button class="menu-item" class:selected={answers.step3 === 'yes'} onclick={() => handleAnswerSelect('yes')}>
+						<div class="menu-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.5"/>
+								<circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/>
+							</svg>
+						</div>
+						<span>Yes, who I am matters</span>
+						<div class="chevron">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+					</button>
+
+					<button class="menu-item" class:selected={answers.step3 === 'no'} onclick={() => handleAnswerSelect('no')}>
+						<div class="menu-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.5"/>
+								<circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/>
+								<path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="1.5"/>
+								<path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.5"/>
+							</svg>
+						</div>
+						<span>No, preferences are universal</span>
+						<div class="chevron">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+					</button>
+
+					<button class="menu-item" class:selected={answers.step3 === 'somewhat'} onclick={() => handleAnswerSelect('somewhat')}>
+						<div class="menu-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M8 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+								<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+							</svg>
+						</div>
+						<span>Somewhat</span>
+						<div class="chevron">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+					</button>
+				</div>
+			</div>
+		{/if}
 
 		<div class="separator"></div>
 
