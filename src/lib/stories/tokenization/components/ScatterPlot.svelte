@@ -14,7 +14,24 @@
   import data from '../data/embeddings-2d.json'; // Assuming this path is correct
 
   // Define props with default values for width and height
-  const { stepCount, width = 600, height = 600 } = $props();
+  import { writable } from 'svelte/store';
+
+  const { stepCount, height = 600 } = $props();
+
+  // Responsive width: 100% of window, max 1000px
+  const widthStore = writable(Math.min(window.innerWidth, 1000));
+  let width = Math.min(window.innerWidth, 1000);
+
+  function updateWidth() {
+    width = Math.min(window.innerWidth, 1000);
+    widthStore.set(width);
+  }
+
+  onMount(() => {
+    window.addEventListener('resize', updateWidth);
+    updateWidth();
+    return () => window.removeEventListener('resize', updateWidth);
+  });
 
   // Reactive console log for stepCount changes
   $effect(() => {
@@ -24,7 +41,8 @@
   // Derived reactive data for x and y coordinates based on stepCount
   // Ensure stepCount is a valid index, otherwise default to a safe value like 0
   const currentStepData = $derived.by(() => {
-    const step = Math.max(0, Math.min(stepCount, data.svd_2d_results.length - 1));
+    let step = Math.max(0, Math.min(stepCount, data.svd_2d_results.length - 1));
+    step = step + 5;
     return data.svd_2d_results[step] || [];
   });
 
@@ -70,7 +88,7 @@
     const tooltip = d3.select(tooltipElement);
 
     // Remove previous text labels
-    svg.selectAll('.random-label').remove();
+    svg.selectAll('.viz-content').remove();
 
     // Join new data with existing circles, update positions with transition
     svg.selectAll("circle")
@@ -95,22 +113,26 @@
           })
           .on("mousemove", function(event, d) {
             // Optional: make tooltip follow mouse more precisely
-            tooltip.style("left", (event.offsetX - 20) + "px")
-                   .style("top", (event.offsetY + 200) + "px");
+            tooltip.style("left", (event.offsetX - 10) + "px")
+                   .style("top", (event.offsetY + 30) + "px");
           })
           .on("mouseout", function() {
             tooltip.style("opacity", 0);
           })
           .transition()
-          .duration(750) // Animation duration
-          .attr("r", 5), // Animate to radius 5
+          .duration(1500) // Animation duration
+          .attr("r", 4), // Animate to radius 5
         update => update
           .transition()
           .on("end", function(_, i) {
         // Only run once after all transitions
         if (i === xData.length - 1) {
-          // Select 5 random indices
+          // Select 3 unique random indices
           const indices = getRandomIndices(xData.length, 3);
+
+          // Remove all previous random labels and lines before adding new ones
+          d3.selectAll('.random-label-html').remove();
+          d3.selectAll('.random-label-line').remove();
 
           // Add text labels for those indices
           indices.forEach(idx => {
@@ -124,40 +146,70 @@
             // Ensure label stays within top/bottom bounds
             y = Math.max(labelPadding, Math.min(y, height - labelPadding));
 
-            svg.append('text')
-              .attr('class', 'random-label')
-              .attr('x', x)
-              .attr('y', y)
-              .attr('text-anchor', 'middle')
-              .attr('font-size', 14)
-              .attr('font-weight', 'bold')
-              .attr('fill', '#333')
-              .attr('stroke', '#fff')
-              .attr('stroke-width', 2)
-              .attr('paint-order', 'stroke')
+            // Calculate SVG coordinates for the point
+            const svgRect = svgElement.getBoundingClientRect();
+            const containerRect = document.querySelector('.viz-content').getBoundingClientRect();
+
+            // Convert SVG coordinates to container-relative coordinates
+            const labelX = svgRect.left - containerRect.left + xscale(xData[idx]);
+            const labelY = svgRect.top - containerRect.top + yscale(yData[idx]);
+
+            // Position label above the point
+            const labelOffsetY = 32; // pixels above the point
+
+            // Draw the label as an absolutely positioned div
+            d3.select(".viz-content")
+              .append("div")
+              .attr("class", `random-label-html random-label-html-${idx}`)
+              .style("position", "absolute")
+              .style("left", `${labelX}px`)
+              .style("top", `${labelY - labelOffsetY}px`)
+              .style("transform", "translate(-50%, -100%)")
+              .style("font-size", "1rem")
+              .style("font-weight", "bold")
+              .style("color", "#333")
+              .style("background", "#fff")
+              .style("padding", "2px 8px")
+              .style("border-radius", "5px")
+              .style("box-shadow", "0 2px 8px rgba(0,0,0,0.1)")
+              .style("pointer-events", "none")
               .text(data.utterances[idx]);
+
+            // Draw a line from the label to the point using SVG
+            d3.select(svgElement)
+              .append("line")
+              .attr("class", `random-label-line random-label-line-${idx}`)
+              .attr("x1", xscale(xData[idx]))
+              .attr("y1", yscale(yData[idx]) - labelOffsetY + 8) // 8px fudge for label height
+              .attr("x2", xscale(xData[idx]))
+              .attr("y2", yscale(yData[idx]))
+              .attr("stroke", "#333")
+              .attr("stroke-width", 1.5)
+              .attr("opacity", 0.7);
           });
         }
       })
           .duration(750) // Animation duration
           .attr("cx", (d) => xscale(d))
           .attr("cy", (d, i) => yscale(yData[i]))
-          .attr("r", 5)
-          .on("mouseover", function(event, d) {
+          .attr("r", 4)
+            .on("mouseover", function(event, d) {
             const i = svg.selectAll("circle").nodes().indexOf(this);
             tooltip.style("opacity", 1)
-                   .html(`X: ${d.toFixed(2)}, Y: ${yData[i].toFixed(2)}`);
-            tooltip.style("left", event.clientX + "px")
-                   .style("top", event.clientY + "px");
-          })
-          .on("mousemove", function(event, d) {
-            
-            tooltip.style("left", event.clientX + "px")
-                   .style("top", event.clientY + "px");
-          })
-          .on("mouseout", function() {
+                 .html(`X: ${d.toFixed(2)}, Y: ${yData[i].toFixed(2)}`);
+            // Center tooltip vertically over mouse
+            const tooltipRect = tooltip.node().getBoundingClientRect();
+            tooltip.style("left", (event.clientX + 10) + "px")
+                 .style("top", (event.clientY - tooltipRect.height / 2) + "px");
+            })
+            .on("mousemove", function(event, d) {
+            const tooltipRect = tooltip.node().getBoundingClientRect();
+            tooltip.style("left", (event.clientX + 10) + "px")
+                 .style("top", (event.clientY - tooltipRect.height / 2) + "px");
+            })
+            .on("mouseout", function() {
             tooltip.style("opacity", 0);
-          }),
+            }),
         exit => exit
           .transition()
           .duration(750) // Animation duration
@@ -192,8 +244,6 @@
   }
   #plot-container {
     border: 1px solid #ccc;
-    
-rgb(137, 137, 137)    padding: 10px;
   }
   svg {
     display: block;

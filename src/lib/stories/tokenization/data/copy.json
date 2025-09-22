@@ -49,7 +49,7 @@
   "thirdSection": [
     {
       "type": "markdown",
-      "value": "We can examine the layers of the model to see how it processes tokens. In this graph, each dot is a sentence with the word 'bank' in it. Here is one layer of the model."
+      "value": "We can examine the layers of the model to see how it processes tokens. In this graph, each dot is a sentence with the word 'bank' in it, grouped by similarity. Here is one layer of the model."
     },
     {
       "type": "markdown",

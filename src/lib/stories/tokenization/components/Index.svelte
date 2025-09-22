@@ -2,6 +2,7 @@
 	import Scrolly from "$lib/components/helpers/Scrolly.svelte";
 	import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 	import TextInterpolator from "./TextInterpolator.svelte";
+	import MobileTextInterpolator from "./MobileTextInterpolator.svelte";
 	import Hero from './Hero.svelte';
 	import StackedSlider from "./StackedSlider.svelte";
 	import Scatter from "./Scatter.svelte";
@@ -111,10 +112,17 @@
 	<div class="global-chart-container">
 		{#if activeSection === 'first'}
 			<div class="chart-content" key="first">
-				<TextInterpolator 
-					progress={activeSectionData.progress ?? 0} 
-					currentStep={activeSectionData.index ?? 0} 
-				/>
+				{#if innerWidth > 800}
+					<TextInterpolator 
+						progress={activeSectionData.progress ?? 0} 
+						currentStep={activeSectionData.index ?? 0} 
+					/>
+				{:else}
+					<MobileTextInterpolator 
+						progress={activeSectionData.progress ?? 0} 
+						currentStep={activeSectionData.index ?? 0} 
+					/>
+				{/if}
 			</div>
 		{:else if activeSection === 'second'}
 			<div class="chart-content" key="second">
@@ -347,6 +355,7 @@
 		position: relative;
 		z-index: var(--z-top);
 		margin-bottom: 150px;
+		opacity: 0.95;
 	}
 	
 	.step-content {

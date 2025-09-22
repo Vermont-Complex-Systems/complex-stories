@@ -44,7 +44,7 @@
 </script>
 
 <h3>How big is a token?</h3>
-<div style="margin-bottom: 1.5rem; margin-top: 15%;display: flex; gap: 2rem; align-items: center;">
+<div style="margin-bottom: 1.5rem; margin-top: 5%;display: flex; gap: 2rem; align-items: center;">
   <div>
     <label for="slider">Number: {sliderValue}</label>
     <input id="slider" type="range" min={1} max={25} bind:value={sliderValue} />
@@ -57,7 +57,7 @@
 
 <!-- Highlighted text (words or characters) -->
 {#if renderMode === 'words'}
-  <p style="font-size: 1.2rem; line-height: 1.7;">
+  <p class="highlighted-text">
     {#each words as word, i}
       {#if sliderValue > 0}
         <span style="background: {highlightColors[Math.floor(i / sliderValue) % highlightColors.length]}; border-radius: 4px; padding: 0 4px; transition: background 0.8s;">
@@ -69,7 +69,7 @@
     {/each}
   </p>
 {:else}
-  <p style="font-size: 1.2rem; line-height: 1.7; word-break: break-all;">
+  <p class="highlighted-text">
     {#each chars as char, i}
       {#if sliderValue > 0}
         <span style="background: {highlightColors[Math.floor(i / sliderValue) % highlightColors.length]}; border-radius: 4px; padding: 0 2px; transition: background 0.8s;">
@@ -101,4 +101,18 @@
   </div>
 {/if}
 
+<style>
+  .highlighted-text {
+    font-size: 1.2rem; 
+    line-height: 1.7; 
+    word-break: break-all;
+  }
+
+  @media (max-width: 800px) {
+    .highlighted-text {
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+  }
+</style>
 
