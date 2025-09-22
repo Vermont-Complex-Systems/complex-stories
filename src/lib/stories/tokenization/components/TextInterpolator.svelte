@@ -83,7 +83,7 @@ function getInterpolatedTexts() {
 }
 </script>
 
-<svg width="800" height="650" id="word-chart">
+<svg width="800" height="600" id="word-chart" style="margin-left: 100px">
     {#if currentStep > 0 && currentStep < 3}
     {@html links}
     {/if}

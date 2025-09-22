@@ -2,10 +2,15 @@
 	import Scrolly from "$lib/components/helpers/Scrolly.svelte";
 	import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 	import TextInterpolator from "./TextInterpolator.svelte";
+	import MobileTextInterpolator from "./MobileTextInterpolator.svelte";
 	import Hero from './Hero.svelte';
 	import StackedSlider from "./StackedSlider.svelte";
 	import Scatter from "./Scatter.svelte";
+	import ScatterPlot from "./ScatterPlot.svelte";
 	import { browser } from '$app/environment';
+	import { base } from '$app/paths';
+	import letterImg from '../assets/julia-illos/Symbolmapping.png?url'
+	
 	
 	let { story, data } = $props();
 	
@@ -22,11 +27,15 @@
 	
 	let thirdSectionIndex = $state(undefined);
 	let thirdSectionProgress = $state(0);
-	
+
+	let fourthSectionIndex = $state(undefined);
+	let fourthSectionProgress = $state(0);
+
 	const firstSectionSteps = data.firstSection;
 	const secondSectionSteps = data.secondSection;
-	const thirdSectionSteps = data.secondSection; // Reusing for now
-	
+	const thirdSectionSteps = data.thirdSection; // Reusing for now
+	const fourthSectionSteps = data.fourthSection; // Reusing for now
+
 	// Safe window width check
 	let innerWidth = $state(browser ? window.innerWidth : 1200);
 	
@@ -50,6 +59,7 @@
 	
 	// Update active section based on which section has an active step
 	$effect(() => {
+		
 		if (firstSectionIndex !== undefined) {
 			activeSection = 'first';
 			activeSectionData = {
@@ -68,6 +78,12 @@
 				index: thirdSectionIndex,
 				progress: thirdSectionProgress
 			};
+		} else if (fourthSectionIndex !== undefined) {
+			activeSection = 'fourth';
+			activeSectionData = {
+				index: fourthSectionIndex,
+				progress: fourthSectionProgress
+			};
 		} else {
 			activeSection = 'none';
 			activeSectionData = {};
@@ -84,11 +100,11 @@
 			case 1:
 				return 1;
 			case 2:
-				return 5;
+				return 12;
 			case 3:
 				return 1;
 			default:
-				return 7;
+				return 1;
 		}
 	});
 
@@ -100,17 +116,24 @@
 </script>
 
 <!-- Story wrapper with parchment theme -->
-<div class="story-theme">
+<article id="tokenization-story" class="story-theme">
 	<Hero />
 	
 	<!-- Global sticky chart container -->
 	<div class="global-chart-container">
 		{#if activeSection === 'first'}
 			<div class="chart-content" key="first">
-				<TextInterpolator 
-					progress={activeSectionData.progress ?? 0} 
-					currentStep={activeSectionData.index ?? 0} 
-				/>
+				{#if innerWidth > 800}
+					<TextInterpolator 
+						progress={activeSectionData.progress ?? 0} 
+						currentStep={activeSectionData.index ?? 0} 
+					/>
+				{:else}
+					<MobileTextInterpolator 
+						progress={activeSectionData.progress ?? 0} 
+						currentStep={activeSectionData.index ?? 0} 
+					/>
+				{/if}
 			</div>
 		{:else if activeSection === 'second'}
 			<div class="chart-content" key="second">
@@ -122,10 +145,18 @@
 			</div>
 		{:else if activeSection === 'third'}
 			<div class="chart-content" key="third">
-				<Scatter 
+				<!-- <Scatter 
 					value={activeSectionData.index ?? 0} 
 					steps={thirdSectionSteps} 
-				/>
+				/> -->
+				<ScatterPlot
+					stepCount={activeSectionData.index ?? 0}
+					/>
+			</div>
+		{:else if activeSection === 'fourth'}
+			<div>
+				<p>Some text that will nicely conclude.</p>
+				<p>With future thoughts for future considerations.</p>
 			</div>
 		{/if}
 	</div>
@@ -152,8 +183,10 @@
 	
 	<!-- Section Break -->
 	<div class="story-section-break">
+		<img src={letterImg} style="margin: 0 auto;" width="20%" alt="letter being converted to binary ones and zeros" />
 		<h2>What is a token?</h2>
 		<p>Let's explore how language models break down text into manageable pieces.</p>
+		
 	</div>
 	
 	<!-- Second Section -->
@@ -179,7 +212,7 @@
 	<!-- Section Break -->
 	<div class="story-section-break">
 		<h2>The Distributional Hypothesis</h2>
-		<p>The Distributional Hypothesis states that words that occur in the same contexts tend to have similar meanings. So how does an LLM group different words?</p>
+		<p>The Distributional Hypothesis states that words that occur in the same contexts tend to have similar meanings. So how does an LLM group different instances of the same word?</p>
 	</div>
 	
 	<!-- Third Section -->
@@ -201,13 +234,44 @@
 		</Scrolly>
 		<div class="spacer"></div>
 	</section>
-</div>
+
+	<div class="conclusion">
+		<h2>Where do we go from here?</h2>
+		<p>The world's a stage, and we are actors.</p>
+		<p>What role will LLM's play? Do they know something?</p>
+		<p>Time will tell dear ones!</p>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+	</div>
+</article>
 
 <style>
 	/* =============================================================================
 	   STORY THEME SCOPE
 	   ============================================================================= */
-	
+	.conclusion {
+		max-width: 700px;
+		margin: 0 auto;
+		font-size: var(--font-size-medium);
+	}
+	/* Apply parchment background to body when this story is loaded */
+	:global(body:has(#tokenization-story)) {
+		background-color: #f8ecd4;
+		background-image:
+			url("data:image/svg+xml;utf8,<svg width='400' height='400' xmlns='http://www.w3.org/2000/svg'><filter id='parchment-noise'><feTurbulence type='fractalNoise' baseFrequency='0.055' numOctaves='2' seed='7'/><feColorMatrix type='saturate' values='0.1'/></filter><rect width='100%' height='100%' filter='url(%23parchment-noise)' opacity='0.22'/></svg>"),
+			radial-gradient(ellipse at center, rgba(0,0,0,0) 20%, rgba(80,60,30,0.4) 100%);
+		background-blend-mode: multiply, normal;
+		background-size: 400px 400px, 100% 100%;
+		background-repeat: repeat, no-repeat;
+		background-attachment: fixed;
+		overflow-x: hidden;
+	}
+
 	.story-theme {
 		/* Override semantic color tokens for parchment theme */
 		--color-bg: #f8ecd4;
@@ -225,22 +289,12 @@
 		--story-texture-opacity: 0.22;
 		--story-vignette-strength: 0.4;
 		
-		/* Force full screen coverage */
+		/* Restore full-width layout properties */
 		position: relative;
 		width: 100vw;
 		margin-left: calc(-50vw + 50%);
 		padding: 0;
 		box-sizing: border-box;
-		
-		/* Apply the theme */
-		background-color: var(--color-bg);
-		background-image:
-			url("data:image/svg+xml;utf8,<svg width='400' height='400' xmlns='http://www.w3.org/2000/svg'><filter id='parchment-noise'><feTurbulence type='fractalNoise' baseFrequency='0.055' numOctaves='2' seed='7'/><feColorMatrix type='saturate' values='0.1'/></filter><rect width='100%' height='100%' filter='url(%23parchment-noise)' opacity='0.22'/></svg>"),
-			radial-gradient(ellipse at center, rgba(0,0,0,0) 20%, rgba(80,60,30,0.4) 100%);
-		background-blend-mode: multiply, normal;
-		background-size: 400px 400px, 100% 100%;
-		background-repeat: repeat, no-repeat;
-		background-attachment: fixed;
 		color: var(--color-fg);
 		font-family: var(--font-body);
 		min-height: 100vh;
@@ -253,17 +307,23 @@
 	.global-chart-container {
 		position: fixed;
 		top: calc(50vh - 375px);
-		right: 5%;
-		width: 45%;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 80%;
+		max-width: 1200px;
 		height: 750px;
 		z-index: var(--z-middle);
 		pointer-events: none; /* Allow scrolling through it */
+	}
+
+	/* need to add this so user can click on slider in third section */
+	.story-section {
+		pointer-events: none;
 	}
 	
 	.chart-content {
 		width: 100%;
 		height: 100%;
-		display: flex;
 		align-items: center;
 		justify-content: center;
 		pointer-events: auto; /* Re-enable for chart interactions */
@@ -325,18 +385,20 @@
 	}
 	
 	.step {
-		height: 80vh;
+		height: 90vh;
 		display: flex;
 		align-items: center;
 		justify-content: flex-start;
 		position: relative;
 		z-index: var(--z-top);
+		margin-bottom: 150px;
+		opacity: 0.95;
 	}
 	
 	.step-content {
 		width: 40%;
 		max-width: 500px;
-		margin-left: 5%;
+		margin: 0 auto;
 		padding: 1.5rem 2rem;
 		
 		/* Parchment-themed step styling */
@@ -387,12 +449,10 @@
 	
 	@media (max-width: 768px) {
 		.global-chart-container {
-			position: relative;
-			top: auto;
-			right: auto;
 			width: 100%;
 			height: 400px;
-			margin: 2rem auto;
+			margin: 4rem auto;
+			padding: 0 2rem;
 		}
 		
 		.story-section {
@@ -400,14 +460,14 @@
 		}
 		
 		.step {
-			height: 60vh;
+			height: 120vh;
 			justify-content: center;
 		}
 		
 		.step-content {
 			width: 90%;
 			margin: 0 auto;
-			font-size: var(--font-size-smallish);
+			font-size: 14px;
 			padding: 1rem 1.5rem;
 		}
 		
