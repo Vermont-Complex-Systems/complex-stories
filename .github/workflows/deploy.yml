@@ -1,5 +1,5 @@
 # .github/workflows/deploy.yml
-name: Deploy to University VM
+name: Build and Deploy
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
     branches: [ main ]
 
 jobs:
-  deploy:
+  build:
     runs-on: self-hosted
     
     steps:
@@ -27,8 +27,20 @@ jobs:
     - name: Build application
       run: npm run build
 
+    - name: Run tests (if you have any)
+      run: npm test --if-present
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    if: github.ref == 'refs/heads/main'
+    environment: production  # Creates deployment status
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Setup SSH Key
-      if: github.ref == 'refs/heads/main'
       run: |
         mkdir -p ~/.ssh
         echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/deploy_key
@@ -36,28 +48,27 @@ jobs:
         ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
 
     - name: Deploy to VM
-      if: github.ref == 'refs/heads/main'
       run: |
         ssh -i ~/.ssh/deploy_key ${{ secrets.VM_USERNAME }}@${{ secrets.VM_HOST }} << 'EOF'
-          # Navigate to project directory
           cd ~/complex-stories
-          
-          # Pull latest changes
           git pull origin main
-          
-          # Install dependencies
           npm ci --only=production
-          
-          npm install
-          
-          # Build the application
           npm run build
-          
-          # Restart PM2 process
           pm2 restart complex-stories
           
-          # Check status
-          pm2 status
+          # Wait for app to start
+          sleep 10
           
-          echo "Deployment completed successfully!"
+          # Health check
+          if pm2 describe complex-stories | grep -q "online"; then
+            echo "✅ Deployment successful - app is online"
+            exit 0
+          else
+            echo "❌ Deployment failed - app not online"
+            exit 1
+          fi
         EOF
+
+    - name: Verify deployment
+      run: |
+        echo "Deployment completed successfully!"

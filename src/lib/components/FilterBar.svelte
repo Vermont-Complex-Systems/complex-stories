@@ -21,7 +21,7 @@
 </script>
 
 <div class="filter-bar">
-  <div class="filter-content column-screen">
+  <div class="filter-content">
     <div class="spacer"></div>
     <div class="filters-wrapper">
       <!-- Desktop filters -->
@@ -66,22 +66,21 @@
   
   .filter-content {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
+    padding: 0.5rem var(--margin-left);
     max-width: 100%;
     position: relative;
+    box-sizing: border-box;
   }
   
   .spacer {
-    width: 15.625rem; /* Convert 250px to rem */
+    display: none; /* No longer needed since we're using margin-left padding */
   }
   
   .filters-wrapper {
     display: flex;
     align-items: center;
-    margin-right: 1.5rem;
   }
 
   /* Desktop filters */
@@ -154,6 +153,7 @@
   @media (max-width: 768px) {
     .filter-content {
       justify-content: center;
+      padding: 0.5rem var(--margin-left-mobile);
     }
     
     .spacer {

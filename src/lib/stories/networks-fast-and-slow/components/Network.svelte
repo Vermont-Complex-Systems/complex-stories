@@ -146,7 +146,7 @@
 
 
 <div class="chart-container">
-	<svg {width} {height} style="overflow: visible;">
+	<svg {width} {height} style="overflow: visible; max-width: 100%;">
 		<g class="inner-chart">
 			<Edges links={renderedLinks} nodes={nodes_xy} />
 			<Nodes nodes={nodes_xy} />
@@ -160,4 +160,16 @@
 		-moz-osx-font-smoothing: grayscale;
 	}
 	
+	.chart-container {
+		width: 100%;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	@media (max-width: 768px) {
+		.chart-container {
+			overflow: hidden;
+		}
+	}
 </style>

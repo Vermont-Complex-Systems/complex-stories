@@ -68,6 +68,7 @@
   /* Or be more specific to avoid affecting other pages */
   :global(main:has(.content)) {
     max-width: none;
+    padding: 0 !important;
   }
 
   .content {
