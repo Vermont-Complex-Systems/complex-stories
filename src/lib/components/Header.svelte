@@ -101,18 +101,16 @@
     z-index: var(--z-overlay);
     width: 100%;
     background: var(--color-bg);
-    padding: 1.5rem 0 0.5rem 0;
+    padding: 1.5rem var(--margin-left) 0.5rem var(--margin-left);
     min-height: 7rem;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
+    align-items: flex-start;
+    justify-content: space-between;
+    box-sizing: border-box;
   }
 
   .header-left {
-    position: absolute;
-    left: var(--margin-left);
-    top: 2.5rem;
+    padding-top: 1rem;
   }
   
   .title-link {
@@ -188,9 +186,7 @@
   }
   
   .header-right {
-    position: absolute;
-    top: 2.5rem;
-    right: var(--margin-left);
+    padding-top: 1rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -288,13 +284,12 @@
 
 
     .header {
-      padding: 1rem 0 0 0;
+      padding: 1rem var(--margin-left-mobile) 0 var(--margin-left-mobile);
       min-height: 5rem;
     }
     
     .header-left {
-      left: var(--margin-left-mobile);
-      top: 2rem;
+      padding-top: 1rem;
     }
     
     .site-title {
@@ -306,8 +301,7 @@
     }
     
     .header-right {
-      top: 2rem;
-      right: var(--margin-left-mobile);
+      padding-top: 1rem;
     }
   }
   
