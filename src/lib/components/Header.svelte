@@ -166,6 +166,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
   }
   
   .logo-container:hover {
@@ -178,7 +179,7 @@
   }
   
   .logo {
-    width: 100%;
+    width: auto;
     height: auto;
     border-radius: var(--border-radius);
     max-height: 2rem;

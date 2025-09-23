@@ -393,6 +393,7 @@
     section h1 {
         font-size: var(--font-size-xlarge);
         margin: 2rem 0 3rem 0;
+        max-width: 60%;
         text-align: left;
         font-family: var(--serif);
     }
@@ -449,26 +450,19 @@
 
     /* Mobile dashboard image styling - full width */
     .mobile-dashboard-image {
-        width: 100vw;
+        width: 100%;
         margin: 2rem 0;
-        /* Break out of parent constraints */
-        position: relative;
-        left: 50%;
-        right: 50%;
-        margin-left: -50vw;
-        margin-right: -50vw;
         display: flex;
         justify-content: center;
         align-items: center;
-        position: relative;
-        z-index: -1;
-        padding: 0;
+        padding: 0 1rem;
+        box-sizing: border-box;
     }
 
     .mobile-dashboard-image img {
-        width: 100%;
+        width: 90vw;
         height: auto;
-        max-width: 100vw;
+        max-width: 90vw;
         object-fit: contain;
         object-position: center;
         display: block;
@@ -620,10 +614,11 @@
 
         section h1 {
             font-size: var(--font-size-xlarge); 
+            max-width: none;
         }
         
         section h1 a {
-               font-size: var(--font-size-large);
+               font-size: var(--font-size-xlarge);
                font-family: var(--mono);
         }
         
@@ -640,10 +635,11 @@
             float: none;
             min-height: 60vh;
         }
-        
+
         section p {
-            line-height: 1.4; /* Better readability */
+            line-height: 1.4; /* Better readability */            
         }
+
 
         /* Fix dashboard section on mobile */
         .dashboard-section {
