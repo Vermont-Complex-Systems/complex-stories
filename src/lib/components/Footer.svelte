@@ -62,7 +62,7 @@
 		margin-top: auto;
 		background-color: var(--color-uvm-green);
 		border-top: 1px solid var(--color-border);
-		padding: 3rem 1rem 2rem;
+		padding: 3rem var(--margin-left) 2rem;
 		width: 100%;
 		box-sizing: border-box;
 	}
@@ -73,8 +73,6 @@
 	}
 	
 	.footer-content {
-		max-width: var(--width-column-wide); /* Use design system width */
-		margin: 0 auto;
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-start;
@@ -233,7 +231,7 @@
 	/* Mobile adjustments */
 	@media (max-width: 768px) {
 		.footer {
-			padding: 2rem 1rem 1.5rem;
+			padding: 2rem var(--margin-left-mobile) 1.5rem;
 		}
 		
 		.footer-content {

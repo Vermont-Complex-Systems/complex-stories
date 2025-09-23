@@ -111,7 +111,7 @@
 
   .header-left {
     position: absolute;
-    left: 6.4rem;
+    left: var(--margin-left);
     top: 2.5rem;
   }
   
@@ -190,7 +190,7 @@
   .header-right {
     position: absolute;
     top: 2.5rem;
-    right: 6.5rem;
+    right: var(--margin-left);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -202,7 +202,7 @@
   }
   
   /* Only show on mobile */
-  @media (max-width: 768px) {
+  @media (max-width: 960px) {
     .mobile-menu-button {
       display: flex !important;
     }
@@ -271,7 +271,7 @@
   }
   
   /* Mobile styles */
-  @media (max-width: 768px) {
+  @media (max-width: 960px) {
     .icon-button,
     .text-button {
       display: none;
@@ -289,7 +289,7 @@
     }
     
     .header-left {
-      left: 2rem;
+      left: var(--margin-left-mobile);
       top: 2rem;
     }
     
@@ -303,7 +303,7 @@
     
     .header-right {
       top: 2rem;
-      right: 1rem;
+      right: var(--margin-left-mobile);
     }
   }
   

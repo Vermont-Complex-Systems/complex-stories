@@ -20,12 +20,12 @@
   }
 
   ul {
-    padding: 0 4.5rem;
+    padding: 0 var(--margin-left);
     display: grid;
     grid-template-columns: 1fr;
     gap: 3rem 1.5rem; /* Convert px to rem: 48px = 3rem, 24px = 1.5rem */
-    margin: 0 auto;
-    max-width: 1400px;
+    margin: 0;
+    max-width: none;
   }
 
   li {
@@ -37,7 +37,7 @@
 
   @media (max-width: 768px) {
     ul {
-      padding: 0 2rem;
+      padding: 0 var(--margin-left-mobile);
     }
   }
 
@@ -56,7 +56,6 @@
     ul {
       grid-template-columns: repeat(3, 1fr);
       gap: 4rem 2.5rem; /* Convert 64px 40px to rem */
-      max-width: 1600px;
     }
     
     li {
