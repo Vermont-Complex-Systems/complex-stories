@@ -3,11 +3,15 @@
   import EmbeddingDotPlot from './EmbeddingDotPlot.svelte';
   import BrushableCoauthorChart from './BrushableCoauthorChart.svelte';
   import * as d3 from 'd3';
-    
+  import { innerWidth } from 'svelte/reactivity/window';
   import { dashboardState } from '../state.svelte';
   import { ageColorScale, processCoauthorData, getCombinedDateRange, parseDate } from '../utils/combinedChartUtils2'
-
+  
   let { embeddingData, coauthorData } = $props();
+  
+  let isMobile = $derived(innerWidth.current <= 1200);
+
+  $inspect(embeddingData);
 
   // Process coauthor data into positioned points
   let processedCoauthorData = $derived.by(() => {
@@ -74,7 +78,7 @@
       
       // Apply highlight filter
       if (dashboardState.highlightedCoauthor) {
-        const isHighlightedCoauthor = point.name === dashboardState.highlightedCoauthor;
+        const isHighlightedCoauthor = point.ego_display_name === dashboardState.highlightedCoauthor;
         opacity *= isHighlightedCoauthor ? 1 : 0.2;
       }
       
@@ -109,64 +113,43 @@
   function handleBrushSelection(brushedPoints) {
     selectedCoauthors = brushedPoints;
   }
-
+  
 </script>
 
 <section id="embeddings" class="story">
-   <h3>Embeddings</h3>
-  <p>Instead of using time to position papers, we can also use embeddings to position similar papers closer together in space. To do so, we use the <a href="https://allenai.org/blog/specter2-adapting-scientific-document-embeddings-to-multiple-fields-and-task-formats-c95686c06567">Specter2 model</a>, accessible via Semantic Scholar's API, which has the benefit of taking into account the similarity of paper titles and abstracts, but also the relative proximity in citation space. That is, a paper can be similar in terms of content but pushed apart by virtue of being cited by different communities. We use <a href="https://umap-learn.readthedocs.io/en/latest/">UMAP</a> to project down the high-dimensional embedding space onto a two-dimensional cartesian plane.</p>
-    
-  <p>Taking Peter again as our example, what is of interest to us is how his exploration of this embedding space might have been modified by his diverse coauthors. We situate Peter's papers within the backdrop of papers written by the UVM 2023 faculty (the papers themselves can be older than that):</p>
-
 
   <div class="charts-container">
     <EmbeddingDotPlot 
       {embeddingData}
-      width={1200} 
-      height={650}
+      width={isMobile ? innerWidth.current : 1200} 
+      height={isMobile ? 350 : 650}
       {selectedCoauthors}
       timeRange={timeRange}
     />
 
-    <BrushableCoauthorChart 
-        displayData={styledCoauthorData}
-        width={chartWidth}
-        height={chartHeight}
-        {timeScale}
-        onBrushSelection={handleBrushSelection}
-    />    
-    <small>brush to filter</small>
+    {#if !isMobile}
+      <BrushableCoauthorChart 
+          displayData={styledCoauthorData}
+          width={chartWidth}
+          height={chartHeight}
+          {timeScale}
+          onBrushSelection={handleBrushSelection}
+      />    
+      <small>brush to filter</small>
+    {/if}
   </div>
 
-  <p>Brushing the bottom chart over the years, it seems that Peter focused on a mixed bag of computational sciences early on (2015-2016), which makes sense. Starting in 2020-2021, he made incursions into health science. From ground truth, we know that this corresponds to different periods for his lab, with the Mass Mutual funding coming in later on.</p>
-
-  <p>There are a few issues with this plot, such as reducing the high-dimensionality of papers onto two dimensions. Another issue is that earlier papers have worse embedding coverage, which is too bad (we might fix that later on by running the embedding model ourselves).</p>
-
-  <p>All that being said, this plot remains highly informative for getting a glimpse of the UVM ecosystem, and exploring how different periods in collaboration are reflected in how faculty might explore topics.</p>
 </section>
 
 <style>
-  /* Story-wide settings */
- :global(#embeddings) {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
-}
-
-  :global(#embeddings h1) {
-    font-size: var(--font-size-xlarge);
-    margin: 2rem 0 3rem 0;
-    text-align: left;
-    font-family: var(--serif);
+  section#embeddings .charts-container {
+    transform: translate(10%) !important;
   }
 
-
-section p {
-    font-size: 22px;
-    max-width: 800px;
-    line-height: 1.3;
-    margin-top: 2rem; /* Add more space after paragraphs */
-    margin-bottom: 2rem; /* Add more space after paragraphs */
+  @media (max-width: 1200px) {
+    section#embeddings .charts-container {
+      transform: none !important;
+    }
   }
 </style>
 

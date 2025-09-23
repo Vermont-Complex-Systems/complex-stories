@@ -1,3 +1,8 @@
+<script>
+	import { base } from '$app/paths';
+	import imgUrl from '../assets/julia-illos/Tbook1.png?url'
+</script>
+
 <div class="hero-banner">
 	<a
 		class="github-link"
@@ -18,16 +23,16 @@
 				<h3 class="construction-note">Note: this story is still under construction!</h3>
 				<div class="hero-description">
 					<p>
-						By <a href="https://jstonge.vercel.app/about">Julia Zimmerman</a> and
-						<a href="">Ben Cooley</a>.
+						By <a href="{base}/author/julia-witte-zimmerman">Julia Zimmerman</a> and
+						<a href="{base}/author/ben-dexter-cooley">Ben Cooley</a>.
 					</p>
 					<p>Language is a human skill. Computers were historically very bad at language...until LLMs came along.</p>
 				</div>
 			</div>
 			<div class="hero-visual">
-				<div class="placeholder-content">
+				<div>
 					<!-- Your visualization component will go here -->
-					hello
+					<img src={imgUrl} alt="Hero Visual" />
 				</div>
 			</div>
 		</div>
@@ -95,6 +100,18 @@
 	.hero-visual {
 		flex: 0 0 350px;
 		transform: translateY(150px);
+		/* Apply blending to the container */
+		mix-blend-mode: multiply;
+		opacity: 0.8;
+		filter: sepia(0.15) brightness(0.95) contrast(1.05);
+		/* Ensure the container doesn't create a new stacking context that blocks blending */
+		isolation: auto;
+	}
+
+	.hero-visual img {
+		width: 100%;
+		height: auto;
+		display: block;
 	}
 
 	/* =============================================================================

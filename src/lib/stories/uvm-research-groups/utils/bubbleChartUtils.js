@@ -17,14 +17,14 @@ export function createPoint(d, targetY) {
     y: targetY,
     r: radius,
     color: color,
-    name: d.coauth_name,
+    coauthor_display_name: d.coauthor_display_name,
     year: d.pub_year,
     date: d.pub_date,
     age_diff: d.age_diff,
     collabs: d.all_times_collabo,
-    faculty: d.name,
+    ego_display_name: d.ego_display_name,
     shared_institutions: d.shared_institutions,
-    coauth_aid: d.coauth_aid
+    coauthor_id: d.coauthor_id
   };
 }
 
@@ -171,7 +171,7 @@ export function processDataPoints(data, width, height) {
       placedPoints.push(point);
     } else {
       // Emergency fallback - place at center with warning
-      console.warn('Could not place point:', point.name);
+      console.warn('Could not place point:', point.coauthor_display_name);
       point.x = centerX;
       placedPoints.push(point);
     }

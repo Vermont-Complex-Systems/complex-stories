@@ -1,4 +1,4 @@
-node_modules
+node_modules/
 
 # Output
 .output
@@ -40,4 +40,4 @@ src/lib/stories/open-academic-analytics/open_academic_analytics.egg-info/
 ~/
 src/lib/stories/open-academic-analyticsOld/
 CLAUDE.md
-src/lib/stories/friends-funnier-than-you-are/data/convert_distribution.sh
+src/lib/stories/open-academic-analytics/backend/.tmp_*

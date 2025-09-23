@@ -10,8 +10,6 @@ import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 
 let { story, data } = $props();
 
-const intro = data.intro;
-const model = data.model;
 
 </script>
 
@@ -38,6 +36,7 @@ const model = data.model;
         </div>
     </div>
 
+    <!-- a bit clunky to do it like like -->
     {#snippet renderContent(contentArray)}
         {#each contentArray as { type, value, component }, i}
             {#if type === "Component"}
@@ -83,6 +82,11 @@ const model = data.model;
         <h2>{data.ResultSectionTitle}</h2>
         {@render renderContent(data.result)}
     </section>
+    
+    <section id="conclusion">
+        <h2>{data.ConclusionSectionTitle}</h2>
+        {@render renderContent(data.conclusion)}
+    </section>
 </article>
 
 
@@ -92,13 +96,25 @@ const model = data.model;
         overflow-x: hidden; /* Prevent horizontal scroll from full-width components */
     }
     
+    /* Dark mode support */
+    :global(.dark body:has(#cascade-story)) {
+        background-color: var(--color-bg);
+        color: var(--color-fg);
+    }
+    
+    
     :global(body:has(#cascade-story)) h1, h2 {
-        font-family: var(--sans);
-        max-width: 300px;
+        font-family: var(--serif);
+        max-width: 450px;
         font-size: var(--font-size-giant);
-        margin: 0 auto 1rem auto;
+        margin: 6rem auto 1rem auto;
         text-align: center;
     }    
+    
+    /* Dark mode support */
+    :global(body:has(#cascade-story)) .title {
+        margin: 0 auto 5rem auto;
+    }
 
     section h2 {
         margin-top: 3rem !important;
@@ -113,9 +129,8 @@ const model = data.model;
     
     .logo-container {
         margin: 1rem auto 0 auto;
-        max-width: 300px;
+        max-width: 8rem;
         position: relative;
-        transform: translateX(1rem);
     }
     
     .branching-container {
@@ -161,5 +176,27 @@ const model = data.model;
         margin: 0;
         font-weight: 400;
         text-align: center !important;
+    }
+    
+    @media (max-width: 768px) {
+        :global(body:has(#cascade-story)) h1 {
+            font-size: 4rem !important;
+        }
+        
+        :global(body:has(#cascade-story)) h2 {
+            font-size: 2rem !important;
+        }
+        
+        .article-meta .author {
+            font-size: var(--font-size-large) !important;
+        }
+        
+        .article-meta .date {
+            font-size: var(--font-size-medium) !important;
+        }
+        
+        .logo-container {
+            max-width: 6rem;
+        }
     }
 </style>

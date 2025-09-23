@@ -282,6 +282,10 @@
       display: none;
     }
 
+    .octopus-icon {
+      display: none;
+    }
+
 
     .header {
       padding: 1rem 0 0 0;

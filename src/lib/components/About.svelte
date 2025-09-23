@@ -72,12 +72,7 @@
     padding: 0; /* Remove default padding to let column-screen handle spacing */
   }
 
-  .blog-container {
-    position: relative;
-    min-height: 100vh;
-  }
-
-
+  
   .section-heading {
     line-height: 1.2;
     margin-top: 3rem;      /* Add space above section headings */
@@ -129,6 +124,7 @@
     :global(#contributors li) {
       width: calc(50% - 0.5rem);
     }
+    
   }
 
   @media (max-width: 400px) {
