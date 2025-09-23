@@ -59,8 +59,7 @@
     position: sticky;
     top: 0;
     z-index: calc(var(--z-overlay) - 100);
-    width: 100vw;
-    margin-left: calc(50% - 50vw);
+    width: 100%;
     background: var(--color-bg);
     transition: all var(--transition-medium);
   }
@@ -69,12 +68,10 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    padding-left: var(--margin-left);
-    padding-right: var(--margin-left);
+    padding: 0.5rem var(--margin-left);
     max-width: 100%;
     position: relative;
+    box-sizing: border-box;
   }
   
   .spacer {
@@ -156,8 +153,7 @@
   @media (max-width: 768px) {
     .filter-content {
       justify-content: center;
-      padding-left: var(--margin-left-mobile);
-      padding-right: var(--margin-left-mobile);
+      padding: 0.5rem var(--margin-left-mobile);
     }
     
     .spacer {
