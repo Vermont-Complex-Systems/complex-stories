@@ -105,15 +105,15 @@
     /* Base scrolly markdown styles */
     .scrolly-markdown {
         font-family: "New York", "Times New Roman", Georgia, serif;
-        font-size: 1.1rem;
-        line-height: 1.6;
+        font-size: 1rem;
+        line-height: 1.2;
         color: var(--color-fg);
     }
 
     .scrolly-markdown :global(p) {
         margin: 1.2rem 0;
         font-weight: 400;
-        line-height: 1.7;
+        line-height: 1.2;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
