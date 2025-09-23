@@ -25,7 +25,7 @@
 	const steps = data.steps;
 	const postIntro = data.postIntro;
 
-	let width = $state(innerWidth.current > 1200 ? 450 : 350);
+	let width = $state(innerWidth.current > 1200 ? 550 : innerWidth.current > 768 ? 350 : Math.min(350, (innerWidth.current || 350) - 40));
 	let height = 600;
 	const padding = { top: 20, right: 40, bottom: 20, left: 60 };
 </script>
@@ -154,7 +154,7 @@
 		height: 550px;
 		position: sticky;
 		top: calc(50vh - 275px);
-		right: 5%;
+		right: 2%;
 		margin-left: auto;
 		float: right;
 		clear: both;
@@ -186,13 +186,14 @@
 		.chart-container-scrolly {
 			position: sticky;
 			top: calc(50vh - 275px);
-			width: 100%;
-			max-width: 600px;
-			margin: 2rem auto;
+			width: 100vw;
+			margin: 2rem 0;
+			margin-left: calc(-50vw + 50%);
 			display: flex;
 			justify-content: center;
 			align-items: center;
 			float: none;
+			overflow: hidden;
 		}
 
 		/* Mobile styles now handled by global framework */
@@ -301,10 +302,6 @@
 	@media (max-width: 480px) {
 		.logo-container {
 			max-width: 5rem;
-		}
-
-		.author-name {
-			font-size: var(--font-size-xsmall);
 		}
 	}
 </style>
