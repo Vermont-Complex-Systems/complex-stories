@@ -53,6 +53,7 @@ jobs:
           cd ~/complex-stories
           git pull origin main
           npm ci --only=production
+          npm install
           npm run build
           pm2 restart complex-stories
           
