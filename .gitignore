@@ -45,3 +45,4 @@ src/lib/stories/open-academic-analytics/backend/.tmp_*
 
 # SQLite
 *.db
+src/lib/stories/dark-data-survey/data/dfall.csv

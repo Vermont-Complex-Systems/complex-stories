@@ -10,7 +10,7 @@ Complex Stories is a scientific data essay platform built with SvelteKit, inspir
 
 ### Core Development
 - `npm run dev` - Start development server with hot reloading
-- `npm run build` - Build for production (static site generation)
+- `npm run build` - Build for production
 - `npm run preview` - Preview production build locally
 
 ### Code Quality
@@ -18,6 +18,12 @@ Complex Stories is a scientific data essay platform built with SvelteKit, inspir
 - `npm run check:watch` - Type checking in watch mode
 - `npm run format` - Format code with Prettier
 - `npm run lint` - Check code formatting with Prettier
+
+### Database (Drizzle ORM)
+- `npm run db:push` - Push schema changes to database
+- `npm run db:generate` - Generate migration files
+- `npm run db:migrate` - Run database migrations
+- `npm run db:studio` - Open Drizzle Studio for database management
 
 ### Testing
 No specific test framework is configured. Check individual story directories for any custom testing setups.
@@ -51,13 +57,16 @@ story-slug/
 - `/blog/[slug]` - Blog posts  
 - `/about` - About page
 - `/research-at-uvm` - Research groups page
+- `/work-with-us` - Collaboration opportunities page
 - `/author/[name]` - Author pages
+- `/api/*` - API endpoints
 
 ### Key Technologies
 - **SvelteKit 2** with Svelte 5 (using runes syntax)
-- **Static site generation** via `@sveltejs/adapter-static`
+- **Node.js adapter** via `@sveltejs/adapter-node` (server-side rendering)
 - **D3.js** for data visualization and manipulation
 - **DuckDB WASM** for client-side data processing
+- **Drizzle ORM** for database management
 - **Vite** for build tooling with custom plugins for DSV files
 - **TypeScript** for type safety
 
@@ -83,10 +92,11 @@ story-slug/
 - **Vite** config includes custom path aliases: `$data` → `src/data`, `$styles` → `src/styles`
 - **DSV plugin** for loading CSV/TSV files directly in components
 - **Version/timestamp injection** via `__VERSION__` and `__TIMESTAMP__` globals
-- **Node adapter** is currently configured (not static adapter)
+- **Node adapter** configured via `@sveltejs/adapter-node` for server-side rendering
 - **DuckDB WASM** excluded from optimization, with d3-regression included in SSR
 - **Worker format** set to 'es' for modern browser support
 - **Experimental features** enabled: remote functions and async compiler options
+- **TypeScript** strict mode enabled with ESM module resolution
 
 ## Adding New Stories
 
