@@ -26,71 +26,52 @@ import { select } from 'd3-selection';
     return `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="#FCAEBB" fill-opacity="0" stroke="#333" stroke-width="2"/>`;
   }
 
-  // Match texts by id (or text content)
-function getInterpolatedTexts() {
-    switch (true) {
-        case currentStep < 1:
-            select('#word-chart')
-                .selectAll('.word-box')
-                .remove(); // clear previous boxes
-            return svg1Texts; // initial state
-        case currentStep === 1:
-            // interpolate between svg1Texts and svg2Texts
-            return svg1Texts.map(t1 => {
-                const t2 = svg2Texts.find(t => t.id === t1.id);
-                if (!t2) return t1;
-                return {
-                    id: t1.id,
-                    text: t1.text,
-                    x: interpolateNumber(t1.x, t2.x)(progress),
-                    y: interpolateNumber(t1.y, t2.y)(progress),
-                    opacity: progress
-                };
-            });
-        case currentStep === 2:
-            select('#word-chart')
-                .selectAll('.word-box')
-                .remove(); // clear previous boxes
-            return svg2Texts;
-        case currentStep === 3:
-            // for each text in svg3Texts, draw a rectangle around it
-            svg3Texts.forEach(t => {
-                // Estimate width: 16px per character + padding
-                const charWidth = 16;
-                const padding = 20;
-                const width = t.text.length * charWidth + padding;
-                select('#word-chart')
-                    .append('g')
-                    .attr('class', 'word-box')
-                    .html(drawRect(t.x - width / 2, t.y - 20, width, 30));
-            });
-
-            // interpolate between svg2Texts and svg3Texts
-            return svg2Texts.map(t2 => {
-                const t3 = svg3Texts.find(t => t.id === t2.id);
-                if (!t3) return t2;
-                return {
-                    id: t2.id,
-                    text: t2.text,
-                    x: interpolateNumber(t2.x, t3.x)(progress),
-                    y: interpolateNumber(t2.y, t3.y)(progress),
-                    opacity: 0
-                };
-            });
-        default:
-            return svg3Texts;
-    }
-}
+  // Remove the getInterpolatedTexts function and replace with a reactive variable
+$: interpolatedTexts = (() => {
+  if (currentStep >= 0 && currentStep < 1) {
+    return svg1Texts;
+  } else if (currentStep >= 1 && currentStep < 2) {
+    return svg1Texts.map(t1 => {
+      const t2 = svg2Texts.find(t => t.id === t1.id);
+      if (!t2) return t1;
+      return {
+        id: t1.id,
+        text: t1.text,
+        x: interpolateNumber(t1.x, t2.x)(progress),
+        y: interpolateNumber(t1.y, t2.y)(progress),
+        opacity: progress
+      };
+    });
+  } else if (currentStep >= 2 && currentStep < 3) {
+    return svg2Texts.map(t2 => {
+      const t3 = svg3Texts.find(t => t.id === t2.id);
+      if (!t3) return t2;
+      return {
+        id: t2.id,
+        text: t2.text,
+        x: interpolateNumber(t2.x, t3.x)(progress),
+        y: interpolateNumber(t2.y, t3.y)(progress),
+        opacity: 1
+      };
+    });
+  } else if (currentStep >= 3) {
+    return svg3Texts;
+  } else {
+    return svg1Texts;
+  }
+})();
 </script>
 
 <svg width="800" height="600" id="word-chart" style="margin-left: 100px">
     {#if currentStep > 0 && currentStep < 3}
     {@html links}
     {/if}
-    {#if currentStep >= 2}
-    <!-- {@html boxes} -->
+    {#if currentStep >= 3}
+      {#each svg3Texts as t}
+        {@html drawRect(t.x - (t.text.length * 8 + 20) / 2, t.y - 20, t.text.length * 8 + 20, 30)}
+      {/each}
     {/if}
-  {#each getInterpolatedTexts() as t}
+  {#each interpolatedTexts as t}
   
     {#if posWords.includes(t.text)}
     {#if currentStep > 0 && currentStep < 3}
