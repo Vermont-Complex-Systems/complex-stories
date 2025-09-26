@@ -233,7 +233,7 @@ $effect(() => {
         position: fixed;
         bottom: 2rem;
         left: 2rem;
-        max-width: 20rem;
+        max-width: 10rem;
         z-index: 10;
         opacity: 1;
         transition: opacity 0.6s ease;

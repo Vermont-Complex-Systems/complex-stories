@@ -6,7 +6,7 @@
     } from '@lucide/svelte';
     import { flip } from 'svelte/animate';
     
-    let { filteredData, colorScale } = $props();
+    let { filteredData, colorScale, chosen_inst } = $props();
     
     // Institution to icon mapping - updated for new data format
     const institutionIcons = {
@@ -17,7 +17,7 @@
         'TP_Employer': Building,
         'TP_Researcher': FlaskConical,
         'TP_Co_worker': Briefcase,
-        'TP_Police': Shield,
+        chosen_inst: Shield,
         'TP_Platform': Smartphone,
         'TP_Company_cust': Store,
         'TP_Company_notcust': Building2,
@@ -46,7 +46,6 @@
                 trustLevel: Math.round(Number(item.distance)) // Approximate trust level from distance
             }));
         
-        console.log('Distribution data order:', sorted.map(d => `${d.name}: ${d.distance.toFixed(2)}`));
         return sorted;
     });
     
@@ -62,7 +61,7 @@
         'TP_Employer': '#7c3aed',      // Purple - work related
         'TP_Researcher': '#9333ea',    // Purple variant
         'TP_Co_worker': '#8b5cf6',     // Light purple
-        'TP_Police': '#dc2626',        // Red - authority/government
+        chosen_inst: '#dc2626',        // Red - authority/government
         'TP_Platform': '#ea580c',      // Orange - tech platforms
         'TP_Company_cust': '#f59e0b',  // Amber - business
         'TP_Company_notcust': '#d97706', // Dark amber
@@ -88,12 +87,12 @@
             
             <div class="institution-row" animate:flip={{ duration: 400 }}>
                 <!-- Institution icon -->
-                <div class="institution-icon">
+                <div class="institution-icon" style="opacity: {institution.institution == chosen_inst ? 1.0 : 0.2};">
                     <IconComponent size="10" />
                 </div>
                 
                 <!-- Institution name -->
-                <div class="institution-name">
+                <div class="institution-name" style="opacity: {institution.institution == chosen_inst ? 1.0 : 0.2};">
                     {i+1} {institution.name}
                 </div>
                 
@@ -104,18 +103,18 @@
                         {@const gridPosition = (gridValue / maxDistance) * maxBarWidth}
                         <div 
                             class="grid-line"
-                            style="left: {gridPosition}px;"
+                            style="left: {gridPosition}px; opacity: {institution.institution == chosen_inst ? 1.0 : 0.2};"
                         ></div>
                     {/each}
                     
                     <div 
                         class="trust-bar"
-                        style="width: {barWidth}px; background-color: {institutionColors[institution.institution] || '#6b7280'}; transition: width 0.6s ease-out, background-color 0.6s ease-out;"
+                        style="width: {barWidth}px; background-color: {institutionColors[institution.institution] || '#6b7280'}; opacity: {institution.institution == chosen_inst ? 1.0 : 0.2};  transition: width 0.6s ease-out, background-color 0.6s ease-out;"
                     ></div>
                 </div>
                 
                 <!-- Distance value label -->
-                <div class="distance-value">
+                <div class="distance-value" style="opacity: {institution.institution == chosen_inst ? 1.0 : 0.2};">
                     {Number(institution.distance).toFixed(2)}
                 </div>
             </div>
@@ -158,13 +157,13 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #6b7280;
+        color: whitesmoke;
     }
     
     .institution-name {
         width: 130px;
         font-size: 15px;
-        color: #6b7280;
+        color: whitesmoke;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -203,7 +202,7 @@
         width: 40px;
         text-align: right;
         font-size: 15px;
-        color: #6b7280;
+        color: whitesmoke;
     }
     
     .legend {
@@ -212,7 +211,7 @@
         gap: 12px;
         margin-top: 8px;
         font-size: 8px;
-        color: #6b7280;
+        color: whitesmoke;
     }
     
     .legend-title {

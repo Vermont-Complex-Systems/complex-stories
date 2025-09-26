@@ -175,7 +175,7 @@
     }
 
     .step {
-        height: 80vh;
+        height: 120vh;
         display: flex;
         align-items: center;
         justify-content: center;
