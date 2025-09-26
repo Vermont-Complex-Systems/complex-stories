@@ -45,4 +45,9 @@ src/lib/stories/open-academic-analytics/backend/.tmp_*
 
 # SQLite
 *.db
+
+# Specific data
 src/lib/stories/dark-data-survey/data/dfall.csv
+src/lib/stories/dark-data-survey/data/trust_circles.csv
+src/lib/stories/dark-data-survey/data/trust_circles2.csv
+.gitignore

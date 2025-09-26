@@ -30,25 +30,71 @@
 		{
 			"type": "markdown",
 			"value": "Privacy depends on who you are and context. Your willingness to share data varies dramatically across different institutions and relationships."
+		},
+		{
+			"type": "markdown",
+			"value": "In this survey, we asked people about their relative trust in different institutions."
 		}
 	],
 	"ScrolylSectionTitle": "Zooming out",
 	"steps": [
 		{
 			"type": "markdown",
-			"value": "Question: How comfortable do you feel sharing PII with the following institution?"
+			"value": "For instance, how much do you trust the Government, on a scale from 1 to 7? On average, people are somewhat neither overly trustful or suspicious of it, at least at the time of the survey. It sits 9th, in between sharing Personally Identifiable Information (PII) with a non-profit and the police."
 		},
 		{
 			"type": "markdown",
-			"value": "Your personal relationship with institutions varies greatly. Each institution sits at a different distance from you, representing how much you trust them with your personal data."
+			"value": "Let's now look at the average patterns."
 		},
 		{
 			"type": "markdown",
-			"value": "But you're not alone in this landscape. Hundreds of others navigate the same institutional relationships, each with their own trust levels and patterns."
+			"value": "Now let's see how **women** respond differently. Notice the shifts in trust distances."
 		},
 		{
 			"type": "markdown",
-			"value": "Different demographic groups show strikingly different patterns of institutional trust, reflecting lived experiences and historical relationships with institutions."
+			"value": "Compare that to **men's** trust patterns. See any differences?"
+		},
+		{
+			"type": "markdown",
+			"value": "What about relationship status? Here are people who are **not single** (in relationships)."
+		},
+		{
+			"type": "markdown",
+			"value": "And here are those who are **single**. Different patterns emerge."
+		},
+		{
+			"type": "markdown",
+			"value": "Sexual orientation also matters. This shows **straight** individuals' trust patterns."
+		},
+		{
+			"type": "markdown",
+			"value": "**Bisexual** individuals show different trust boundaries."
+		},
+		{
+			"type": "markdown",
+			"value": "**Gay** individuals - notice how institutions shift in trustworthiness."
+		},
+		{
+			"type": "markdown",
+			"value": "Those with **other sexual orientations** complete the picture of diverse trust patterns."
+		},
+		{
+			"type": "markdown",
+			"value": "Finally, let's look at race. This shows **White** individuals' trust patterns."
+		},
+		{
+			"type": "markdown",
+			"value": "**Mixed race** individuals show how cultural background shapes trust."
+		},
+		{
+			"type": "markdown",
+			"value": "**People of Color** - the final piece showing how identity influences privacy decisions."
+		}
+	],
+	"conclusion": [
+		{
+			"type": "markdown",
+			"value": "So privacy do depends on who you are and and context."
 		}
 	]
 }

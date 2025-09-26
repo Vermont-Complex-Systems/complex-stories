@@ -2,191 +2,64 @@
 import { base } from "$app/paths";
 import { scaleSequential } from 'd3-scale';
 import { interpolateRdYlGn } from 'd3-scale-chromatic';
-import { innerWidth } from 'svelte/reactivity/window';
+import { innerWidth, outerHeight } from 'svelte/reactivity/window';
 
 import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 import Scrolly from '$lib/components/helpers/Scrolly.svelte';
 
 import TrustEvo from './TrustEvo.svelte';
+import Survey from './Survey.svelte';
 
-import { generatePeopleByInstitution } from '../data/generatePeople.js';
 import { renderContent, scrollyContent, surveyContent } from './Snippets.svelte';
-import { submitSurvey } from '../data/data.remote.js';
-import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
 let { story, data } = $props();
 
 
 // Generate people data using imported function
 
-let people = $state(generatePeopleByInstitution());
 let selectedDemographic = $state('white_men');
 
-// Scrolly state management - use object for binding  
-let scrollyState = $state({ 
+// Scrolly state management - separate states for survey and story
+let surveyScrollyState = $state({ 
     scrollyIndex: undefined,
     isMobile: false,
     isTablet: false
 });
 
-// Update derived values in effect
-$effect(() => {
-    scrollyState.isMobile = innerWidth.current <= 768;
-    scrollyState.isTablet = innerWidth.current <= 1200 && innerWidth.current > 768;
+let storyScrollyState = $state({ 
+    scrollyIndex: undefined,
+    isMobile: false,
+    isTablet: false
 });
 
-// Generate browser fingerprint using FingerprintJS
-let userFingerprint = $state('');
 
+// Layout calculations using D3 - responsive width and height
+let width = $state(innerWidth.current);
+let height = $state(outerHeight.current);
+
+// Reference to story section for visibility detection
+let storySection = $state();
+let conclusionSection = $state();
+let conclusionVisible = $state(false);
+
+// Detect when conclusion section is visible
 $effect(() => {
-    if (typeof window !== 'undefined') {
-        FingerprintJS.load().then(fp => {
-            return fp.get();
-        }).then(result => {
-            userFingerprint = result.visitorId;
-        });
+    if (typeof window !== 'undefined' && conclusionSection) {
+        const observer = new IntersectionObserver((entries) => {
+            conclusionVisible = entries[0].isIntersecting;
+        }, { threshold: 0.3 });
+        
+        observer.observe(conclusionSection);
+        
+        return () => observer.disconnect();
     }
 });
-
-// Layout calculations using D3 - keep original size
-const width = 1000;
-const height = 800;
 
 </script>
 
 <article id="dark-data-survey">
-        
-    <section id="survey">
-        <div class="scrolly-container survey-scrolly">
-            <div class="scrolly-chart survey-chart">
-                {#if scrollyState.scrollyIndex === 0 || scrollyState.scrollyIndex === undefined}
-                    <img src="{base}/facebook_privacy.png" alt="Facebook privacy settings interface" class="chart-image" />
-                {:else if scrollyState.scrollyIndex === 1}
-                    <img src="{base}/openAi_privacy.jpg" alt="OpenAI privacy settings interface" class="chart-image" />
-                {:else if scrollyState.scrollyIndex === 2}
-                    <img src="{base}/facebook_privacy.png" alt="Institution privacy settings" class="chart-image" />
-                {:else if scrollyState.scrollyIndex === 3}
-                    <img src="{base}/openAi_privacy.png" alt="Demographics privacy settings" class="chart-image" />
-                {:else}
-                    <img src="{base}/facebook_privacy.png" alt="Default privacy settings" class="chart-image" />
-                {/if}
-            </div>
-            
-            <form {...submitSurvey}>
-                <input type="hidden" name="fingerprint" value={userFingerprint} />
-                
-                <div class="scrolly-content">
-                    <div class="spacer"></div>
-                    <Scrolly bind:value={scrollyState.scrollyIndex}>
-                        <div class="step" class:active={scrollyState.scrollyIndex === 0}>
-                            <div class="step-content">
-                                <div class="question-text">
-                                    <h3>How do you typically set your social media privacy?</h3>
-                                </div>
-                                <div class="survey-controls">
-                                    <select name="socialMedia" aria-invalid={!!submitSurvey.issues.socialMedia}>
-                                        <option value="">Choose...</option>
-                                        <option value="private">Private</option>
-                                        <option value="mixed">Mixed</option>
-                                        <option value="public">Public</option>
-                                    </select>
-                                    {#if submitSurvey.issues.socialMedia}
-                                        {#each submitSurvey.issues.socialMedia as issue}
-                                            <p class="error">{issue.message}</p>
-                                        {/each}
-                                    {/if}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="step" class:active={scrollyState.scrollyIndex === 1}>
-                            <div class="step-content">
-                                <div class="question-text">
-                                    <h3>Does the platform matter for your privacy decisions?</h3>
-                                </div>
-                                <div class="survey-controls">
-                                    <select name="platformMatters" aria-invalid={!!submitSurvey.issues.platformMatters}>
-                                        <option value="">Choose...</option>
-                                        <option value="yes">Yes, platform matters</option>
-                                        <option value="no">No, same across platforms</option>
-                                        <option value="sometimes">Sometimes</option>
-                                    </select>
-                                    {#if submitSurvey.issues.platformMatters}
-                                        {#each submitSurvey.issues.platformMatters as issue}
-                                            <p class="error">{issue.message}</p>
-                                        {/each}
-                                    {/if}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="step" class:active={scrollyState.scrollyIndex === 2}>
-                            <div class="step-content">
-                                <div class="question-text">
-                                    <h3>Do your privacy preferences vary by institution type?</h3>
-                                </div>
-                                <div class="survey-controls">
-                                    <select name="institutionPreferences" aria-invalid={!!submitSurvey.issues.institutionPreferences}>
-                                        <option value="">Choose...</option>
-                                        <option value="vary-greatly">Vary greatly</option>
-                                        <option value="mostly-same">Mostly the same</option>
-                                        <option value="depends-context">Depends on context</option>
-                                    </select>
-                                    {#if submitSurvey.issues.institutionPreferences}
-                                        {#each submitSurvey.issues.institutionPreferences as issue}
-                                            <p class="error">{issue.message}</p>
-                                        {/each}
-                                    {/if}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="step" class:active={scrollyState.scrollyIndex === 3}>
-                            <div class="step-content">
-                                <div class="question-text">
-                                    <h3>Do demographics (who you are) influence your privacy preferences?</h3>
-                                </div>
-                                <div class="survey-controls">
-                                    <select name="demographicsMatter" aria-invalid={!!submitSurvey.issues.demographicsMatter}>
-                                        <option value="">Choose...</option>
-                                        <option value="yes">Yes, who I am matters</option>
-                                        <option value="no">No, preferences are universal</option>
-                                        <option value="somewhat">Somewhat</option>
-                                    </select>
-                                    {#if submitSurvey.issues.demographicsMatter}
-                                        {#each submitSurvey.issues.demographicsMatter as issue}
-                                            <p class="error">{issue.message}</p>
-                                        {/each}
-                                    {/if}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="step" class:active={scrollyState.scrollyIndex === 4}>
-                            <div class="step-content">
-                                <div class="submit-section">
-                                    <button type="submit" disabled={submitSurvey.pending || !userFingerprint}>
-                                        {submitSurvey.pending ? 'Submitting...' : 'Submit Survey'}
-                                    </button>
-                                    
-                                    {#if submitSurvey.success}
-                                        <p class="success">✅ Thank you! Your responses have been saved.</p>
-                                    {/if}
-                                </div>
-                            </div>
-                        </div>
-                    </Scrolly>
-                    <div class="spacer"></div>
-                </div>
-            </form>
-        </div>
-    </section>
     
-    <div class="logo-container">
-        <a href="{base}/" class="logo-link">
-            <img src="{base}/octopus-swim-right.png" alt="Home" class="logo" width="200" />
-        </a>
-    </div>
+    <Survey bind:scrollyState={surveyScrollyState} />
 
     <div class="title">
         <h1>{data.title}</h1>
@@ -201,35 +74,46 @@ const height = 800;
             </p>
         </div>
     </div>
+
+    <!-- Text Intro -->
     <section id="intro">
         {@render renderContent(data.intro)}
     </section>
 
+    <!-- ScrollyPlot -->
     <h2>{data.ScrolylSectionTitle}</h2>
-    <section id="scrolly">
-        <div class="scrolly-container">
-            
+    <section id="story">
+        <div class="scrolly-container" bind:this={storySection}>
             <div class="scrolly-chart">
-                <TrustEvo scrollyIndex={scrollyState.scrollyIndex} {selectedDemographic} {width} {height} />
+                <TrustEvo
+                    scrollyIndex={storyScrollyState.scrollyIndex} 
+                    {selectedDemographic} 
+                    {width} {height}
+                    isStorySection={true}
+                    {storySection}
+                    {conclusionVisible} />
             </div>
 
-            {@render scrollyContent(data.steps, scrollyState)}
+            {@render scrollyContent(data.steps, storyScrollyState)}
         </div>
     </section>
-
+    
+    <h2>Conclusion</h2>
+    <section id="conclusion" bind:this={conclusionSection}>
+        {@render renderContent(data.conclusion)}
+    </section>
 </article>
 
+<div class="corner-image" class:hidden={conclusionVisible}>
+    <img src="{base}/common/thumbnails/screenshots/dark-data.png" alt="Dark data visualization" />
+</div>
 
 <style>
 
     :global(body:has(#dark-data-survey)) {
-        overflow-x: hidden; /* Prevent horizontal scroll from full-width components */
-    }
-
-    /* Dark mode support */
-    :global(.dark body:has(#dark-data-survey)) {
-        background-color: var(--color-bg);
-        color: var(--color-fg);
+        overflow-x: hidden;
+        background-color: #2b2b2b;
+        color: #ffffff;
     }
 
     :global(body:has(#dark-data-survey)) h1, h2 {
@@ -249,6 +133,25 @@ const height = 800;
         font-weight: 400;
         margin: 0 auto 3rem auto;
         text-align: center;
+    }    
+    
+    :global(body:has(#dark-data-survey)) p {
+        color: whitesmoke !important;
+    }
+    
+    /* Ensure intro text is white */
+    :global(#intro p) {
+        color: whitesmoke !important;
+    }    
+    
+    :global(#conclusion p) {
+        color: whitesmoke !important;
+    }    
+    
+    /* Make scrolly content black for readability */
+    :global(.scrolly-container .markdown-content),
+    :global(.scrolly-container .markdown-content p) {
+        color: black !important;
     }    
 
     .logo-container {
@@ -292,60 +195,24 @@ const height = 800;
     .scrolly-container {
         position: relative;
         min-height: 100vh;
-        margin-top: 3rem;
-    }
-    
-    /* make the plot sticky and to the left - SURVEY SPECIFIC */
-    .survey-chart {
-        position: sticky;
-        top: calc(50vh - 250px);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: fit-content;
-        z-index: 1;
-        pointer-events: none;
-        width: 40%;
-        float: left;
-    }
 
-    .survey-scrolly .scrolly-content {
-        width: 60%;
-        margin-left: 40%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
     }
-    
     
     /* make the plot sticky and centered - circle plot */
     .scrolly-chart {
         position: sticky;
-        top: calc(50vh - 50%);
-        display: flex;
-        justify-content: center;
+        top: calc(50vh - 500px);
         height: fit-content;
         z-index: 1;
         pointer-events: none;
     }
 
-
-    @media (min-width: 1200px) {
-        section#scrolly .scrolly-container,
-        section#survey .scrolly-container {
-            width: var(--width-column-wide) !important;
-            max-width: none !important;
-            margin-left: 50% !important;
-            transform: translateX(-50%) !important;
-        }
-    }
-
     @media (max-width: 768px) {
-        :global(body:has(#cascade-story)) h1 {
+        :global(body:has(#dark-data-survey)) h1 {
             font-size: 4rem !important;
         }
         
-        :global(body:has(#cascade-story)) h2 {
+        :global(body:has(#dark-data-survey)) h2 {
             font-size: 2rem !important;
         }
         
@@ -360,157 +227,31 @@ const height = 800;
         .logo-container {
             max-width: 6rem;
         }
-
-        /* Mobile survey layout */
-        #survey {
-            position: relative;
-        }
-
-        #survey .survey-chart {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            min-height: 200vh;
-            z-index: 0;
-            opacity: 0.3;
-        }
-
-        #survey .survey-scrolly {
-            position: relative;
-            z-index: 1;
-        }
-
-        .survey-scrolly .scrolly-content {
-            width: 100%;
-            margin-left: 0;
-            position: relative;
-            z-index: 2;
-        }
-
-        .survey-scrolly .scrolly-content .step-content {
-            max-width: 300px;
-            background: rgba(255, 255, 255, 0.95) !important;
-            backdrop-filter: blur(2px);
-        }
     }
 
-    /* Survey-specific styling */
-    .scrolly-content .step {
-        height: 80vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1rem;
-        margin: 0 auto;
+    .corner-image {
+        position: fixed;
+        bottom: 2rem;
+        left: 2rem;
+        max-width: 20rem;
+        z-index: 10;
+        opacity: 1;
+        transition: opacity 0.6s ease;
     }
 
-    .scrolly-content .step-content {
-        padding: 2rem;
-        background: #f5f5f5;
-        color: #ccc;
-        border-radius: 8px;
-        box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
-        transition: all 500ms ease;
-        max-width: 360px;
-        margin: 0 auto;
+    .corner-image.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .corner-image img {
         width: 100%;
-    }
-
-    .scrolly-content .step.active .step-content {
-        background: white;
-        color: black;
-    }
-
-    .chart-image {
-        max-width: 100%;
-        max-height: 500px;
-        width: auto;
         height: auto;
-        object-fit: contain;
+        transition: opacity 0.3s ease;
     }
 
-    .question-text h3 {
-        margin: 0 0 1rem 0;
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #333;
-    }
-
-    .survey-controls select {
-        width: 100%;
-        padding: 0.75rem;
-        border: 2px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
-        background: white;
-        cursor: pointer;
-        transition: border-color 0.2s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .survey-controls select:hover {
-        border-color: var(--color-primary, #007acc);
-    }
-
-    .survey-controls select:focus {
-        outline: none;
-        border-color: var(--color-primary, #007acc);
-        box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.1);
-    }
-
-    .survey-controls select:not([value=""]) {
-        background: #f8f9fa;
-        border-color: #28a745;
-    }
-
-    .submit-section {
-        text-align: center;
-        padding: 1rem 0;
-    }
-
-    .submit-section button {
-        background: #007acc;
-        color: white;
-        border: none;
-        padding: 1rem 2rem;
-        border-radius: 8px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        min-width: 150px;
-    }
-
-    .submit-section button:hover:not(:disabled) {
-        background: #0066aa;
-        transform: translateY(-1px);
-    }
-
-    .submit-section button:disabled {
-        background: #ccc;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .success {
-        background: #d4edda;
-        color: #155724;
-        padding: 1rem;
-        border-radius: 8px;
-        border: 1px solid #c3e6cb;
-        font-weight: 500;
-        margin: 1rem 0;
-    }
-
-    .error {
-        background: #f8d7da;
-        color: #721c24;
-        padding: 0.5rem;
-        border-radius: 4px;
-        border: 1px solid #f5c6cb;
-        font-size: 0.9rem;
-        margin: 0.5rem 0;
+    .corner-image:hover img {
+        opacity: 1;
     }
 
 </style>

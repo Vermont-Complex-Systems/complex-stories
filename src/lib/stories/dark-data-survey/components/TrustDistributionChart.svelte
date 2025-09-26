@@ -4,235 +4,233 @@
         FlaskConical, Briefcase, Shield, Smartphone, Store,
         Building2, UserX
     } from '@lucide/svelte';
+    import { flip } from 'svelte/animate';
     
-    let { people, selectedDemographic, trustworthinessColorScale } = $props();
+    let { filteredData, colorScale } = $props();
     
-    // Institution to icon mapping (same as People.svelte)
+    // Institution to icon mapping - updated for new data format
     const institutionIcons = {
-        'friend': Heart,
-        'relative': Users, 
-        'medical': Stethoscope,
-        'school': GraduationCap,
-        'employer': Building,
-        'researcher': FlaskConical,
-        'worker': Briefcase,
-        'police': Shield,
-        'social_media_platform': Smartphone,
-        'company_customer': Store,
-        'company_not_customer': Building2,
-        'acquaintance': Users,
-        'neighbor': Users,
-        'government': Building,
-        'non_profit': Heart,
-        'financial': Building2,
-        'stranger': UserX
+        'TP_Friend': Heart,
+        'TP_Relative': Users, 
+        'TP_Medical': Stethoscope,
+        'TP_School': GraduationCap,
+        'TP_Employer': Building,
+        'TP_Researcher': FlaskConical,
+        'TP_Co_worker': Briefcase,
+        'TP_Police': Shield,
+        'TP_Platform': Smartphone,
+        'TP_Company_cust': Store,
+        'TP_Company_notcust': Building2,
+        'TP_Acquaintance': Users,
+        'TP_Neighbor': Users,
+        'TP_Gov': Building,
+        'TP_NonProf': Heart,
+        'TP_Financial': Building2,
+        'TP_Stranger': UserX
     };
     
     // Chart dimensions
     const chartWidth = 350;
-    const chartHeight = 420; // Increased to accommodate all 17 institutions and legend
-    const barHeight = 12;
-    const barSpacing = 18;
+    const chartHeight = 500; // Increased to accommodate all 17 institutions and legend
     
-    // Trust distances by demographic group (same as other components)
-    const trustDistancesByDemographic = {
-        all: {
-            'friend': 0.15, 'relative': 0.18, 'medical': 0.22,
-            'acquaintance': 0.35, 'neighbor': 0.38, 'researcher': 0.42,
-            'non_profit': 0.45, 'school': 0.55, 'employer': 0.58,
-            'worker': 0.62, 'financial': 0.70, 'government': 0.75,
-            'company_customer': 0.78, 'police': 0.85, 
-            'social_media_platform': 0.90, 'company_not_customer': 0.95,
-            'stranger': 1.0
-        },
-        white_men: {
-            'friend': 0.20, 'relative': 0.25, 'medical': 0.30,
-            'acquaintance': 0.40, 'neighbor': 0.42, 'researcher': 0.45,
-            'non_profit': 0.50, 'school': 0.48, 'employer': 0.46,
-            'worker': 0.52, 'financial': 0.55, 'government': 0.60,
-            'company_customer': 0.58, 'police': 0.65, 
-            'social_media_platform': 0.75, 'company_not_customer': 0.80,
-            'stranger': 0.85
-        },
-        black_women: {
-            'friend': 0.12, 'relative': 0.10, 'medical': 0.45,
-            'acquaintance': 0.25, 'neighbor': 0.22, 'researcher': 0.50,
-            'non_profit': 0.30, 'school': 0.55, 'employer': 0.65,
-            'worker': 0.40, 'financial': 0.80, 'government': 0.90,
-            'company_customer': 0.85, 'police': 0.95, 
-            'social_media_platform': 0.88, 'company_not_customer': 0.98,
-            'stranger': 1.0
-        }
-    };
-    
-    // Calculate trust distribution data
+    // Calculate trust distribution data from filtered circles
     const distributionData = $derived(() => {
-        if (!people || people.length === 0) return [];
+        if (!filteredData || filteredData.length === 0) return [];
         
-        // Filter people based on selected demographic
-        const filtered = people.filter(person => {
-            return person.demographic === selectedDemographic;
-        });
+        // Sort by distance (closest trust = lowest distance first)
+        const sorted = [...filteredData].sort((a, b) => Number(a.distance) - Number(b.distance))
+            .map(item => ({
+                institution: item.institution,
+                name: item.institution.replace('TP_', '').replace(/_/g, ' '),
+                distance: Number(item.distance),
+                trustLevel: Math.round(Number(item.distance)) // Approximate trust level from distance
+            }));
         
-        // Get trust distances for current demographic
-        const trustDistances = trustDistancesByDemographic[selectedDemographic] || trustDistancesByDemographic.all;
-        
-        // Group by institution
-        const institutionGroups = {};
-        filtered.forEach(person => {
-            if (!institutionGroups[person.institution]) {
-                institutionGroups[person.institution] = {
-                    name: person.label,
-                    total: 0,
-                    trustCounts: [0, 0, 0, 0, 0, 0, 0] // indices 0-6 for trust levels 1-7
-                };
-            }
-            institutionGroups[person.institution].total += 1;
-            institutionGroups[person.institution].trustCounts[person.trustworthiness - 1] += 1;
-        });
-        
-        // Convert to array and sort by trust distance (closest to furthest)
-        return Object.entries(institutionGroups)
-            .map(([institution, data]) => ({
-                ...data,
-                institution,
-                trustDistance: trustDistances[institution] || 1.0
-            }))
-            .sort((a, b) => a.trustDistance - b.trustDistance); // Sort by distance (closest first) - show all institutions
+        console.log('Distribution data order:', sorted.map(d => `${d.name}: ${d.distance.toFixed(2)}`));
+        return sorted;
     });
+    
+    // Use fixed scale from 1 to 7 for consistency across demographic groups
+    const maxDistance = 7;
+    
+    // Institution color mapping for consistent visualization
+    const institutionColors = {
+        'TP_Friend': '#10b981',        // Green - high trust category
+        'TP_Relative': '#059669',      // Dark green
+        'TP_Medical': '#0891b2',       // Teal - professional services
+        'TP_School': '#0284c7',        // Blue - educational
+        'TP_Employer': '#7c3aed',      // Purple - work related
+        'TP_Researcher': '#9333ea',    // Purple variant
+        'TP_Co_worker': '#8b5cf6',     // Light purple
+        'TP_Police': '#dc2626',        // Red - authority/government
+        'TP_Platform': '#ea580c',      // Orange - tech platforms
+        'TP_Company_cust': '#f59e0b',  // Amber - business
+        'TP_Company_notcust': '#d97706', // Dark amber
+        'TP_Acquaintance': '#6b7280',  // Gray - neutral relationships
+        'TP_Neighbor': '#9ca3af',      // Light gray
+        'TP_Gov': '#ef4444',           // Red - government
+        'TP_NonProf': '#22c55e',       // Green - community
+        'TP_Financial': '#f97316',     // Orange - financial
+        'TP_Stranger': '#374151'       // Dark gray - unknown
+    };
 </script>
 
-<svg width={chartWidth} height={chartHeight} class="trust-distribution-chart">
-    <!-- Chart background -->
-    <rect
-        x="0"
-        y="0"
-        width={chartWidth}
-        height={chartHeight}
-        fill="rgba(255, 255, 255, 0.95)"
-        stroke="rgba(0, 0, 0, 0.1)"
-        stroke-width="1"
-        rx="4"
-    />
-    
+<div class="trust-distribution-chart" style="width: {chartWidth}px; height: {chartHeight}px; transform">
     <!-- Chart title -->
-    <text
-        x={chartWidth / 2}
-        y="20"
-        text-anchor="middle"
-        font-size="12px"
-        font-weight="600"
-        fill="#374151"
-        font-family="var(--sans)"
-    >
-        Trust Level Distribution
-    </text>
+    <div class="chart-title">Trust Level Distribution</div>
     
     <!-- Institution bars -->
-    {#each distributionData() as institution, i}
-        {@const yPos = 40 + i * barSpacing}
-        {@const maxBarWidth = 200}
-        
-        <!-- Institution icon -->
-        {@const IconComponent = institutionIcons[institution.institution] || UserX}
-        <foreignObject
-            x="10"
-            y={yPos + barHeight / 2 - 6}
-            width="12"
-            height="12"
-        >
-            <div style="width: 12px; height: 12px; display: flex; align-items: center; justify-content: center;">
-                <IconComponent size="10" fill="#6b7280" stroke="none" />
-            </div>
-        </foreignObject>
-        
-        <!-- Institution name -->
-        <text
-            x="26"
-            y={yPos + barHeight / 2}
-            text-anchor="start"
-            dominant-baseline="central"
-            font-size="9px"
-            fill="#6b7280"
-            font-family="var(--sans)"
-        >
-            {institution.name}
-        </text>
-        
-        <!-- Stacked bar segments -->
-        {#each institution.trustCounts as count, trustLevel}
-            {@const proportion = count / institution.total}
-            {@const segmentWidth = proportion * maxBarWidth}
-            {@const prevProportions = institution.trustCounts.slice(0, trustLevel).reduce((sum, c) => sum + c/institution.total, 0)}
-            {@const xPos = 120 + prevProportions * maxBarWidth}
+    <div class="chart-content">
+        {#each distributionData() as institution, i (institution.institution)}
+            {@const maxBarWidth = 130}
+            {@const barWidth = Math.max(2, (institution.distance / maxDistance) * maxBarWidth)}
+            {@const IconComponent = institutionIcons[institution.institution] || UserX}
             
-            {#if count > 0}
-                <rect
-                    x={xPos}
-                    y={yPos}
-                    width={segmentWidth}
-                    height={barHeight}
-                    fill={trustworthinessColorScale(trustLevel + 1)}
-                    opacity="0.8"
-                    style="transition: all 0.6s ease-in-out;"
-                />
-            {/if}
+            <div class="institution-row" animate:flip={{ duration: 400 }}>
+                <!-- Institution icon -->
+                <div class="institution-icon">
+                    <IconComponent size="10" />
+                </div>
+                
+                <!-- Institution name -->
+                <div class="institution-name">
+                    {i+1} {institution.name}
+                </div>
+                
+                <!-- Trust distance bar -->
+                <div class="bar-container">
+                    <!-- Grid lines for trust levels 1-7 -->
+                    {#each [1, 2, 3, 4, 5, 6, 7] as gridValue}
+                        {@const gridPosition = (gridValue / maxDistance) * maxBarWidth}
+                        <div 
+                            class="grid-line"
+                            style="left: {gridPosition}px;"
+                        ></div>
+                    {/each}
+                    
+                    <div 
+                        class="trust-bar"
+                        style="width: {barWidth}px; background-color: {institutionColors[institution.institution] || '#6b7280'}; transition: width 0.6s ease-out, background-color 0.6s ease-out;"
+                    ></div>
+                </div>
+                
+                <!-- Distance value label -->
+                <div class="distance-value">
+                    {Number(institution.distance).toFixed(2)}
+                </div>
+            </div>
         {/each}
-        
-        <!-- Total count label -->
-        <text
-            x="330"
-            y={yPos + barHeight / 2}
-            text-anchor="end"
-            dominant-baseline="central"
-            font-size="8px"
-            fill="#6b7280"
-            font-family="var(--sans)"
-        >
-            {institution.total}
-        </text>
-    {/each}
+    </div>
     
-    <!-- Legend for trust levels -->
-    <g transform="translate(10, {chartHeight - 50})">
-        <text
-            x="0"
-            y="0"
-            font-size="9px"
-            font-weight="600"
-            fill="#374151"
-            font-family="var(--sans)"
-        >
-            Trust Level:
-        </text>
-        
-        {#each [1, 4, 7] as level, i}
-            <rect
-                x={i * 80 + 10}
-                y="8"
-                width="12"
-                height="8"
-                fill={trustworthinessColorScale(level)}
-                opacity="0.8"
-            />
-            <text
-                x={i * 80 + 25}
-                y="14"
-                font-size="8px"
-                fill="#6b7280"
-                font-family="var(--sans)"
-            >
-                {level === 1 ? 'Low (1)' : level === 4 ? 'Med (4)' : 'High (7)'}
-            </text>
-        {/each}
-    </g>
-</svg>
+    
+</div>
 
 <style>
     .trust-distribution-chart {
+        padding: 12px;
+        font-family: var(--sans);
+    }
+    
+    .chart-title {
+        text-align: center;
+        font-size: 15px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+    
+    .chart-content {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .institution-row {
+        display: flex;
+        align-items: center;
+        height: 14px;
+        gap: 6px;
+    }
+    
+    .institution-icon {
+        width: 12px;
+        height: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+    }
+    
+    .institution-name {
+        width: 130px;
+        font-size: 15px;
+        color: #6b7280;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-shrink: 0;
+    }
+    
+    .bar-container {
+        flex: 1;
+        height: 12px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 2px;
+    }
+    
+    .grid-line {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        width: 1px;
         background: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        border: 1px solid rgba(0, 0, 0, 0.1);
+        z-index: 1;
+    }
+    
+    .trust-bar {
+        height: 100%;
+        border-radius: 2px;
+        opacity: 0.8;
+        z-index: 2;
+        position: relative;
+    }
+    
+    .distance-value {
+        width: 40px;
+        text-align: right;
+        font-size: 15px;
+        color: #6b7280;
+    }
+    
+    .legend {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 8px;
+        font-size: 8px;
+        color: #6b7280;
+    }
+    
+    .legend-title {
+        font-size: 9px;
+        font-weight: 600;
+        color: #374151;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .legend-color {
+        width: 12px;
+        height: 8px;
+        border-radius: 2px;
+        opacity: 0.8;
     }
 </style>
