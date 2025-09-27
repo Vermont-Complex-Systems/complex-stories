@@ -4,6 +4,10 @@
     import { extent } from 'd3-array';
     
     import TrustDistributionChart from './TrustDistributionChart.svelte';
+    import Controls from './Controls.svelte';
+    import TrustCircles from './TrustCircles.svelte';
+    import IndividualPoints from './IndividualPoints.svelte';
+    import DataPanel from './DataPanel.svelte';
     import trust_circles from '../data/trust_circles.csv';
     import trust_circles_individual from '../data/trust_circles_individual.csv';
     
@@ -13,9 +17,9 @@
     // Track if story section is in viewport
     let storySectionVisible = $state(false);
     
-    const TIMEPOINT = 1;
+    const TIMEPOINT = 4;
     const GENDER = 0; // 0=Women/1=Men
-    const INST = "TP_Gov";
+    const INST = "TP_Police";
     
     $effect(() => {
         if (typeof window !== 'undefined' && storySection) {
@@ -191,10 +195,6 @@
                 trustLevel: distance,
                 raceColor: raceColors[raceValue] || '#6b7280', // Default gray if race not found
                 raceLabel: raceValue === "0" ? 'White' : raceValue === "1" ? 'Mixed' : raceValue === "2" ? 'POC' : 'Unknown',
-                orientationShape: orientationValue === "0" ? 'circle' : 
-                                orientationValue === "1" ? 'square' : 
-                                orientationValue === "2" ? 'triangle' : 
-                                orientationValue === "3" ? 'diamond' : 'circle',
                 orientationLabel: orientationValue === "0" ? 'Straight' : 
                                 orientationValue === "1" ? 'Bisexual' : 
                                 orientationValue === "2" ? 'Gay' : 
@@ -246,364 +246,36 @@
 
 <div bind:clientWidth={width} bind:clientHeight={height} class="chart-wrapper">
      <div class="viz-content">
-        {#if isInteractivePhase}
-            <div class="controls" style="pointer-events: auto; position: relative; z-index: 1000;">
-                <label>
-                    Category:
-                    <select bind:value={selectedCategory}>
-                        {#each categories as category}
-                            <option value={category}>{category}</option>
-                        {/each}
-                    </select>
-                </label>
-                
-                <label>
-                    Value:
-                    <select bind:value={selectedValue}>
-                        {#each getValuesForCategory(selectedCategory) as value}
-                            <option value={value.toString()}>{value}</option>
-                        {/each}
-                    </select>
-                </label>
-            </div>
-        {:else}
-            <div class="scrolly-info">
-                <p>Currently showing: {currentCategory} = {currentValue}</p>
-            </div>
-        {/if}
+        <Controls 
+            {isInteractivePhase} 
+            bind:selectedCategory 
+            bind:selectedValue 
+            {categories} 
+            {getValuesForCategory} 
+            {currentCategory} 
+            {currentValue} 
+        />
         
         <div class="plot-container">
             <svg width={width} height={height} class="trust-visualization" viewBox={`0 0 ${width} ${height}`}>
-                <!-- Background average circles (always visible as dotted lines) -->
-                <g class="background-circles">
-                    {#each backgroundCircles() as circle}
-                        <circle
-                            cx={centerX}
-                            cy={centerY}
-                            r={radiusScale(circle.distance)}
-                            fill="none"
-                            stroke={institutionColors[circle.institution] || '#cccccc'}
-                            stroke-width={scrollyIndex === 1 && circle.institution == INST ? "5.0" : "1.0"}
-                            stroke-dasharray="4,4"
-                            opacity={scrollyIndex === 1 && circle.institution == INST ? "1.0" : "0.2"}
-                        />
-                    {/each}
-                </g>
+                <TrustCircles 
+                    {width} 
+                    {height} 
+                    filteredCircles={filteredCircles()} 
+                    {scrollyIndex} 
+                    {centerX} 
+                    {centerY} 
+                    {radiusScale} 
+                    {institutionColors} 
+                    {INST} 
+                />
                 
-                <g class="trust-circles">
-                    {#each filteredCircles() as circle}
-                        {console.log(circle)}
-                        <circle
-                            cx={centerX}
-                            cy={centerY}
-                            r={radiusScale(circle.distance)}
-                            fill="none"
-                            stroke={institutionColors[circle.institution] || '#6b7280'}
-                            stroke-width={scrollyIndex === 1 && circle.institution == INST ? "5.0" : "1.0"}
-                            stroke-dasharray={circle.value === 0 ? "8,4" : "none"}
-                            opacity={scrollyIndex === 1 && circle.institution == INST ? "1.0" : "0.2"}
-                            style="transition: r 0.8s ease-in-out; pointer-events: none;"
-                        />
-                    {/each}
-                </g>
-                
-                <!-- Individual data points for scrollyIndex 1 -->
-                {#if scrollyIndex === 1}
-                    <g class="individual-points">
-                        {#each individualPoints() as point}
-                            
-                            {#if point.orientationShape === 'circle'}
-                                <!-- Straight - Circle -->
-                                <circle
-                                    cx={point.x}
-                                    cy={point.y}
-                                    r="6"
-                                    fill={point.raceColor}
-                                    opacity="0.8"
-                                    stroke="white"
-                                    stroke-width="1.5"
-                                />
-                            {:else if point.orientationShape === 'square'}
-                                <!-- Bisexual - Square -->
-                                <rect
-                                    x={point.x - 5}
-                                    y={point.y - 5}
-                                    width="10"
-                                    height="10"
-                                    fill={point.raceColor}
-                                    opacity="0.8"
-                                    stroke="white"
-                                    stroke-width="1.5"
-                                />
-                            {:else if point.orientationShape === 'triangle'}
-                                <!-- Gay - Triangle -->
-                                <polygon
-                                    points="{point.x},{point.y - 7} {point.x - 6},{point.y + 5} {point.x + 6},{point.y + 5}"
-                                    fill={point.raceColor}
-                                    opacity="0.8"
-                                    stroke="white"
-                                    stroke-width="1.5"
-                                />
-                            {:else if point.orientationShape === 'diamond'}
-                                <!-- Other - Diamond -->
-                                <polygon
-                                    points="{point.x},{point.y - 6} {point.x + 6},{point.y} {point.x},{point.y + 6} {point.x - 6},{point.y}"
-                                    fill={point.raceColor}
-                                    opacity="0.8"
-                                    stroke="white"
-                                    stroke-width="1.5"
-                                />
-                            {:else}
-                                <!-- Fallback - Circle -->
-                                <circle
-                                    cx={point.x}
-                                    cy={point.y}
-                                    r="6"
-                                    fill={point.raceColor}
-                                    opacity="0.8"
-                                    stroke="white"
-                                    stroke-width="1.5"
-                                />
-                            {/if}
-                        {/each}
-                    </g>
-                {/if}                
+                <IndividualPoints {scrollyIndex} individualPoints={individualPoints()} />
             </svg>
         </div>
         
         
-        <!-- Data distribution panel for scrollyIndex 1 -->
-        {#if scrollyIndex === 1 && individualPoints().length > 0}
-            {@const firstPoint = individualPoints()[0]}
-            {@const distribution = firstPoint?.trustDistribution || {}}
-            {@const demographicBreakdown = firstPoint?.demographicBreakdown || {}}
-            {@const orientationRaceBreakdown = firstPoint?.orientationRaceBreakdown || {}}
-            {@const currentDemo = firstPoint?.currentDemographic || 'Current Group'}
-            {@const raceColors = {
-                "0": "#3b82f6", // Blue for white
-                "1": "#f59e0b", // Amber for mixed  
-                "2": "#ef4444"  // Red for poc
-            }}
-            <div class="data-panel">
-                <h3>{GENDER == 1 ? "Men" : "Women"}'s Trust in {INST}</h3>
-                
-                <!-- Race color legend -->
-                <div class="section">
-                    <h4>Race (Color) Legend</h4>
-                    <div class="race-legend">
-                        <div class="legend-item">
-                            <div class="legend-dot" style="background-color: #3b82f6;"></div>
-                            <span>White ({demographicBreakdown.race?.white || 0})</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-dot" style="background-color: #f59e0b;"></div>
-                            <span>Mixed ({demographicBreakdown.race?.mixed || 0})</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-dot" style="background-color: #ef4444;"></div>
-                            <span>POC ({demographicBreakdown.race?.poc || 0})</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sexual orientation shape legend -->
-                <div class="section">
-                    <h4>Orientation (Shape) Legend</h4>
-                    
-                    <div class="orientation-breakdown">
-                        <div class="orientation-item">
-                            {#if (orientationRaceBreakdown["0"]?.white + orientationRaceBreakdown["0"]?.mixed + orientationRaceBreakdown["0"]?.poc) > 0}
-                                {@const straightTotal = orientationRaceBreakdown["0"].white + orientationRaceBreakdown["0"].mixed + orientationRaceBreakdown["0"].poc}
-                                <div class="trust-level-row">
-                                    <div class="level-info">
-                                        <svg width="14" height="14" style="flex-shrink: 0;">
-                                            <circle cx="7" cy="7" r="5" fill="#8b5cf6" stroke="white" stroke-width="1"/>
-                                        </svg>
-                                        <span>Straight</span>
-                                    </div>
-                                    <div class="bar-container">
-                                        <div class="stacked-bar">
-                                            {#if orientationRaceBreakdown["0"].white > 0}
-                                                <div class="bar-segment" 
-                                                     style="width: {(orientationRaceBreakdown['0'].white / straightTotal) * 100}%; background-color: {raceColors['0']}"
-                                                     title="White: {orientationRaceBreakdown['0'].white}">
-                                                </div>
-                                            {/if}
-                                            {#if orientationRaceBreakdown["0"].mixed > 0}
-                                                <div class="bar-segment" 
-                                                     style="width: {(orientationRaceBreakdown['0'].mixed / straightTotal) * 100}%; background-color: {raceColors['1']}"
-                                                     title="Mixed: {orientationRaceBreakdown['0'].mixed}">
-                                                </div>
-                                            {/if}
-                                            {#if orientationRaceBreakdown["0"].poc > 0}
-                                                <div class="bar-segment" 
-                                                     style="width: {(orientationRaceBreakdown['0'].poc / straightTotal) * 100}%; background-color: {raceColors['2']}"
-                                                     title="POC: {orientationRaceBreakdown['0'].poc}">
-                                                </div>
-                                            {/if}
-                                        </div>
-                                    </div>
-                                    <span class="count">{straightTotal}</span>
-                                </div>
-                            {/if}
-                        </div>
-                        
-                        <div class="orientation-item">
-                            {#if (orientationRaceBreakdown["1"]?.white + orientationRaceBreakdown["1"]?.mixed + orientationRaceBreakdown["1"]?.poc) > 0}
-                                {@const bisexualTotal = orientationRaceBreakdown["1"].white + orientationRaceBreakdown["1"].mixed + orientationRaceBreakdown["1"].poc}
-                                <div class="trust-level-row">
-                                    <div class="level-info">
-                                        <svg width="14" height="14" style="flex-shrink: 0;">
-                                            <rect x="2" y="2" width="10" height="10" fill="#06b6d4" stroke="white" stroke-width="1"/>
-                                        </svg>
-                                        <span>Bisexual</span>
-                                    </div>
-                                    <div class="bar-container">
-                                        <div class="stacked-bar">
-                                            {#if orientationRaceBreakdown["1"].white > 0}
-                                                <div class="bar-segment" 
-                                                     style="width: {(orientationRaceBreakdown['1'].white / bisexualTotal) * 100}%; background-color: {raceColors['0']}"
-                                                     title="White: {orientationRaceBreakdown['1'].white}">
-                                                </div>
-                                            {/if}
-                                            {#if orientationRaceBreakdown["1"].mixed > 0}
-                                                <div class="bar-segment" 
-                                                     style="width: {(orientationRaceBreakdown['1'].mixed / bisexualTotal) * 100}%; background-color: {raceColors['1']}"
-                                                     title="Mixed: {orientationRaceBreakdown['1'].mixed}">
-                                                </div>
-                                            {/if}
-                                            {#if orientationRaceBreakdown["1"].poc > 0}
-                                                <div class="bar-segment" 
-                                                     style="width: {(orientationRaceBreakdown['1'].poc / bisexualTotal) * 100}%; background-color: {raceColors['2']}"
-                                                     title="POC: {orientationRaceBreakdown['1'].poc}">
-                                                </div>
-                                            {/if}
-                                        </div>
-                                    </div>
-                                    <span class="count">{bisexualTotal}</span>
-                                </div>
-                            {/if}
-                        </div>
-                        
-                        <div class="orientation-item">
-                            {#if (orientationRaceBreakdown["2"]?.white + orientationRaceBreakdown["2"]?.mixed + orientationRaceBreakdown["2"]?.poc) > 0}
-                                {@const gayTotal = orientationRaceBreakdown["2"].white + orientationRaceBreakdown["2"].mixed + orientationRaceBreakdown["2"].poc}
-                                <div class="trust-level-row">
-                                    <div class="level-info">
-                                        <svg width="14" height="14" style="flex-shrink: 0;">
-                                            <polygon points="7,2 12,12 2,12" fill="#92400e" stroke="white" stroke-width="1"/>
-                                        </svg>
-                                        <span>Gay</span>
-                                    </div>
-                                    <div class="bar-container">
-                                        <div class="stacked-bar">
-                                            {#if orientationRaceBreakdown["2"].white > 0}
-                                                <div class="bar-segment" 
-                                                     style="width: {(orientationRaceBreakdown['2'].white / gayTotal) * 100}%; background-color: {raceColors['0']}"
-                                                     title="White: {orientationRaceBreakdown['2'].white}">
-                                                </div>
-                                            {/if}
-                                            {#if orientationRaceBreakdown["2"].mixed > 0}
-                                                <div class="bar-segment" 
-                                                     style="width: {(orientationRaceBreakdown['2'].mixed / gayTotal) * 100}%; background-color: {raceColors['1']}"
-                                                     title="Mixed: {orientationRaceBreakdown['2'].mixed}">
-                                                </div>
-                                            {/if}
-                                            {#if orientationRaceBreakdown["2"].poc > 0}
-                                                <div class="bar-segment" 
-                                                     style="width: {(orientationRaceBreakdown['2'].poc / gayTotal) * 100}%; background-color: {raceColors['2']}"
-                                                     title="POC: {orientationRaceBreakdown['2'].poc}">
-                                                </div>
-                                            {/if}
-                                        </div>
-                                    </div>
-                                    <span class="count">{gayTotal}</span>
-                                </div>
-                            {/if}
-                        </div>
-                        
-                        <div class="orientation-item">
-                            {#if (orientationRaceBreakdown["3"]?.white + orientationRaceBreakdown["3"]?.mixed + orientationRaceBreakdown["3"]?.poc) > 0}
-                                {@const otherTotal = orientationRaceBreakdown["3"].white + orientationRaceBreakdown["3"].mixed + orientationRaceBreakdown["3"].poc}
-                                <div class="trust-level-row">
-                                    <div class="level-info">
-                                        <svg width="14" height="14" style="flex-shrink: 0;">
-                                            <polygon points="7,2 12,7 7,12 2,7" fill="#6b7280" stroke="white" stroke-width="1"/>
-                                        </svg>
-                                        <span>Other</span>
-                                    </div>
-                                    <div class="bar-container">
-                                        <div class="stacked-bar">
-                                            {#if orientationRaceBreakdown["3"].white > 0}
-                                                <div class="bar-segment" 
-                                                     style="width: {(orientationRaceBreakdown['3'].white / otherTotal) * 100}%; background-color: {raceColors['0']}"
-                                                     title="White: {orientationRaceBreakdown['3'].white}">
-                                                </div>
-                                            {/if}
-                                            {#if orientationRaceBreakdown["3"].mixed > 0}
-                                                <div class="bar-segment" 
-                                                     style="width: {(orientationRaceBreakdown['3'].mixed / otherTotal) * 100}%; background-color: {raceColors['1']}"
-                                                     title="Mixed: {orientationRaceBreakdown['3'].mixed}">
-                                                </div>
-                                            {/if}
-                                            {#if orientationRaceBreakdown["3"].poc > 0}
-                                                <div class="bar-segment" 
-                                                     style="width: {(orientationRaceBreakdown['3'].poc / otherTotal) * 100}%; background-color: {raceColors['2']}"
-                                                     title="POC: {orientationRaceBreakdown['3'].poc}">
-                                                </div>
-                                            {/if}
-                                        </div>
-                                    </div>
-                                    <span class="count">{otherTotal}</span>
-                                </div>
-                            {/if}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Current demographic trust distribution -->
-                <div class="section">
-                    <h4>Trust Distribution</h4>
-                    
-                    <!-- Stacked bar chart -->
-                    <div class="trust-bars">
-                        {#each Object.entries(distribution).sort(([a], [b]) => parseFloat(a) - parseFloat(b)) as [level, totalCount]}
-                            {@const trustByOrientationData = firstPoint?.trustByOrientation || {}}
-                            {@const maxCount = Math.max(...Object.values(distribution))}
-                            {@const orientationColors = {
-                                "0": "#8b5cf6", // Purple for straight
-                                "1": "#06b6d4", // Cyan for bisexual  
-                                "2": "#92400e", // Brown for gay
-                                "3": "#6b7280"  // Grey for other
-                            }}
-                            {@const orientationData = trustByOrientationData[level] || {}}
-                            {@const barWidth = (totalCount / maxCount) * 100}
-                            
-                            <div class="trust-level-row">
-                                <span class="trust-label">Trust {level}:</span>
-                                <div class="bar-container">
-                                    <div class="stacked-bar" style="width: {barWidth}%">
-                                        {#each Object.entries(orientationData) as [orientation, count]}
-                                            {@const segmentWidth = (count / totalCount) * 100}
-                                            <div 
-                                                class="bar-segment" 
-                                                style="width: {segmentWidth}%; background-color: {orientationColors[orientation] || '#6b7280'}"
-                                                title="{orientation === '0' ? 'Straight' : orientation === '1' ? 'Bisexual' : orientation === '2' ? 'Gay' : 'Other'}: {count}"
-                                            ></div>
-                                        {/each}
-                                    </div>
-                                </div>
-                                <span class="count">{totalCount}</span>
-                            </div>
-                        {/each}
-                    </div>
-                    
-                    <div class="subtotal">
-                        <strong>Total: {demographicBreakdown.gender_ord} {GENDER == 1 ? "Men" : "Women"}</strong>
-                    </div>
-                </div>
-            </div>
-        {/if}
+        <DataPanel {scrollyIndex} individualPoints={individualPoints()} {GENDER} {INST} />
         
         <!-- Trust Distribution Chart in bottom right - only during main scrolly story -->
         <div class="chart-overlay" 
@@ -629,33 +301,6 @@
         height: 100vh;
     }
     
-    .controls {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 1rem;
-        padding: 1rem;
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 8px;
-    }
-    
-    .controls label {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .controls select {
-        padding: 0.5rem;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-    }
-    
-    .scrolly-info {
-        padding: 1rem;
-        text-align: center;
-        font-weight: 500;
-        color: var(--color-secondary-gray);
-    }
     
     .plot-container {
         position: relative;
@@ -667,13 +312,14 @@
         pointer-events: none;
     }
     
-    .plot-container svg {
+    .trust-visualization {
         width: 100%;
         height: 100%;
         position: absolute;
         top: 0;
         left: 0;
     }
+    
     
     .chart-overlay {
         position: fixed;
@@ -697,276 +343,6 @@
         pointer-events: none;
     }
     
-    .data-panel {
-        position: fixed;
-        top: 4rem;
-        left: 2rem;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        z-index: 1000;
-        min-width: 280px;
-        max-width: 350px;
-        max-height: 80vh;
-        overflow-y: auto;
-        animation: fadeInRight 0.5s ease-out;
-    }
-    
-    .data-panel h3 {
-        margin: 0 0 1rem 0;
-        font-size: 1rem;
-        font-weight: 600;
-        color: #374151;
-        text-align: center;
-    }
-    
-    .distribution-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-    }
-    
-    .distribution-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.875rem;
-    }
-    
-    .trust-level {
-        color: #6b7280;
-        font-weight: 500;
-    }
-    
-    .count {
-        color: #dc2626;
-        font-weight: 600;
-    }
-    
-    .total {
-        padding-top: 0.75rem;
-        border-top: 1px solid #e5e7eb;
-        text-align: center;
-        font-size: 0.875rem;
-        color: #374151;
-    }
-    
-    .section {
-        margin-bottom: 1.5rem;
-    }
-    
-    .section:last-child {
-        margin-bottom: 0;
-    }
-    
-    .section h4 {
-        margin: 0 0 0.75rem 0;
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: #374151;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-    
-    .subtotal {
-        padding-top: 0.5rem;
-        border-top: 1px solid #e5e7eb;
-        text-align: center;
-        font-size: 0.8rem;
-        color: #374151;
-    }
-    
-    .breakdown-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    
-    .breakdown-category {
-        border-left: 3px solid #e5e7eb;
-        padding-left: 0.75rem;
-    }
-    
-    .category-title {
-        display: block;
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #6b7280;
-        margin-bottom: 0.25rem;
-    }
-    
-    .category-items {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-    
-    .category-items span {
-        font-size: 0.75rem;
-        color: #374151;
-        padding-left: 0.5rem;
-    }
-    
-    .race-legend {
-        display: flex;
-        color: black;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.875rem;
-    }
-    
-    .legend-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 1px solid black;
-        flex-shrink: 0;
-    }
-    
-    .orientation-breakdown {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .orientation-item {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .orientation-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-    }
-    
-    .orientation-header {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.875rem;
-        color: black;
-    }
-    
-    .race-bar-container {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        height: 30px;
-        width: 200px;
-        flex-shrink: 0;
-    }
-    
-    .race-bar-container .stacked-bar {
-        height: 30px;
-        width: 100%;
-        display: flex;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        overflow: hidden;
-        background: #f5f5f5;
-    }
-    
-    .race-bar-container .bar-segment {
-        height: 100%;
-        transition: all 0.2s ease;
-        border-right: 1px solid rgba(255,255,255,0.5);
-    }
-    
-    .race-bar-container .bar-segment:last-child {
-        border-right: none;
-    }
-    
-    .trust-bars {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-    }
-    
-    .trust-level-row {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.8rem;
-    }
-    
-    .trust-label {
-        color: #6b7280;
-        font-weight: 500;
-        min-width: 60px;
-        flex-shrink: 0;
-    }
-    
-    .level-info {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #374151;
-        font-weight: 500;
-        min-width: 80px;
-        flex-shrink: 0;
-    }
-    
-    .level-info span {
-        color: #374151;
-    }
-    
-    .bar-container {
-        flex: 1;
-        height: 16px;
-        background: #f3f4f6;
-        border-radius: 2px;
-        overflow: hidden;
-    }
-    
-    .stacked-bar {
-        height: 100%;
-        display: flex;
-        background: transparent;
-    }
-    
-    .bar-segment {
-        height: 100%;
-        transition: all 0.2s ease;
-    }
-    
-    .bar-segment:hover {
-        opacity: 0.8;
-        cursor: pointer;
-    }
-    
-    .count {
-        color: #374151;
-        font-weight: 600;
-        min-width: 25px;
-        text-align: right;
-        flex-shrink: 0;
-    }
-    
-    
-    @keyframes fadeInRight {
-        from {
-            opacity: 0;
-            transform: translateX(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
     
     @keyframes slideInFromRight {
         from {
