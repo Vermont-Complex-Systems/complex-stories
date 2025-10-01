@@ -1,0 +1,12 @@
+[project]
+name = "complex-stories-backend"
+version = "0.1.0"
+description = "Complex Stories Backend - FastAPI + Data Pipelines"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.118.0",
+    "pydantic-settings>=2.11.0",
+]
+
+
