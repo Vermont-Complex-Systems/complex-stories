@@ -18,9 +18,25 @@
   - `npm run preview` - Preview production build locally
 
   ### Backend Development
-  - `cd backend && uv run fastapi dev main.py` - Start FastAPI development server
-  - `cd backend && uv run fastapi run main.py` - Run FastAPI in production mode
-  - Backend runs on port 8000 by default
+
+  **FastAPI Server:**
+  ```bash
+  cd backend
+  source projects/open-academic-analytics/.venv/bin/activate
+  uv run --active fastapi dev main.py  # Development server on port 8000
+  ```
+
+  **Dagster Workspace:**
+  ```bash
+  cd backend
+  source projects/open-academic-analytics/.venv/bin/activate
+  PYTHONPATH=. dg dev  # Dagster webserver (auto-assigns port)
+  ```
+
+  **Environment Setup:**
+  - Set `DAGSTER_HOME=~/.dagster` for persistent storage
+  - Each project has its own virtual environment but shares dependencies
+  - Shared clients in `backend/shared/clients/` for reusable API resources
 
   ### Code Quality
   - `npm run check` - Type checking with svelte-check

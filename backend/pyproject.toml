@@ -5,8 +5,14 @@ description = "Complex Stories Backend - FastAPI + Data Pipelines"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "dagster>=1.11.12",
+    "dagster-dg-cli>=1.11.12",
+    "dagster-duckdb>=0.27.12",
+    "dagster-webserver>=1.11.12",
     "fastapi[standard]>=0.118.0",
+    "pandas>=2.3.3",
     "pydantic-settings>=2.11.0",
+    "umap-learn>=0.5.9.post2",
 ]
 
 

@@ -1,9 +1,0 @@
-[project]
-name = "test_project"
-version = "0.1.0"
-
-[tool.dg]
-directory_type = "project"
-
-[tool.dg.project]
-root_module = "test_project"
