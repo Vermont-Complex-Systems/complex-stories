@@ -106,7 +106,13 @@ async def preview_dataset(filename: str, limit: int = 10):
 
 
 @router.get("/academic-research-groups")
-async def get_academic_research_groups(limit: int = None, department: str = None):
+async def get_academic_research_groups(
+    limit: int = None,
+    department: str = None,
+    year: int = None,
+    inst_ipeds_id: int = None,
+    college: str = None
+):
     """Get academic research groups data with optional filtering."""
     file_path = DATA_DIR / "academic-research-groups.csv"
 
@@ -122,6 +128,18 @@ async def get_academic_research_groups(limit: int = None, department: str = None
                 if department and department.lower() not in row.get('host_dept', '').lower():
                     continue
 
+                # Apply year filter if specified
+                if year and row.get('payroll_year') and int(row.get('payroll_year', 0)) != year:
+                    continue
+
+                # Apply institution filter if specified
+                if inst_ipeds_id and row.get('inst_ipeds_id') and int(row.get('inst_ipeds_id', 0)) != inst_ipeds_id:
+                    continue
+
+                # Apply college filter if specified
+                if college and college.lower() not in row.get('college', '').lower():
+                    continue
+
                 rows.append(row)
 
                 # Apply limit if specified
@@ -133,6 +151,9 @@ async def get_academic_research_groups(limit: int = None, department: str = None
             "total_rows": len(rows),
             "filters_applied": {
                 "department": department,
+                "year": year,
+                "inst_ipeds_id": inst_ipeds_id,
+                "college": college,
                 "limit": limit
             },
             "data": rows

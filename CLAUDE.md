@@ -13,53 +13,67 @@
   ## Development Commands
 
   ### Frontend Development
-  - `npm run dev` - Start development server with hot reloading
-  - `npm run build` - Build for production (Node.js server)
-  - `npm run preview` - Preview production build locally
+  ```bash
+  cd frontend
+  npm run dev     # Start development server with hot reloading
+  npm run build   # Build for production (Node.js server)
+  npm run preview # Preview production build locally
+  ```
 
   ### Backend Development
 
   **FastAPI Server:**
   ```bash
   cd backend
-  source projects/open-academic-analytics/.venv/bin/activate
-  uv run --active fastapi dev main.py  # Development server on port 8000
+  uv run fastapi dev app/main.py  # Development server on port 8000
   ```
 
-  **Dagster Workspace:**
+  **Dagster Workspace (Open Academic Analytics):**
   ```bash
-  cd backend
-  source projects/open-academic-analytics/.venv/bin/activate
-  PYTHONPATH=. dg dev  # Dagster webserver (auto-assigns port)
+  cd backend/projects/open-academic-analytics
+  uv run dg dev  # Dagster webserver (auto-assigns port)
   ```
 
   **Environment Setup:**
   - Set `DAGSTER_HOME=~/.dagster` for persistent storage
-  - Each project has its own virtual environment but shares dependencies
+  - Backend uses uv for dependency management with pyproject.toml
   - Shared clients in `backend/shared/clients/` for reusable API resources
+  - Backend includes PostgreSQL support (asyncpg, psycopg2-binary) and Alembic for migrations
 
   ### Code Quality
-  - `npm run check` - Type checking with svelte-check
-  - `npm run check:watch` - Type checking in watch mode
-  - `npm run format` - Format code with Prettier
-  - `npm run lint` - Check code formatting with Prettier
+  ```bash
+  cd frontend
+  npm run check       # Type checking with svelte-check
+  npm run check:watch # Type checking in watch mode
+  npm run format      # Format code with Prettier
+  npm run lint        # Check code formatting with Prettier
+  ```
 
   ### Testing
-  No specific test framework is configured. Check individual story directories for any custom testing setups.
+  - **Frontend**: No specific test framework is configured. Check individual story directories for any custom testing setups.
+  - **Backend**: Test directories exist at `backend/tests/` and `backend/projects/open-academic-analytics/tests/`
 
   ### Deployment
   - `pm2 start ecosystem.config.json` - Deploy using PM2 process manager
-  - Built application serves from `./build/index.js` on port 3000
+  - Built application serves from `./build/index.js` on port 3000 (production)
+  - Frontend runs as Node.js server, not static site
 
   ### Dependency Management
-  - `npm install` - Install all dependencies
-  - Dependencies include specialized packages like `@duckdb/duckdb-wasm`, `allotaxonometer-ui`, `svelteplot`
+  ```bash
+  cd frontend
+  npm install  # Install all Node.js dependencies
+
+  cd backend
+  uv sync      # Install Python dependencies
+  ```
+  - Frontend dependencies include specialized packages like `@duckdb/duckdb-wasm`, `allotaxonometer-ui`, `svelteplot`
+  - Backend uses uv for Python dependency management with pyproject.toml
   - Optional dependencies configured for Linux x64 builds
 
   ## Architecture
 
   ### Story Structure
-  Each story lives in `src/lib/stories/[story-slug]/` with the following structure:
+  Each story lives in `frontend/src/lib/stories/[story-slug]/` with the following structure:
   ```
   story-slug/
   ├── components/
@@ -72,11 +86,10 @@
   ```
 
   ### Data Management
-  - Stories are configured in `src/data/stories.csv` which defines metadata, URLs, authors, keywords, and
-  display settings
-  - Story components are dynamically loaded via `src/lib/utils/storyRegistry.js` using Vite's `import.meta.glob()`
-  - Global data files live in `src/data/` with path alias `$data`
-  - Static assets live in `static/`
+  - Stories are configured in `frontend/src/data/stories.csv` which defines metadata, URLs, authors, keywords, and display settings
+  - Story components are dynamically loaded via `frontend/src/lib/utils/storyRegistry.js` using Vite's `import.meta.glob()`
+  - Global data files live in `frontend/src/data/` with path alias `$data`
+  - Static assets live in `frontend/static/`
   - CSV/TSV files can be imported directly as JS objects via the DSV plugin
   - Complex stories may include `data/loader.js` files for dynamic data processing
 
@@ -98,7 +111,7 @@
 
   ### Styling Approach
   - No CSS framework - custom styling per story
-  - Global styles in `src/styles/` (app.css, base.css, theme.css, etc.)
+  - Global styles in `frontend/src/styles/` (app.css, base.css, theme.css, etc.)
   - Component-specific styles within `<style>` blocks
   - Story-wide styling decisions made in story's `Index.svelte`
 
@@ -118,7 +131,7 @@
   - **bits-ui** for accessible UI primitives
 
   ### Build Configuration
-  - **Vite** config includes custom path aliases: `$data` → `src/data`, `$styles` → `src/styles`
+  - **Vite** config includes custom path aliases: `$data` → `frontend/src/data`, `$styles` → `frontend/src/styles`
   - **DSV plugin** for loading CSV/TSV files directly in components
   - **Version/timestamp injection** via `__VERSION__` and `__TIMESTAMP__` globals
   - **Node.js adapter** for server-side functionality
@@ -131,9 +144,9 @@
 
   
 
-1. Create story directory in `src/lib/stories/[new-story-slug]/`
+1. Create story directory in `frontend/src/lib/stories/[new-story-slug]/`
 2. Add required `components/Index.svelte` and `data/copy.json`
-3. Add story entry to `src/data/stories.csv` with required fields:
+3. Add story entry to `frontend/src/data/stories.csv` with required fields:
 - `url`: story slug (matches directory name)
 - `url_alt`: external URL (for external stories)
 - `external`: true/false flag for external vs internal stories
@@ -172,24 +185,31 @@ The project is being refactored to support external institutions and better data
 #### Current Structure
 
 ```
-complex-stories/
+complex-stories-dev/
 ├── backend/ # FastAPI backend (in development)
 │ ├── app/ # FastAPI application
+│ │ ├── main.py # FastAPI app entry point
+│ │ └── core/ # FastAPI core modules
+│ ├── projects/ # Dagster project modules
+│ │ └── open-academic-analytics/ # Open academic analytics pipeline
+│ │     ├── pyproject.toml # Project-specific dependencies
+│ │     └── src/open_academic_analytics/ # Source code
+│ ├── shared/ # Shared backend resources
+│ │ └── clients/ # Reusable API clients
 │ ├── data/ # Raw datasets
-│ ├── main.py # FastAPI app entry point
-│ ├── pyproject.toml # Python dependencies (fastapi, etc.)
-│ └── .venv/ # Python virtual environment
-├── src/ # SvelteKit frontend (current)
-│ ├── lib/
-│ │ ├── stories/ # Story components
-│ │ └── utils/ # Shared utilities
-│ ├── routes/ # SvelteKit routes
-│ ├── data/ # Static story metadata
-│ └── styles/ # Global CSS
-├── static/ # Static assets and data files
-├── package.json # Node.js dependencies
-├── svelte.config.js # SvelteKit config with Node.js adapter
-└── ecosystem.config.js # PM2 configuration
+│ └── pyproject.toml # Backend dependencies (fastapi, dagster, etc.)
+├── frontend/ # SvelteKit frontend
+│ ├── src/
+│ │ ├── lib/
+│ │ │ ├── stories/ # Story components
+│ │ │ └── utils/ # Shared utilities
+│ │ ├── routes/ # SvelteKit routes
+│ │ ├── data/ # Static story metadata
+│ │ └── styles/ # Global CSS
+│ ├── static/ # Static assets and data files
+│ ├── package.json # Node.js dependencies
+│ └── svelte.config.js # SvelteKit config with Node.js adapter
+└── ecosystem.config.json # PM2 configuration
 ```
 
 #### Target Structure (Planned)
@@ -265,9 +285,13 @@ complex-stories/
 
 **Phase 2: Extract Backend Infrastructure** 🔄 **IN PROGRESS**
 1. ✅ Create `backend/` directory structure with FastAPI skeleton
-2. 🔄 Move story-specific backends to shared pipeline structure
-3. 🔄 Consolidate shared resources and clients
-4. 🔄 Create comprehensive API endpoints
+2. ✅ Implement PostgreSQL database layer with SQLAlchemy 2.0+ async
+3. ✅ Create Paper and Coauthor models matching Dagster export structure
+4. ✅ Build comprehensive API endpoints for academic data (GET/POST)
+5. ✅ Add database table creation and management scripts
+6. 🔄 Move story-specific backends to shared pipeline structure
+7. 🔄 Consolidate shared resources and clients
+8. ⏳ **BLOCKED**: Waiting for PostgreSQL admin access to test database integration
 
 **Phase 3: Data Sharing Implementation** 🔄 **NEXT**
 1. Create API endpoints for cross-story data access
@@ -283,13 +307,13 @@ complex-stories/
 
 #### Backend Migration Pattern
 ```bash
-# Current structure
-src/lib/stories/[story]/backend/src/backend/defs/ → backend/core/pipelines/[story]/assets/
-src/lib/stories/[story]/backend/src/backend/clients/ → backend/core/clients/ (shared)
-src/lib/stories/[story]/backend/src/backend/defs/resources.py → backend/core/pipelines/[story]/resources.py
+# Current structure (in progress)
+frontend/src/lib/stories/[story]/backend/ → backend/projects/[story]/
+frontend/static/data/[story]/ ← backend/projects/[story]/assets/export/
 
-# Generated data
-static/data/[story]/ ← backend/core/pipelines/[story]/assets/export/
+# Target structure
+backend/projects/[story]/src/[story]/defs/ → backend/pipelines/[story]/assets/
+backend/projects/[story]/clients/ → backend/shared/clients/ (shared)
 ```
 
 ## Remote Functions Architecture
@@ -335,7 +359,7 @@ return db.select().from(stories).where(/* filter logic */).all();
 
 **Story-Specific Data Loading**: Each story gets a `data.remote.js` file for backend integration:
 ```javascript
-// src/lib/stories/uvm-research-groups/data.remote.js
+// frontend/src/lib/stories/uvm-research-groups/data.remote.js
 export const getProfs = query(
 v.optional(v.object({ research_area: v.optional(v.string()) })),
 async (filters = {}) => {
@@ -350,7 +374,7 @@ return response.json();
 
 **Simplified Page Loading**: `+page.server.ts` only handles static copy.json, no async data:
 ```typescript
-// src/routes/[slug]/+page.server.ts (uniform for all stories)
+// frontend/src/routes/[slug]/+page.server.ts (uniform for all stories)
 export async function load({ params }) {
 const story = storiesData.find(d => d.slug === params.slug);
 const copyData = await import(`$lib/stories/${params.slug}/data/copy.json`);
@@ -370,6 +394,48 @@ let profs = $derived(await getProfs({ research_area: filter }));
 - **Type Safety**: Valibot schemas provide validation and TypeScript types
 - **Performance**: Prerendered SQLite for stories, remote functions for dynamic data
 - **Clean URLs**: Simple, readable API endpoints without unnecessary nesting
+
+## Database Layer Implementation
+
+The backend now includes a complete PostgreSQL database layer with academic data models:
+
+### **Database Models** (`backend/app/models/academic.py`)
+- **Paper model**: Complete structure matching Dagster pipeline exports with 80+ fields including:
+  - Author and publication metadata (title, year, citations, etc.)
+  - OpenAlex and Semantic Scholar integration data
+  - UMAP embeddings for visualization
+  - Collaboration metrics (coauthor counts, citation analysis)
+  - Open access status and PDF availability
+- **Coauthor model**: Collaboration analysis data including:
+  - Ego/coauthor relationship data
+  - Age and career stage analysis
+  - Institution affiliations and shared collaborations
+  - Temporal collaboration patterns
+
+### **Database Configuration** (`backend/app/core/database.py`)
+- SQLAlchemy 2.0+ with async PostgreSQL support via asyncpg
+- Connection pooling and error handling
+- Environment-based configuration (supports both `DATABASE_URL` and individual components)
+- Automatic connection management in FastAPI lifecycle
+
+### **API Endpoints** (`backend/app/routers/open_academic_analytics.py`)
+- **GET endpoints** for frontend data consumption:
+  - `/papers/{author_name}` - Filtered paper data with coauthor limits
+  - `/coauthors/{author_name}` - Collaboration network data
+  - `/departments` and `/research-areas` - Metadata endpoints
+- **POST endpoints** for Dagster pipeline data uploads:
+  - `/papers/bulk` - Bulk paper data ingestion
+  - `/coauthors/bulk` - Bulk coauthor data ingestion
+- Full field mapping between database models and JSON API responses
+
+### **Database Management**
+- **Table creation**: `backend/create_tables.py` script with create/drop operations
+- **Setup documentation**: `backend/local-postgres-setup.md` with complete local development guide
+- **Environment configuration**: Supports both development and production PostgreSQL setups
+
+### **Current Status**
+✅ **COMPLETE**: Database models, API endpoints, management scripts
+⏳ **BLOCKED**: Waiting for PostgreSQL admin access to create database and test integration
 
 ## API Layer Architecture Decision
 
@@ -416,7 +482,7 @@ const profs = await fetch('/open-academic-analytics/profs?department=cs');
 - This CLAUDE.md file provides context for future Claude Code sessions
 
 ### Story Configuration Fields
-Important CSV fields in `src/data/stories.csv`:
+Important CSV fields in `frontend/src/data/stories.csv`:
 - `external`: Boolean flag for internal vs external stories
 - `filters`: Used for homepage categorization (popular, in_theory, dashboard, dataset)
 - `faves`: Boolean for featuring stories on homepage

@@ -47,8 +47,11 @@ def uvm_profs_2023(
     duckdb: DuckDBResource,
     complex_stories_api: ComplexStoriesAPIResource
 ) -> dg.MaterializeResult:
-    # Fetch data from FastAPI backend
-    api_data = complex_stories_api.get_academic_research_groups()
+    # Fetch data from FastAPI backend with filters
+    api_data = complex_stories_api.get_academic_research_groups(
+        year=2023,
+        inst_ipeds_id=231174
+    )
 
     # Process and load into DuckDB
     import_filtered_data_to_duckdb(

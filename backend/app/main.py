@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import settings
+from .core.database import connect_to_database, close_database_connection
 from .routers import open_academic_analytics, datasets
 from .internal import admin
 
@@ -11,6 +12,15 @@ app = FastAPI(
     version=settings.version,
     debug=settings.debug,
 )
+
+# Database events
+@app.on_event("startup")
+async def startup_event():
+    await connect_to_database()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await close_database_connection()
 
 # Configure CORS
 app.add_middleware(

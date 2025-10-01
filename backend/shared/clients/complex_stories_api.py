@@ -12,7 +12,10 @@ class ComplexStoriesAPIResource(dg.ConfigurableResource):
     def get_academic_research_groups(
         self,
         limit: Optional[int] = None,
-        department: Optional[str] = None
+        department: Optional[str] = None,
+        year: Optional[int] = None,
+        inst_ipeds_id: Optional[int] = None,
+        college: Optional[str] = None
     ) -> Dict[str, Any]:
         """Get academic research groups data with optional filtering"""
 
@@ -21,6 +24,12 @@ class ComplexStoriesAPIResource(dg.ConfigurableResource):
             params["limit"] = limit
         if department is not None:
             params["department"] = department
+        if year is not None:
+            params["year"] = year
+        if inst_ipeds_id is not None:
+            params["inst_ipeds_id"] = inst_ipeds_id
+        if college is not None:
+            params["college"] = college
 
         response = requests.get(
             f"{self.base_url}/datasets/academic-research-groups",
