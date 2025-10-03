@@ -46,7 +46,7 @@
 <h3>How big is a token?</h3>
 <div style="margin-bottom: 1.5rem; margin-top: 5%;display: flex; gap: 2rem; align-items: center;">
   <div>
-    <label for="slider">Number: {sliderValue}</label>
+    <label for="slider">Token size: {sliderValue}</label>
     <input id="slider" type="range" min={1} max={25} bind:value={sliderValue} />
   </div>
   <div>

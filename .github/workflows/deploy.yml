@@ -50,17 +50,18 @@ jobs:
     - name: Deploy to VM
       run: |
         ssh -i ~/.ssh/deploy_key ${{ secrets.VM_USERNAME }}@${{ secrets.VM_HOST }} << 'EOF'
-          cd ~/complex-stories
+          cd ~/complex-stories-main
           git pull origin main
           npm ci --only=production
+          npm install
           npm run build
-          pm2 restart complex-stories
+          pm2 restart complex-stories-main
           
           # Wait for app to start
           sleep 10
           
           # Health check
-          if pm2 describe complex-stories | grep -q "online"; then
+          if pm2 describe complex-stories-main | grep -q "online"; then
             echo "✅ Deployment successful - app is online"
             exit 0
           else
