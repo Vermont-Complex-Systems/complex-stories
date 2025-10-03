@@ -90,7 +90,22 @@ class OpenAlexClient:
         
         # Handle rate limit responses
         if response.status_code == 429:
-            retry_after = int(response.headers.get("Retry-After", 5))
+            retry_after_header = response.headers.get("Retry-After", "5")
+
+            # Handle both formats: seconds (int) or HTTP date string
+            try:
+                retry_after = int(retry_after_header)
+            except ValueError:
+                # If it's a date string, parse it and calculate seconds from now
+                from email.utils import parsedate_to_datetime
+                import datetime as dt
+                try:
+                    retry_date = parsedate_to_datetime(retry_after_header)
+                    retry_after = max(1, int((retry_date - dt.datetime.now(retry_date.tzinfo)).total_seconds()))
+                except Exception:
+                    # Fallback if date parsing fails
+                    retry_after = 5
+
             print(f"Rate limited by OpenAlex. Waiting {retry_after} seconds before retry.")
             time.sleep(retry_after)
             return self.request(endpoint, params, method, json_data)  # Retry once

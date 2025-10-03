@@ -26,50 +26,88 @@ def get_external_coauthors_to_process(conn) -> List[Tuple[str, str]]:
     """Get external coauthors who haven't been processed yet"""
     
     result = conn.execute("""
-    SELECT DISTINCT 
-        a.author_id,
-        a.author_display_name
-    FROM oa.raw.authorships a
-    JOIN oa.raw.publications p ON a.work_id = p.id
-    LEFT JOIN oa.cache.coauthor_cache c ON a.author_id = c.id
-    WHERE p.ego_author_id IS NULL  -- Only get external (non-UVM) coauthors
-    AND c.id IS NULL               -- Not already cached
+    -- Find external coauthors who need their publication ranges cached
+    SELECT DISTINCT
+        a.author_id,           -- OpenAlex author ID (e.g., 'https://openalex.org/A12345')
+        a.author_display_name  -- Author's display name for logging
+    FROM oa.raw.authorships a      -- All author-paper relationships
+    LEFT JOIN oa.cache.coauthor_cache c
+        ON a.author_id = c.id      -- Check if already cached
+    WHERE a.author_id NOT IN (
+        -- Exclude UVM professors (we don't need to cache their data)
+        SELECT ego_author_id
+        FROM oa.raw.uvm_profs_2023
+        WHERE ego_author_id IS NOT NULL
+    )  -- Only get external (non-UVM) coauthors who collaborate with UVM profs
+    AND (c.id IS NULL OR c.fetch_successful = FALSE) -- Only skips successful
     ORDER BY a.author_display_name
     """).fetchall()
     
     return [(row[0], row[1]) for row in result]
 
-def fetch_author_publication_range(oa_client: OpenAlexClient, author_id: str) -> Tuple[Optional[int], Optional[int], int]:
+def fetch_author_publication_range(oa_client: OpenAlexClient, author_id: str) -> Tuple[Optional[int], Optional[int]]:
     """Get first/last pub year in a single API call using group_by"""
     try:
         clean_id = author_id.replace('https://openalex.org/', '')
-        
+
         # Single API call using group_by to get year statistics
         response = oa_client.request("works", {
             "filter": f"author.id:{clean_id}",
             "group_by": "publication_year",
-            "per_page": 200 
+            "per_page": 200
         }).json()
-        
+
         results = response.get('group_by', [])
-        
+
         if not results:
             return None, None
-        
-        # Extract all years and find min/max
-        years = [item['key'] for item in results if item['key'] is not None]
-        
+
+        # Extract all years and convert to integers, filtering out invalid values
+        years = []
+        skipped_values = []
+
+        dg.get_dagster_logger().info(f"Processing {len(results)} group_by results for {author_id}")
+
+        for item in results:
+            key = item.get('key')
+            count = item.get('count', 0)
+
+            if key is not None:
+                try:
+                    # Convert to int, skip if it's not a valid year
+                    year = int(key)
+                    if 1900 <= year <= 2030:  # Reasonable year range
+                        years.append(year)
+                        dg.get_dagster_logger().debug(f"Valid year: {year} ({count} publications)")
+                    else:
+                        skipped_values.append(f"{key} (out of range, {count} pubs)")
+                        dg.get_dagster_logger().warning(f"Year out of range: {key} ({count} publications)")
+                except (ValueError, TypeError):
+                    # Skip invalid year values (like timestamps)
+                    skipped_values.append(f"{key} (invalid format, {count} pubs)")
+                    dg.get_dagster_logger().warning(f"Invalid year format: {key} ({count} publications)")
+            else:
+                skipped_values.append(f"null key ({count} pubs)")
+                dg.get_dagster_logger().warning(f"Null year key with {count} publications")
+
+        # Log summary
+        if skipped_values:
+            dg.get_dagster_logger().warning(f"Skipped {len(skipped_values)} invalid year values: {skipped_values}")
+
+        dg.get_dagster_logger().info(f"Found {len(years)} valid years for {author_id}")
+
         if not years:
+            dg.get_dagster_logger().warning(f"No valid years found for {author_id} after filtering")
             return None, None
-            
+
         first_year = min(years)
         last_year = max(years)
-        
+
         return first_year, last_year
-        
+
     except Exception as e:
         dg.get_dagster_logger().error(f"Failed to fetch publication range for {author_id}: {str(e)}")
-        return None, None, 0
+        return None, None
    
 @dg.asset(
     kinds={"openalex"},
@@ -91,8 +129,11 @@ def coauthor_cache(
         total_external = conn.execute("""
             SELECT COUNT(DISTINCT a.author_id) as total_external_authors
             FROM oa.raw.authorships a
-            JOIN oa.raw.publications p ON a.work_id = p.id
-            WHERE p.ego_author_id IS NULL  -- External (non-UVM) coauthors only
+            WHERE a.author_id NOT IN (
+                SELECT ego_author_id
+                FROM oa.raw.uvm_profs_2023
+                WHERE ego_author_id IS NOT NULL
+            )  -- External (non-UVM) coauthors only
         """).fetchone()[0]
         
         already_cached = conn.execute("""
@@ -190,12 +231,15 @@ def coauthor_cache_progress_check(duckdb: DuckDBResource) -> dg.AssetCheckResult
     """Check the progress of building coauthor cache"""
     
     with duckdb.get_connection() as conn:
-        # Get external coauthors count using publications table
+        # Get external coauthors count
         total_external = conn.execute("""
             SELECT COUNT(DISTINCT a.author_id) as total_external_coauthors
             FROM oa.raw.authorships a
-            JOIN oa.raw.publications p ON a.work_id = p.id
-            WHERE p.ego_author_id IS NULL  -- External (non-UVM) coauthors only
+            WHERE a.author_id NOT IN (
+                SELECT ego_author_id
+                FROM oa.raw.uvm_profs_2023
+                WHERE ego_author_id IS NOT NULL
+            )  -- External (non-UVM) coauthors only
         """).fetchone()[0]
         
         cached_stats = conn.execute("""

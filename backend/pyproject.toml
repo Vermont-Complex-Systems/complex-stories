@@ -18,6 +18,16 @@ dependencies = [
     "pydantic-settings>=2.11.0",
     "umap-learn>=0.5.9.post2",
     "fastparquet>=2024.11.0",
+    "ipykernel>=6.30.1",
+    "shared",
 ]
+
+[tool.uv.workspace]
+members = [
+    "shared",
+]
+
+[tool.uv.sources]
+shared = { workspace = true, editable = true }
 
 
