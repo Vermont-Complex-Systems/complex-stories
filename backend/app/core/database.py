@@ -26,24 +26,19 @@ database = Database()
 
 
 def get_database_url() -> str:
-    """Get PostgreSQL connection URL from environment variables"""
+    """Get PostgreSQL connection URL from settings"""
+    from .config import settings
 
     # Check for full DATABASE_URL first (common in deployment)
     database_url = os.getenv("DATABASE_URL")
     if database_url:
-        # Convert postgres:// to postgresql+asyncpg:// if needed
+        # Convert postgres:// to postgresql+psycopg:// if needed
         if database_url.startswith("postgres://"):
-            database_url = database_url.replace("postgres://", "postgresql+asyncpg://", 1)
+            database_url = database_url.replace("postgres://", "postgresql+psycopg://", 1)
         return database_url
 
-    # Fallback to individual components for development
-    host = os.getenv("POSTGRES_HOST", "localhost")
-    port = os.getenv("POSTGRES_PORT", "5432")
-    username = os.getenv("POSTGRES_USER", "postgres")
-    password = os.getenv("POSTGRES_PASSWORD", "")
-    database_name = os.getenv("POSTGRES_DB", "complex_stories")
-
-    return f"postgresql+asyncpg://{username}:{password}@{host}:{port}/{database_name}"
+    # Use settings instead of os.getenv for consistency
+    return f"postgresql+psycopg://{settings.postgres_user}:{settings.postgres_password}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}"
 
 
 async def connect_to_database():

@@ -7,6 +7,10 @@ This script creates all the necessary tables in PostgreSQL.
 import asyncio
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Add the backend directory to the Python path
 import sys

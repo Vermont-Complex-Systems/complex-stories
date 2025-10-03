@@ -332,25 +332,27 @@ async def upload_papers_bulk(
     """
     try:
         from ..models.academic import Paper
-        from sqlalchemy import delete
+        from sqlalchemy import delete, text
 
-        # Clear existing data
-        await db.execute(delete(Paper))
+        # Alternative approach: Use ON CONFLICT to handle duplicates
+        from sqlalchemy.dialects.postgresql import insert
 
-        # Insert new papers
-        paper_objects = []
+        # Insert papers with ON CONFLICT DO UPDATE (upsert)
         for paper_data in papers:
-            paper = Paper(**paper_data)
-            paper_objects.append(paper)
+            stmt = insert(Paper).values(**paper_data)
+            # Update all fields if conflict on primary key
+            stmt = stmt.on_conflict_do_update(
+                index_elements=['id'],
+                set_={key: stmt.excluded[key] for key in paper_data.keys() if key != 'id'}
+            )
+            await db.execute(stmt)
 
-        if paper_objects:
-            db.add_all(paper_objects)
-            await db.commit()
+        await db.commit()
 
         return {
             "status": "success",
-            "papers_inserted": len(paper_objects),
-            "message": f"Successfully uploaded {len(paper_objects)} papers"
+            "papers_processed": len(papers),
+            "message": f"Successfully processed {len(papers)} papers (inserted or updated)"
         }
 
     except Exception as e:

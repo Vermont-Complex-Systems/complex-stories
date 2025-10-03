@@ -1,11 +1,40 @@
 {
-  "apps": [{
-    "name": "complex-stories",
-    "script": "./build/index.js",
-    "env": {
-      "NODE_ENV": "production",
-      "HOST": "0.0.0.0",
-      "PORT": "3000"
+  "apps": [
+    {
+      "name": "complex-stories-main",
+      "script": "./build/index.js",
+      "cwd": "/users/j/s/jstonge1/complex-stories-main",
+      "env": {
+        "NODE_ENV": "production",
+        "HOST": "0.0.0.0",
+        "PORT": "3000"
+      }
+    },
+    {
+      "name": "complex-stories-dev",
+      "script": "./build/index.js",
+      "cwd": "/users/j/s/jstonge1/complex-stories-dev",
+      "env": {
+        "NODE_ENV": "production",
+        "HOST": "0.0.0.0",
+        "PORT": "3000"
+      },
+      "autorestart": false
+    },
+    {
+      "name": "complex-stories-api",
+      "script": "./start_api.sh",
+      "cwd": "/users/j/s/jstonge1/complex-stories-dev/backend",
+      "env": {
+        "NODE_ENV": "production",
+        "HOST": "0.0.0.0",
+        "PORT": "3001",
+        "POSTGRES_HOST": "localhost",
+        "POSTGRES_PORT": "5432",
+        "POSTGRES_DB": "complex_stories",
+        "POSTGRES_USER": "jstonge1"
+      },
+      "env_file": "/users/j/s/jstonge1/complex-stories-dev/backend/.env"
     }
-  }]
+  ]
 }

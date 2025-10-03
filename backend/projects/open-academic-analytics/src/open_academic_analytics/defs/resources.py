@@ -42,13 +42,6 @@ class OpenAlexResource(dg.ConfigurableResource):
             base_url=self.base_url,
         )
 
-# class StaticDataPathResource(dg.ConfigurableResource):
-#     """Resource for managing static data output paths"""
-#     static_data_path: str = "../../../../../static/data"
-    
-#     def get_path(self) -> str:
-#         return self.static_data_path
-
 @dg.definitions  
 def resources():
     return dg.Definitions(
@@ -59,6 +52,5 @@ def resources():
             ),
             "s2_resource": SemanticScholarResource(),
             "complex_stories_api": ComplexStoriesAPIResource()
-            # "static_data_path": StaticDataPathResource()
         }
     )

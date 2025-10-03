@@ -1,20 +1,19 @@
 import dagster as dg
 from dagster_duckdb import DuckDBResource
-from pathlib import Path
-from backend.defs.resources import StaticDataPathResource 
+import requests
+from typing import Dict, Any, List 
 
 @dg.asset(
     kinds={"export"},
     deps=["yearly_collaborations", "coauthor_institutions", "coauthor_cache"], 
 )
-def coauthor_parquet(duckdb: DuckDBResource, static_data_path: StaticDataPathResource) -> dg.MaterializeResult:
-    """Export final coauthor collaboration data as parquet for static frontend"""
+def coauthor_database_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
+    """Export final coauthor collaboration data to database via API"""
     
     with duckdb.get_connection() as conn:
         # import duckdb
         # conn=duckdb.connect("/tmp/oa.duckdb")
-        conn.execute(f"""
-            COPY (
+        result = conn.execute("""
             WITH base_data AS (
                 SELECT 
                     yc.*,
@@ -119,13 +118,35 @@ def coauthor_parquet(duckdb: DuckDBResource, static_data_path: StaticDataPathRes
 
             FROM age_calculations
             ORDER BY publication_year
-        ) TO '{static_data_path.get_path()}/coauthor.parquet' (FORMAT PARQUET)
-        """)
+        """).fetchall()
 
-        return dg.MaterializeResult(
-            metadata={
-                "export_path": str(Path(static_data_path.get_path()) / "coauthor.parquet"),
-            }
-    )
+        # Convert to list of dictionaries for API
+        coauthor_data = []
+        for row in result:
+            # Create composite ID for the database
+            row_dict = dict(row)
+            row_dict['id'] = f"{row_dict['ego_author_id']}_{row_dict['coauthor_id']}_{row_dict['publication_year']}"
+            coauthor_data.append(row_dict)
+
+        # POST to the database API
+        api_url = "https://api.complexstories.uvm.edu/open-academic-analytics/coauthors/bulk"
+
+        try:
+            response = requests.post(api_url, json=coauthor_data, verify=False)
+            response.raise_for_status()
+
+            dg.get_dagster_logger().info(f"Successfully uploaded {len(coauthor_data)} coauthor records to database")
+
+            return dg.MaterializeResult(
+                metadata={
+                    "records_uploaded": len(coauthor_data),
+                    "api_endpoint": api_url,
+                    "upload_status": "success"
+                }
+            )
+
+        except requests.exceptions.RequestException as e:
+            dg.get_dagster_logger().error(f"Failed to upload coauthor data: {str(e)}")
+            raise
 
 

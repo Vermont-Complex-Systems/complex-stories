@@ -31,7 +31,8 @@
   **Dagster Workspace (Open Academic Analytics):**
   ```bash
   cd backend/projects/open-academic-analytics
-  uv run dg dev  # Dagster webserver (auto-assigns port)
+  ./run_dagster.sh  # Dagster webserver with shared modules (auto-assigns port)
+  # Alternative: uv run dg dev (if shared modules properly installed)
   ```
 
   **Environment Setup:**
@@ -236,8 +237,8 @@ complex-stories/
 │ │ ├── assets/
 │ │ └── resources.py
 │ ├── data/ # raw datasets
-│ │ ├── academic-department.csv
-│ │ └── academic-research-groups.csv
+│ │ ├── academic-department.parquet
+│ │ └── academic-research-groups.parquet
 │ ├── pyproject.toml # Python dependencies (dagster, fastapi, etc.)
 │ └── tests/ # Backend tests
 ├── frontend/ # SvelteKit (current src/ moved here)
@@ -283,21 +284,26 @@ complex-stories/
 2. ✅ Enable remote functions in SvelteKit configuration
 3. ✅ Update deployment to PM2 Node.js app
 
-**Phase 2: Extract Backend Infrastructure** 🔄 **IN PROGRESS**
+**Phase 2: Extract Backend Infrastructure** ✅ **COMPLETED**
 1. ✅ Create `backend/` directory structure with FastAPI skeleton
 2. ✅ Implement PostgreSQL database layer with SQLAlchemy 2.0+ async
 3. ✅ Create Paper and Coauthor models matching Dagster export structure
 4. ✅ Build comprehensive API endpoints for academic data (GET/POST)
 5. ✅ Add database table creation and management scripts
-6. 🔄 Move story-specific backends to shared pipeline structure
-7. 🔄 Consolidate shared resources and clients
-8. ⏳ **BLOCKED**: Waiting for PostgreSQL admin access to test database integration
+6. ✅ Deploy FastAPI backend via PM2 with environment configuration
+7. ✅ Create datasets management API endpoints (parquet and CSV support)
+8. ✅ Implement frontend datasets page with API connectivity monitoring
+9. ✅ Configure shared clients architecture for Dagster pipelines
+10. ✅ Update Dagster pipelines to consume API endpoints instead of raw URLs
+11. ⏳ **WAITING**: IT setup for reverse proxy (api.complexstories.uvm.edu → port 3001)
 
-**Phase 3: Data Sharing Implementation** 🔄 **NEXT**
-1. Create API endpoints for cross-story data access
-2. Implement `uvm-research-groups` pipeline consuming `open-academic-analytics` data
-3. Update frontend to call backend API for dynamic queries
-4. Maintain DuckDB WASM for high-performance exploration
+**Phase 3: Data Sharing Implementation** 🔄 **IN PROGRESS**
+1. ✅ Create datasets API endpoints for cross-story data access
+2. ✅ Implement shared clients architecture (`backend/shared/clients/`)
+3. ✅ Update `open-academic-analytics` pipeline to consume API datasets
+4. 🔄 Test end-to-end pipeline functionality with new API integration
+5. ⏳ Update frontend to call backend API for dynamic queries (after reverse proxy setup)
+6. ⏳ Maintain DuckDB WASM for high-performance exploration
 
 **Phase 4: Multi-Tenant Platform** ⏳ **PLANNED**
 1. Add institution-based data partitioning
@@ -418,24 +424,31 @@ The backend now includes a complete PostgreSQL database layer with academic data
 - Environment-based configuration (supports both `DATABASE_URL` and individual components)
 - Automatic connection management in FastAPI lifecycle
 
-### **API Endpoints** (`backend/app/routers/open_academic_analytics.py`)
-- **GET endpoints** for frontend data consumption:
-  - `/papers/{author_name}` - Filtered paper data with coauthor limits
-  - `/coauthors/{author_name}` - Collaboration network data
-  - `/departments` and `/research-areas` - Metadata endpoints
-- **POST endpoints** for Dagster pipeline data uploads:
-  - `/papers/bulk` - Bulk paper data ingestion
-  - `/coauthors/bulk` - Bulk coauthor data ingestion
-- Full field mapping between database models and JSON API responses
+### **API Endpoints**
+- **Academic Data** (`backend/app/routers/open_academic_analytics.py`):
+  - GET/POST endpoints for papers and coauthors data
+  - Bulk data ingestion for Dagster pipeline integration
+  - Metadata endpoints for departments and research areas
+- **Datasets Management** (`backend/app/routers/datasets.py`):
+  - File serving endpoints for raw parquet/CSV data
+  - Preview endpoints for data exploration
+  - Statistics endpoints for dataset metadata
+  - Support for both parquet and CSV formats with proper NaN handling
 
-### **Database Management**
-- **Table creation**: `backend/create_tables.py` script with create/drop operations
-- **Setup documentation**: `backend/local-postgres-setup.md` with complete local development guide
-- **Environment configuration**: Supports both development and production PostgreSQL setups
+### **Deployment Infrastructure**
+- **PM2 Configuration** (`ecosystem.config.json`): FastAPI service on port 3001
+- **Environment Management**: PostgreSQL credentials and CORS configuration
+- **Database Setup**: Complete table creation and user management scripts
+- **Dependency Management**: Full parquet support with pyarrow and fastparquet
+
+### **Frontend Integration**
+- **Datasets Page** (`frontend/src/routes/datasets/`): API connectivity monitoring
+- **Status Indicators**: Real-time API health checks and dataset availability
+- **Download/Preview**: Direct access to datasets with proper error handling
 
 ### **Current Status**
-✅ **COMPLETE**: Database models, API endpoints, management scripts
-⏳ **BLOCKED**: Waiting for PostgreSQL admin access to create database and test integration
+✅ **COMPLETE**: Database models, API endpoints, PM2 deployment, frontend integration
+⏳ **WAITING**: IT reverse proxy setup for api.complexstories.uvm.edu → port 3001
 
 ## API Layer Architecture Decision
 

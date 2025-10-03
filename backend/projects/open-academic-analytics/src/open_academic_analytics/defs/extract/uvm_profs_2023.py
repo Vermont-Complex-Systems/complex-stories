@@ -3,28 +3,8 @@ from dagster_duckdb import DuckDBResource
 import pandas as pd
 from shared.clients.complex_stories_api import ComplexStoriesAPIResource
 
-def import_filtered_data_to_duckdb(api_data: dict, duckdb: DuckDBResource, payroll_year: int, inst_ipeds_id: int):
-    # Convert API data to DataFrame
-    df = pd.DataFrame(api_data['data'])
-
-    # Filter the data
-    filtered_df = df[
-        (df['payroll_year'].astype(int) == payroll_year) &
-        (df['inst_ipeds_id'].astype(int) == inst_ipeds_id) &
-        (df['oa_uid'].notna())
-    ].copy()
-
-    # Transform the data
-    filtered_df['ego_author_id'] = 'https://openalex.org/' + filtered_df['oa_uid'].astype(str)
-    filtered_df['department'] = filtered_df['host_dept']
-    filtered_df['first_pub_year'] = pd.to_numeric(filtered_df['first_pub_year'], errors='coerce').astype('Int64')
-
-    # Select and rename columns to match expected schema
-    final_df = filtered_df[[
-        'is_prof', 'group_size', 'perceived_as_male', 'department',
-        'college', 'has_research_group', 'ego_author_id', 'group_url',
-        'first_pub_year', 'payroll_name', 'position', 'notes'
-    ]]
+def import_filtered_url_to_duckdb(url: str, duckdb: DuckDBResource, payroll_year: int, inst_ipeds_id: int):
+    """Import from parquet URL (same as frontend) to match exact data"""
 
     with duckdb.get_connection() as conn:
         # Create schemas
@@ -33,29 +13,41 @@ def import_filtered_data_to_duckdb(api_data: dict, duckdb: DuckDBResource, payro
         conn.execute("CREATE SCHEMA IF NOT EXISTS cache")
         conn.execute("CREATE SCHEMA IF NOT EXISTS transform")
 
-        # Insert data using pandas DataFrame
-        conn.execute("CREATE OR REPLACE TABLE oa.raw.uvm_profs_2023 AS SELECT * FROM final_df")
-
-        row_count = len(final_df)
-
+        # Use the exact same SQL as frontend version
+        row_count = conn.execute(
+            f"""
+            CREATE OR REPLACE TABLE oa.raw.uvm_profs_2023 as (
+                SELECT
+                    is_prof,
+                    group_size,
+                    perceived_as_male,
+                    host_dept AS department,
+                    college,
+                    has_research_group,
+                    'https://openalex.org/' || oa_uid AS ego_author_id,
+                    group_url,
+                    CAST(first_pub_year AS INTEGER) as first_pub_year,
+                    payroll_name,
+                    position,
+                    notes
+                FROM read_parquet('{url}')
+                WHERE
+                    payroll_year = {payroll_year} AND inst_ipeds_id = {inst_ipeds_id} AND oa_uid IS NOT NULL
+            )
+            """
+        ).fetchone()
 
 @dg.asset(
-        description="📋 Load UVM Professors 2023 dataset from Complex Stories FastAPI backend",
+        description="📋 Load UVM Professors 2023 dataset from Complex Stories FastAPI backend (now with consistent data)",
         kinds={"duckdb"},
     )
 def uvm_profs_2023(
     duckdb: DuckDBResource,
     complex_stories_api: ComplexStoriesAPIResource
 ) -> dg.MaterializeResult:
-    # Fetch data from FastAPI backend with filters
-    api_data = complex_stories_api.get_academic_research_groups(
-        year=2023,
-        inst_ipeds_id=231174
-    )
-
     # Process and load into DuckDB
-    import_filtered_data_to_duckdb(
-        api_data=api_data,
+    import_filtered_url_to_duckdb(
+        url=f"{complex_stories_api.base_url}/datasets/data/academic-research-groups.parquet",
         duckdb=duckdb,
         payroll_year=2023,
         inst_ipeds_id=231174
@@ -92,7 +84,7 @@ def uvm_profs_2023(
                 )
             ),
             "sample_ego_author_ids": dg.MetadataValue.text(", ".join(sample_id_list[:3])),
-            "source_url": f"{complex_stories_api.base_url}/datasets/academic-research-groups",
+            "source_url": f"{complex_stories_api.base_url}/datasets/data/academic-research-groups.parquet",
             "filters_applied": f"payroll_year=2023, inst_ipeds_id=231174"
         }
     )

@@ -4,7 +4,9 @@ Enhanced paper processing asset combining SQL efficiency with pandas flexibility
 import dagster as dg
 from dagster_duckdb import DuckDBResource
 import numpy as np
+import pandas as pd
 from pathlib import Path
+import requests
 
 
 # Data filtering settings
@@ -102,8 +104,6 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """Export publications data as parquet for static frontend"""
 
     # Static path for exported data
-    output_file = Path("../../../../../static/data") / "paper.parquet"
-    output_file.parent.mkdir(parents=True, exist_ok=True)
     
     print("🔍 Phase 1: SQL-based data extraction and joining...")
     
@@ -219,33 +219,145 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
         'umap_2_range': [float(df_processed['umap_2'].min()), float(df_processed['umap_2'].max())] if final_umap_coverage > 0 else [0, 0]
     }
     
-    # Save processed data
-    df_processed.to_parquet(output_file, index=False)
-    print(f"💾 Saved processed data to {output_file}")
+    # Convert DataFrame to list of dictionaries for API
+    # Handle datetime/timestamp columns that aren't JSON serializable
+    df_for_api = df_processed.copy()
+
+    # Convert datetime columns to proper date/datetime objects
+    from datetime import date, datetime
+
+    for col in df_for_api.columns:
+        if df_for_api[col].dtype == 'datetime64[ns]' or str(df_for_api[col].dtype).startswith('datetime'):
+            # For date fields, convert to date objects; for datetime fields, keep as datetime
+            if col in ['publication_date', 'created_date']:  # Date fields
+                df_for_api[col] = df_for_api[col].dt.date
+            elif col in ['updated_date']:  # DateTime fields
+                df_for_api[col] = df_for_api[col].dt.to_pydatetime()
+            else:
+                # Default to date for other datetime columns
+                df_for_api[col] = df_for_api[col].dt.date
+        # Also handle Timestamp objects
+        elif df_for_api[col].dtype == 'object':
+            # Check if any values are Timestamp objects
+            if df_for_api[col].apply(lambda x: hasattr(x, 'strftime') if x is not None else False).any():
+                if col in ['publication_date', 'created_date']:  # Date fields
+                    df_for_api[col] = df_for_api[col].apply(lambda x: x.date() if x is not None and hasattr(x, 'date') else x)
+                elif col in ['updated_date']:  # DateTime fields
+                    df_for_api[col] = df_for_api[col].apply(lambda x: x.to_pydatetime() if x is not None and hasattr(x, 'to_pydatetime') else x)
+                else:
+                    # Default to date for other timestamp columns
+                    df_for_api[col] = df_for_api[col].apply(lambda x: x.date() if x is not None and hasattr(x, 'date') else x)
+
+    # Convert all numpy/pandas types to native Python types before serialization
+    df_for_api = df_for_api.replace({np.nan: None})  # Replace NaN with None
+
+    # Convert numpy dtypes to native Python types
+    for col in df_for_api.columns:
+        if df_for_api[col].dtype.kind in ['i', 'u']:  # integer types
+            df_for_api[col] = df_for_api[col].astype('Int64').astype(object).where(df_for_api[col].notna(), None)
+        elif df_for_api[col].dtype.kind == 'f':  # float types
+            df_for_api[col] = df_for_api[col].astype('Float64').astype(object).where(df_for_api[col].notna(), None)
+        elif df_for_api[col].dtype.kind == 'b':  # boolean types
+            df_for_api[col] = df_for_api[col].astype('boolean').astype(object).where(df_for_api[col].notna(), None)
+
+    # Convert to records
+    paper_data = df_for_api.to_dict('records')
+
+    # Final cleanup - ensure all values are JSON serializable
+    import json
+    from datetime import date, datetime
+
+    def clean_for_json(obj, key=None):
+        try:
+            json.dumps(obj)
+            return obj
+        except TypeError:
+            if hasattr(obj, 'item'):  # numpy scalar
+                return obj.item()
+            elif pd.isna(obj):
+                return None
+            elif isinstance(obj, date):  # Python date objects
+                return obj.isoformat()  # YYYY-MM-DD format
+            elif isinstance(obj, datetime):  # Python datetime objects
+                return obj.isoformat()  # YYYY-MM-DDTHH:MM:SS format
+            elif hasattr(obj, 'strftime'):  # other datetime/timestamp objects
+                return obj.strftime('%Y-%m-%d')
+            else:
+                return str(obj)
+
+    # Apply final cleanup
+    for record in paper_data:
+        for key, value in record.items():
+            record[key] = clean_for_json(value, key)
+
+    # POST to the database API (local development)
+    api_url = "http://127.0.0.1:8000/open-academic-analytics/papers/bulk"
+
+    try:
+        # Log first record for debugging
+        if paper_data:
+            dg.get_dagster_logger().info(f"Sample record keys: {list(paper_data[0].keys())}")
+            dg.get_dagster_logger().info(f"Total records to upload: {len(paper_data)}")
+
+        response = requests.post(api_url, json=paper_data)
+
+        # Log response details for debugging
+        dg.get_dagster_logger().info(f"Response status: {response.status_code}")
+        if response.status_code != 200:
+            dg.get_dagster_logger().error(f"Response content: {response.text[:1000]}")  # First 1000 chars
+
+        response.raise_for_status()
+
+        dg.get_dagster_logger().info(f"Successfully uploaded {len(paper_data)} paper records to database")
+        upload_status = "success"
+
+    except requests.exceptions.RequestException as e:
+        dg.get_dagster_logger().error(f"Failed to upload paper data: {str(e)}")
+        if hasattr(e, 'response') and e.response is not None:
+            dg.get_dagster_logger().error(f"Error response content: {e.response.text[:1000]}")
+        upload_status = f"failed: {str(e)}"
+
+    print(f"💾 Uploaded {len(paper_data)} papers to database via API")
     print(f"🗺️  Final UMAP coverage: {final_umap_coverage}/{len(df_processed)} papers ({umap_stats['embedding_coverage_percent']}%)")
-    
-    return dg.MaterializeResult(
-        metadata={
-            "papers_processed": len(df_processed),
-            "unique_authors": unique_authors,
-            "year_range": year_range,
-            "work_type_distribution": work_type_dist,
-            "avg_coauthors_per_paper": round(avg_coauthors, 2),
-            "citation_statistics": citation_stats,
-            "umap_embedding_stats": umap_stats,
-            "processing_stages": {
-                "sql_extraction": len(df_raw),
-                "after_title_filter": "applied",
-                "after_deduplication": "applied", 
-                "after_work_type_filter": "applied",
-                "after_mislabel_filter": "applied",
-                "final_count": len(df_processed)
-            },
-            "output_file": str(output_file),
-            "file_size_mb": round(output_file.stat().st_size / (1024*1024), 2) if output_file.exists() else 0,
-            "configuration_used": {
-                "accepted_work_types": ACCEPTED_WORK_TYPES,
-                "filter_patterns_count": len(FILTER_TITLE_PATTERNS)
-            }
+
+    # Clean metadata to ensure all values are JSON serializable
+    def clean_metadata_value(value):
+        if isinstance(value, (np.integer, np.int64, np.int32)):
+            return int(value)
+        elif isinstance(value, (np.floating, np.float64, np.float32)):
+            return float(value)
+        elif isinstance(value, dict):
+            return {k: clean_metadata_value(v) for k, v in value.items()}
+        elif isinstance(value, list):
+            return [clean_metadata_value(v) for v in value]
+        else:
+            return value
+
+    metadata_dict = {
+        "papers_processed": len(df_processed),
+        "unique_authors": unique_authors,
+        "year_range": year_range,
+        "work_type_distribution": work_type_dist,
+        "avg_coauthors_per_paper": round(avg_coauthors, 2),
+        "citation_statistics": citation_stats,
+        "umap_embedding_stats": umap_stats,
+        "processing_stages": {
+            "sql_extraction": len(df_raw),
+            "after_title_filter": "applied",
+            "after_deduplication": "applied",
+            "after_work_type_filter": "applied",
+            "after_mislabel_filter": "applied",
+            "final_count": len(df_processed)
+        },
+        "api_endpoint": api_url,
+        "upload_status": upload_status,
+        "records_uploaded": len(paper_data),
+        "configuration_used": {
+            "accepted_work_types": ACCEPTED_WORK_TYPES,
+            "filter_patterns_count": len(FILTER_TITLE_PATTERNS)
         }
+    }
+
+    return dg.MaterializeResult(
+        metadata=clean_metadata_value(metadata_dict)
     )

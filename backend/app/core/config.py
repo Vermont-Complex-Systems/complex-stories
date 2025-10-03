@@ -8,11 +8,14 @@ class Settings(BaseSettings):
     version: str = "0.1.0"
 
     # CORS settings
-    allowed_origins: List[str] = ["http://localhost:5173", "http://localhost:3000"]
+    allowed_origins: List[str] = ["http://localhost:5173", "http://localhost:3000", "https://complexstories.uvm.edu"]
 
-    # Database settings (for future use)
-    mongodb_url: str = "mongodb://localhost:27017"
-    database_name: str = "complex_stories"
+    # PostgreSQL Database settings
+    postgres_host: str = "localhost"
+    postgres_port: int = 5432
+    postgres_db: str = "complex_stories"
+    postgres_user: str = "postgres"
+    postgres_password: str = ""
 
     # API settings
     api_host: str = "0.0.0.0"
