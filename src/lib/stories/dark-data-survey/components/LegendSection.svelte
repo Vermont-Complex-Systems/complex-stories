@@ -41,14 +41,14 @@
         margin: 0 0 0.75rem 0;
         font-size: 0.875rem;
         font-weight: 600;
-        color: #f3f4f6;
+        color: #333;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
-    
+
     .race-legend {
         display: flex;
-        color: #f3f4f6;
+        color: #333;
         flex-direction: column;
         gap: 0.5rem;
     }
@@ -64,7 +64,7 @@
         width: 12px;
         height: 12px;
         border-radius: 50%;
-        border: 1px solid #f3f4f6;
+        border: 1px solid #ccc;
         flex-shrink: 0;
     }
     

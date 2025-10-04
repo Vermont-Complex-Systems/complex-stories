@@ -57,17 +57,17 @@
         margin: 0 0 0.75rem 0;
         font-size: 0.875rem;
         font-weight: 600;
-        color: #f3f4f6;
+        color: #333;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
-    
+
     .subtotal {
         padding-top: 0.5rem;
-        border-top: 1px solid #6b7280;
+        border-top: 1px solid #ddd;
         text-align: center;
         font-size: 0.8rem;
-        color: #f3f4f6;
+        color: #333;
     }
     
     .trust-bars {
@@ -85,16 +85,16 @@
     }
     
     .trust-label {
-        color: #d1d5db;
+        color: #666;
         font-weight: 500;
         min-width: 60px;
         flex-shrink: 0;
     }
-    
+
     .bar-container {
         flex: 1;
         height: 16px;
-        background: rgba(30, 30, 30, 0.8);
+        background: #f5f5f5;
         border-radius: 2px;
         overflow: hidden;
     }
@@ -116,7 +116,7 @@
     }
     
     .count {
-        color: #f3f4f6;
+        color: #333;
         font-weight: 600;
         min-width: 25px;
         text-align: right;

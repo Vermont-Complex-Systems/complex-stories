@@ -41,8 +41,19 @@ const valueToOrdinal = {
 export const postAnswer = command(
 	v.object({ fingerprint: v.string(), value: v.string(), field: v.string() }),
 	async (data) => {
+		// Validate fingerprint is not empty
+		if (!data.fingerprint || data.fingerprint.trim() === '') {
+			console.error('Invalid fingerprint:', data.fingerprint);
+			throw new Error('Fingerprint is required');
+		}
+
 		const ordinal = valueToOrdinal[data.field][data.value];
+		if (!ordinal) {
+			console.error(`Invalid value ${data.value} for field ${data.field}`);
+			throw new Error(`Invalid value for field ${data.field}`);
+		}
+
 		await upsertAnswer(data.fingerprint, data.field, ordinal);
-		console.log(`Saved ${data.field}:`, data.value);
+		console.log(`Saved ${data.field}:`, data.value, '(ordinal:', ordinal, ')');
 	}
 );

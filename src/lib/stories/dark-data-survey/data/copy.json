@@ -40,11 +40,11 @@
 	"steps": [
 		{
 			"type": "markdown",
-			"value": "For instance, how much do you trust the Government, on a scale from 1 to 7? On average, people are somewhat neither overly trustful or suspicious of it, at least at the time of the survey. It sits 9th, in between sharing Personally Identifiable Information (PII) with a non-profit and the police."
+			"value": "White"
 		},
 		{
 			"type": "markdown",
-			"value": "Let's now look at the average patterns."
+			"value": "POC"
 		},
 		{
 			"type": "markdown",

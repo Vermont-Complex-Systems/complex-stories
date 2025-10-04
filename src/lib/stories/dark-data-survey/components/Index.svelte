@@ -14,7 +14,6 @@ import { renderContent, scrollyContent, surveyContent } from './Snippets.svelte'
 
 let { story, data } = $props();
 
-
 // Generate people data using imported function
 
 let selectedDemographic = $state('white_men');

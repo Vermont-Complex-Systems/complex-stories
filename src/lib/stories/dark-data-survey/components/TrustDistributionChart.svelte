@@ -6,8 +6,48 @@
     } from '@lucide/svelte';
     import { flip } from 'svelte/animate';
     
-    let { filteredData, colorScale, chosen_inst } = $props();
-    
+    let { filteredData, colorScale } = $props();
+
+    // Create a stable Map of institution objects
+    const institutionMap = new Map();
+
+    // Track sorted list in state - this array reference stays stable
+    let distributionData = $state([]);
+
+    // Initialize or update when filteredData changes
+    $effect(() => {
+        if (!filteredData || filteredData.length === 0) {
+            distributionData = [];
+            return;
+        }
+
+        // Defer to next frame so flip can measure current positions first
+        requestAnimationFrame(() => {
+            // Update or create institution objects in the map
+            filteredData.forEach(item => {
+                if (!institutionMap.has(item.institution)) {
+                    institutionMap.set(item.institution, {
+                        institution: item.institution,
+                        distance: Number(item.distance)
+                    });
+                } else {
+                    // Update distance on existing object
+                    institutionMap.get(item.institution).distance = Number(item.distance);
+                }
+            });
+
+            // Get objects from map and sort them - reuse existing objects
+            const items = Array.from(institutionMap.values())
+                .filter(item => filteredData.some(fd => fd.institution === item.institution));
+
+            // Sort in place using the same object references
+            items.sort((a, b) => a.distance - b.distance);
+
+            // Update state array (triggers reactivity while keeping object refs)
+            distributionData = items;
+        });
+    });
+
     // Institution to icon mapping - updated for new data format
     const institutionIcons = {
         'TP_Friend': Heart,
@@ -17,7 +57,7 @@
         'TP_Employer': Building,
         'TP_Researcher': FlaskConical,
         'TP_Co_worker': Briefcase,
-        chosen_inst: Shield,
+        'TP_Police': Shield,
         'TP_Platform': Smartphone,
         'TP_Company_cust': Store,
         'TP_Company_notcust': Building2,
@@ -32,23 +72,7 @@
     // Chart dimensions
     const chartWidth = 350;
     const chartHeight = 500; // Increased to accommodate all 17 institutions and legend
-    
-    // Calculate trust distribution data from filtered circles
-    const distributionData = $derived(() => {
-        if (!filteredData || filteredData.length === 0) return [];
-        
-        // Sort by distance (closest trust = lowest distance first)
-        const sorted = [...filteredData].sort((a, b) => Number(a.distance) - Number(b.distance))
-            .map(item => ({
-                institution: item.institution,
-                name: item.institution.replace('TP_', '').replace(/_/g, ' '),
-                distance: Number(item.distance),
-                trustLevel: Math.round(Number(item.distance)) // Approximate trust level from distance
-            }));
-        
-        return sorted;
-    });
-    
+
     // Use fixed scale from 1 to 7 for consistency across demographic groups
     const maxDistance = 7;
     
@@ -61,7 +85,7 @@
         'TP_Employer': '#7c3aed',      // Purple - work related
         'TP_Researcher': '#9333ea',    // Purple variant
         'TP_Co_worker': '#8b5cf6',     // Light purple
-        chosen_inst: '#dc2626',        // Red - authority/government
+        'TP_Police': '#dc2626',        // Red - authority/government
         'TP_Platform': '#ea580c',      // Orange - tech platforms
         'TP_Company_cust': '#f59e0b',  // Amber - business
         'TP_Company_notcust': '#d97706', // Dark amber
@@ -80,42 +104,44 @@
     
     <!-- Institution bars -->
     <div class="chart-content">
-        {#each distributionData() as institution, i (institution.institution)}
+        {#each distributionData as item, i (item.institution)}
             {@const maxBarWidth = 130}
-            {@const barWidth = Math.max(2, (institution.distance / maxDistance) * maxBarWidth)}
-            {@const IconComponent = institutionIcons[institution.institution] || UserX}
-            
-            <div class="institution-row" animate:flip={{ duration: 400 }}>
+            {@const barWidth = Math.max(2, (Number(item.distance) / maxDistance) * maxBarWidth)}
+            {@const IconComponent = institutionIcons[item.institution] || UserX}
+            {@const name = item.institution.replace('TP_', '').replace(/_/g, ' ')}
+
+            <div class="institution-row"
+                 animate:flip={{ duration: 600 }}>
                 <!-- Institution icon -->
-                <div class="institution-icon" style="opacity: {institution.institution == chosen_inst ? 1.0 : 0.2};">
+                <div class="institution-icon">
                     <IconComponent size="10" />
                 </div>
-                
+
                 <!-- Institution name -->
-                <div class="institution-name" style="opacity: {institution.institution == chosen_inst ? 1.0 : 0.2};">
-                    {i+1} {institution.name}
+                <div class="institution-name">
+                    {i+1} {name}
                 </div>
-                
+
                 <!-- Trust distance bar -->
                 <div class="bar-container">
                     <!-- Grid lines for trust levels 1-7 -->
                     {#each [1, 2, 3, 4, 5, 6, 7] as gridValue}
                         {@const gridPosition = (gridValue / maxDistance) * maxBarWidth}
-                        <div 
+                        <div
                             class="grid-line"
-                            style="left: {gridPosition}px; opacity: {institution.institution == chosen_inst ? 1.0 : 0.2};"
+                            style="left: {gridPosition}px;"
                         ></div>
                     {/each}
-                    
-                    <div 
+
+                    <div
                         class="trust-bar"
-                        style="width: {barWidth}px; background-color: {institutionColors[institution.institution] || '#6b7280'}; opacity: {institution.institution == chosen_inst ? 1.0 : 0.2};  transition: width 0.6s ease-out, background-color 0.6s ease-out;"
+                        style="width: {barWidth}px; background-color: {institutionColors[item.institution] || '#6b7280'}; transition: width 0.5s ease, background-color 0.5s ease;"
                     ></div>
                 </div>
-                
+
                 <!-- Distance value label -->
-                <div class="distance-value" style="opacity: {institution.institution == chosen_inst ? 1.0 : 0.2};">
-                    {Number(institution.distance).toFixed(2)}
+                <div class="distance-value">
+                    {Number(item.distance).toFixed(2)}
                 </div>
             </div>
         {/each}
@@ -129,7 +155,7 @@
         padding: 12px;
         font-family: var(--sans);
     }
-    
+
     .chart-title {
         text-align: center;
         font-size: 15px;
@@ -137,20 +163,20 @@
         color: #374151;
         margin-bottom: 8px;
     }
-    
+
     .chart-content {
         display: flex;
         flex-direction: column;
         gap: 10px;
     }
-    
+
     .institution-row {
         display: flex;
         align-items: center;
         height: 14px;
         gap: 6px;
     }
-    
+
     .institution-icon {
         width: 12px;
         height: 12px;
@@ -159,7 +185,7 @@
         justify-content: center;
         color: whitesmoke;
     }
-    
+
     .institution-name {
         width: 130px;
         font-size: 15px;
@@ -169,18 +195,15 @@
         text-overflow: ellipsis;
         flex-shrink: 0;
     }
-    
+
     .bar-container {
         flex: 1;
         height: 12px;
         position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
         background: rgba(0, 0, 0, 0.05);
         border-radius: 2px;
     }
-    
+
     .grid-line {
         position: absolute;
         top: 0;
@@ -189,47 +212,19 @@
         background: white;
         z-index: 1;
     }
-    
+
     .trust-bar {
         height: 100%;
         border-radius: 2px;
         opacity: 0.8;
-        z-index: 2;
         position: relative;
+        z-index: 2;
     }
-    
+
     .distance-value {
         width: 40px;
         text-align: right;
         font-size: 15px;
         color: whitesmoke;
-    }
-    
-    .legend {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-top: 8px;
-        font-size: 8px;
-        color: whitesmoke;
-    }
-    
-    .legend-title {
-        font-size: 9px;
-        font-weight: 600;
-        color: #374151;
-    }
-    
-    .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-    
-    .legend-color {
-        width: 12px;
-        height: 8px;
-        border-radius: 2px;
-        opacity: 0.8;
     }
 </style>

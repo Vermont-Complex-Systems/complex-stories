@@ -1,7 +1,6 @@
 <script>
 import Scrolly from '$lib/components/helpers/Scrolly.svelte';
 import RadioQuestion from './RadioQuestion.svelte';
-import { postAnswer } from '../data/data.remote.js';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
 let { scrollyState } = $props();
@@ -21,10 +20,40 @@ $effect(() => {
             return fp.get();
         }).then(result => {
             userFingerprint = result.visitorId;
+            console.log('Fingerprint loaded:', userFingerprint);
+        }).catch(err => {
+            console.error('Failed to load fingerprint:', err);
         });
     }
 });
+
+// Helper to safely post answers
+async function saveAnswer(field, value) {
+    if (!userFingerprint) {
+        console.warn('Fingerprint not ready yet, skipping save');
+        return;
+    }
+    try {
+        const response = await fetch('/api/survey', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fingerprint: userFingerprint, value, field })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to save');
+        }
+
+        console.log(`Successfully saved ${field}: ${value}`);
+    } catch (err) {
+        console.error(`Failed to save ${field}:`, err);
+    }
+}
 </script>
+
+<!-- GENDER AND RACE AND PLATFORM USAGE -->
+<!-- ADVERSE TRAUMA -->
 
 <section id="survey">
     <div class="scrolly-container survey-scrolly">
@@ -33,23 +62,22 @@ $effect(() => {
             <Scrolly bind:value={scrollyState.scrollyIndex}>
                 <div class="step" class:active={scrollyState.scrollyIndex === 0}>
                     <div class="step-content">
-                        <RadioQuestion 
-                            question="How do you typically set your social media privacy?"
-                            name="socialMedia"
+                        <RadioQuestion
+                            question="Are your social media profiles typically public or private?"
                             bind:value={socialMedia}
                             options={[
                                 { value: 'private', label: 'Private' },
                                 { value: 'mixed', label: 'Mixed' },
                                 { value: 'public', label: 'Public' }
                             ]}
-                            onchange={() => postAnswer({ fingerprint: userFingerprint, value: socialMedia, field: 'socialMediaPrivacy' })}
+                            onchange={() => saveAnswer('socialMediaPrivacy', socialMedia)}
                         />
                     </div>
                 </div>
 
                 <div class="step" class:active={scrollyState.scrollyIndex === 1}>
                     <div class="step-content">
-                        <RadioQuestion 
+                        <RadioQuestion
                             question="Does the platform matter for your privacy decisions?"
                             name="platformMatters"
                             bind:value={platformMatters}
@@ -58,14 +86,14 @@ $effect(() => {
                                 { value: 'no', label: 'No, same across platforms' },
                                 { value: 'sometimes', label: 'Sometimes' }
                             ]}
-                            onchange={() => postAnswer({ fingerprint: userFingerprint, value: platformMatters, field: 'platformMatters' })}
+                            onchange={() => saveAnswer('platformMatters', platformMatters)}
                         />
                     </div>
                 </div>
 
                 <div class="step" class:active={scrollyState.scrollyIndex === 2}>
                     <div class="step-content">
-                        <RadioQuestion 
+                        <RadioQuestion
                             question="Do your privacy preferences vary by institution type?"
                             name="institutionPreferences"
                             bind:value={institutionPreferences}
@@ -74,14 +102,14 @@ $effect(() => {
                                 { value: 'mostly-same', label: 'Mostly the same' },
                                 { value: 'depends-context', label: 'Depends on context' }
                             ]}
-                            onchange={() => postAnswer({ fingerprint: userFingerprint, value: institutionPreferences, field: 'institutionPreferences' })}
+                            onchange={() => saveAnswer('institutionPreferences', institutionPreferences)}
                         />
                     </div>
                 </div>
 
                 <div class="step" class:active={scrollyState.scrollyIndex === 3}>
                     <div class="step-content">
-                        <RadioQuestion 
+                        <RadioQuestion
                             question="Do demographics (who you are) influence your privacy preferences?"
                             name="demographicsMatter"
                             bind:value={demographicsMatter}
@@ -90,7 +118,7 @@ $effect(() => {
                                 { value: 'no', label: 'No, preferences are universal' },
                                 { value: 'somewhat', label: 'Somewhat' }
                             ]}
-                            onchange={() => postAnswer({ fingerprint: userFingerprint, value: demographicsMatter, field: 'demographicsMatter' })}
+                            onchange={() => saveAnswer('demographicsMatter', demographicsMatter)}
                         />
                     </div>
                 </div>
@@ -125,18 +153,19 @@ $effect(() => {
 
     .scrolly-content .step-content {
         padding: 2rem;
-        background: #fef9f3;
-        color: #ccc;
-        border-radius: 8px;
-        box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+        background: white;
+        color: #333;
+        border-radius: 2px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
         transition: all 500ms ease;
         max-width: 360px;
         margin: 0 auto;
         width: 100%;
+        opacity: 0.3;
+        font-family: 'Georgia', 'Times New Roman', Times, serif;
     }
 
     .scrolly-content .step.active .step-content {
-        background: white;
-        color: black;
+        opacity: 1;
     }
 </style>
