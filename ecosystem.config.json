@@ -35,6 +35,36 @@
         "POSTGRES_USER": "jstonge1"
       },
       "env_file": "/users/j/s/jstonge1/complex-stories-dev/backend/.env"
+    },
+    {
+      "name": "dagster-webserver",
+      "script": "uv",
+      "args": "run dg dev",
+      "cwd": "/users/j/s/jstonge1/complex-stories-dev/backend",
+      "env": {
+        "DAGSTER_HOME": "/users/j/s/jstonge1/.dagster",
+        "POSTGRES_HOST": "localhost",
+        "POSTGRES_PORT": "5432",
+        "POSTGRES_DB": "complex_stories",
+        "POSTGRES_USER": "jstonge1"
+      },
+      "env_file": "/users/j/s/jstonge1/complex-stories-dev/backend/.env"
+    },
+    {
+      "name": "fastapi-dev",
+      "script": "uv",
+      "args": "run fastapi dev app/main.py",
+      "cwd": "/users/j/s/jstonge1/complex-stories-dev/backend",
+      "env": {
+        "HOST": "127.0.0.1",
+        "PORT": "8000",
+        "POSTGRES_HOST": "localhost",
+        "POSTGRES_PORT": "5432",
+        "POSTGRES_DB": "complex_stories",
+        "POSTGRES_USER": "jstonge1"
+      },
+      "env_file": "/users/j/s/jstonge1/complex-stories-dev/backend/.env",
+      "autorestart": true
     }
   ]
 }

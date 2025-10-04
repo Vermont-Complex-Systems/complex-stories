@@ -56,7 +56,8 @@
 		"sharp": "^0.34.2",
 		"svelte-exmarkdown": "^5.0.1",
 		"svelteplot": "^0.3.5",
-		"svg2pdf.js": "^2.5.0"
+		"svg2pdf.js": "^2.5.0",
+		"valibot": "^1.1.0"
 	},
 	"optionalDependencies": {
 		"@rollup/rollup-linux-x64-gnu": "^4.44.0"
