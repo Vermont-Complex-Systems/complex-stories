@@ -8,10 +8,10 @@
     import TrustCircles from './TrustCircles.svelte';
     import IndividualPoints from './IndividualPoints.svelte';
     import DataPanel from './DataPanel.svelte';
+    
+    // load data
     import trust_circles from '../data/trust_circles.csv';
     import trust_circles_individual from '../data/trust_circles_individual.csv';
-	import { filter } from 'svelteplot';
-    
 
     let { scrollyIndex, selectedDemographic, width, height, isStorySection = false, storySection, conclusionVisible = false } = $props();
 
@@ -40,6 +40,7 @@
     // Manual filter controls for interactive phase
     let selectedDemCategory = $state('overall_average');
     let selectedValue = $state("1.0");
+    let highlightCircle = $state("");
 
     // Get available categories and values
     const categories = [...new Set(trust_circles.map(d => d.category))];
@@ -51,65 +52,47 @@
     // - Dem_Relationship_Status_Single: 0 (Not Single), 1 (Single)
     // - orientation_ord: 0 (Straight), 1 (Bisexual), 2 (Gay), 3 (Other)
     // - race_ord: 0 (White), 1 (Mixed), 2 (POC)
-
-    // Auto-update category and value based on scroll position (only during scrolly phase)
     $effect(() => {
         switch (scrollyIndex) {
-            case 0:
-                selectedDemCategory = 'race_ord';
-                selectedValue = "0.0";
-                break;
+            // missing cases default to overall average.
             case 1:
-                selectedDemCategory = 'race_ord';
-                selectedValue = "2.0";
+                selectedDemCategory = 'overall_average';
+                selectedValue = "1.0";
+                highlightCircle = "TP_Platform";
                 break;
             case 2:
-                selectedDemCategory = 'Dem_Relationship_Status_Single';
+                selectedDemCategory = 'race_ord';
                 selectedValue = "0.0";
+                highlightCircle = "TP_Platform";
                 break;
             case 3:
-                selectedDemCategory = 'Dem_Relationship_Status_Single';
-                selectedValue = "1.0";
+                selectedDemCategory = 'race_ord';
+                selectedValue = "2.0";
+                highlightCircle = "TP_Platform";
                 break;
             case 4:
-                selectedDemCategory = 'orientation_ord';
-                selectedValue = "0.0";
+                selectedDemCategory = 'multi_platform_ord';
+                selectedValue = "1.0";
+                highlightCircle = "";
                 break;
             case 5:
-                selectedDemCategory = 'orientation_ord';
-                selectedValue = "1.0";
-                break;
-            case 6:
-                selectedDemCategory = 'orientation_ord';
-                selectedValue = "2.0";
-                break;
-            case 7:
-                selectedDemCategory = 'orientation_ord';
-                selectedValue = "3.0";
-                break;
-            case 8:
-                selectedDemCategory = 'race_ord';
-                selectedValue = "0.0";
-                break;
-            case 9:
-                selectedDemCategory = 'race_ord';
-                selectedValue = "1.0";
-                break;
-            case 10:
-                selectedDemCategory = 'race_ord';
-                selectedValue = "2.0";
+                selectedDemCategory = 'multi_platform_ord';
+                selectedValue = "5.0";
+                highlightCircle = "";
                 break;
             default:
                 selectedDemCategory = 'overall_average';
                 selectedValue = "1.0";
+                highlightCircle = "";
         }
     })
-    
     
     // Simple filter - return new array (this is fine, flip doesn't depend on this)
     let filteredCircles = $derived.by(() =>
         trust_circles.filter((c) =>
-            c.Timepoint == TIMEPOINT && c.value == selectedValue && c.category == selectedDemCategory
+            c.Timepoint == TIMEPOINT && 
+                c.value == selectedValue && 
+                c.category == selectedDemCategory
         )
     )
     
@@ -191,14 +174,14 @@
             '#9ca3af', '#ef4444', '#22c55e', '#f97316',
             '#374151'
         ]);
-    $inspect(selectedDemCategory)
+
 </script>
+
 
 <div class="chart-wrapper">
      <div class="viz-content">
         <!-- <Controls 
-            {isInteractivePhase} 
-            bind:selectedCategory 
+            bind:selectedDemCategory 
             bind:selectedValue 
             {categories} 
             {getValuesForCategory} 
@@ -209,20 +192,22 @@
         <div class="plot-container">
             <svg class="trust-visualization" viewBox={`0 0 ${width} ${height}`}>
                 {#each filteredCircles as circle}
+                    {@const isHighlighted = circle.institution === highlightCircle}
+                    {@const hasHighlight = highlightCircle !== ""}
                     <circle
                         cx={centerX}
                         cy={centerY}
                         r={radiusScale(circle.distance)}
                         fill="none"
                         stroke={institutionColors(circle.institution)}
-                        stroke-width={"2.0"}
-                        opacity={"0.6"}
-                        style="transition: r 0.8s ease-in-out; pointer-events: none;"
+                        stroke-width={isHighlighted ? "4.0" : "2.0"}
+                        opacity={hasHighlight ? (isHighlighted ? "1.0" : "0.3") : "0.6"}
+                        style="transition: r 0.8s ease-in-out, stroke-width 0.3s ease, opacity 0.3s ease; pointer-events: none;"
                     />
                 {/each}
-                {#if scrollyIndex === 1 && !isCollapsed}
+                <!-- {#if scrollyIndex === 1 && !isCollapsed}
                     <IndividualPoints {scrollyIndex} individualPoints={individualPoints()} />
-                {/if}
+                {/if} -->
             </svg>
         </div>
         
@@ -231,9 +216,9 @@
         
         <!-- Trust Distribution Chart in bottom right - only during main scrolly story -->
         <div class="chart-overlay"
-             class:visible={isStorySection && scrollyIndex >= 0}
+             class:visible={isStorySection && scrollyIndex >= 1}
              class:fade-out={conclusionVisible}>
-            <TrustDistributionChart filteredData={filteredCircles} colorScale={zScale} />
+            <TrustDistributionChart filteredData={filteredCircles} colorScale={zScale} {highlightCircle} />
         </div>
     </div>
 </div>

@@ -14,15 +14,23 @@ def process_dfall_to_trust_circles(input_file="dfall.csv", output_file="trust_ci
     # Read
     df = pd.read_csv(input_file)
     print(f"Loaded {len(df)} rows from {input_file}")
-    
+
+    # Multi-platform ordinal: sum of all TP_Platforms_* columns (0-5)
+    platform_cols = ['TP_Platforms_twitter', 'TP_Platforms_instagram', 'TP_Platforms_facebook',
+                     'TP_Platforms_tiktok', 'TP_Platforms_other']
+    if all(col in df.columns for col in platform_cols):
+        df['multi_platform_ord'] = df[platform_cols].sum(axis=1)
+        # Drop the individual platform columns after creating the ordinal
+        df = df.drop(columns=platform_cols)
+
     # Institution columns - exclude unwanted patterns
-    exclude_patterns = ['TP_Platforms_', 'TP_Month', 'TP_Which_Platforms', 'TP_Measure', 'TP_Social']
+    exclude_patterns = ['TP_Month', 'TP_Which_Platforms', 'TP_Measure', 'TP_Social']
     institution_columns = [
-        col for col in df.columns 
+        col for col in df.columns
         if col.startswith('TP_') and not any(pattern in col for pattern in exclude_patterns)
     ]
     print(f"Found institution columns: {institution_columns}")
-    
+
     # Create ordinal demographic categories
     race_cols = ['Dem_Race_White', 'Dem_Race_Mixed', 'Dem_Race_POC']
     if all(col in df.columns for col in race_cols):
@@ -53,8 +61,8 @@ def process_dfall_to_trust_circles(input_file="dfall.csv", output_file="trust_ci
             'Dem_Gender_Man': 1,
             'Dem_Gender_Other': 2
         }).fillna(0)
-    
-    demographic_columns = ['gender_ord', 'Dem_Relationship_Status_Single', 'orientation_ord', 'race_ord']
+
+    demographic_columns = ['gender_ord', 'Dem_Relationship_Status_Single', 'orientation_ord', 'race_ord', 'multi_platform_ord']
     print(f"Created ordinal demographic columns: {demographic_columns}")
     
     results = []
@@ -108,15 +116,23 @@ def process_individual_level_data(input_file="dfall.csv", output_file="trust_cir
     
     # Read and filter data
     df = pd.read_csv(input_file)
-    
+
+    # Multi-platform ordinal: sum of all TP_Platforms_* columns (0-5)
+    platform_cols = ['TP_Platforms_twitter', 'TP_Platforms_instagram', 'TP_Platforms_facebook',
+                     'TP_Platforms_tiktok', 'TP_Platforms_other']
+    if all(col in df.columns for col in platform_cols):
+        df['multi_platform_ord'] = df[platform_cols].sum(axis=1)
+        # Drop the individual platform columns after creating the ordinal
+        df = df.drop(columns=platform_cols)
+
     # Institution columns - exclude unwanted patterns
-    exclude_patterns = ['TP_Platforms_', 'TP_Month', 'TP_Which_Platforms', 'TP_Measure', 'TP_Social']
-    institution_columns = [col for col in df.columns 
-                          if col.startswith('TP_') 
+    exclude_patterns = ['TP_Month', 'TP_Which_Platforms', 'TP_Measure', 'TP_Social']
+    institution_columns = [col for col in df.columns
+                          if col.startswith('TP_')
                           and not any(pattern in col for pattern in exclude_patterns)]
-    
+
     print(f"Found institution columns: {institution_columns}")
-    
+
     # Create ordinal demographic categories (same as aggregated version)
     # Race ordinal: White=0, Mixed=1, POC=2
     race_cols = ['Dem_Race_White', 'Dem_Race_Mixed', 'Dem_Race_POC']
@@ -147,13 +163,12 @@ def process_individual_level_data(input_file="dfall.csv", output_file="trust_cir
             'Dem_Gender_Man': 1,
             'Dem_Gender_Other': 2
         }).fillna(0)
-    
-    
+
     # Add respondent ID for tracking individuals
     df['respondent_id'] = range(len(df))
-    
+
     # Melt the dataframe to have one row per person-institution combination
-    id_vars = ['respondent_id', 'gender_ord', 'Dem_Relationship_Status_Single', 'orientation_ord', 'race_ord', 'Timepoint']
+    id_vars = ['respondent_id', 'gender_ord', 'Dem_Relationship_Status_Single', 'orientation_ord', 'race_ord', 'multi_platform_ord', 'Timepoint']
     
     # Only include id_vars that exist in the dataframe
     id_vars = [col for col in id_vars if col in df.columns]
@@ -207,7 +222,7 @@ def main():
     print("Processing individual-level data...")
     
     # Process individual-level data
-    individual_result = process_individual_level_data(balanced=True)
+    individual_result = process_individual_level_data(balanced=False)
     
     if individual_result is not None:
         print(f"\nIndividual data shape: {individual_result.shape}")

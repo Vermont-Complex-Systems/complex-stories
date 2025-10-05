@@ -10,7 +10,7 @@ import Scrolly from '$lib/components/helpers/Scrolly.svelte';
 import TrustEvo from './TrustEvo.svelte';
 import Survey from './Survey.svelte';
 
-import { renderContent, scrollyContent, surveyContent } from './Snippets.svelte';
+import { renderContent, scrollyContent } from './Snippets.svelte';
 
 let { story, data } = $props();
 
@@ -19,8 +19,8 @@ let { story, data } = $props();
 let selectedDemographic = $state('white_men');
 
 // Scrolly state management - separate states for survey and story
-let surveyScrollyState = $state({ 
-    scrollyIndex: undefined,
+let surveyScrollyState = $state({
+    scrollyIndex: 0,
     isMobile: false,
     isTablet: false
 });
@@ -80,7 +80,7 @@ $effect(() => {
     </section>
 
     <!-- ScrollyPlot -->
-    <h2>{data.ScrolylSectionTitle}</h2>
+    <!-- <h2>{data.ScrolylSectionTitle}</h2> -->
     <section id="story">
         <div class="scrolly-container" bind:this={storySection}>
             <div class="scrolly-chart">

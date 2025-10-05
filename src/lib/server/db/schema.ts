@@ -32,3 +32,4 @@ export const surveyResponses = sqliteTable('survey_responses', {
 		.notNull()
 		.default(sql`(unixepoch())`),
 });
+

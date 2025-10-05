@@ -1,8 +1,29 @@
 import * as v from 'valibot';
-import { command } from '$app/server';
-import { eq } from 'drizzle-orm';
+import { command, query } from '$app/server';
+import { eq, count } from 'drizzle-orm';
 import { db } from '$lib/server/db/index.js';
 import { surveyResponses } from '$lib/server/db/schema.ts';
+import dfall from './dfall.csv';
+
+// We use raw JS here to avoid pushing dfall.csv into the public db...
+export const countCategory = query(
+	v.string(),
+	async (category) => {
+		const counts = dfall.filter(d => d.Timepoint == 1).reduce((acc, row) => {
+			const types = row[category];
+			if (types !== null && types !== undefined && types !== '') {
+				acc[types] = (acc[types] || 0) + 1;
+			}
+			return acc;
+		}, {});
+
+		return Object.entries(counts).map(([types, count]) => ({
+			types: parseFloat(types),
+			count
+		})).sort((a, b) => a.types - b.types);
+	}
+)
+
 // Helper to upsert a single answer
 async function upsertAnswer(fingerprint, field, value) {
 	try {

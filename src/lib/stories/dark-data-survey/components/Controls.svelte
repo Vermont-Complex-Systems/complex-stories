@@ -1,6 +1,5 @@
 <script>
     let { 
-        isInteractivePhase, 
         selectedCategory, 
         selectedValue, 
         categories, 

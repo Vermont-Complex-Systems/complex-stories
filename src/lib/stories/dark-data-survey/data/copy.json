@@ -1,20 +1,40 @@
 {
 	"survey": [
 		{
-			"type": "markdown",
-			"value": "Do you have private or public settings on your social media?"
+			"type": "question",
+			"value": {
+				"question": "Are your social media profiles typically public or private?",
+				"name": "socialMediaPrivacy",
+				"options": [
+					{ "value": "private", "label": "Private" },
+					{ "value": "mixed", "label": "Mixed" },
+					{ "value": "public", "label": "Public" }
+				]
+			}
 		},
 		{
-			"type": "markdown",
-			"value": "Does the platform matter?"
+			"type": "question",
+			"value": {
+				"question": "Does the platform matter for your privacy decisions?",
+				"name": "platformMatters",
+				"options": [
+					{ "value": "yes", "label": "Yes, platform matters" },
+					{ "value": "no", "label": "No, same across platforms" },
+					{ "value": "sometimes", "label": "Sometimes" }
+				]
+			}
 		},
 		{
-			"type": "markdown",
-			"value": "Maybe this is just one context; what if people preferences vary across institutions?"
-		},
-		{
-			"type": "markdown",
-			"value": "Maybe it matters who you are?"
+			"type": "question",
+			"value": {
+				"question": "Do your privacy preferences vary by institution type?",
+				"name": "institutionPreferences",
+				"options": [
+					{ "value": "vary-greatly", "label": "Vary greatly" },
+					{ "value": "mostly-same", "label": "Mostly the same" },
+					{ "value": "depends-context", "label": "Depends on context" }
+				]
+			}
 		}
 	],
 	"title": "A taste for privacy",
@@ -34,10 +54,34 @@
 		{
 			"type": "markdown",
 			"value": "In this survey, we asked people about their relative trust in different institutions."
+		},
+		{
+			"type": "markdown",
+			"value": "Lets start with a simple question; how do young people these days set up their privacy settings on social media?"
+		},
+		{
+			"type": "component",
+			"component": "chart-rank"
+		},
+		{
+			"type": "markdown",
+			"value": "We can see that most college students today set their accounts to private, followed by mixed, then public. Overall, **we find that more social media use leads to less private settings**."
+		},
+		{
+			"type": "markdown",
+			"value": "This gives us a first glimpse, but: is social media a good proxy for their broader “taste for privacy”?"
 		}
 	],
 	"ScrolylSectionTitle": "Zooming out",
 	"steps": [
+		{
+			"type": "markdown",
+			"value": "To investigate that question, we asked a series of questions about how comfortable are each respondent with sharing personally identifiable (PII) data with a a number of institution, broadly understood. What if the comfort of sharing data with a particular institution is about the distance from self, which we call _privacy construal_."
+		},
+		{
+			"type": "markdown",
+			"value": "For instance, here's the circle of trust for all our respondents of how sharing PII with social media platforms. We also are going to keep a ranked bar chart to help us interpret the relative ranking of all institutions of interest."
+		},
 		{
 			"type": "markdown",
 			"value": "White"
@@ -48,47 +92,15 @@
 		},
 		{
 			"type": "markdown",
-			"value": "Now let's see how **women** respond to the police specifically. Each red dot represents an individual woman's trust rating toward police, showing the variation around the average."
+			"value": "Single platform users."
 		},
 		{
 			"type": "markdown",
-			"value": "Compare that to **men's** trust patterns. See any differences?"
+			"value": "Multiplatform users."
 		},
 		{
 			"type": "markdown",
-			"value": "What about relationship status? Here are people who are **not single** (in relationships)."
-		},
-		{
-			"type": "markdown",
-			"value": "And here are those who are **single**. Different patterns emerge."
-		},
-		{
-			"type": "markdown",
-			"value": "Sexual orientation also matters. This shows **straight** individuals' trust patterns."
-		},
-		{
-			"type": "markdown",
-			"value": "**Bisexual** individuals show different trust boundaries."
-		},
-		{
-			"type": "markdown",
-			"value": "**Gay** individuals - notice how institutions shift in trustworthiness."
-		},
-		{
-			"type": "markdown",
-			"value": "Those with **other sexual orientations** complete the picture of diverse trust patterns."
-		},
-		{
-			"type": "markdown",
-			"value": "Finally, let's look at race. This shows **White** individuals' trust patterns."
-		},
-		{
-			"type": "markdown",
-			"value": "**Mixed race** individuals show how cultural background shapes trust."
-		},
-		{
-			"type": "markdown",
-			"value": "**People of Color** - the final piece showing how identity influences privacy decisions."
+			"value": "Back to default view"
 		}
 	],
 	"conclusion": [

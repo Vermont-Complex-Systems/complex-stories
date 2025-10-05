@@ -6,7 +6,7 @@
     } from '@lucide/svelte';
     import { flip } from 'svelte/animate';
     
-    let { filteredData, colorScale } = $props();
+    let { filteredData, colorScale, highlightCircle = "" } = $props();
 
     // Create a stable Map of institution objects
     const institutionMap = new Map();
@@ -109,8 +109,10 @@
             {@const barWidth = Math.max(2, (Number(item.distance) / maxDistance) * maxBarWidth)}
             {@const IconComponent = institutionIcons[item.institution] || UserX}
             {@const name = item.institution.replace('TP_', '').replace(/_/g, ' ')}
+            {@const isHighlighted = item.institution === highlightCircle}
 
             <div class="institution-row"
+                 class:highlighted={isHighlighted}
                  animate:flip={{ duration: 600 }}>
                 <!-- Institution icon -->
                 <div class="institution-icon">
@@ -175,6 +177,29 @@
         align-items: center;
         height: 14px;
         gap: 6px;
+        transition: all 0.3s ease;
+        opacity: 1;
+    }
+
+    /* When ANY row is highlighted, dim the others */
+    .chart-content:has(.highlighted) .institution-row:not(.highlighted) {
+        opacity: 0.5;
+    }
+
+    .institution-row.highlighted {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        opacity: 1;
+    }
+
+    .institution-row.highlighted .institution-name,
+    .institution-row.highlighted .distance-value {
+        font-weight: 700;
+        color: white;
+    }
+
+    .institution-row.highlighted .trust-bar {
+        filter: brightness(1.2);
     }
 
     .institution-icon {
