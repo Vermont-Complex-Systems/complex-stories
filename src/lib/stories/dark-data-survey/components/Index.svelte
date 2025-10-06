@@ -3,6 +3,7 @@ import { base } from "$app/paths";
 import { scaleSequential } from 'd3-scale';
 import { interpolateRdYlGn } from 'd3-scale-chromatic';
 import { innerWidth, outerHeight } from 'svelte/reactivity/window';
+import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
 import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 import Scrolly from '$lib/components/helpers/Scrolly.svelte';
@@ -10,10 +11,54 @@ import Scrolly from '$lib/components/helpers/Scrolly.svelte';
 import TrustEvo from './TrustEvo.svelte';
 import Survey from './Survey.svelte';
 import Dashboard from './Dashboard.svelte';
+import ConsentPopup from './ConsentPopup.svelte';
 
 import { renderContent, scrollyContent } from './Snippets.svelte';
 
 let { story, data } = $props();
+
+// Consent state
+let hasConsented = $state(false);
+
+// Generate browser fingerprint using FingerprintJS
+let userFingerprint = $state('');
+
+$effect(() => {
+    if (typeof window !== 'undefined') {
+        FingerprintJS.load().then(fp => {
+            return fp.get();
+        }).then(result => {
+            userFingerprint = result.visitorId;
+            console.log('Fingerprint loaded:', userFingerprint);
+        }).catch(err => {
+            console.error('Failed to load fingerprint:', err);
+        });
+    }
+});
+
+// Helper to safely post answers
+async function saveAnswer(field, value) {
+    if (!userFingerprint) {
+        console.warn('Fingerprint not ready yet, skipping save');
+        return;
+    }
+    try {
+        const response = await fetch('/api/survey', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fingerprint: userFingerprint, value, field })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to save');
+        }
+
+        console.log(`Successfully saved ${field}: ${value}`);
+    } catch (err) {
+        console.error(`Failed to save ${field}:`, err);
+    }
+}
 
 // Generate people data using imported function
 
@@ -41,6 +86,8 @@ let height = $state(outerHeight.current);
 let storySection = $state();
 let conclusionSection = $state();
 let conclusionVisible = $state(false);
+let dashboardSection = $state();
+let dashboardVisible = $state(false);
 
 // Detect when conclusion section is visible
 $effect(() => {
@@ -48,18 +95,34 @@ $effect(() => {
         const observer = new IntersectionObserver((entries) => {
             conclusionVisible = entries[0].isIntersecting;
         }, { threshold: 0.3 });
-        
+
         observer.observe(conclusionSection);
-        
+
+        return () => observer.disconnect();
+    }
+});
+
+// Detect when dashboard section is visible
+$effect(() => {
+    if (typeof window !== 'undefined' && dashboardSection) {
+        const observer = new IntersectionObserver((entries) => {
+            dashboardVisible = entries[0].isIntersecting;
+        }, { threshold: 0.3 });
+
+        observer.observe(dashboardSection);
+
         return () => observer.disconnect();
     }
 });
 
 </script>
 
+<!-- Consent Popup -->
+<ConsentPopup onAccept={() => hasConsented = true} {userFingerprint} {saveAnswer} />
+
 <article id="dark-data-survey">
-    
-    <Survey bind:scrollyState={surveyScrollyState} />
+
+    <Survey bind:scrollyState={surveyScrollyState} {userFingerprint} {saveAnswer} />
 
     <div class="title">
         <h1>{data.title}</h1>
@@ -104,12 +167,12 @@ $effect(() => {
     </section>
 
     <!-- Interactive Dashboard -->
-    <section id="dashboard">
+    <section id="dashboard" bind:this={dashboardSection}>
         <Dashboard {width} {height} />
     </section>
 </article>
 
-<div class="corner-image" class:hidden={conclusionVisible}>
+<div class="corner-image" class:hidden={conclusionVisible || dashboardVisible}>
     <img src="{base}/common/thumbnails/screenshots/dark-data.png" alt="Dark data visualization" />
 </div>
 

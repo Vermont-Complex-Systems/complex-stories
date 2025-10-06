@@ -16,6 +16,7 @@
                 name={value.name}
                 bind:value={answers[value.name]}
                 options={value.options}
+                multiple={value.multiple || false}
                 {userFingerprint}
                 {saveAnswer}
             />

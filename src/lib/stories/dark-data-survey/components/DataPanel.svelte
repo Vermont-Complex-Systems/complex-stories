@@ -190,9 +190,6 @@
     /* Dashboard mode - MUST come first to avoid being overridden */
     .data-panel.dashboard {
         border-radius: 8px;
-        width: 100%;
-        max-width: 400px;
-        transform: translateY(-50%) !important;
     }
 
     /* Default fixed positioning for scrolly story */

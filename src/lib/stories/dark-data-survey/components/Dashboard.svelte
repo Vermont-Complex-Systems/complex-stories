@@ -101,12 +101,12 @@
 
     <div class="visualization-container">
         <div class="left-panel">
-            <!-- <DataPanel
+            <DataPanel
                 {highlightCircle}
                 {selectedDemCategory}
                 {selectedValue}
                 isDashboard={true}
-                isCollapsed={false} /> -->
+                isCollapsed={false} />
         </div>
 
         <div class="center-viz">
@@ -236,7 +236,8 @@
     .left-panel {
         flex-shrink: 0;
         width: 350px;
-        align-self: flex-start;
+        align-self: center;
+        transform: translateY(55%);
     }
 
     .center-viz {

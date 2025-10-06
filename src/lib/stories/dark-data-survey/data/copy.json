@@ -15,24 +15,63 @@
 		{
 			"type": "question",
 			"value": {
-				"question": "Does the platform matter for your privacy decisions?",
+				"question": "Which social media platforms do you use?",
 				"name": "platformMatters",
+				"multiple": true,
 				"options": [
-					{ "value": "yes", "label": "Yes, platform matters" },
-					{ "value": "no", "label": "No, same across platforms" },
-					{ "value": "sometimes", "label": "Sometimes" }
+					{ "value": "Twitter", "label": "Twitter" },
+					{ "value": "Instagram", "label": "Instagram" },
+					{ "value": "Facebook", "label": "Facebook" },
+					{ "value": "TikTok", "label": "TikTok" },
+					{ "value": "Other", "label": "Other" }
 				]
 			}
 		},
 		{
 			"type": "question",
 			"value": {
-				"question": "Do your privacy preferences vary by institution type?",
-				"name": "institutionPreferences",
+				"question": "How comfortable are you with sharing your personally identifiable data with a relative?",
+				"name": "relativePreferences",
 				"options": [
-					{ "value": "vary-greatly", "label": "Vary greatly" },
-					{ "value": "mostly-same", "label": "Mostly the same" },
-					{ "value": "depends-context", "label": "Depends on context" }
+					{ "value": "1", "label": "Very Comfortable" },
+					{ "value": "2", "label": "Comfortable" },
+					{ "value": "3", "label": "Slightly comfortable" },
+					{ "value": "4", "label": "Neutral" },
+					{ "value": "5", "label": "Slightly Uncomfortable" },
+					{ "value": "6", "label": "Uncomfortable" },
+					{ "value": "7", "label": "Very Uncomfortable" }
+				]
+			}
+		},
+		{
+			"type": "question",
+			"value": {
+				"question": "How comfortable are you with sharing your personally identifiable with the government?",
+				"name": "govPreferences",
+				"options": [
+					{ "value": "1", "label": "Very Comfortable" },
+					{ "value": "2", "label": "Comfortable" },
+					{ "value": "3", "label": "Slightly comfortable" },
+					{ "value": "4", "label": "Neutral" },
+					{ "value": "5", "label": "Slightly Uncomfortable" },
+					{ "value": "6", "label": "Uncomfortable" },
+					{ "value": "7", "label": "Very Uncomfortable" }
+				]
+			}
+		},
+		{
+			"type": "question",
+			"value": {
+				"question": "How comfortable are you with sharing your personally identifiable with the police?",
+				"name": "polPreferences",
+				"options": [
+					{ "value": "1", "label": "Very Comfortable" },
+					{ "value": "2", "label": "Comfortable" },
+					{ "value": "3", "label": "Slightly comfortable" },
+					{ "value": "4", "label": "Neutral" },
+					{ "value": "5", "label": "Slightly Uncomfortable" },
+					{ "value": "6", "label": "Uncomfortable" },
+					{ "value": "7", "label": "Very Uncomfortable" }
 				]
 			}
 		}
