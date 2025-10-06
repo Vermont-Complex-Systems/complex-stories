@@ -62,7 +62,7 @@ def process_dfall_to_trust_circles(input_file="dfall.csv", output_file="trust_ci
             'Dem_Gender_Other': 2
         }).fillna(0)
 
-    demographic_columns = ['gender_ord', 'Dem_Relationship_Status_Single', 'orientation_ord', 'race_ord', 'multi_platform_ord']
+    demographic_columns = ['gender_ord', 'Dem_Relationship_Status_Single', 'orientation_ord', 'race_ord', 'multi_platform_ord', 'ACES_Compound']
     print(f"Created ordinal demographic columns: {demographic_columns}")
     
     results = []
@@ -168,8 +168,8 @@ def process_individual_level_data(input_file="dfall.csv", output_file="trust_cir
     df['respondent_id'] = range(len(df))
 
     # Melt the dataframe to have one row per person-institution combination
-    id_vars = ['respondent_id', 'gender_ord', 'Dem_Relationship_Status_Single', 'orientation_ord', 'race_ord', 'multi_platform_ord', 'Timepoint']
-    
+    id_vars = ['respondent_id', 'gender_ord', 'Dem_Relationship_Status_Single', 'orientation_ord', 'race_ord', 'multi_platform_ord', 'ACES_Compound', 'Timepoint']
+
     # Only include id_vars that exist in the dataframe
     id_vars = [col for col in id_vars if col in df.columns]
     

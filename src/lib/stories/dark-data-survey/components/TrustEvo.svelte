@@ -8,12 +8,26 @@
     import TrustCircles from './TrustCircles.svelte';
     import IndividualPoints from './IndividualPoints.svelte';
     import DataPanel from './DataPanel.svelte';
-    
+    import { institutionColorMap, getInstitutionColor } from '../utils/institutionColors.js';
+
     // load data
     import trust_circles from '../data/trust_circles.csv';
     import trust_circles_individual from '../data/trust_circles_individual.csv';
 
-    let { scrollyIndex, selectedDemographic, width, height, isStorySection = false, storySection, conclusionVisible = false } = $props();
+    let {
+        scrollyIndex,
+        selectedDemographic,
+        width,
+        height,
+        isStorySection = false,
+        isDashboard = false,
+        storySection,
+        conclusionVisible = false,
+        externalCategory = undefined,
+        externalValue = undefined,
+        externalHighlight = undefined,
+        onInstitutionClick = undefined
+    } = $props();
 
     // Track if story section is in viewport
     let storySectionVisible = $state(false);
@@ -53,6 +67,15 @@
     // - orientation_ord: 0 (Straight), 1 (Bisexual), 2 (Gay), 3 (Other)
     // - race_ord: 0 (White), 1 (Mixed), 2 (POC)
     $effect(() => {
+        // If external props are provided (dashboard mode), use those instead of scrollyIndex
+        if (externalCategory !== undefined) {
+            selectedDemCategory = externalCategory;
+            selectedValue = externalValue || "1.0";
+            highlightCircle = externalHighlight || "";
+            return;
+        }
+
+        // Otherwise use scrollyIndex to control state
         switch (scrollyIndex) {
             // missing cases default to overall average.
             case 1:
@@ -61,24 +84,69 @@
                 highlightCircle = "TP_Platform";
                 break;
             case 2:
-                selectedDemCategory = 'race_ord';
-                selectedValue = "0.0";
+                selectedDemCategory = 'multi_platform_ord';
+                selectedValue = "1.0";
                 highlightCircle = "TP_Platform";
                 break;
             case 3:
-                selectedDemCategory = 'race_ord';
-                selectedValue = "2.0";
+                selectedDemCategory = 'multi_platform_ord';
+                selectedValue = "4.0";
                 highlightCircle = "TP_Platform";
                 break;
             case 4:
-                selectedDemCategory = 'multi_platform_ord';
+                selectedDemCategory = 'overall_average';
                 selectedValue = "1.0";
                 highlightCircle = "";
                 break;
             case 5:
-                selectedDemCategory = 'multi_platform_ord';
-                selectedValue = "5.0";
+                selectedDemCategory = 'orientation_ord';
+                selectedValue = "0.0";
+                highlightCircle = "TP_Police";
+                break;
+            case 6:
+                selectedDemCategory = 'orientation_ord';
+                selectedValue = "1.0";
+                highlightCircle = "TP_Police";
+                break;
+            case 7:
+                selectedDemCategory = 'orientation_ord';
+                selectedValue = "0.0";
+                highlightCircle = "TP_Relative";
+                break;
+            case 8:
+                selectedDemCategory = 'orientation_ord';
+                selectedValue = "1.0";
+                highlightCircle = "TP_Relative";
+                break;
+            case 9:
+                selectedDemCategory = 'overall_average';
+                selectedValue = "1.0";
                 highlightCircle = "";
+                break;
+            case 10:
+                selectedDemCategory = 'ACES_Compound';
+                selectedValue = "1.0";
+                highlightCircle = "TP_Relative";
+                break;
+            case 11:
+                selectedDemCategory = 'ACES_Compound';
+                selectedValue = "8.0";
+                highlightCircle = "TP_Relative";
+                break;
+            case 12:
+                selectedDemCategory = 'ACES_Compound';
+                selectedValue = "9.0";
+                highlightCircle = "TP_Relative";
+                break;
+            case 13:
+                selectedDemCategory = 'ACES_Compound';
+                selectedValue = "9.0";
+                highlightCircle = "TP_Acquaintance";
+                break;
+            case 14:
+                selectedDemCategory = 'ACES_Compound';
+                selectedValue = "9.0";
+                highlightCircle = "TP_NonProf";
                 break;
             default:
                 selectedDemCategory = 'overall_average';
@@ -150,46 +218,23 @@
     // Use the responsive width/height from props
     // outerHeight is intentionally larger than viewport to maximize circle size
     const centerX = $derived(width / 2);
-    const centerY = $derived(height * 0.6); // Slightly higher than 0.5 to compensate for outerHeight > viewport
-    const maxRadius = $derived(height * 0.4);
+    const centerY = $derived(height * 0.6);
+    const maxRadius = $derived(height * 0.43);
     
     const zScale = $derived(scaleSequential(interpolateRdYlGn).domain(extent(trust_circles.map(d=>d.distance))));
     
     // Likert scale from 1 to 7
     const radiusScale = $derived(scaleLinear().domain([1, 7]).range([50, maxRadius]));
     
-    // Institution color mapping using D3 scale for consistent visualization
-    const institutionColors = scaleOrdinal()
-        .domain([
-            'TP_Friend', 'TP_Relative', 'TP_Medical', 'TP_School',
-            'TP_Employer', 'TP_Researcher', 'TP_Co_worker', 'TP_Police',
-            'TP_Platform', 'TP_Company_cust', 'TP_Company_notcust',
-            'TP_Acquaintance', 'TP_Neighbor', 'TP_Gov', 'TP_NonProf',
-            'TP_Financial', 'TP_Stranger'
-        ])
-        .range([
-            '#10b981', '#059669', '#0891b2', '#0284c7',
-            '#7c3aed', '#9333ea', '#8b5cf6', '#dc2626',
-            '#ea580c', '#f59e0b', '#d97706', '#6b7280',
-            '#9ca3af', '#ef4444', '#22c55e', '#f97316',
-            '#374151'
-        ]);
+    // Use shared institution color mapping
+    const institutionColors = (institution) => getInstitutionColor(institution);
 
 </script>
 
 
 <div class="chart-wrapper">
      <div class="viz-content">
-        <!-- <Controls 
-            bind:selectedDemCategory 
-            bind:selectedValue 
-            {categories} 
-            {getValuesForCategory} 
-            currentCategory={selectedCategory} 
-            currentValue={selectedValue} 
-        /> -->
-        
-        <div class="plot-container">
+        <div class="plot-container" class:dashboard={isDashboard} style={isDashboard ? `height: ${height}px;` : ''}>
             <svg class="trust-visualization" viewBox={`0 0 ${width} ${height}`}>
                 {#each filteredCircles as circle}
                     {@const isHighlighted = circle.institution === highlightCircle}
@@ -210,16 +255,25 @@
                 {/if} -->
             </svg>
         </div>
-        
-        
-        <!-- <DataPanel {scrollyIndex} {GENDER} {INST} bind:isCollapsed /> -->
-        
-        <!-- Trust Distribution Chart in bottom right - only during main scrolly story -->
-        <div class="chart-overlay"
-             class:visible={isStorySection && scrollyIndex >= 1}
-             class:fade-out={conclusionVisible}>
-            <TrustDistributionChart filteredData={filteredCircles} colorScale={zScale} {highlightCircle} />
-        </div>
+
+
+        <!-- DataPanel - only during main scrolly story, NOT in dashboard -->
+        {#if !isDashboard}
+            <div class="data-panel-wrapper"
+                class:visible={isStorySection}
+                class:fade-out={conclusionVisible}>
+                <DataPanel {highlightCircle} {selectedDemCategory} {selectedValue} {isDashboard} bind:isCollapsed />
+            </div>
+        {/if}
+
+        <!-- Trust Distribution Chart in bottom right - only during main scrolly story, NOT in dashboard -->
+        {#if !isDashboard}
+            <div class="chart-overlay"
+                class:visible={isStorySection}
+                class:fade-out={conclusionVisible}>
+                <TrustDistributionChart filteredData={filteredCircles} colorScale={zScale} {highlightCircle} {onInstitutionClick} {isDashboard} />
+            </div>
+        {/if}
     </div>
 </div>
 
@@ -231,6 +285,7 @@
         width: 100%;
         position: relative;
         height: 100vh;
+        overflow: visible;
     }
     
     
@@ -243,6 +298,12 @@
         transform: translateX(-50%);
         pointer-events: none;
     }
+
+    .plot-container.dashboard {
+        width: 100%;
+        left: 0;
+        transform: none;
+    }
     
     .trust-visualization {
         width: 100%;
@@ -253,6 +314,29 @@
     }
     
     
+    .data-panel-wrapper {
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.6s ease;
+    }
+
+    .data-panel-wrapper.visible {
+        pointer-events: auto;
+        opacity: 1;
+    }
+
+    .data-panel-wrapper.fade-out {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .data-panel-wrapper.dashboard {
+        position: static;
+        opacity: 1;
+        pointer-events: auto;
+        margin-bottom: 2rem;
+    }
+
     .chart-overlay {
         position: fixed;
         bottom: 2rem;
@@ -263,16 +347,26 @@
         opacity: 0;
         transition: opacity 0.6s ease, transform 0.8s ease;
     }
-    
+
     .chart-overlay.visible {
         pointer-events: auto;
         transform: translateX(0);
         opacity: 1;
     }
-    
+
     .chart-overlay.fade-out {
         opacity: 0;
         pointer-events: none;
+    }
+
+    .chart-overlay.dashboard {
+        position: static;
+        transform: none;
+        opacity: 1;
+        pointer-events: auto;
+        margin-bottom: 2rem;
+        right: auto;
+        bottom: auto;
     }
     
     

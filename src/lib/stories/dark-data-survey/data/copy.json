@@ -76,37 +76,81 @@
 	"steps": [
 		{
 			"type": "markdown",
-			"value": "To investigate that question, we asked a series of questions about how comfortable are each respondent with sharing personally identifiable (PII) data with a a number of institution, broadly understood. What if the comfort of sharing data with a particular institution is about the distance from self, which we call _privacy construal_."
+			"value": "To investigate that question, we asked a series of questions about how comfortable are each respondent with sharing personally identifiable (PII) data with a a number of institutions, broadly understood. What if the comfort of sharing data with a particular institution is about the distance from self, which we call _privacy construal_."
 		},
 		{
 			"type": "markdown",
-			"value": "For instance, here's the circle of trust for all our respondents of how sharing PII with social media platforms. We also are going to keep a ranked bar chart to help us interpret the relative ranking of all institutions of interest."
+			"value": "For instance, here's the circle of trust for all our respondents of how sharing PII with social media platforms. The orange grouping is meant to represent broader categories, such as that institutions handling sensitive data."
 		},
 		{
 			"type": "markdown",
-			"value": "White"
+			"value": "One interesting pattern we found is the relationship between how platforms users are using and that of comfort sharing PII with social media platform. In general, we found that single platform users are a little bit less trustful of institution than average."
 		},
 		{
 			"type": "markdown",
-			"value": "POC"
+			"value": "On the contrary, the more platform people use the most comfortable they are sharing PII with those companies. When using 4 social media platforms, young people will tend to trust more those companies with their PII than the police or their Neighbor!"
 		},
 		{
 			"type": "markdown",
-			"value": "Single platform users."
+			"value": "Alright, lets go back to the average view."
 		},
 		{
 			"type": "markdown",
-			"value": "Multiplatform users."
+			"value": "In our survey, we also asked about sexual orientation. For instance, we were interested in the relationship between institutions, such as the Police, and sexual orientation. Here it is for people identifying as straight."
 		},
 		{
 			"type": "markdown",
-			"value": "Back to default view"
+			"value": "Here's the circles of trust for bisexual people, being almost one rating scale below than straight people."
+		},
+		{
+			"type": "markdown",
+			"value": "But it is not all."
+		},
+		{
+			"type": "markdown",
+			"value": " Notice also how relatives are also less trusted with data."
+		},
+		{
+			"type": "markdown",
+			"value": "We have one last bit of story to tell."
+		},
+		{
+			"type": "markdown",
+			"value": "No adverse childhood experiences. This is most people"
+		},
+		{
+			"type": "markdown",
+			"value": "Adverse childhood experiences composite score; here we look at an ACE score of 8."
+		},
+		{
+			"type": "markdown",
+			"value": "And ACE of 9, the circle of trusts about sharing data with other is now completely upside down. Relatives score lower than employer or researcher."
+		},
+		{
+			"type": "markdown",
+			"value": "This is not just about relatives, now being ranked below. Acquaintance are even lower."
+		},
+		{
+			"type": "markdown",
+			"value": "Interestingly, non-profits seem to be vital for people experiencing many advese childhood experiences."
+		},
+		{
+			"type": "markdown",
+			"value": "But ultimately, the visualization makes clear that there is a large gap in trust between oneself and others, something that needs to be seen and understood by folks and institutions who are collecting information about others. Any discussion of youth privacy must account for context and identity.."
 		}
 	],
 	"conclusion": [
 		{
 			"type": "markdown",
-			"value": "So privacy do depends on who you are and and context."
+			"value": "Social media settings gave us one angle, but comfort across contexts shows us a richer picture: privacy is relational and institutional."
+		},
+		{
+			"type": "markdown",
+			"value": "Demographic differences reveal that “taste for privacy” is not evenly distributed."
+		},
+		{
+			"type": "markdown",
+			"value": "Privacy do depends on who you are and and context."
 		}
 	]
 }

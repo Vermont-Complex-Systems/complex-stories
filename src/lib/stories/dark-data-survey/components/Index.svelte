@@ -9,6 +9,7 @@ import Scrolly from '$lib/components/helpers/Scrolly.svelte';
 
 import TrustEvo from './TrustEvo.svelte';
 import Survey from './Survey.svelte';
+import Dashboard from './Dashboard.svelte';
 
 import { renderContent, scrollyContent } from './Snippets.svelte';
 
@@ -85,10 +86,10 @@ $effect(() => {
         <div class="scrolly-container" bind:this={storySection}>
             <div class="scrolly-chart">
                 <TrustEvo
-                    scrollyIndex={storyScrollyState.scrollyIndex} 
-                    {selectedDemographic} 
+                    scrollyIndex={storyScrollyState.scrollyIndex}
+                    {selectedDemographic}
                     {width} {height}
-                    isStorySection={true}
+                    isStorySection={storyScrollyState.scrollyIndex !== undefined && storyScrollyState.scrollyIndex >= 1}
                     {storySection}
                     {conclusionVisible} />
             </div>
@@ -100,6 +101,11 @@ $effect(() => {
     <h2>Conclusion</h2>
     <section id="conclusion" bind:this={conclusionSection}>
         {@render renderContent(data.conclusion)}
+    </section>
+
+    <!-- Interactive Dashboard -->
+    <section id="dashboard">
+        <Dashboard {width} {height} />
     </section>
 </article>
 

@@ -1,12 +1,13 @@
 <script>
-    import { 
-        Heart, Users, Stethoscope, GraduationCap, Building, 
+    import {
+        Heart, Users, Stethoscope, GraduationCap, Building,
         FlaskConical, Briefcase, Shield, Smartphone, Store,
         Building2, UserX
     } from '@lucide/svelte';
     import { flip } from 'svelte/animate';
-    
-    let { filteredData, colorScale, highlightCircle = "" } = $props();
+    import { getInstitutionColor } from '../utils/institutionColors.js';
+
+    let { filteredData, colorScale, highlightCircle = "", onInstitutionClick = undefined, isDashboard = false } = $props();
 
     // Create a stable Map of institution objects
     const institutionMap = new Map();
@@ -75,44 +76,50 @@
 
     // Use fixed scale from 1 to 7 for consistency across demographic groups
     const maxDistance = 7;
-    
-    // Institution color mapping for consistent visualization
-    const institutionColors = {
-        'TP_Friend': '#10b981',        // Green - high trust category
-        'TP_Relative': '#059669',      // Dark green
-        'TP_Medical': '#0891b2',       // Teal - professional services
-        'TP_School': '#0284c7',        // Blue - educational
-        'TP_Employer': '#7c3aed',      // Purple - work related
-        'TP_Researcher': '#9333ea',    // Purple variant
-        'TP_Co_worker': '#8b5cf6',     // Light purple
-        'TP_Police': '#dc2626',        // Red - authority/government
-        'TP_Platform': '#ea580c',      // Orange - tech platforms
-        'TP_Company_cust': '#f59e0b',  // Amber - business
-        'TP_Company_notcust': '#d97706', // Dark amber
-        'TP_Acquaintance': '#6b7280',  // Gray - neutral relationships
-        'TP_Neighbor': '#9ca3af',      // Light gray
-        'TP_Gov': '#ef4444',           // Red - government
-        'TP_NonProf': '#22c55e',       // Green - community
-        'TP_Financial': '#f97316',     // Orange - financial
-        'TP_Stranger': '#374151'       // Dark gray - unknown
+
+    // Institution label mapping for display names
+    const institutionLabels = {
+        'TP_Gov': 'Government',
+        'TP_Police': 'Police',
+        'TP_Friend': 'Friend',
+        'TP_Relative': 'Relative',
+        'TP_Employer': 'Employer',
+        'TP_Medical': 'Medical Professional',
+        'TP_Financial': 'Financial Institution',
+        'TP_Neighbor': 'Neighbor',
+        'TP_Acquaintance': 'Acquaintance',
+        'TP_Co_worker': 'Co-worker',
+        'TP_School': 'School',
+        'TP_Researcher': 'Researcher',
+        'TP_Platform': 'Social Media Platform',
+        'TP_NonProf': 'Non-Profit',
+        'TP_Company_cust': 'Company (Customer)',
+        'TP_Company_notcust': 'Company (Not Customer)',
+        'TP_Stranger': 'Stranger'
     };
 </script>
 
-<div class="trust-distribution-chart" style="width: {chartWidth}px; height: {chartHeight}px; transform">
+<div class="trust-distribution-chart" class:dashboard={isDashboard} style="width: {chartWidth}px; height: {chartHeight}px; transform">
     <!-- Chart title -->
-    <div class="chart-title">Trust Level Distribution</div>
+    <div class="chart-title">Institution Trust Level</div>
     
     <!-- Institution bars -->
     <div class="chart-content">
         {#each distributionData as item, i (item.institution)}
-            {@const maxBarWidth = 130}
+            {@const maxBarWidth = 100}
             {@const barWidth = Math.max(2, (Number(item.distance) / maxDistance) * maxBarWidth)}
             {@const IconComponent = institutionIcons[item.institution] || UserX}
-            {@const name = item.institution.replace('TP_', '').replace(/_/g, ' ')}
+            {@const name = institutionLabels[item.institution] || item.institution.replace('TP_', '').replace(/_/g, ' ')}
             {@const isHighlighted = item.institution === highlightCircle}
 
             <div class="institution-row"
                  class:highlighted={isHighlighted}
+                 class:clickable={onInstitutionClick !== undefined}
+                 onclick={() => onInstitutionClick?.(item.institution)}
+                 onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onInstitutionClick?.(item.institution); } }}
+                 role={onInstitutionClick ? "button" : undefined}
+                 tabindex={onInstitutionClick ? 0 : undefined}
+                 aria-label={onInstitutionClick ? `Select ${name}` : undefined}
                  animate:flip={{ duration: 600 }}>
                 <!-- Institution icon -->
                 <div class="institution-icon">
@@ -137,7 +144,7 @@
 
                     <div
                         class="trust-bar"
-                        style="width: {barWidth}px; background-color: {institutionColors[item.institution] || '#6b7280'}; transition: width 0.5s ease, background-color 0.5s ease;"
+                        style="width: {barWidth}px; background-color: {getInstitutionColor(item.institution)}; transition: width 0.5s ease, background-color 0.5s ease;"
                     ></div>
                 </div>
 
@@ -181,13 +188,30 @@
         opacity: 1;
     }
 
+    .institution-row.clickable {
+        cursor: pointer;
+        padding: 2px 4px;
+        margin: -2px -4px;
+    }
+
+    .institution-row.clickable:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 4px;
+    }
+
+    .institution-row.clickable:focus {
+        outline: 2px solid rgba(255, 255, 255, 0.5);
+        outline-offset: 2px;
+        border-radius: 4px;
+    }
+
     /* When ANY row is highlighted, dim the others */
     .chart-content:has(.highlighted) .institution-row:not(.highlighted) {
         opacity: 0.5;
     }
 
     .institution-row.highlighted {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.2);
         border-radius: 4px;
         opacity: 1;
     }
@@ -212,7 +236,7 @@
     }
 
     .institution-name {
-        width: 130px;
+        width: 155px;
         font-size: 15px;
         color: whitesmoke;
         white-space: nowrap;
