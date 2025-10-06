@@ -184,6 +184,9 @@
         flex-wrap: wrap;
         justify-content: center;
         align-items: flex-end;
+        position: relative;
+        z-index: 1000;
+        pointer-events: auto;
     }
 
     .control-group {
@@ -245,6 +248,6 @@
         flex-shrink: 0;
         width: 350px;
         align-self: flex-end;
-        transform: translateY(45%);
+        transform: translateY(44%);
     }
 </style>
