@@ -16,7 +16,6 @@
 
     let {
         scrollyIndex,
-        selectedDemographic,
         width,
         height,
         isStorySection = false,
@@ -219,7 +218,7 @@
     // outerHeight is intentionally larger than viewport to maximize circle size
     const centerX = $derived(width / 2);
     const centerY = $derived(isDashboard ? height * 0.5 : height * 0.6);
-    const maxRadius = $derived(isDashboard ? height * 0.95 : height * 0.47);
+    const maxRadius = $derived(isDashboard ? height * 0.95 : height * 0.43);
     
     const zScale = $derived(scaleSequential(interpolateRdYlGn).domain(extent(trust_circles.map(d=>d.distance))));
     
