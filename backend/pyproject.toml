@@ -20,6 +20,7 @@ dependencies = [
     "fastparquet>=2024.11.0",
     "ipykernel>=6.30.1",
     "shared",
+    "pymongo>=4.15.3",
 ]
 
 [tool.uv.workspace]

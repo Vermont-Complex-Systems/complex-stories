@@ -44,6 +44,7 @@
 		"jspdf": "^3.0.1",
 		"katex": "^0.16.22",
 		"mode-watcher": "^1.0.7",
+		"mongodb": "^6.20.0",
 		"p5-svelte": "^3.1.2",
 		"path-js": "^1.0.1",
 		"rehype-highlight": "^7.0.2",
