@@ -1,8 +1,10 @@
 import * as v from 'valibot';
 import { command, query } from '$app/server';
-import { eq, and, sql } from 'drizzle-orm';
-import { db } from '$lib/server/db/index.js';
-import { surveyResponses, trustCirclesIndividual, surveyDataAll } from '$lib/server/db/schema.ts';
+// import { eq, and, sql } from 'drizzle-orm';
+// import { db } from '$lib/server/db/index.js';
+// import { surveyResponses, trustCirclesIndividual, surveyDataAll } from '$lib/server/db/schema.ts';
+
+// All database functionality commented out - not currently in use
 
 // Map friendly category names to database column names
 const categoryToColumn = {
@@ -16,21 +18,20 @@ const categoryToColumn = {
 export const countCategory = query(
 	v.string(),
 	async (category) => {
-		const column = categoryToColumn[category] || category;
-
-		// Execute raw SQL for aggregation
-		const results = await db.all(sql`
-			SELECT ${sql.raw(column)} as types, COUNT(*) as count
-			FROM survey_data_all
-			WHERE timepoint = 1 AND ${sql.raw(column)} IS NOT NULL
-			GROUP BY ${sql.raw(column)}
-			ORDER BY types
-		`);
-
-		return results.map(row => ({
-			types: parseFloat(row.types),
-			count: row.count
-		}));
+		// Database functionality disabled
+		return [];
+		// const column = categoryToColumn[category] || category;
+		// const results = await db.all(sql`
+		// 	SELECT ${sql.raw(column)} as types, COUNT(*) as count
+		// 	FROM survey_data_all
+		// 	WHERE timepoint = 1 AND ${sql.raw(column)} IS NOT NULL
+		// 	GROUP BY ${sql.raw(column)}
+		// 	ORDER BY types
+		// `);
+		// return results.map(row => ({
+		// 	types: parseFloat(row.types),
+		// 	count: row.count
+		// }));
 	}
 )
 
@@ -48,30 +49,32 @@ const categoryFieldMap = {
 
 // Helper to upsert a single answer
 async function upsertAnswer(fingerprint, field, value) {
-	try {
-		// First, try to find existing record
-		const existing = await db.select()
-								 .from(surveyResponses)
-								 .where(eq(surveyResponses.fingerprint, fingerprint))
-								 .get();
-		
-		if (existing) {
-			// Update only the specific field
-			await db.update(surveyResponses)
-				.set({ [field]: value })
-				.where(eq(surveyResponses.fingerprint, fingerprint));
-		} else {
-			// Insert new record
-			await db.insert(surveyResponses)
-				.values({
-					fingerprint,
-					[field]: value
-				});
-		}
-	} catch (err) {
-		console.error('Upsert error:', err);
-		throw err;
-	}
+	// Database functionality disabled
+	return;
+	// try {
+	// 	// First, try to find existing record
+	// 	const existing = await db.select()
+	// 						 .from(surveyResponses)
+	// 						 .where(eq(surveyResponses.fingerprint, fingerprint))
+	// 						 .get();
+	//
+	// 	if (existing) {
+	// 		// Update only the specific field
+	// 		await db.update(surveyResponses)
+	// 			.set({ [field]: value })
+	// 			.where(eq(surveyResponses.fingerprint, fingerprint));
+	// 	} else {
+	// 		// Insert new record
+	// 		await db.insert(surveyResponses)
+	// 			.values({
+	// 				fingerprint,
+	// 				[field]: value
+	// 			});
+	// 	}
+	// } catch (err) {
+	// 	console.error('Upsert error:', err);
+	// 	throw err;
+	// }
 }
 
 const valueToOrdinal = {
@@ -84,19 +87,20 @@ const valueToOrdinal = {
 export const postAnswer = command(
 	v.object({ fingerprint: v.string(), value: v.string(), field: v.string() }),
 	async (data) => {
-		// Validate fingerprint is not empty
-		if (!data.fingerprint || data.fingerprint.trim() === '') {
-			console.error('Invalid fingerprint:', data.fingerprint);
-			throw new Error('Fingerprint is required');
-		}
-
-		const ordinal = valueToOrdinal[data.field][data.value];
-		if (!ordinal) {
-			console.error(`Invalid value ${data.value} for field ${data.field}`);
-			throw new Error(`Invalid value for field ${data.field}`);
-		}
-
-		await upsertAnswer(data.fingerprint, data.field, ordinal);
-		console.log(`Saved ${data.field}:`, data.value, '(ordinal:', ordinal, ')');
+		// Database functionality disabled
+		console.log('Survey response (not saved):', data);
+		return;
+		// // Validate fingerprint is not empty
+		// if (!data.fingerprint || data.fingerprint.trim() === '') {
+		// 	console.error('Invalid fingerprint:', data.fingerprint);
+		// 	throw new Error('Fingerprint is required');
+		// }
+		// const ordinal = valueToOrdinal[data.field][data.value];
+		// if (!ordinal) {
+		// 	console.error(`Invalid value ${data.value} for field ${data.field}`);
+		// 	throw new Error(`Invalid value for field ${data.field}`);
+		// }
+		// await upsertAnswer(data.fingerprint, data.field, ordinal);
+		// console.log(`Saved ${data.field}:`, data.value, '(ordinal:', ordinal, ')');
 	}
 );
