@@ -37,7 +37,19 @@ src/lib/stories/open-academic-analytics/assets/fit/stan/*
 !src/lib/stories/open-academic-analytics/assets/fit/stan/*.stan
 src/lib/stories/open-academic-analytics/open_academic_analytics.egg-info/
 
-~/
 src/lib/stories/open-academic-analyticsOld/
+src/lib/stories/open-academic-analytics/backend/.tmp_dagster_*
+
 CLAUDE.md
 src/lib/stories/open-academic-analytics/backend/.tmp_*
+
+# SQLite
+*.db
+
+# Specific data
+src/lib/stories/dark-data-survey/data/dfall.csv
+src/lib/stories/dark-data-survey/data/trust_circles.csv
+src/lib/stories/dark-data-survey/data/trust_circles2.csv
+src/lib/stories/dark-data-survey/data/trust_circles_individual_all_timepoints.csv
+src/lib/stories/dark-data-survey/data/trust_circles_individual.csv
+drizzle/

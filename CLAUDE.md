@@ -10,7 +10,7 @@ Complex Stories is a scientific data essay platform built with SvelteKit, inspir
 
 ### Core Development
 - `npm run dev` - Start development server with hot reloading
-- `npm run build` - Build for production (static site generation)
+- `npm run build` - Build for production
 - `npm run preview` - Preview production build locally
 
 ### Code Quality
@@ -18,6 +18,36 @@ Complex Stories is a scientific data essay platform built with SvelteKit, inspir
 - `npm run check:watch` - Type checking in watch mode
 - `npm run format` - Format code with Prettier
 - `npm run lint` - Check code formatting with Prettier
+
+### Database (Drizzle ORM)
+- `npm run db:push` - Push schema changes to database
+- `npm run db:generate` - Generate migration files
+- `npm run db:migrate` - Run database migrations
+- `npm run db:studio` - Open Drizzle Studio for database management
+
+You are able to use the Svelte MCP server, where you have access to comprehensive Svelte 5 and SvelteKit documentation. Here's how to use the available tools effectively:
+
+## Available MCP Tools:
+
+### 1. list-sections
+
+Use this FIRST to discover all available documentation sections. Returns a structured list with titles, use_cases, and paths.
+When asked about Svelte or SvelteKit topics, ALWAYS use this tool at the start of the chat to find relevant sections.
+
+### 2. get-documentation
+
+Retrieves full documentation content for specific sections. Accepts single or multiple sections.
+After calling the list-sections tool, you MUST analyze the returned documentation sections (especially the use_cases field) and then use the get-documentation tool to fetch ALL documentation sections that are relevant for the user's task.
+
+### 3. svelte-autofixer
+
+Analyzes Svelte code and returns issues and suggestions.
+You MUST use this tool whenever writing Svelte code before sending it to the user. Keep calling it until no issues or suggestions are returned.
+
+### 4. playground-link
+
+Generates a Svelte Playground link with the provided code.
+After completing the code, ask the user if they want a playground link. Only call this tool after user confirmation and NEVER if code was written to files in their project.
 
 ### Testing
 No specific test framework is configured. Check individual story directories for any custom testing setups.
@@ -51,13 +81,16 @@ story-slug/
 - `/blog/[slug]` - Blog posts  
 - `/about` - About page
 - `/research-at-uvm` - Research groups page
+- `/work-with-us` - Collaboration opportunities page
 - `/author/[name]` - Author pages
+- `/api/*` - API endpoints
 
 ### Key Technologies
 - **SvelteKit 2** with Svelte 5 (using runes syntax)
-- **Static site generation** via `@sveltejs/adapter-static`
+- **Node.js adapter** via `@sveltejs/adapter-node` (server-side rendering)
 - **D3.js** for data visualization and manipulation
 - **DuckDB WASM** for client-side data processing
+- **Drizzle ORM** for database management
 - **Vite** for build tooling with custom plugins for DSV files
 - **TypeScript** for type safety
 
@@ -76,14 +109,18 @@ story-slug/
 - **Enhanced Images** for optimized image handling
 - **Rehype/Remark** plugins for markdown processing with math and syntax highlighting
 - **Sharp** for image optimization
-- **Reveal.js** for presentation components
+- **Reveal.js** for presentation components  
+- **Additional libraries**: P5.js integration, DOM-to-image conversion, PDF generation (jsPDF), Lucide icons, advanced data analysis tools
 
 ### Build Configuration
 - **Vite** config includes custom path aliases: `$data` → `src/data`, `$styles` → `src/styles`
 - **DSV plugin** for loading CSV/TSV files directly in components
 - **Version/timestamp injection** via `__VERSION__` and `__TIMESTAMP__` globals
-- **Static adapter** with 404.html fallback for SPA routing
-- **Prerendering** with graceful HTTP error handling
+- **Node adapter** configured via `@sveltejs/adapter-node` for server-side rendering
+- **DuckDB WASM** excluded from optimization, with d3-regression included in SSR
+- **Worker format** set to 'es' for modern browser support
+- **Experimental features** enabled: remote functions and async compiler options
+- **TypeScript** strict mode enabled with ESM module resolution
 
 ## Adding New Stories
 
@@ -104,5 +141,16 @@ story-slug/
 - Use Svelte 5 runes syntax (`$state`, `$derived`, `$props`) instead of legacy reactive statements
 - Story positioning decisions should be made by parent components
 - The project uses `BASE_PATH` environment variable for deployment path configuration
-- DuckDB is excluded from SSR optimization in vite config
-- Worker format is set to 'es' for modern browser support
+- **Key Utilities**: 
+  - `storyRegistry.js` - Dynamic story component loading system
+  - `duckdb.js` - DuckDB WASM initialization and query utilities
+  - `filterStoryProps.js` - Story metadata filtering for display
+  - Various data processing utilities (slugify, tokenize, numberAsText, etc.)
+
+## Story Development Workflow
+
+1. Check existing stories in `src/lib/stories/` for patterns and conventions
+2. Use the GitHub issue template for story proposals and planning
+3. Follow the story structure with required `components/Index.svelte` and `data/copy.json`
+4. Test stories thoroughly in development mode before adding to `stories.csv`
+5. Consider technical features that showcase best practices in data science and software development

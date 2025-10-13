@@ -14,7 +14,7 @@ export default defineConfig({
 		__VERSION__: JSON.stringify(version),
 		__TIMESTAMP__: JSON.stringify(timestamp)
 	},
-	plugins: [enhancedImages(), sveltekit(), dsv()],
+	plugins: [dsv(), enhancedImages(), sveltekit()],
 	resolve: {
 		alias: {
 			$data: path.resolve("./src/data"),
