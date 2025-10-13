@@ -6,13 +6,13 @@
     import TrustDistributionChart from './TrustDistributionChart.svelte';
     import Controls from './Controls.svelte';
     import TrustCircles from './TrustCircles.svelte';
-    import IndividualPoints from './IndividualPoints.svelte';
-    import DataPanel from './DataPanel.svelte';
+    // import IndividualPoints from './IndividualPoints.svelte';
+    // import DataPanel from './DataPanel.svelte';
     import { institutionColorMap, getInstitutionColor } from '../utils/institutionColors.js';
 
     // load data
     import trust_circles from '../data/trust_circles.csv';
-    import trust_circles_individual from '../data/trust_circles_individual.csv';
+    // import trust_circles_individual from '../data/trust_circles_individual.csv';
 
     let {
         scrollyIndex,
@@ -164,53 +164,53 @@
     )
     
     // Individual data points for visualization
-    const individualPoints = $derived(() => {
-        if (scrollyIndex !== 1) return [];
+    // const individualPoints = $derived(() => {
+    //     if (scrollyIndex !== 1) return [];
 
-        // Filter for current demographic and institution
-        const filteredPoliceData = trust_circles_individual.filter(d => {
-            return d.gender_ord == GENDER && d.institution === INST && d.Timepoint == TIMEPOINT;
-        });
+    //     // Filter for current demographic and institution
+    //     const filteredPoliceData = trust_circles_individual.filter(d => {
+    //         return d.gender_ord == GENDER && d.institution === INST && d.Timepoint == TIMEPOINT;
+    //     });
 
-        // Position each point around the police trust circle
-        const positionedPoints = [];
+    //     // Position each point around the police trust circle
+    //     const positionedPoints = [];
 
-        // Race color mapping
-        const raceColors = {
-            0: '#3b82f6',  // Blue for White
-            1: '#f59e0b',  // Amber for Mixed
-            2: '#ef4444'   // Red for POC
-        };
+    //     // Race color mapping
+    //     const raceColors = {
+    //         0: '#3b82f6',  // Blue for White
+    //         1: '#f59e0b',  // Amber for Mixed
+    //         2: '#ef4444'   // Red for POC
+    //     };
 
-        filteredPoliceData.forEach((point, i) => {
-            const distance = parseFloat(point.distance);
-            const pointRadius = radiusScale(distance);
-            const raceValue = point.race_ord;
-            const orientationValue = point.orientation_ord;
+    //     filteredPoliceData.forEach((point, i) => {
+    //         const distance = parseFloat(point.distance);
+    //         const pointRadius = radiusScale(distance);
+    //         const raceValue = point.race_ord;
+    //         const orientationValue = point.orientation_ord;
 
-            // Spread points evenly around the circle at the exact radius for their trust level
-            const angle = (i / filteredPoliceData.length) * 2 * Math.PI;
+    //         // Spread points evenly around the circle at the exact radius for their trust level
+    //         const angle = (i / filteredPoliceData.length) * 2 * Math.PI;
 
-            const x = centerX + Math.cos(angle) * pointRadius;
-            const y = centerY + Math.sin(angle) * pointRadius;
+    //         const x = centerX + Math.cos(angle) * pointRadius;
+    //         const y = centerY + Math.sin(angle) * pointRadius;
 
-            positionedPoints.push({
-                ...point,
-                x: x,
-                y: y,
-                baseRadius: pointRadius,
-                trustLevel: distance,
-                raceColor: raceColors[raceValue] || '#6b7280',
-                raceLabel: raceValue === "0" ? 'White' : raceValue === "1" ? 'Mixed' : raceValue === "2" ? 'POC' : 'Unknown',
-                orientationLabel: orientationValue === "0" ? 'Straight' :
-                                orientationValue === "1" ? 'Bisexual' :
-                                orientationValue === "2" ? 'Gay' :
-                                orientationValue === "3" ? 'Other' : 'Unknown'
-            });
-        });
+    //         positionedPoints.push({
+    //             ...point,
+    //             x: x,
+    //             y: y,
+    //             baseRadius: pointRadius,
+    //             trustLevel: distance,
+    //             raceColor: raceColors[raceValue] || '#6b7280',
+    //             raceLabel: raceValue === "0" ? 'White' : raceValue === "1" ? 'Mixed' : raceValue === "2" ? 'POC' : 'Unknown',
+    //             orientationLabel: orientationValue === "0" ? 'Straight' :
+    //                             orientationValue === "1" ? 'Bisexual' :
+    //                             orientationValue === "2" ? 'Gay' :
+    //                             orientationValue === "3" ? 'Other' : 'Unknown'
+    //         });
+    //     });
 
-        return positionedPoints;
-    });
+    //     return positionedPoints;
+    // });
     
     // TRUST CIRCLES PLOTTING ---
 
@@ -257,13 +257,13 @@
 
 
         <!-- DataPanel - only during main scrolly story, NOT in dashboard -->
-        {#if !isDashboard}
+        <!-- {#if !isDashboard}
             <div class="data-panel-wrapper"
                 class:visible={isStorySection}
                 class:fade-out={conclusionVisible}>
                 <DataPanel {highlightCircle} {selectedDemCategory} {selectedValue} {isDashboard} bind:isCollapsed />
             </div>
-        {/if}
+        {/if} -->
 
         <!-- Trust Distribution Chart in bottom right - only during main scrolly story, NOT in dashboard -->
         {#if !isDashboard}

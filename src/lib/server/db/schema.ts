@@ -1,4 +1,4 @@
-import { sqliteTable, integer, text, customType } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, integer, text, real, customType } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 // Custom ordinal type for survey responses (1-3 scale typically)
@@ -41,4 +41,3 @@ export const surveyResponses = sqliteTable('survey_responses', {
 		.notNull()
 		.default(sql`(unixepoch())`),
 });
-
