@@ -1,8 +1,10 @@
 import * as v from 'valibot';
 import { command, query } from '$app/server';
-import { eq, count } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db/index.js';
 import { surveyResponses } from '$lib/server/db/schema.ts';
+
+// Import CSV files - the DSV plugin will handle these
 import dfall from './dfall.csv';
 import trust_circles_individual from './trust_circles_individual.csv';
 
