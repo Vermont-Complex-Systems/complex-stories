@@ -1,11 +1,12 @@
 <script>
     import TrustDistributionBars from './TrustDistributionBars.svelte';
     import { X } from '@lucide/svelte';
-    import trust_circles_individual from '../data/trust_circles_individual.csv';
+    // import trust_circles_individual from '../data/trust_circles_individual.csv';
 
     let { highlightCircle, selectedDemCategory, selectedValue, isDashboard = false, isCollapsed = $bindable(true) } = $props();
 
     const TIMEPOINT = 1;
+    const trust_circles_individual = [];
 
     function togglePanel() {
         isCollapsed = !isCollapsed;
