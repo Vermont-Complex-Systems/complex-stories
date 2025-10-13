@@ -12,7 +12,7 @@
 
     // load data
     import trust_circles from '../data/trust_circles.csv';
-    import trust_circles_individual from '../data/trust_circles_individual.csv';
+    import { getIndividualPoints } from '../data/data.remote';
 
     let {
         scrollyIndex,
@@ -163,13 +163,15 @@
         )
     )
     
-    // Individual data points for visualization
-    const individualPoints = $derived(() => {
+    // Individual data points for visualization - fetch from server
+    const individualPoints = $derived(async () => {
         if (scrollyIndex !== 1) return [];
 
-        // Filter for current demographic and institution
-        const filteredPoliceData = trust_circles_individual.filter(d => {
-            return d.gender_ord == GENDER && d.institution === INST && d.Timepoint == TIMEPOINT;
+        // Fetch filtered data from server
+        const filteredPoliceData = await getIndividualPoints({
+            timepoint: TIMEPOINT,
+            genderOrd: GENDER,
+            institution: INST
         });
 
         // Position each point around the police trust circle
@@ -183,8 +185,7 @@
         };
 
         filteredPoliceData.forEach((point, i) => {
-            const distance = parseFloat(point.distance);
-            const pointRadius = radiusScale(distance);
+            const pointRadius = radiusScale(point.distance);
             const raceValue = point.race_ord;
             const orientationValue = point.orientation_ord;
 
@@ -195,11 +196,10 @@
             const y = centerY + Math.sin(angle) * pointRadius;
 
             positionedPoints.push({
-                ...point,
                 x: x,
                 y: y,
                 baseRadius: pointRadius,
-                trustLevel: distance,
+                trustLevel: point.distance,
                 raceColor: raceColors[raceValue] || '#6b7280',
                 raceLabel: raceValue === "0" ? 'White' : raceValue === "1" ? 'Mixed' : raceValue === "2" ? 'POC' : 'Unknown',
                 orientationLabel: orientationValue === "0" ? 'Straight' :

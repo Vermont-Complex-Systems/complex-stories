@@ -1,7 +1,7 @@
 <script>
     import TrustDistributionBars from './TrustDistributionBars.svelte';
     import { X } from '@lucide/svelte';
-    import trust_circles_individual from '../data/trust_circles_individual.csv';
+    import { getTrustCirclesData } from '../data/data.remote';
 
     let { highlightCircle, selectedDemCategory, selectedValue, isDashboard = false, isCollapsed = $bindable(true) } = $props();
 
@@ -33,92 +33,19 @@
     const displayValue = $derived(valueLabels[selectedDemCategory]?.[selectedValue] || selectedValue);
     const displayInstitution = $derived(highlightCircle || 'None');
 
-    // Count how many people match the selected value
-    const selectedValueCount = $derived.by(() => {
-        if (!highlightCircle) {
-            return trust_circles_individual.filter(d =>
-                d.Timepoint == TIMEPOINT &&
-                parseFloat(d[selectedDemCategory]) === parseFloat(selectedValue)
-            ).length;
-        }
-        return trust_circles_individual.filter(d =>
-            d.institution === highlightCircle &&
-            d.Timepoint == TIMEPOINT &&
-            parseFloat(d[selectedDemCategory]) === parseFloat(selectedValue)
-        ).length;
-    });
+    // Fetch data from server instead of importing CSV
+    const trustData = $derived(await getTrustCirclesData({
+        timepoint: TIMEPOINT,
+        category: selectedDemCategory,
+        value: selectedValue,
+        institution: highlightCircle || undefined
+    }));
 
-    // Compute filtered data for current demographic and institution
-    // For the DataPanel, we show ALL values of the selected category, not just the filtered value
-    const filteredData = $derived.by(() => {
-        // If no institution highlighted, show all institutions
-        if (!highlightCircle) {
-            return trust_circles_individual.filter(d => d.Timepoint == TIMEPOINT);
-        }
-
-        // Otherwise show all data for the highlighted institution
-        return trust_circles_individual.filter(d =>
-            d.institution === highlightCircle &&
-            d.Timepoint == TIMEPOINT
-        );
-    });
-
-    // Calculate trust distribution
-    const trustDistribution = $derived.by(() => {
-        const distribution = {};
-        filteredData.forEach(d => {
-            const distance = parseFloat(d.distance);
-            distribution[distance] = (distribution[distance] || 0) + 1;
-        });
-        return distribution;
-    });
-
-    // Calculate trust by selected demographic category
-    const trustByCategory = $derived.by(() => {
-        const byCategory = {};
-
-        // Get data from all values of the selected category (not filtered)
-        const allData = !highlightCircle
-            ? trust_circles_individual.filter(d => d.Timepoint == TIMEPOINT)
-            : trust_circles_individual.filter(d =>
-                d.institution === highlightCircle &&
-                d.Timepoint == TIMEPOINT
-            );
-
-        allData.forEach(d => {
-            const distance = parseFloat(d.distance);
-            const categoryValue = d[selectedDemCategory]?.toString() || '0';
-            if (!byCategory[distance]) {
-                byCategory[distance] = {};
-            }
-            byCategory[distance][categoryValue] = (byCategory[distance][categoryValue] || 0) + 1;
-        });
-        return byCategory;
-    });
-
-    // Calculate demographic breakdown
-    // Show breakdowns for dimensions OTHER than the one we're filtering by
+    const selectedValueCount = $derived(trustData.count);
+    const trustDistribution = $derived(trustData.distribution);
+    const trustByCategory = $derived(trustData.byCategory);
     const demographicBreakdown = $derived.by(() => {
-        const data = filteredData;
-        const breakdown = {
-            total: data.length,
-            orientation: {
-                straight: data.filter(d => d.orientation_ord == 0).length,
-                bisexual: data.filter(d => d.orientation_ord == 1).length,
-                gay: data.filter(d => d.orientation_ord == 2).length,
-                other: data.filter(d => d.orientation_ord == 3).length
-            },
-            race: {
-                white: data.filter(d => d.race_ord == 0).length,
-                mixed: data.filter(d => d.race_ord == 1).length,
-                poc: data.filter(d => d.race_ord == 2).length
-            },
-            gender: {
-                women: data.filter(d => d.gender_ord == 0).length,
-                men: data.filter(d => d.gender_ord == 1).length,
-                other: data.filter(d => d.gender_ord == 2).length
-            }
-        };
+        const breakdown = trustData.breakdown;
 
         // Remove the category we're filtering by from the breakdown
         if (selectedDemCategory === 'race_ord') {
@@ -163,7 +90,7 @@
             <span class="value">{displayInstitution}</span>
         </div>
 
-        {#if filteredData.length > 0}
+        {#if selectedValueCount > 0}
             <h4>Trust Distribution by {displayCategory}</h4>
             <div class="filter-info">Viewing: <strong>{displayValue}</strong> ({selectedValueCount} people)</div>
             <TrustDistributionBars

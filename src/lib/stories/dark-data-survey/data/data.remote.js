@@ -4,6 +4,7 @@ import { eq, count } from 'drizzle-orm';
 import { db } from '$lib/server/db/index.js';
 import { surveyResponses } from '$lib/server/db/schema.ts';
 import dfall from './dfall.csv';
+import trust_circles_individual from './trust_circles_individual.csv';
 
 // We use raw JS here to avoid pushing dfall.csv into the public db...
 export const countCategory = query(
@@ -21,6 +22,92 @@ export const countCategory = query(
 			types: parseFloat(types),
 			count
 		})).sort((a, b) => a.types - b.types);
+	}
+)
+
+// Get trust circles data with filters for privacy
+export const getTrustCirclesData = query(
+	v.object({
+		timepoint: v.number(),
+		category: v.string(),
+		value: v.string(),
+		institution: v.optional(v.string())
+	}),
+	async (filters) => {
+		let filtered = trust_circles_individual.filter(
+			d => d.Timepoint == filters.timepoint &&
+			     parseFloat(d[filters.category]) === parseFloat(filters.value)
+		);
+
+		if (filters.institution) {
+			filtered = filtered.filter(d => d.institution === filters.institution);
+		}
+
+		// Calculate aggregated statistics
+		const distribution = {};
+		const byCategory = {};
+
+		filtered.forEach(d => {
+			const distance = parseFloat(d.distance);
+			distribution[distance] = (distribution[distance] || 0) + 1;
+
+			const categoryValue = d[filters.category]?.toString() || '0';
+			if (!byCategory[distance]) {
+				byCategory[distance] = {};
+			}
+			byCategory[distance][categoryValue] = (byCategory[distance][categoryValue] || 0) + 1;
+		});
+
+		// Calculate demographic breakdown
+		const breakdown = {
+			total: filtered.length,
+			orientation: {
+				straight: filtered.filter(d => d.orientation_ord == 0).length,
+				bisexual: filtered.filter(d => d.orientation_ord == 1).length,
+				gay: filtered.filter(d => d.orientation_ord == 2).length,
+				other: filtered.filter(d => d.orientation_ord == 3).length
+			},
+			race: {
+				white: filtered.filter(d => d.race_ord == 0).length,
+				mixed: filtered.filter(d => d.race_ord == 1).length,
+				poc: filtered.filter(d => d.race_ord == 2).length
+			},
+			gender: {
+				women: filtered.filter(d => d.gender_ord == 0).length,
+				men: filtered.filter(d => d.gender_ord == 1).length,
+				other: filtered.filter(d => d.gender_ord == 2).length
+			}
+		};
+
+		return {
+			distribution,
+			byCategory,
+			breakdown,
+			count: filtered.length
+		};
+	}
+)
+
+// Get individual points for visualization (for scrollyIndex === 1 only)
+export const getIndividualPoints = query(
+	v.object({
+		timepoint: v.number(),
+		genderOrd: v.number(),
+		institution: v.string()
+	}),
+	async (filters) => {
+		const filtered = trust_circles_individual.filter(d => {
+			return d.gender_ord == filters.genderOrd &&
+			       d.institution === filters.institution &&
+			       d.Timepoint == filters.timepoint;
+		});
+
+		// Return only necessary fields, not entire rows
+		return filtered.map(d => ({
+			distance: parseFloat(d.distance),
+			race_ord: d.race_ord,
+			orientation_ord: d.orientation_ord
+		}));
 	}
 )
 
