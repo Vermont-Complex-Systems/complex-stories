@@ -115,7 +115,7 @@
 	"steps": [
 		{
 			"type": "markdown",
-			"value": "To investigate that question, we asked a series of questions about how comfortable each respondent is with sharing personally identifiable (PII) data with a number of institutions, broadly understood. What if the comfort of sharing data with a particular institution depends on the perceived distance from oneself, which we call _privacy construal_?"
+			"value": "To investigate that question, we asked a series of questions about how comfortable each respondent is with sharing personally identifiable information (PII) data with a number of institutions, broadly understood. What if the comfort of sharing data with a particular institution depends on the perceived distance from oneself, which we call _privacy construal_?"
 		},
 		{
 			"type": "markdown",

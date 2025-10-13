@@ -124,7 +124,7 @@
                 break;
             case 10:
                 selectedDemCategory = 'ACES_Compound';
-                selectedValue = "1.0";
+                selectedValue = "0.0";
                 highlightCircle = "TP_Relative";
                 break;
             case 11:
