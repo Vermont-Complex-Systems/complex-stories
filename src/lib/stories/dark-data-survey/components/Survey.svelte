@@ -1,6 +1,6 @@
 <script>
 import { surveyScrollyContent } from './Snippets.svelte';
-import DemographicsBox from './DemographicsBox.svelte';
+import DemographicsBox from './Survey.DemographicsBox.svelte';
 import copy from '../data/copy.json';
 
 let { scrollyState, userFingerprint, saveAnswer } = $props();

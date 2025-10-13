@@ -1,6 +1,6 @@
 <script>
-    import RadioQuestion from './RadioQuestion.svelte';
-    import CheckboxQuestion from './CheckboxQuestion.svelte';
+    import RadioQuestion from './Survey.Question.Radio.svelte';
+    import CheckboxQuestion from './Survey.Question.Checkbox.svelte';
 
     let { question, name, value, options, multiple = false, userFingerprint, saveAnswer } = $props();
 </script>

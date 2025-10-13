@@ -1,9 +1,7 @@
 import { json } from '@sveltejs/kit';
-// import { eq } from 'drizzle-orm';
-// import { db } from '$lib/server/db/index.js';
-// import { surveyResponses } from '$lib/server/db/schema.ts';
-
-// Database functionality disabled
+import { eq } from 'drizzle-orm';
+import { db } from '$lib/server/db/index.js';
+import { surveyResponses } from '$lib/server/db/schema.ts';
 
 const valueToOrdinal = {
 	socialMediaPrivacy: { 'private': 1, 'mixed': 2, 'public': 3 }
@@ -32,50 +30,46 @@ export async function POST({ request }) {
 			return json({ error: 'Invalid field' }, { status: 400 });
 		}
 
-		// Database functionality disabled - just log the response
-		console.log('Survey response (not saved):', { fingerprint, field, value });
-		return json({ success: true });
+		// Determine the value to save
+		let valueToSave;
+		if (arrayFields.includes(field)) {
+			// Array fields - store as JSON string
+			valueToSave = Array.isArray(value) ? JSON.stringify(value) : value;
+		} else if (directFields.includes(field)) {
+			// Direct fields - save as-is
+			valueToSave = value;
+		} else {
+			// Ordinal fields - convert to number
+			const ordinal = valueToOrdinal[field][value];
+			if (!ordinal) {
+				console.error(`Invalid value ${value} for field ${field}`);
+				return json({ error: `Invalid value for field ${field}` }, { status: 400 });
+			}
+			valueToSave = ordinal;
+		}
 
-		// // Determine the value to save
-		// let valueToSave;
-		// if (arrayFields.includes(field)) {
-		// 	// Array fields - store as JSON string
-		// 	valueToSave = Array.isArray(value) ? JSON.stringify(value) : value;
-		// } else if (directFields.includes(field)) {
-		// 	// Direct fields - save as-is
-		// 	valueToSave = value;
-		// } else {
-		// 	// Ordinal fields - convert to number
-		// 	const ordinal = valueToOrdinal[field][value];
-		// 	if (!ordinal) {
-		// 		console.error(`Invalid value ${value} for field ${field}`);
-		// 		return json({ error: `Invalid value for field ${field}` }, { status: 400 });
-		// 	}
-		// 	valueToSave = ordinal;
-		// }
-		//
-		// // Check if record exists
-		// const existing = await db.select()
-		// 	.from(surveyResponses)
-		// 	.where(eq(surveyResponses.fingerprint, fingerprint))
-		// 	.get();
-		//
-		// if (existing) {
-		// 	// Update only the specific field
-		// 	await db.update(surveyResponses)
-		// 		.set({ [field]: valueToSave })
-		// 		.where(eq(surveyResponses.fingerprint, fingerprint));
-		// } else {
-		// 	// Insert new record
-		// 	await db.insert(surveyResponses)
-		// 		.values({
-		// 			fingerprint,
-		// 			[field]: valueToSave
-		// 		});
-		// }
-		//
-		// console.log(`Saved ${field}:`, value, valueToSave);
-		// return json({ success: true });
+		// Check if record exists
+		const existing = await db.select()
+			.from(surveyResponses)
+			.where(eq(surveyResponses.fingerprint, fingerprint))
+			.get();
+
+		if (existing) {
+			// Update only the specific field
+			await db.update(surveyResponses)
+				.set({ [field]: valueToSave })
+				.where(eq(surveyResponses.fingerprint, fingerprint));
+		} else {
+			// Insert new record
+			await db.insert(surveyResponses)
+				.values({
+					fingerprint,
+					[field]: valueToSave
+				});
+		}
+
+		console.log(`Saved ${field}:`, value);
+		return json({ success: true });
 
 	} catch (err) {
 		console.error('Survey save error:', err);

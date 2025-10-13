@@ -1,7 +1,7 @@
 <script module>
     import Scrolly from '$lib/components/helpers/Scrolly.svelte';
     import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
-    import Question from './Question.svelte';
+    import Question from './Survey.Question.svelte';
     import BarChartRank from './BarChartRank.svelte';
     import {countCategory} from '../data/data.remote'
 
@@ -24,6 +24,7 @@
             {@html value}
         {:else if type === "math"}
             <Md text={value}/>
+        <!-- Each component should be added here. A bit sloppy. -->
         {:else if type === "component"}
             {#if component === "chart-rank"}
                 {#await countCategory("TP_Social")}
