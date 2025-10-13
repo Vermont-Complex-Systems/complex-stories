@@ -1,31 +1,49 @@
 import * as v from 'valibot';
 import { command, query } from '$app/server';
-import { eq } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { db } from '$lib/server/db/index.js';
-import { surveyResponses } from '$lib/server/db/schema.ts';
+import { surveyResponses, trustCirclesIndividual, surveyDataAll } from '$lib/server/db/schema.ts';
 
-// Import CSV files - the DSV plugin will handle these
-import dfall from './dfall.csv';
-import trust_circles_individual from './trust_circles_individual.csv';
+// Map friendly category names to database column names
+const categoryToColumn = {
+	'socialMediaPrivacy': 'tp_platform',
+	'platformMatters': 'tp_platform',
+	'institutionPreferences': 'tp_platform',
+	'demographicsMatter': 'gender_ord'
+};
 
-// We use raw JS here to avoid pushing dfall.csv into the public db...
+// Query aggregated counts from database
 export const countCategory = query(
 	v.string(),
 	async (category) => {
-		const counts = dfall.filter(d => d.Timepoint == 1).reduce((acc, row) => {
-			const types = row[category];
-			if (types !== null && types !== undefined && types !== '') {
-				acc[types] = (acc[types] || 0) + 1;
-			}
-			return acc;
-		}, {});
+		const column = categoryToColumn[category] || category;
 
-		return Object.entries(counts).map(([types, count]) => ({
-			types: parseFloat(types),
-			count
-		})).sort((a, b) => a.types - b.types);
+		// Execute raw SQL for aggregation
+		const results = await db.all(sql`
+			SELECT ${sql.raw(column)} as types, COUNT(*) as count
+			FROM survey_data_all
+			WHERE timepoint = 1 AND ${sql.raw(column)} IS NOT NULL
+			GROUP BY ${sql.raw(column)}
+			ORDER BY types
+		`);
+
+		return results.map(row => ({
+			types: parseFloat(row.types),
+			count: row.count
+		}));
 	}
 )
+
+// Map category names to database column names
+const categoryFieldMap = {
+	'overall_average': null, // No filtering needed
+	'gender_ord': 'genderOrd',
+	'orientation_ord': 'orientationOrd',
+	'race_ord': 'raceOrd',
+	'multi_platform_ord': 'multiPlatformOrd',
+	'ACES_Compound': 'acesCompound',
+	'Dem_Relationship_Status_Single': 'relationshipStatusSingle'
+};
 
 // Get trust circles data with filters for privacy
 export const getTrustCirclesData = query(
@@ -36,24 +54,38 @@ export const getTrustCirclesData = query(
 		institution: v.optional(v.string())
 	}),
 	async (filters) => {
-		let filtered = trust_circles_individual.filter(
-			d => d.Timepoint == filters.timepoint &&
-			     parseFloat(d[filters.category]) === parseFloat(filters.value)
-		);
+		const dbColumn = categoryFieldMap[filters.category];
 
-		if (filters.institution) {
-			filtered = filtered.filter(d => d.institution === filters.institution);
+		// Build where conditions
+		const conditions = [
+			eq(trustCirclesIndividual.timepoint, filters.timepoint)
+		];
+
+		// Add category filter if not "overall_average"
+		if (dbColumn && filters.value !== "1.0") {
+			const numValue = parseFloat(filters.value);
+			conditions.push(eq(trustCirclesIndividual[dbColumn], numValue));
 		}
+
+		// Add institution filter if provided
+		if (filters.institution) {
+			conditions.push(eq(trustCirclesIndividual.institution, filters.institution));
+		}
+
+		// Query database
+		const rows = await db.select()
+			.from(trustCirclesIndividual)
+			.where(and(...conditions));
 
 		// Calculate aggregated statistics
 		const distribution = {};
 		const byCategory = {};
 
-		filtered.forEach(d => {
-			const distance = parseFloat(d.distance);
+		rows.forEach(row => {
+			const distance = row.distance;
 			distribution[distance] = (distribution[distance] || 0) + 1;
 
-			const categoryValue = d[filters.category]?.toString() || '0';
+			const categoryValue = (row[dbColumn] || 0).toString();
 			if (!byCategory[distance]) {
 				byCategory[distance] = {};
 			}
@@ -62,22 +94,22 @@ export const getTrustCirclesData = query(
 
 		// Calculate demographic breakdown
 		const breakdown = {
-			total: filtered.length,
+			total: rows.length,
 			orientation: {
-				straight: filtered.filter(d => d.orientation_ord == 0).length,
-				bisexual: filtered.filter(d => d.orientation_ord == 1).length,
-				gay: filtered.filter(d => d.orientation_ord == 2).length,
-				other: filtered.filter(d => d.orientation_ord == 3).length
+				straight: rows.filter(d => d.orientationOrd == 0).length,
+				bisexual: rows.filter(d => d.orientationOrd == 1).length,
+				gay: rows.filter(d => d.orientationOrd == 2).length,
+				other: rows.filter(d => d.orientationOrd == 3).length
 			},
 			race: {
-				white: filtered.filter(d => d.race_ord == 0).length,
-				mixed: filtered.filter(d => d.race_ord == 1).length,
-				poc: filtered.filter(d => d.race_ord == 2).length
+				white: rows.filter(d => d.raceOrd == 0).length,
+				mixed: rows.filter(d => d.raceOrd == 1).length,
+				poc: rows.filter(d => d.raceOrd == 2).length
 			},
 			gender: {
-				women: filtered.filter(d => d.gender_ord == 0).length,
-				men: filtered.filter(d => d.gender_ord == 1).length,
-				other: filtered.filter(d => d.gender_ord == 2).length
+				women: rows.filter(d => d.genderOrd == 0).length,
+				men: rows.filter(d => d.genderOrd == 1).length,
+				other: rows.filter(d => d.genderOrd == 2).length
 			}
 		};
 
@@ -85,7 +117,7 @@ export const getTrustCirclesData = query(
 			distribution,
 			byCategory,
 			breakdown,
-			count: filtered.length
+			count: rows.length
 		};
 	}
 )
@@ -98,18 +130,19 @@ export const getIndividualPoints = query(
 		institution: v.string()
 	}),
 	async (filters) => {
-		const filtered = trust_circles_individual.filter(d => {
-			return d.gender_ord == filters.genderOrd &&
-			       d.institution === filters.institution &&
-			       d.Timepoint == filters.timepoint;
-		});
+		const rows = await db.select({
+			distance: trustCirclesIndividual.distance,
+			race_ord: trustCirclesIndividual.raceOrd,
+			orientation_ord: trustCirclesIndividual.orientationOrd
+		})
+		.from(trustCirclesIndividual)
+		.where(and(
+			eq(trustCirclesIndividual.genderOrd, filters.genderOrd),
+			eq(trustCirclesIndividual.institution, filters.institution),
+			eq(trustCirclesIndividual.timepoint, filters.timepoint)
+		));
 
-		// Return only necessary fields, not entire rows
-		return filtered.map(d => ({
-			distance: parseFloat(d.distance),
-			race_ord: d.race_ord,
-			orientation_ord: d.orientation_ord
-		}));
+		return rows;
 	}
 )
 
