@@ -12,11 +12,11 @@ class Paper(Base):
     """Papers table - exact structure from paper.py export"""
     __tablename__ = "papers"
 
-    # Primary key (using the OpenAlex work ID)
+    # Composite primary key (paper ID + ego author)
     id = Column(String, primary_key=True)
+    ego_author_id = Column(String, primary_key=True)
 
     # Author info
-    ego_author_id = Column(String)
     ego_display_name = Column(String)
 
     # Publication info

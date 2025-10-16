@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     postgres_user: str = "postgres"
     postgres_password: str = ""
 
+    label_studio_api_key: str
+    label_studio_url: str
+    faculty_project_id: int
+    
     # API settings
     api_host: str = "0.0.0.0"
     api_port: int = 8000

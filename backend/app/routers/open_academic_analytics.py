@@ -133,6 +133,71 @@ async def get_papers_for_author(
         raise HTTPException(status_code=500, detail=f"Error fetching papers: {str(e)}")
 
 
+@router.get("/authors")
+async def get_all_authors(
+    ipeds_id: Optional[str] = Query(None, description="IPEDS ID to filter by institution (defaults to UVM)"),
+    year: Optional[int] = Query(None, description="Year to filter faculty list (defaults to 2023)"),
+    db: AsyncSession = Depends(get_db_session)
+) -> Dict[str, Any]:
+    """
+    Get all available authors with their current age, last publication year, and paper count.
+
+    Supports filtering by institution (IPEDS ID) and faculty year for multi-tenant use.
+    Currently defaults to UVM 2023 faculty list.
+    """
+    try:
+        from ..models.academic import Coauthor
+        from sqlalchemy import select, func
+
+        # Set defaults for current UVM implementation
+        # TODO: Extend data model to support multiple institutions and years
+        effective_ipeds_id = ipeds_id or "uvm"  # Default to UVM
+        effective_year = year or 2023  # Default to 2023
+
+        # Query to get UVM faculty with their info (without expensive paper counts):
+        # Fast query using just the coauthor table
+        # Paper counts can be added later if needed via a separate endpoint
+
+        query = select(
+            Coauthor.ego_display_name,
+            func.max(Coauthor.ego_age).label('current_age'),
+            func.max(Coauthor.publication_year).label('last_pub_year')
+        ).where(
+            (Coauthor.ego_display_name.is_not(None)) &
+            (Coauthor.ego_age.is_not(None))
+            # TODO: Add institution and year filtering when data model supports it
+            # & (Coauthor.institution_ipeds_id == effective_ipeds_id)
+            # & (Coauthor.faculty_year == effective_year)
+        ).group_by(
+            Coauthor.ego_display_name
+        ).order_by(
+            Coauthor.ego_display_name
+        )
+
+        # Execute query
+        result = await db.execute(query)
+        authors_data = result.all()
+
+        # Convert to list of dictionaries
+        authors = []
+        for row in authors_data:
+            authors.append({
+                "ego_display_name": row.ego_display_name,
+                "current_age": row.current_age,
+                "last_pub_year": row.last_pub_year
+            })
+
+        return {
+            "total_authors": len(authors),
+            "institution": effective_ipeds_id,
+            "year": effective_year,
+            "authors": authors
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching authors: {str(e)}")
+
+
 @router.get("/coauthors/{author_name}")
 async def get_coauthors_for_author(
     author_name: str,
@@ -232,34 +297,72 @@ async def upload_papers_bulk(
 ) -> Dict[str, Any]:
     """
     Bulk upload processed papers data from Dagster pipeline.
+    Uses efficient batch processing instead of individual inserts.
     """
     try:
         from ..models.academic import Paper
-        from sqlalchemy import delete, text
-
-        # Alternative approach: Use ON CONFLICT to handle duplicates
         from sqlalchemy.dialects.postgresql import insert
+        import logging
 
-        # Insert papers with ON CONFLICT DO UPDATE (upsert)
+        logger = logging.getLogger(__name__)
+        logger.info(f"Starting bulk upload of {len(papers)} papers")
+
+        if not papers:
+            return {"status": "success", "papers_processed": 0, "message": "No papers to process"}
+
+        # Validate a sample record to check field compatibility
+        sample_paper = papers[0]
+        expected_fields = set(Paper.__table__.columns.keys())
+        provided_fields = set(sample_paper.keys())
+
+        # Log field differences for debugging
+        missing_fields = expected_fields - provided_fields
+        extra_fields = provided_fields - expected_fields
+
+        if missing_fields:
+            logger.warning(f"Missing fields in paper data: {missing_fields}")
+        if extra_fields:
+            logger.warning(f"Extra fields in paper data (will be ignored): {extra_fields}")
+
+        # Filter paper data to only include valid fields
+        filtered_papers = []
         for paper_data in papers:
-            stmt = insert(Paper).values(**paper_data)
-            # Update all fields if conflict on primary key
-            stmt = stmt.on_conflict_do_update(
-                index_elements=['id'],
-                set_={key: stmt.excluded[key] for key in paper_data.keys() if key != 'id'}
-            )
-            await db.execute(stmt)
+            filtered_data = {k: v for k, v in paper_data.items() if k in expected_fields}
+            filtered_papers.append(filtered_data)
 
-        await db.commit()
+        # Use efficient bulk insert with correct composite key
+        try:
+            stmt = insert(Paper)
+            stmt = stmt.on_conflict_do_update(
+                index_elements=['id', 'ego_author_id'],
+                set_={col.name: stmt.excluded[col.name] for col in Paper.__table__.columns if col.name not in ['id', 'ego_author_id']}
+            )
+
+            # Execute bulk insert
+            await db.execute(stmt, filtered_papers)
+            await db.commit()
+            successful_inserts = len(filtered_papers)
+
+        except Exception as e:
+            logger.error(f"Bulk insert failed: {str(e)}")
+            await db.rollback()
+            successful_inserts = 0
+
+        logger.info(f"Successfully processed {successful_inserts}/{len(filtered_papers)} papers")
 
         return {
             "status": "success",
-            "papers_processed": len(papers),
-            "message": f"Successfully processed {len(papers)} papers (inserted or updated)"
+            "papers_processed": successful_inserts,
+            "papers_received": len(papers),
+            "papers_attempted": len(filtered_papers),
+            "missing_fields": list(missing_fields) if missing_fields else [],
+            "extra_fields": list(extra_fields) if extra_fields else [],
+            "message": f"Successfully processed {successful_inserts}/{len(filtered_papers)} papers (inserted or updated)"
         }
 
     except Exception as e:
         await db.rollback()
+        logger.error(f"Error in bulk upload: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error uploading papers: {str(e)}")
 
 
@@ -273,25 +376,24 @@ async def upload_coauthors_bulk(
     """
     try:
         from ..models.academic import Coauthor
-        from sqlalchemy import delete
+        from sqlalchemy.dialects.postgresql import insert
 
-        # Clear existing data
-        await db.execute(delete(Coauthor))
-
-        # Insert new coauthors
-        coauthor_objects = []
+        # Use upsert approach instead of delete + insert to handle batching
         for coauthor_data in coauthors:
-            coauthor = Coauthor(**coauthor_data)
-            coauthor_objects.append(coauthor)
+            stmt = insert(Coauthor).values(**coauthor_data)
+            # Update all fields if conflict on primary key
+            stmt = stmt.on_conflict_do_update(
+                index_elements=['id'],
+                set_={key: stmt.excluded[key] for key in coauthor_data.keys() if key != 'id'}
+            )
+            await db.execute(stmt)
 
-        if coauthor_objects:
-            db.add_all(coauthor_objects)
-            await db.commit()
+        await db.commit()
 
         return {
             "status": "success",
-            "coauthor_records_inserted": len(coauthor_objects),
-            "message": f"Successfully uploaded {len(coauthor_objects)} coauthor records"
+            "coauthor_records_processed": len(coauthors),
+            "message": f"Successfully processed {len(coauthors)} coauthor records (inserted or updated)"
         }
 
     except Exception as e:

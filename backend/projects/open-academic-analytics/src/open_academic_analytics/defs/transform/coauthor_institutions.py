@@ -100,28 +100,14 @@ def coauthor_institutions(duckdb: DuckDBResource) -> dg.MaterializeResult:
         
         # Get statistics
         stats = conn.execute("""
-            SELECT 
+            SELECT
                 COUNT(DISTINCT (id, publication_year)) as total_coauthor_years,
                 COUNT(DISTINCT id) as unique_coauthors,
                 COUNT(DISTINCT publication_year) as years_covered,
                 COUNT(CASE WHEN primary_institution != 'Unknown' THEN 1 END) as with_known_institution,
                 COUNT(DISTINCT primary_institution) as unique_institutions
-            FROM oa.main.coauthor_institutions
+            FROM oa.transform.coauthor_institutions
         """).fetchone()
-        
-        # Get examples of institution changes over time
-        mobility_examples = conn.execute("""
-            SELECT 
-                display_name,
-                COUNT(DISTINCT primary_institution) as institution_changes,
-                STRING_AGG(DISTINCT primary_institution, ' → ' ORDER BY primary_institution) as institutions
-            FROM oa.main.coauthor_institutions
-            WHERE primary_institution != 'Unknown'
-            GROUP BY id, display_name
-            HAVING COUNT(DISTINCT primary_institution) > 1
-            ORDER BY institution_changes DESC
-            LIMIT 5
-        """).fetchall()
     
     return dg.MaterializeResult(
         metadata={
@@ -131,10 +117,5 @@ def coauthor_institutions(duckdb: DuckDBResource) -> dg.MaterializeResult:
             "with_known_institution": stats[3],
             "unknown_institution_percentage": round((stats[0] - stats[3]) / stats[0] * 100, 1) if stats[0] > 0 else 0,
             "unique_institutions": stats[4],
-            
-            "institution_mobility_examples": [
-                f"{ex[0]}: {ex[1]} institutions ({ex[2]})" 
-                for ex in mobility_examples
-            ] if mobility_examples else []
         }
     )

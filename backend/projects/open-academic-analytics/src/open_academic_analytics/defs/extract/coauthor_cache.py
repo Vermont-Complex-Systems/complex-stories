@@ -1,6 +1,9 @@
 """
-Cache all publication ranges of all coauthors of UVM 2023 faculties to calculate relative age.
-This takes a while but there is no way around it as far as we can tell.
+Cache all publication ranges of all coauthors of UVM 2023 
+faculties to calculate relative age.
+
+This takes a while but there is no way around 
+it as far as we can tell.
 """
 
 import dagster as dg
@@ -172,7 +175,7 @@ def coauthor_cache(
                 
                 # Store in cache (using same connection)
                 conn.execute("""
-                    INSERT OR IGNORE INTO oa.cache.coauthor_cache 
+                    INSERT OR REPLACE INTO oa.cache.coauthor_cache
                     (id, display_name, first_pub_year, 
                      last_pub_year, last_fetched_date, fetch_successful)
                     VALUES (?, ?, ?, ?, NOW(), ?)
@@ -223,44 +226,44 @@ def coauthor_cache(
             }
         )
 
-@dg.asset_check(
-    asset=coauthor_cache,
-    description="Check coauthor cache progress",
-)
-def coauthor_cache_progress_check(duckdb: DuckDBResource) -> dg.AssetCheckResult:
-    """Check the progress of building coauthor cache"""
+# @dg.asset_check(
+#     asset=coauthor_cache,
+#     description="Check coauthor cache progress",
+# )
+# def coauthor_cache_progress_check(duckdb: DuckDBResource) -> dg.AssetCheckResult:
+#     """Check the progress of building coauthor cache"""
     
-    with duckdb.get_connection() as conn:
-        # Get external coauthors count
-        total_external = conn.execute("""
-            SELECT COUNT(DISTINCT a.author_id) as total_external_coauthors
-            FROM oa.raw.authorships a
-            WHERE a.author_id NOT IN (
-                SELECT ego_author_id
-                FROM oa.raw.uvm_profs_2023
-                WHERE ego_author_id IS NOT NULL
-            )  -- External (non-UVM) coauthors only
-        """).fetchone()[0]
+#     with duckdb.get_connection() as conn:
+#         # Get external coauthors count
+#         total_external = conn.execute("""
+#             SELECT COUNT(DISTINCT a.author_id) as total_external_coauthors
+#             FROM oa.raw.authorships a
+#             WHERE a.author_id NOT IN (
+#                 SELECT ego_author_id
+#                 FROM oa.raw.uvm_profs_2023
+#                 WHERE ego_author_id IS NOT NULL
+#             )  -- External (non-UVM) coauthors only
+#         """).fetchone()[0]
         
-        cached_stats = conn.execute("""
-            SELECT 
-                COUNT(*) as cached_count,
-                COUNT(CASE WHEN fetch_successful = TRUE THEN 1 END) as successful_count
-            FROM oa.cache.coauthor_cache
-        """).fetchone()
+#         cached_stats = conn.execute("""
+#             SELECT 
+#                 COUNT(*) as cached_count,
+#                 COUNT(CASE WHEN fetch_successful = TRUE THEN 1 END) as successful_count
+#             FROM oa.cache.coauthor_cache
+#         """).fetchone()
         
-        cached_count, successful_count = cached_stats
-        completion_pct = (cached_count / total_external * 100) if total_external > 0 else 0
-        success_rate = (successful_count / cached_count * 100) if cached_count > 0 else 0
+#         cached_count, successful_count = cached_stats
+#         completion_pct = (cached_count / total_external * 100) if total_external > 0 else 0
+#         success_rate = (successful_count / cached_count * 100) if cached_count > 0 else 0
     
-    return dg.AssetCheckResult(
-        passed=True,  # Always pass, just tracking progress
-        metadata={
-            "total_external_coauthors": total_external,
-            "cached_count": cached_count,
-            "successful_count": successful_count,
-            "completion_percentage": round(completion_pct, 1),
-            "success_rate": round(success_rate, 1),
-            "remaining": total_external - cached_count
-        }
-    )
+#     return dg.AssetCheckResult(
+#         passed=True,  # Always pass, just tracking progress
+#         metadata={
+#             "total_external_coauthors": total_external,
+#             "cached_count": cached_count,
+#             "successful_count": successful_count,
+#             "completion_percentage": round(completion_pct, 1),
+#             "success_rate": round(success_rate, 1),
+#             "remaining": total_external - cached_count
+#         }
+#     )

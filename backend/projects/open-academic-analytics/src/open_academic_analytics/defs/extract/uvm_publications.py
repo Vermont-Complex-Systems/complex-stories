@@ -330,40 +330,57 @@ def update_uvm_profs_sync_status(conn, ego_author_id: str) -> None:
 def determine_fetch_start_date(ego_author_id: str, conn) -> Optional[str]:
     """
     Determine the earliest date to start fetching publications for a professor.
-    
+
     Strategy:
-    1. If we have a corrected first publication year, that's our absolute earliest bound
-    2. If we already have publications, we can start from the latest one we have
-    3. Choose the later of these two dates to avoid unnecessary re-fetching
-    4. Return None if we should fetch all publications (first time sync, no corrections)
+    1. Check if this professor has been successfully synced before
+    2. If never synced successfully, fetch all publications (return None)
+    3. If previously synced, use incremental fetching from latest publication date
+    4. If we have a corrected first publication year, respect that as earliest bound
     """
+    # Check sync status to determine if this is a first-time sync
+    sync_status = conn.execute("""
+        SELECT last_synced_date, needs_update
+        FROM oa.cache.uvm_profs_sync_status
+        WHERE ego_author_id = ?
+    """, [ego_author_id]).fetchone()
+
+    has_been_synced = sync_status and sync_status[0] is not None
+
     latest_existing = get_latest_publication_date(conn, ego_author_id)
     corrected_first_year = get_corrected_first_pub_year(conn, ego_author_id)
-    
+
     # Convert corrected year to date string if it exists
     corrected_earliest = f"{corrected_first_year}-01-01" if corrected_first_year else None
-    
+
     # Decision logic
-    if latest_existing and corrected_earliest:
-        # We have both - use whichever is later to avoid gaps (convert to strings for comparison)
+    if not has_been_synced:
+        # First time sync - fetch everything, but respect corrected first year if available
+        if corrected_earliest:
+            start_date = corrected_earliest
+            reason = f"first sync with corrected first year ({corrected_first_year})"
+        else:
+            start_date = None
+            reason = "first sync - fetching all publications"
+    elif latest_existing and corrected_earliest:
+        # Previously synced - use incremental, but respect corrected earliest bound
         latest_str = str(latest_existing)
         start_date = max(latest_str, corrected_earliest)
-        reason = f"latest existing ({latest_existing}) vs corrected earliest ({corrected_earliest})"
+        reason = f"incremental: latest ({latest_existing}) vs corrected earliest ({corrected_earliest})"
     elif latest_existing:
-        # Only have existing data - continue from there
+        # Previously synced - continue from latest publication
         start_date = str(latest_existing)
-        reason = f"continuing from latest existing publication"
+        reason = f"incremental: continuing from latest existing publication"
     elif corrected_earliest:
-        # Only have correction data - start from corrected year
+        # Previously synced but no existing data - use corrected year
         start_date = corrected_earliest
-        reason = f"starting from corrected first year ({corrected_first_year})"
+        reason = f"using corrected first year ({corrected_first_year})"
     else:
-        # No existing data or corrections - fetch everything
+        # Previously synced but no data - fetch everything
         start_date = None
-        reason = "fetching all publications (first sync, no corrections)"
-    
+        reason = "no existing data - fetching all publications"
+
     dg.get_dagster_logger().info(f"{ego_author_id}: {reason} → start_date: {start_date}")
-    
+
     return start_date
 
 @dg.asset(
@@ -397,6 +414,7 @@ def uvm_publications(
         total_authorships_added = 0
         
         for ego_author_id in uvm_profs_to_update:
+            # ego_author_id = "https://openalex.org/A5085232359"
             try:
                 # Check current data for this professor
                 current_count = conn.execute("""
@@ -428,6 +446,7 @@ def uvm_publications(
                 dg.get_dagster_logger().info(f"Found {len(works)} works for {ego_author_id}")
                 
                 if works:
+                    
                     # Process each work
                     for work in works:
                         authorships_added = process_and_insert_work(work, conn, corrected_first_year, ego_author_id)

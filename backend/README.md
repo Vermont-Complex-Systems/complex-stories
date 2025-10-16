@@ -2,17 +2,8 @@
 
 Clean backend setup for Complex Stories platform.
 
-## Getting Started
+## Dagster projects
 
-Install dependencies:
+### Open-academic-analytics
 
-```bash
-cd backend
-uv sync
-```
-
-Run the FastAPI server:
-
-```bash
-uv run fastapi dev main.py
-```
+This pipeline 

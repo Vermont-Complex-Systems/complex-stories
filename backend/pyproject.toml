@@ -21,6 +21,7 @@ dependencies = [
     "ipykernel>=6.30.1",
     "shared",
     "pymongo>=4.15.3",
+    "label-studio-sdk>=2.0.12",
 ]
 
 [tool.uv.workspace]

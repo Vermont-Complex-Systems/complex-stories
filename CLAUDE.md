@@ -501,3 +501,119 @@ Important CSV fields in `frontend/src/data/stories.csv`:
 - `faves`: Boolean for featuring stories on homepage
 - `bgColor`/`fgColor`: Story-specific color theming
 - `keyword`: Space-separated tags for story classification
+
+## Open Academic Analytics Pipeline
+
+The `open-academic-analytics` Dagster pipeline processes academic publication data for UVM faculty research analysis. This pipeline demonstrates the complete data flow from extraction to final database upload.
+
+### **Pipeline Architecture**
+
+```
+Raw Data Sources → Extract → Transform → Export → PostgreSQL
+     ↓              ↓          ↓          ↓          ↓
+OpenAlex API → uvm_publications → processed_papers → paper_database_upload
+UVM Faculty  → coauthor_cache   → yearly_collaborations → coauthor_database_upload
+```
+
+### **Key Assets and Data Flow**
+
+**Extract Phase** (`backend/projects/open-academic-analytics/src/open_academic_analytics/defs/extract/`):
+- **`uvm_publications`**: Fetches publication data from OpenAlex API for UVM faculty
+  - Creates normalized `oa.raw.publications` and `oa.raw.authorships` tables
+  - Handles incremental updates and first publication year corrections
+  - Uses composite keys to handle multiple UVM authors per paper
+- **`coauthor_cache`**: Caches external coauthor first publication years
+
+**Transform Phase** (`backend/projects/open-academic-analytics/src/open_academic_analytics/defs/transform/`):
+- **`processed_papers`**: Processes raw publications into analysis-ready format
+- **`yearly_collaborations`**: Analyzes collaboration patterns between authors by year
+- **`coauthor_institutions`**: Maps authors to their institutional affiliations
+
+**Export Phase** (`backend/projects/open-academic-analytics/src/open_academic_analytics/defs/export/`):
+- **`paper_database_upload`**: Exports processed papers to PostgreSQL via FastAPI bulk endpoint
+- **`coauthor_database_upload`**: Exports collaboration data to PostgreSQL via FastAPI bulk endpoint
+
+### **Critical Data Model Insights**
+
+**Composite Primary Keys**: Papers use `(id, ego_author_id)` composite primary key because:
+- Same paper can have multiple UVM faculty authors
+- Each UVM author gets their own record for the same paper
+- Prevents data loss during bulk uploads with `ON CONFLICT DO UPDATE`
+
+**First Publication Year Logic**: The pipeline uses a hierarchical approach for first publication years:
+```sql
+-- For ego authors (UVM faculty)
+COALESCE(prof.first_pub_year, calculated_from_raw.min_pub_year) as ego_first_pub_year
+
+-- For coauthors
+COALESCE(
+    cc_coauthor.first_pub_year,           -- External coauthors from cache
+    prof_coauthor.first_pub_year,         -- UVM coauthors from faculty table
+    calculated_from_raw.min_pub_year      -- Calculated from oa.raw.authorships + publications
+) as coauthor_first_pub_year
+```
+
+**Raw Data Calculation**: First publication years are calculated by joining:
+```sql
+SELECT a.author_id, MIN(p.publication_year) as min_pub_year
+FROM oa.raw.authorships a
+JOIN oa.raw.publications p ON a.work_id = p.id
+WHERE p.publication_year IS NOT NULL
+GROUP BY a.author_id
+```
+
+### **Bulk Upload Strategy**
+
+**Batch Processing**: Both paper and coauthor exports use batch processing:
+- **Papers**: 10,000 records per batch to PostgreSQL
+- **Coauthors**: 100,000 records per batch to PostgreSQL
+- **Error Handling**: Individual batch failures don't affect other batches
+- **Progress Logging**: Detailed logging for troubleshooting upload issues
+
+**FastAPI Integration**: Export assets POST to FastAPI bulk endpoints:
+- `POST /open-academic-analytics/papers/bulk` - Bulk paper upload
+- `POST /open-academic-analytics/coauthors/bulk` - Bulk coauthor upload
+- Uses `ON CONFLICT DO UPDATE` for upsert operations
+- Handles field mapping between Dagster exports and PostgreSQL models
+
+### **Common Issues and Solutions**
+
+**Missing Papers**: Initially lost ~85,000 papers due to single primary key conflicts
+- **Solution**: Implemented composite primary key `(id, ego_author_id)` in PostgreSQL model
+- **Root Cause**: Same paper had multiple UVM authors, causing overwrites instead of inserts
+
+**NULL First Publication Years**: UVM coauthors showed NULL publication years
+- **Root Cause**: UVM faculty weren't in external coauthor cache
+- **Solution**: Added JOIN to UVM faculty table + fallback to calculated years from raw data
+
+**Sync Strategy**: UVM faculty publications use intelligent incremental updates:
+- Tracks sync status in `oa.cache.uvm_profs_sync_status`
+- Uses corrected first publication years to filter historical data
+- Continues from latest existing publication date to avoid gaps
+
+### **Development Workflow**
+
+**Testing Pipeline Changes**:
+```bash
+cd backend/projects/open-academic-analytics
+./run_dagster.sh  # Start Dagster webserver
+# Navigate to localhost:{assigned_port} to trigger assets
+```
+
+**Database Management**:
+```bash
+# Connect to PostgreSQL
+psql -h localhost -U jstonge1 -d complex_stories
+
+# Drop and recreate tables after schema changes
+DROP TABLE papers CASCADE;
+DROP TABLE coauthors CASCADE;
+```
+
+**FastAPI Development**:
+```bash
+cd backend
+uv run fastapi dev app/main.py  # Development server on port 8000
+```
+
+This pipeline demonstrates enterprise-grade data processing with proper error handling, incremental updates, and efficient bulk operations for academic research data analysis.

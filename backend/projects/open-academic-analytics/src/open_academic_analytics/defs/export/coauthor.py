@@ -14,12 +14,21 @@ def coauthor_database_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
         # import duckdb
         # conn=duckdb.connect("/tmp/oa.duckdb")
         result = conn.execute("""
-            WITH base_data AS (
-                SELECT 
+            WITH calculated_first_years AS (
+                SELECT
+                    a.author_id,
+                    MIN(p.publication_year) as min_pub_year
+                FROM oa.raw.authorships a
+                JOIN oa.raw.publications p ON a.work_id = p.id
+                WHERE p.publication_year IS NOT NULL
+                GROUP BY a.author_id
+            ),
+            base_data AS (
+                SELECT
                     yc.*,
-                    -- Pre-calculate ego and coauthor first publication years (clean coalescing)
-                    COALESCE(prof.first_pub_year, cc_uvm.first_pub_year) as ego_first_pub_year,
-                    cc_external.first_pub_year as coauthor_first_pub_year,
+                    -- Use ground truth first_pub_year when available, fallback to calculated
+                    COALESCE(prof.first_pub_year, ego_calc.min_pub_year) as ego_first_pub_year,
+                    COALESCE(cc_coauthor.first_pub_year, prof_coauthor.first_pub_year, coauthor_calc.min_pub_year) as coauthor_first_pub_year,
                     
                     -- Include other fields from joins
                     prof.first_pub_year as prof_first_pub_year_raw,
@@ -28,19 +37,27 @@ def coauthor_database_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
                     ci_external.primary_institution as coauthor_institution
                     
                 FROM oa.transform.yearly_collaborations yc
-                LEFT JOIN oa.raw.uvm_profs_2023 prof 
+                
+                LEFT JOIN oa.raw.uvm_profs_2023 prof
                     ON yc.ego_author_id = prof.ego_author_id
-                LEFT JOIN oa.cache.coauthor_cache cc_external
-                    ON yc.coauthor_id = cc_external.id
-                
-                LEFT JOIN oa.cache.coauthor_cache cc_uvm 
-                    ON yc.ego_author_id = cc_uvm.id
-                
-                LEFT JOIN oa.transform.coauthor_institutions ci_uvm 
+
+                LEFT JOIN calculated_first_years ego_calc
+                    ON yc.ego_author_id = ego_calc.author_id
+
+                LEFT JOIN oa.cache.coauthor_cache cc_coauthor
+                    ON yc.coauthor_id = cc_coauthor.id
+
+                LEFT JOIN oa.raw.uvm_profs_2023 prof_coauthor
+                    ON yc.coauthor_id = prof_coauthor.ego_author_id
+
+                LEFT JOIN calculated_first_years coauthor_calc
+                    ON yc.coauthor_id = coauthor_calc.author_id
+
+                LEFT JOIN oa.transform.coauthor_institutions ci_uvm
                     ON yc.ego_author_id = ci_uvm.id
                     AND yc.publication_year = ci_uvm.publication_year
-                
-                LEFT JOIN oa.transform.coauthor_institutions ci_external 
+
+                LEFT JOIN oa.transform.coauthor_institutions ci_external
                     ON yc.coauthor_id = ci_external.id
                     AND yc.publication_year = ci_external.publication_year
             ),
@@ -120,26 +137,84 @@ def coauthor_database_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
             ORDER BY publication_year
         """).fetchall()
 
+        # Get column names from the query result
+        column_names = [desc[0] for desc in conn.description]
+
         # Convert to list of dictionaries for API
         coauthor_data = []
         for row in result:
+            # Create row dictionary using column names
+            row_dict = dict(zip(column_names, row))
             # Create composite ID for the database
-            row_dict = dict(row)
             row_dict['id'] = f"{row_dict['ego_author_id']}_{row_dict['coauthor_id']}_{row_dict['publication_year']}"
             coauthor_data.append(row_dict)
 
-        # POST to the database API
-        api_url = "https://api.complexstories.uvm.edu/open-academic-analytics/coauthors/bulk"
+        # Clean data to ensure JSON serialization compatibility
+        import json
+        from datetime import date, datetime
+
+        def clean_for_json(obj):
+            try:
+                json.dumps(obj)
+                return obj
+            except TypeError:
+                if hasattr(obj, 'item'):  # numpy scalar
+                    return obj.item()
+                elif obj is None:
+                    return None
+                elif isinstance(obj, date):  # Python date objects
+                    return obj.isoformat()  # YYYY-MM-DD format
+                elif isinstance(obj, datetime):  # Python datetime objects
+                    return obj.isoformat()  # YYYY-MM-DDTHH:MM:SS format
+                elif hasattr(obj, 'strftime'):  # other datetime/timestamp objects
+                    return obj.strftime('%Y-%m-%d')
+                else:
+                    return str(obj)
+
+        # Apply cleanup to all records
+        for record in coauthor_data:
+            for key, value in record.items():
+                record[key] = clean_for_json(value)
+
+        # Debug: Log first record for troubleshooting
+        if coauthor_data:
+            dg.get_dagster_logger().info(f"Sample record keys: {list(coauthor_data[0].keys())}")
+            dg.get_dagster_logger().info(f"Sample record: {coauthor_data[0]}")
+            dg.get_dagster_logger().info(f"Total records to upload: {len(coauthor_data)}")
+
+        # POST to the database API in batches to avoid timeouts
+        api_url = "http://127.0.0.1:8000/open-academic-analytics/coauthors/bulk"
+        batch_size = 100_000  # Process 100k records at a time
+        total_uploaded = 0
 
         try:
-            response = requests.post(api_url, json=coauthor_data, verify=False)
-            response.raise_for_status()
+            # Process in batches
+            for i in range(0, len(coauthor_data), batch_size):
+                batch = coauthor_data[i:i + batch_size]
+                batch_num = (i // batch_size) + 1
+                total_batches = (len(coauthor_data) + batch_size - 1) // batch_size
 
-            dg.get_dagster_logger().info(f"Successfully uploaded {len(coauthor_data)} coauthor records to database")
+                dg.get_dagster_logger().info(f"Uploading batch {batch_num}/{total_batches} ({len(batch)} records)")
+
+                response = requests.post(api_url, json=batch, verify=False, timeout=120)
+
+                # Log response details for debugging
+                dg.get_dagster_logger().info(f"Batch {batch_num} response status: {response.status_code}")
+                if response.status_code != 200:
+                    dg.get_dagster_logger().error(f"Batch {batch_num} response content: {response.text[:1000]}")
+
+                response.raise_for_status()
+                total_uploaded += len(batch)
+
+                dg.get_dagster_logger().info(f"Batch {batch_num} successful: {len(batch)} records uploaded")
+
+            dg.get_dagster_logger().info(f"Successfully uploaded all {total_uploaded} coauthor records to database")
 
             return dg.MaterializeResult(
                 metadata={
-                    "records_uploaded": len(coauthor_data),
+                    "records_uploaded": total_uploaded,
+                    "batches_processed": (len(coauthor_data) + batch_size - 1) // batch_size,
+                    "batch_size": batch_size,
                     "api_endpoint": api_url,
                     "upload_status": "success"
                 }
@@ -147,6 +222,8 @@ def coauthor_database_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
 
         except requests.exceptions.RequestException as e:
             dg.get_dagster_logger().error(f"Failed to upload coauthor data: {str(e)}")
+            if hasattr(e, 'response') and e.response is not None:
+                dg.get_dagster_logger().error(f"Error response content: {e.response.text[:1000]}")
             raise
 
 

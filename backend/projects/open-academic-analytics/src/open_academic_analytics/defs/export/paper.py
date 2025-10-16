@@ -5,7 +5,6 @@ import dagster as dg
 from dagster_duckdb import DuckDBResource
 import numpy as np
 import pandas as pd
-from pathlib import Path
 import requests
 
 
@@ -110,10 +109,10 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
     with duckdb.get_connection() as conn:
         
         df_raw=conn.execute("""
-        SELECT 
-            a.author_id as ego_author_id,
+        SELECT
+            uvm.ego_author_id,
             a.author_display_name as ego_display_name,
-            
+
             -- Publication info
             p.id,
             p.title,
@@ -123,11 +122,11 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
             p.type as work_type,
             p.language,
             p.doi,
-                            
+
             -- Author-specific info
             a.author_position,
             a.is_corresponding,
-                                            
+
             -- Publication details
             p.primary_location.is_oa as is_open_access,
             p.primary_location.landing_page_url,
@@ -135,19 +134,19 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
             p.primary_location.license,
             p.primary_location.source.display_name as journal_name,
             p.primary_location.source.type as source_type,
-                            
+
             p.open_access.oa_status,
             p.open_access.oa_url,
-                            
+
             p.primary_topic.id as topic_id,
             p.primary_topic.display_name as topic_name,
             p.primary_topic.score as topic_score,
-                            
+
             p.biblio.volume,
             p.biblio.issue,
             p.biblio.first_page,
             p.biblio.last_page,
-                            
+
             p.fwci,
             p.has_fulltext,
             p.fulltext_origin,
@@ -156,27 +155,37 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
             p.institutions_distinct_count,
             p.locations_count,
             p.referenced_works_count,
-                            
+
             p.updated_date,
             p.created_date,
-                            
+
             -- Coauthor count (subquery)
-            (SELECT COUNT(*) - 1, 
-            FROM oa.raw.authorships a2 
+            (SELECT COUNT(*) - 1
+            FROM oa.raw.authorships a2
             WHERE a2.work_id = p.id) as nb_coauthors_raw,
-            -- Coauthor names (subquery) 
+            -- Coauthor names (subquery)
             (SELECT STRING_AGG(a3.author_display_name, '; ' ORDER BY a3.author_position)
-            FROM oa.raw.authorships a3 
-            WHERE a3.work_id = p.id AND a3.author_id != a.author_id) as coauthor_names,
+            FROM oa.raw.authorships a3
+            WHERE a3.work_id = p.id AND a3.author_id != uvm.ego_author_id) as coauthor_names,
             -- UMAP data
             u.umap_1, u.umap_2, u.abstract, u.s2FieldsOfStudy, u.fieldsOfStudy
-        FROM oa.raw.publications p
-        JOIN oa.raw.authorships a ON p.id = a.work_id
+
+        -- Start with UVM faculty list
+        FROM oa.raw.uvm_profs_2023 uvm
+
+        -- Join to their authorships
+        JOIN oa.raw.authorships a ON uvm.ego_author_id = a.author_id
+
+        -- Join to publication details
+        JOIN oa.raw.publications p ON a.work_id = p.id
+
+        -- Join embeddings
         LEFT JOIN oa.transform.umap_embeddings u ON p.doi = u.doi
-        WHERE p.ego_author_id IS NOT NULL  -- Only UVM authors
-        AND p.doi IS NOT NULL 
+
+        -- Basic filters
+        WHERE p.doi IS NOT NULL
         AND p.title IS NOT NULL
-        ORDER BY a.author_id DESC, p.publication_year
+        ORDER BY uvm.ego_author_id DESC, p.publication_year
         """).df()
 
     
@@ -290,8 +299,12 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
         for key, value in record.items():
             record[key] = clean_for_json(value, key)
 
-    # POST to the database API (local development)
+    # POST to the database API (local development) in batches
     api_url = "http://127.0.0.1:8000/open-academic-analytics/papers/bulk"
+
+    # Process in batches to avoid memory/timeout issues
+    batch_size = 10_000  # Process 1000 records at a time
+    total_uploaded = 0
 
     try:
         # Log first record for debugging
@@ -299,16 +312,27 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
             dg.get_dagster_logger().info(f"Sample record keys: {list(paper_data[0].keys())}")
             dg.get_dagster_logger().info(f"Total records to upload: {len(paper_data)}")
 
-        response = requests.post(api_url, json=paper_data)
+        # Process in batches
+        for i in range(0, len(paper_data), batch_size):
+            batch = paper_data[i:i + batch_size]
+            batch_num = (i // batch_size) + 1
+            total_batches = (len(paper_data) + batch_size - 1) // batch_size
 
-        # Log response details for debugging
-        dg.get_dagster_logger().info(f"Response status: {response.status_code}")
-        if response.status_code != 200:
-            dg.get_dagster_logger().error(f"Response content: {response.text[:1000]}")  # First 1000 chars
+            dg.get_dagster_logger().info(f"Uploading batch {batch_num}/{total_batches} ({len(batch)} records)")
 
-        response.raise_for_status()
+            response = requests.post(api_url, json=batch, verify=False, timeout=120)
 
-        dg.get_dagster_logger().info(f"Successfully uploaded {len(paper_data)} paper records to database")
+            # Log response details for debugging
+            dg.get_dagster_logger().info(f"Batch {batch_num} response status: {response.status_code}")
+            if response.status_code != 200:
+                dg.get_dagster_logger().error(f"Batch {batch_num} response content: {response.text[:1000]}")
+
+            response.raise_for_status()
+            total_uploaded += len(batch)
+
+            dg.get_dagster_logger().info(f"Batch {batch_num} successful: {len(batch)} records uploaded")
+
+        dg.get_dagster_logger().info(f"Successfully uploaded all {total_uploaded} paper records to database")
         upload_status = "success"
 
     except requests.exceptions.RequestException as e:
@@ -317,7 +341,14 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
             dg.get_dagster_logger().error(f"Error response content: {e.response.text[:1000]}")
         upload_status = f"failed: {str(e)}"
 
-    print(f"💾 Uploaded {len(paper_data)} papers to database via API")
+    # Also save processed data to DuckDB for downstream assets
+    with duckdb.get_connection() as conn:
+        # Create a table from the processed DataFrame for other assets to use
+        conn.execute("CREATE OR REPLACE TABLE oa.transform.processed_papers AS SELECT * FROM df_processed")
+        dg.get_dagster_logger().info(f"Created oa.transform.processed_papers table with {len(df_processed)} records")
+
+    print(f"💾 Uploaded {total_uploaded} papers to database via API")
+    print(f"📊 Saved {len(df_processed)} processed papers to DuckDB table")
     print(f"🗺️  Final UMAP coverage: {final_umap_coverage}/{len(df_processed)} papers ({umap_stats['embedding_coverage_percent']}%)")
 
     # Clean metadata to ensure all values are JSON serializable
@@ -351,7 +382,7 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
         },
         "api_endpoint": api_url,
         "upload_status": upload_status,
-        "records_uploaded": len(paper_data),
+        "records_uploaded": total_uploaded,
         "configuration_used": {
             "accepted_work_types": ACCEPTED_WORK_TYPES,
             "filter_patterns_count": len(FILTER_TITLE_PATTERNS)
