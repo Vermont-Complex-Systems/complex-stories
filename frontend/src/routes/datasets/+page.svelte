@@ -1,9 +1,9 @@
 <script>
 	import { getDatasets } from './preview.remote.js';
+	import Spinner from "$lib/components/helpers/Spinner.svelte"
 </script>
 
 <div class="datasets-container">
-	<!-- Hero section -->
 	<section class="datasets-header">
 		<div class="datasets-header-content">
 			<h1>Datasets</h1>
@@ -15,13 +15,12 @@
 	</section>
 
 {#await getDatasets()}
-	<p>Loading datasets...</p>
+	<Spinner text="loading datasets..." />
 {:then result}
 	<div class="datasets-section">
 		<div class="datasets-grid">
 		{#each result.datasets as dataset}
 			<div class="dataset-card">
-				<!-- Header -->
 				<div class="card-header">
 					<h3 class="dataset-name">
 						{dataset.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -29,10 +28,8 @@
 					<span class="status-badge available">available</span>
 				</div>
 
-				<!-- Description -->
 				<p class="dataset-description">{dataset.description}</p>
 
-				<!-- Keywords -->
 				{#if dataset.keywords && dataset.keywords.length > 0}
 					<div class="keywords">
 						<div class="keyword-list">
@@ -43,9 +40,8 @@
 					</div>
 				{/if}
 
-				<!-- Actions -->
 				<div class="card-actions">
-					<a href="http://127.0.0.1:8000/datasets/data/{dataset.filename}" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+					<a href="https://api.complexstories.uvm.edu/datasets/{dataset.name}?format=parquet" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
 						Download
 					</a>
 					<a href="/datasets/{dataset.name}" class="btn btn-secondary">

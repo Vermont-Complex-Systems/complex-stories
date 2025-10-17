@@ -22,6 +22,7 @@ load_dotenv()  # take environment variables
 LABEL_STUDIO_URL = os.getenv("LABEL_STUDIO_URL")
 LABEL_STUDIO_API_KEY = os.getenv("LABEL_STUDIO_API_KEY")
 FACULTY_PROJECT_ID = os.getenv("FACULTY_PROJECT_ID")
+DEPARTMENT_PROJECT_ID = os.getenv("DEPARTMENT_PROJECT_ID")
 
 
 # Base directory for datasets
@@ -104,7 +105,7 @@ def export_snapshot(project_id: int, export_type: str = "CSV") -> bytes:
     )
 
 @router.get("/academic-research-groups")
-def get_academic_research_groups(inst_ipeds_id: int = None, year: int = None, format: str = "json"):
+def get_academic_research_groups(inst_ipeds_id: int = 231174, year: int = 2023, format: str = "json"):
     """Get academic research groups data from Label Studio - return JSON or download parquet."""
     # Export data as CSV first
     raw_bytes = export_snapshot(FACULTY_PROJECT_ID, export_type="CSV")
@@ -151,37 +152,41 @@ def get_academic_research_groups(inst_ipeds_id: int = None, year: int = None, fo
         return rows
 
 @router.get("/academic-department")
-async def get_academic_department(college: str = None):
-    """Get academic department data with optional filtering.
+async def get_academic_department(inst_ipeds_id: int = 231174, year: int = 2023, format: str = "json"):
+    """Get department data from Label Studio - return JSON or download parquet."""
+    # Export data as CSV first
+    raw_bytes = export_snapshot(DEPARTMENT_PROJECT_ID, export_type="CSV")
+    raw_csv = raw_bytes.decode("utf-8")
 
-    Note: This endpoint still uses a static parquet file.
-    TODO: Consider migrating to Label Studio or database source.
-    """
-    file_path = DATA_DIR / "academic-department.parquet"
+    # Convert CSV to DataFrame
+    import io as io_module
+    df = pd.read_csv(io_module.StringIO(raw_csv))
 
-    if not file_path.exists():
-        raise HTTPException(status_code=404, detail="Academic department dataset not found")
+    # Wrangle 
+    df.drop(['annotation_id', 'annotator', 'created_at', 'updated_at', 'lead_time', 'id'], axis=1, inplace=True)
+    df.fillna("", inplace=True)
+    
+    # Apply IPEDS filter if specified
+    if inst_ipeds_id and "inst_ipeds_id" in df.columns:
+        df = df[df['inst_ipeds_id'] == inst_ipeds_id]
 
-    try:
-        # Read parquet file with pandas
-        df = pd.read_parquet(file_path)
+    if year and "year" in df.columns:
+        df = df[df['year'] == year]
 
-        # Apply college filter if specified
-        if college:
-            df = df[df['college'].str.contains(college, case=False, na=False)]
+    if format.lower() == "parquet":
+        # Convert to parquet and return as download
+        buffer = io.BytesIO()
+        df.to_parquet(buffer, index=False, engine="pyarrow")
+        buffer.seek(0)
+        parquet_bytes = buffer.read()
 
-        # Convert to records and clean NaN values
-        rows = df.fillna("").to_dict('records')
+        return StreamingResponse(
+            io.BytesIO(parquet_bytes),
+            media_type="application/octet-stream",
+            headers={"Content-Disposition": "attachment; filename=academic-department.parquet"}
+        )
+    else:
+        # Return JSON data (default)
+        rows = df.to_dict('records')
 
-        return {
-            "dataset": "academic-department",
-            "source": "static_file",
-            "total_rows": len(rows),
-            "filters_applied": {
-                "college": college
-            },
-            "data": rows
-        }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error reading dataset: {str(e)}")
+        return rows

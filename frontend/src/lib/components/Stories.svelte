@@ -16,14 +16,14 @@
 
 <style>
   section {
-    margin-top: 1rem; /* Use rem instead of hardcoded 16px */
+    margin-top: 1rem; 
   }
 
   ul {
     padding: 0 var(--margin-left);
     display: grid;
     grid-template-columns: 1fr;
-    gap: 3rem 1.5rem; /* Convert px to rem: 48px = 3rem, 24px = 1.5rem */
+    gap: 3rem 1.5rem; 
     margin: 0;
     max-width: none;
   }
@@ -32,7 +32,7 @@
     margin: 0;
     list-style-type: none;
     padding: 0;
-    --padding: clamp(1.25rem, 3vw, 3.5rem); /* Convert px to rem: 20px=1.25rem, 56px=3.5rem */
+    --padding: clamp(1.25rem, 3vw, 3.5rem);
   }
 
   @media (max-width: 768px) {

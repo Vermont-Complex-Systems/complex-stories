@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     label_studio_api_key: str
     label_studio_url: str
     faculty_project_id: int
+    department_project_id: int
     
     # API settings
     api_host: str = "0.0.0.0"
