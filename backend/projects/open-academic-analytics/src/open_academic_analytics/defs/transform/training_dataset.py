@@ -9,10 +9,7 @@ def training_dataset(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """Create training dataset by aggregating coauthor data into wide format with all required features"""
     
     with duckdb.get_connection() as conn:
-        # Ensure the database and schemas exist
-        conn.execute("CREATE DATABASE IF NOT EXISTS oa")
-        conn.execute("CREATE SCHEMA IF NOT EXISTS oa.transform")
-        conn.execute("CREATE SCHEMA IF NOT EXISTS oa.raw")
+        # Schemas are auto-initialized by InitDuckDBResource
         
         # Check if yearly_collaborations table exists, if not, throw helpful error
         try:

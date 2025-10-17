@@ -8,17 +8,11 @@ from dagster_duckdb import DuckDBResource
 def uvm_profs_2023(duckdb: DuckDBResource) -> dg.MaterializeResult:
     
     with duckdb.get_connection() as conn:
-        # Create schemas
-        conn.execute("CREATE SCHEMA IF NOT EXISTS oa")
-        conn.execute("CREATE SCHEMA IF NOT EXISTS raw")
-        conn.execute("CREATE SCHEMA IF NOT EXISTS cache")
-        conn.execute("CREATE SCHEMA IF NOT EXISTS transform")
-
         # params
         payroll_year=2023
         ipeds_id=231174
-        api_url= f"https://api.complexstories.uvm.edu/datasets/academic-research-groups?inst_iped_id={ipeds_id}&year={payroll_year}"
-        # Use the exact same SQL as frontend version
+        api_url= f"https://api.complexstories.uvm.edu/datasets/academic-research-groups?inst_ipeds_id={ipeds_id}&year={payroll_year}&format=parquet"
+        
         row_count = conn.execute(
             f"""
             CREATE OR REPLACE TABLE oa.raw.uvm_profs_2023 as (
@@ -49,26 +43,12 @@ def uvm_profs_2023(duckdb: DuckDBResource) -> dg.MaterializeResult:
 
 
     with duckdb.get_connection() as conn:
-        # Get record count
-        count_result = conn.execute("""
-            SELECT COUNT(*) FROM oa.raw.uvm_profs_2023
-        """).fetchone()
-
-        # Get sample of ego_author_id formats to verify URL prefix
-        sample_ids = conn.execute("""
-            SELECT ego_author_id
-            FROM oa.raw.uvm_profs_2023
-            LIMIT 3
-        """).fetchall()
-
         # Get table schema using PyArrow
         table_arrow = conn.execute("SELECT * FROM oa.raw.uvm_profs_2023 LIMIT 0").arrow()
 
-    sample_id_list = [row[0] for row in sample_ids]
-
     return dg.MaterializeResult(
         metadata={
-            "record_count": count_result[0] if count_result else 0,
+            "record_count": row_count[0] if row_count else 0,
             "table_schema": dg.MetadataValue.table_schema(
                 dg.TableSchema(
                     columns=[
@@ -77,10 +57,10 @@ def uvm_profs_2023(duckdb: DuckDBResource) -> dg.MaterializeResult:
                     ]
                 )
             ),
-            "sample_ego_author_ids": dg.MetadataValue.text(", ".join(sample_id_list[:3])),
             "source_url": api_url
         }
     )
+
 
 @dg.asset_check(
     asset=uvm_profs_2023,

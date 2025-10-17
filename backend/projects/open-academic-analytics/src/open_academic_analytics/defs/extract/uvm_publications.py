@@ -21,125 +21,7 @@ from typing import Dict, List, Tuple, Optional
 import json
 
 
-def create_publications_tables(conn) -> None:
-    """Create the publications and authorships tables"""
-    
-    # Publications table - one record per unique work
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS oa.raw.publications (
-            id VARCHAR PRIMARY KEY,
-            doi VARCHAR,
-            title VARCHAR,
-            display_name VARCHAR,
-            publication_year INTEGER,
-            publication_date DATE,
-            language VARCHAR,
-            type VARCHAR,
-            type_crossref VARCHAR,
-            
-            -- Metrics
-            cited_by_count INTEGER,
-            fwci DOUBLE,
-            has_fulltext BOOLEAN,
-            fulltext_origin VARCHAR,
-            is_retracted BOOLEAN,
-            is_paratext BOOLEAN,
-            
-            -- Nested structures as STRUCTs
-            ids STRUCT(
-                openalex VARCHAR,
-                doi VARCHAR,
-                mag VARCHAR,
-                pmid VARCHAR,
-                pmcid VARCHAR
-            ),
-            
-            primary_location STRUCT(
-                is_oa BOOLEAN,
-                landing_page_url VARCHAR,
-                pdf_url VARCHAR,
-                source STRUCT(
-                    id VARCHAR,
-                    display_name VARCHAR,
-                    type VARCHAR
-                ),
-                license VARCHAR,
-                version VARCHAR,
-                is_accepted BOOLEAN,
-                is_published BOOLEAN
-            ),
-            
-            open_access STRUCT(
-                is_oa BOOLEAN,
-                oa_status VARCHAR,
-                oa_url VARCHAR,
-                any_repository_has_fulltext BOOLEAN
-            ),
-            
-            primary_topic STRUCT(
-                id VARCHAR,
-                display_name VARCHAR,
-                score DOUBLE
-            ),
-            
-            biblio STRUCT(
-                volume VARCHAR,
-                issue VARCHAR,
-                first_page VARCHAR,
-                last_page VARCHAR
-            ),
-            
-            -- Arrays as VARCHAR for now
-            concepts VARCHAR,
-            topics VARCHAR,
-            keywords VARCHAR,
-            mesh VARCHAR,
-            referenced_works VARCHAR,
-            related_works VARCHAR,
-            
-            -- Counts
-            countries_distinct_count INTEGER,
-            institutions_distinct_count INTEGER,
-            locations_count INTEGER,
-            referenced_works_count INTEGER,
-            
-            -- Metadata
-            updated_date TIMESTAMP,
-            created_date DATE,
-            
-            -- UVM Professor tracking
-            ego_author_id VARCHAR  -- ego_author_id from uvm_profs_2023 if this is a UVM publication
-        )
-    """)
-    
-def create_authorships_table(conn) -> None:
-    """Authorships table - many records per work (one per author)"""
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS oa.raw.authorships (
-            work_id VARCHAR,
-            author_id VARCHAR,
-            author_display_name VARCHAR,
-            author_position VARCHAR,  -- first, middle, last
-            institutions VARCHAR,     -- JSON array of author's institutions for this work
-            raw_affiliation_strings VARCHAR,
-            is_corresponding BOOLEAN,
-            
-            PRIMARY KEY (work_id, author_id)
-        )
-    """)
-
-def create_uvm_profs_sync_status_table(conn) -> None:
-    """Authorships table - many records per work (one per author)"""
-
-    conn.execute("""
-            CREATE TABLE IF NOT EXISTS oa.cache.uvm_profs_sync_status (
-                ego_author_id VARCHAR PRIMARY KEY,
-                last_synced_date TIMESTAMP,
-                paper_count INTEGER,
-                needs_update BOOLEAN DEFAULT TRUE
-            )
-        """)
+# Table creation is now handled by InitDuckDBResource in resources.py
 
 def get_uvm_profs_to_update(conn) -> List[str]:
     """Get list of uvm_profs who need updating, prioritizing those never synced"""
@@ -397,9 +279,7 @@ def uvm_publications(
     oa_client = oa_resource.get_client()
     
     with duckdb.get_connection() as conn:
-        # Initialize tables and get professors to update
-        create_publications_tables(conn)
-        create_authorships_table(conn)
+        # Tables are auto-initialized by InitDuckDBResource
         uvm_profs_to_update = get_uvm_profs_to_update(conn)
         
         dg.get_dagster_logger().info(f"Processing {len(uvm_profs_to_update)} uvm_profs")
@@ -511,9 +391,7 @@ def uvm_profs_sync_status(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """Track when each professor was last synced with OpenAlex"""
     
     with duckdb.get_connection() as conn:
-        conn.execute("CREATE SCHEMA IF NOT EXISTS oa.cache")
-
-        create_uvm_profs_sync_status_table(conn)
+        # Schema and tables are auto-initialized by InitDuckDBResource
         
         conn.execute("""
             INSERT OR IGNORE INTO oa.cache.uvm_profs_sync_status (ego_author_id)

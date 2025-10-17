@@ -6,21 +6,7 @@ from dagster import MaterializeResult, MetadataValue
 from dagster_duckdb import DuckDBResource
 from open_academic_analytics.defs.resources import SemanticScholarResource
 
-def create_embedding_table(conn) -> None:
-    """Create the embeddings table if it doesn't exist"""
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS oa.raw.embeddings (
-            doi VARCHAR PRIMARY KEY,
-            paperId VARCHAR,
-            title VARCHAR,
-            abstract VARCHAR,
-            fieldsOfStudy VARCHAR,
-            s2FieldsOfStudy VARCHAR,
-            embedding FLOAT[],
-            status VARCHAR DEFAULT 'success',
-            created_at TIMESTAMP DEFAULT NOW()
-        )
-    """)
+# Table creation is now handled by InitDuckDBResource in resources.py
 
 def extract_field_categories(field_list):
     """Extract category values from field dictionaries"""
@@ -45,7 +31,7 @@ def embeddings(
 
     with duckdb.get_connection() as conn:
         print("🚀 Starting embeddings collection...")
-        create_embedding_table(conn)
+        # Table is auto-initialized by InitDuckDBResource
         
         # Find DOIs that need embeddings (only for UVM publications)
         dois_to_fetch = [row[0] for row in conn.execute("""

@@ -9,8 +9,7 @@ def change_point_analysis(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """Add change point analysis (changing_rate) to training dataset"""
     
     with duckdb.get_connection() as conn:
-        # Ensure the transform schema exists
-        conn.execute("CREATE SCHEMA IF NOT EXISTS oa.transform")
+        # Schema is auto-initialized by InitDuckDBResource
         # For now, implement a simple trend-based changing_rate calculation
         # This can be replaced with proper Bayesian change point analysis later
         conn.execute("""

@@ -3,13 +3,13 @@ from dagster_duckdb import DuckDBResource
 
 @dg.asset(
     kinds={"duckdb"},
-    deps=["paper_parquet"],
+    deps=["paper_upload"],
 )
 def yearly_collaborations(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """
     Extract collaboration pairs and aggregate them by year.
 
-    Uses the processed papers table created by the paper_parquet asset
+    Uses the processed papers table created by the paper_upload asset
     to generate yearly collaboration pattern.
     """
 

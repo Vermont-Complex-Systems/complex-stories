@@ -69,10 +69,10 @@ def add_citation_percentiles(df):
     """Add citation percentiles for better scaling"""
     print("Computing citation percentiles...")
     df_with_percentiles = df.copy()
-    
+
     citations = df_with_percentiles['cited_by_count'].fillna(0)
     df_with_percentiles['citation_percentile'] = citations.rank(pct=True) * 100
-    
+
     # Also add categorical levels
     conditions = [
         citations == 0,
@@ -82,9 +82,31 @@ def add_citation_percentiles(df):
         citations > citations.quantile(0.95)
     ]
     categories = ['uncited', 'low_impact', 'medium_impact', 'high_impact', 'very_high_impact']
-    
+
     df_with_percentiles['citation_category'] = np.select(conditions, categories, default='uncited')
     return df_with_percentiles
+
+def convert_datetime_for_api(df):
+    """Convert datetime columns to ISO strings for JSON serialization"""
+    print("Converting datetime columns for API...")
+    df_converted = df.copy()
+
+    # Auto-detect datetime columns
+    datetime_cols = df_converted.select_dtypes(include=['datetime64[ns]', 'datetime']).columns
+    for col in datetime_cols:
+        if col in ['publication_date', 'created_date']:
+            # Date fields - convert to YYYY-MM-DD format
+            df_converted[col] = df_converted[col].dt.strftime('%Y-%m-%d')
+        else:
+            # DateTime fields - convert to ISO format
+            df_converted[col] = df_converted[col].dt.strftime('%Y-%m-%dT%H:%M:%S')
+
+    return df_converted
+
+def clean_for_json_serialization(df):
+    """Clean data for JSON serialization - handle NaN and infinity"""
+    print("Cleaning data for JSON serialization...")
+    return df.replace([np.nan, np.inf, -np.inf], None)
 
 def prepare_for_deduplication(df):
     """Sort by publication date and normalize titles for deduplication"""
@@ -99,7 +121,7 @@ def prepare_for_deduplication(df):
     kinds={"export"},
     deps=["uvm_publications", "umap_embeddings"],
 )
-def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
+def paper_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """Export publications data as parquet for static frontend"""
 
     # Static path for exported data
@@ -107,7 +129,7 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
     print("🔍 Phase 1: SQL-based data extraction and joining...")
     
     with duckdb.get_connection() as conn:
-        
+
         df_raw=conn.execute("""
         SELECT
             uvm.ego_author_id,
@@ -198,6 +220,8 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
                     .pipe(filter_mislabeled_title)
                     .pipe(calculate_number_authors)
                     .pipe(add_citation_percentiles)
+                    .pipe(convert_datetime_for_api)
+                    .pipe(clean_for_json_serialization)
                    )
     
     # Clean up temporary columns
@@ -205,134 +229,26 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
         df_processed = df_processed.drop('title_normalized', axis=1)
     
     print(f"📈 Processing pipeline complete: {len(df_processed)} final records")
-    
-    # Generate comprehensive statistics
-    work_type_dist = df_processed.work_type.value_counts().to_dict()
-    year_range = f"{int(df_processed.publication_year.min())}-{int(df_processed.publication_year.max())}"
-    avg_coauthors = float(df_processed.nb_coauthors.mean()) if 'nb_coauthors' in df_processed.columns else 0
-    unique_authors = int(df_processed.ego_author_id.nunique())
-    
-    citation_stats = {
-        'median_citations': float(df_processed.cited_by_count.median()),
-        'mean_citations': float(df_processed.cited_by_count.mean()),
-        'max_citations': int(df_processed.cited_by_count.max()),
-        'uncited_papers': int((df_processed.cited_by_count == 0).sum())
-    }
-    
-    # UMAP embedding statistics
-    final_umap_coverage = df_processed['umap_1'].notna().sum()
-    umap_stats = {
-        'papers_with_embeddings': int(final_umap_coverage),
-        'embedding_coverage_percent': round(100 * final_umap_coverage / len(df_processed), 1),
-        'umap_1_range': [float(df_processed['umap_1'].min()), float(df_processed['umap_1'].max())] if final_umap_coverage > 0 else [0, 0],
-        'umap_2_range': [float(df_processed['umap_2'].min()), float(df_processed['umap_2'].max())] if final_umap_coverage > 0 else [0, 0]
-    }
-    
-    # Convert DataFrame to list of dictionaries for API
-    # Handle datetime/timestamp columns that aren't JSON serializable
-    df_for_api = df_processed.copy()
 
-    # Convert datetime columns to proper date/datetime objects
-    from datetime import date, datetime
-
-    for col in df_for_api.columns:
-        if df_for_api[col].dtype == 'datetime64[ns]' or str(df_for_api[col].dtype).startswith('datetime'):
-            # For date fields, convert to date objects; for datetime fields, keep as datetime
-            if col in ['publication_date', 'created_date']:  # Date fields
-                df_for_api[col] = df_for_api[col].dt.date
-            elif col in ['updated_date']:  # DateTime fields
-                df_for_api[col] = df_for_api[col].dt.to_pydatetime()
-            else:
-                # Default to date for other datetime columns
-                df_for_api[col] = df_for_api[col].dt.date
-        # Also handle Timestamp objects
-        elif df_for_api[col].dtype == 'object':
-            # Check if any values are Timestamp objects
-            if df_for_api[col].apply(lambda x: hasattr(x, 'strftime') if x is not None else False).any():
-                if col in ['publication_date', 'created_date']:  # Date fields
-                    df_for_api[col] = df_for_api[col].apply(lambda x: x.date() if x is not None and hasattr(x, 'date') else x)
-                elif col in ['updated_date']:  # DateTime fields
-                    df_for_api[col] = df_for_api[col].apply(lambda x: x.to_pydatetime() if x is not None and hasattr(x, 'to_pydatetime') else x)
-                else:
-                    # Default to date for other timestamp columns
-                    df_for_api[col] = df_for_api[col].apply(lambda x: x.date() if x is not None and hasattr(x, 'date') else x)
-
-    # Convert all numpy/pandas types to native Python types before serialization
-    df_for_api = df_for_api.replace({np.nan: None})  # Replace NaN with None
-
-    # Convert numpy dtypes to native Python types
-    for col in df_for_api.columns:
-        if df_for_api[col].dtype.kind in ['i', 'u']:  # integer types
-            df_for_api[col] = df_for_api[col].astype('Int64').astype(object).where(df_for_api[col].notna(), None)
-        elif df_for_api[col].dtype.kind == 'f':  # float types
-            df_for_api[col] = df_for_api[col].astype('Float64').astype(object).where(df_for_api[col].notna(), None)
-        elif df_for_api[col].dtype.kind == 'b':  # boolean types
-            df_for_api[col] = df_for_api[col].astype('boolean').astype(object).where(df_for_api[col].notna(), None)
-
-    # Convert to records
-    paper_data = df_for_api.to_dict('records')
-
-    # Final cleanup - ensure all values are JSON serializable
-    import json
-    from datetime import date, datetime
-
-    def clean_for_json(obj, key=None):
-        try:
-            json.dumps(obj)
-            return obj
-        except TypeError:
-            if hasattr(obj, 'item'):  # numpy scalar
-                return obj.item()
-            elif pd.isna(obj):
-                return None
-            elif isinstance(obj, date):  # Python date objects
-                return obj.isoformat()  # YYYY-MM-DD format
-            elif isinstance(obj, datetime):  # Python datetime objects
-                return obj.isoformat()  # YYYY-MM-DDTHH:MM:SS format
-            elif hasattr(obj, 'strftime'):  # other datetime/timestamp objects
-                return obj.strftime('%Y-%m-%d')
-            else:
-                return str(obj)
-
-    # Apply final cleanup
-    for record in paper_data:
-        for key, value in record.items():
-            record[key] = clean_for_json(value, key)
+    # Convert to API-ready format
+    paper_data = df_processed.to_dict('records')
 
     # POST to the database API (local development) in batches
     api_url = "http://127.0.0.1:8000/open-academic-analytics/papers/bulk"
-
-    # Process in batches to avoid memory/timeout issues
-    batch_size = 10_000  # Process 1000 records at a time
-    total_uploaded = 0
-
-    try:
-        # Log first record for debugging
+    
+    try: 
         if paper_data:
             dg.get_dagster_logger().info(f"Sample record keys: {list(paper_data[0].keys())}")
             dg.get_dagster_logger().info(f"Total records to upload: {len(paper_data)}")
+        
+        response = requests.post(api_url, json=paper_data, verify=False, timeout=120)
 
-        # Process in batches
-        for i in range(0, len(paper_data), batch_size):
-            batch = paper_data[i:i + batch_size]
-            batch_num = (i // batch_size) + 1
-            total_batches = (len(paper_data) + batch_size - 1) // batch_size
-
-            dg.get_dagster_logger().info(f"Uploading batch {batch_num}/{total_batches} ({len(batch)} records)")
-
-            response = requests.post(api_url, json=batch, verify=False, timeout=120)
-
-            # Log response details for debugging
-            dg.get_dagster_logger().info(f"Batch {batch_num} response status: {response.status_code}")
-            if response.status_code != 200:
-                dg.get_dagster_logger().error(f"Batch {batch_num} response content: {response.text[:1000]}")
+        # Log response details for debugging
+        if response.status_code != 200:
+            dg.get_dagster_logger().error(f"Response content: {response.text[:1000]}")
 
             response.raise_for_status()
-            total_uploaded += len(batch)
-
-            dg.get_dagster_logger().info(f"Batch {batch_num} successful: {len(batch)} records uploaded")
-
-        dg.get_dagster_logger().info(f"Successfully uploaded all {total_uploaded} paper records to database")
+        
         upload_status = "success"
 
     except requests.exceptions.RequestException as e:
@@ -343,20 +259,46 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
 
     # Also save processed data to DuckDB for downstream assets
     with duckdb.get_connection() as conn:
-        # Create a table from the processed DataFrame for other assets to use
         conn.execute("CREATE OR REPLACE TABLE oa.transform.processed_papers AS SELECT * FROM df_processed")
-        dg.get_dagster_logger().info(f"Created oa.transform.processed_papers table with {len(df_processed)} records")
-
-    print(f"💾 Uploaded {total_uploaded} papers to database via API")
+        
     print(f"📊 Saved {len(df_processed)} processed papers to DuckDB table")
+
+    #####################################
+    #                                   #
+    # Generate comprehensive statistics #
+    #                                   #
+    #####################################
+
+
+    work_type_dist = df_processed.work_type.value_counts().to_dict()
+    year_range = f"{int(df_processed.publication_year.min())}-{int(df_processed.publication_year.max())}"
+    avg_coauthors = float(df_processed.nb_coauthors.mean()) if 'nb_coauthors' in df_processed.columns else 0
+    unique_authors = int(df_processed.ego_author_id.nunique())
+
+
+    citation_stats = {
+        'median_citations': float(df_processed.cited_by_count.median()),
+        'mean_citations': float(df_processed.cited_by_count.mean()),
+        'max_citations': int(df_processed.cited_by_count.max()),
+        'uncited_papers': int((df_processed.cited_by_count == 0).sum())
+    }
+
+    # UMAP embedding statistics
+    final_umap_coverage = df_processed['umap_1'].notna().sum()
+    
+    umap_stats = {
+        'papers_with_embeddings': int(final_umap_coverage),
+        'embedding_coverage_percent': round(100 * final_umap_coverage / len(df_processed), 1),
+        'umap_1_range': [float(df_processed['umap_1'].min()), float(df_processed['umap_1'].max())] if final_umap_coverage > 0 else [0, 0],
+        'umap_2_range': [float(df_processed['umap_2'].min()), float(df_processed['umap_2'].max())] if final_umap_coverage > 0 else [0, 0]
+    }
+
     print(f"🗺️  Final UMAP coverage: {final_umap_coverage}/{len(df_processed)} papers ({umap_stats['embedding_coverage_percent']}%)")
 
-    # Clean metadata to ensure all values are JSON serializable
+    # Simple metadata cleanup for numpy types
     def clean_metadata_value(value):
-        if isinstance(value, (np.integer, np.int64, np.int32)):
-            return int(value)
-        elif isinstance(value, (np.floating, np.float64, np.float32)):
-            return float(value)
+        if hasattr(value, 'item'):  # numpy scalars
+            return value.item()
         elif isinstance(value, dict):
             return {k: clean_metadata_value(v) for k, v in value.items()}
         elif isinstance(value, list):
@@ -382,7 +324,6 @@ def paper_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
         },
         "api_endpoint": api_url,
         "upload_status": upload_status,
-        "records_uploaded": total_uploaded,
         "configuration_used": {
             "accepted_work_types": ACCEPTED_WORK_TYPES,
             "filter_patterns_count": len(FILTER_TITLE_PATTERNS)

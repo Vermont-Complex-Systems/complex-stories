@@ -12,18 +12,7 @@ from dagster_duckdb import DuckDBResource
 from open_academic_analytics.defs.resources import OpenAlexResource
 from typing import List, Tuple, Optional
 
-def create_coauthor_cache_table(conn) -> None:
-    """Create table to cache coauthor first publication years"""
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS oa.cache.coauthor_cache (
-            id VARCHAR PRIMARY KEY,
-            display_name VARCHAR,
-            first_pub_year INTEGER,
-            last_pub_year INTEGER,
-            last_fetched_date TIMESTAMP,
-            fetch_successful BOOLEAN DEFAULT FALSE
-        )
-    """)
+# Table creation is now handled by InitDuckDBResource in resources.py
 
 def get_external_coauthors_to_process(conn) -> List[Tuple[str, str]]:
     """Get external coauthors who haven't been processed yet"""
@@ -126,7 +115,7 @@ def coauthor_cache(
 
     with duckdb.get_connection() as conn:
         
-        create_coauthor_cache_table(conn)
+        # Table is auto-initialized by InitDuckDBResource
         
         # Get total counts for context
         total_external = conn.execute("""
