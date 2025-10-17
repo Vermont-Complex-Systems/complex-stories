@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 800 600" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;">
+    <g id="top-text">
+        <text x="46.172px" y="94.311px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">the</text>
+        <text x="113.532px" y="92.141px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">quick</text>
+        <text x="196.54px" y="92.141px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">brown</text>
+        <text x="285.457px" y="92.141px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">fox</text>
+        <text x="354.09px" y="92.141px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">jumped</text>
+        <text x="459.586px" y="92.141px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">over</text>
+        <text x="547.953px" y="92.141px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">the</text>
+        <text x="613.877px" y="92.141px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">lazy</text>
+        <text x="691.367px" y="92.141px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:18px;">dog</text>
+    </g>
+    <g id="links">
+        <path d="M387.896,109.006C387.896,216.484 663.613,216.484 663.613,323.962" style="fill:none;fill-rule:nonzero;stroke:rgb(204,204,204);stroke-width:1.01px;"/>
+        <path d="M387.896,109.006C387.896,216.484 478.694,216.484 478.694,323.962" style="fill:none;fill-rule:nonzero;stroke:rgb(204,204,204);stroke-width:1.01px;"/>
+        <path d="M387.896,109.006C387.896,216.484 339.173,216.484 339.173,323.962" style="fill:none;fill-rule:nonzero;stroke:rgb(204,204,204);stroke-width:1.01px;"/>
+        <path d="M387.896,109.006C387.896,216.484 202.977,216.484 202.977,323.962" style="fill:none;fill-rule:nonzero;stroke:rgb(204,204,204);stroke-width:1.01px;"/>
+        <path d="M387.896,109.006C387.896,216.484 112.179,216.484 112.179,323.962" style="fill:none;fill-rule:nonzero;stroke:rgb(204,204,204);stroke-width:1.01px;"/>
+        <path d="M663.613,323.962C663.613,431.44 754.411,431.44 754.411,538.918" style="fill:none;fill-rule:nonzero;stroke:rgb(204,204,204);stroke-width:1.01px;"/>
+        <path d="M663.613,323.962L663.613,538.918" style="fill:none;fill-rule:nonzero;stroke:rgb(204,204,204);stroke-width:1.01px;"/>
+        <path d="M663.613,323.962C663.613,431.44 572.815,431.44 572.815,538.918" style="fill:none;fill-rule:nonzero;stroke:rgb(204,204,204);stroke-width:1.01px;"/>
+        <path d="M478.694,323.962L478.694,538.918" style="fill:none;fill-rule:nonzero;stroke:rgb(204,204,204);stroke-width:1.01px;"/>
+        <path d="M339.173,323.962C339.173,431.44 384.572,431.44 384.572,538.918" style="fill:none;fill-rule:nonzero;stroke:rgb(204,204,204);stroke-width:1.01px;"/>
+        <path d="M339.173,323.962C339.173,431.44 293.774,431.44 293.774,538.918" style="fill:none;fill-rule:nonzero;stroke:rgb(204,204,204);stroke-width:1.01px;"/>
+        <path d="M202.977,323.962L202.977,538.918" style="fill:none;fill-rule:nonzero;stroke:rgb(204,204,204);stroke-width:1.01px;"/>
+        <path d="M112.179,323.962L112.179,538.918" style="fill:none;fill-rule:nonzero;stroke:rgb(204,204,204);stroke-width:1.01px;"/>
+    </g>
+    <g id="pos-tags">
+        <text x="98.936px" y="593.791px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:14px;">Adverb</text>
+        <text x="193.743px" y="593.791px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:14px;">Verb</text>
+        <text x="325.685px" y="593.791px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:14px;">Noun</text>
+        <text x="446.026px" y="592.482px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:14px;">Preposition</text>
+        <text x="630.108px" y="592.4px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:14px;">Adjective</text>
+    </g>
+</svg>
