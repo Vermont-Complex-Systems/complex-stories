@@ -121,7 +121,6 @@
       switch (colorMode) {
         case 'age_category':
         case 'age_diff':
-          console.log(d.age_category)
           colorValue = d.age_category === 'unknown' ? null : d.age_category;
           break;
           

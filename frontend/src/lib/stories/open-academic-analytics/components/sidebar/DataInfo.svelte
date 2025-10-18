@@ -1,6 +1,5 @@
 <script>
   import { dashboardState, data, unique } from '../state.svelte.ts';
-  
 </script>
 
 <div class="data-info-section">
@@ -24,7 +23,7 @@
     </div>
     <div class="stat-row">
       <span class="stat-label">Departments:</span>
-      <span class="stat-value-text">{unique.chosen_author?.host_dept}</span>
+      <span class="stat-value-text">{unique.chosen_author?.ego_department}</span>
     </div>
     {#if unique.chosen_author?.group_url}
       <div class="stat-row">

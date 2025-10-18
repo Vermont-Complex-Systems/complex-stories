@@ -32,7 +32,7 @@ client = LabelStudio(base_url=LABEL_STUDIO_URL, api_key=LABEL_STUDIO_API_KEY)
 
 def load_faculty_data():
     """Load faculty data from various possible sources."""
-    df = pd.read_parquet("../../../data/academic-research-groups.parquet")
+    df = pd.read_csv("../import/academic-research-groups2.csv")
     return df
 
 def prepare_tasks(df):

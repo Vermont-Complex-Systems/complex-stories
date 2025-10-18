@@ -168,3 +168,5 @@ venv.bak/
 # PyPI configuration file
 .pypirc
 frontend/.mcp.json
+backend/scripts/label-studio/academic-research-groups/import/uvm_salaries.csv
+backend/scripts/label-studio/academic-research-groups/import/academic-research-groups2.csv

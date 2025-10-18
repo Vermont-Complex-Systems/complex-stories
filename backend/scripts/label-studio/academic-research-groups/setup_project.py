@@ -64,22 +64,22 @@ label_config = """
     <!-- RIGHT COLUMN: Text Areas -->
     <View style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
       <Header value="Host Department"/>
-      <TextArea name="host_dept" toName="payroll_name" value="$host_dept"/>
+      <TextArea name="host_dept" toName="payroll_name" value="$host_dept" editable="true"/>
 
       <Header value="Group Size"/>
-      <TextArea name="group_size" toName="payroll_name" value="$group_size"/>
+      <TextArea name="group_size" toName="payroll_name" value="$group_size" editable="true"/>
 
       <Header value="Group URL"/>
-      <TextArea name="group_url" toName="payroll_name" value="$group_url"/>
+      <TextArea name="group_url" toName="payroll_name" value="$group_url" editable="true"/>
 
       <Header value="First Publication Year"/>
-      <TextArea name="first_pub_year" toName="payroll_name" value="$first_pub_year"/>
-      
+      <TextArea name="first_pub_year" toName="payroll_name" value="$first_pub_year" editable="true"/>
+
       <Header value="OpenAlex user id"/>
-      <TextArea name="oa_uid" toName="oa_uid" value="$oa_uid"/>
-      
+      <TextArea name="oa_uid" toName="payroll_name" value="$oa_uid" editable="true"/>
+
       <Header value="Notes"/>
-      <TextArea name="notes" toName="notes" value="$notes"/>
+      <TextArea name="notes" toName="payroll_name" value="$notes" editable="true"/>
     </View>
 
   </View>
