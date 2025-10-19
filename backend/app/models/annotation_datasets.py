@@ -1,5 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
 from sqlalchemy.sql import func
+from pydantic import BaseModel
+from typing import Optional
 from ..core.database import Base
 
 
@@ -26,3 +28,22 @@ class AcademicResearchGroups(Base):
 
     def __repr__(self):
         return f"<AcademicResearchGroups(id={self.id}, payroll_name='{self.payroll_name}', payroll_year={self.payroll_year})>"
+
+
+# Pydantic schemas for API validation
+class AcademicResearchGroupCreate(BaseModel):
+    payroll_name: str
+    payroll_year: int
+    position: Optional[str] = None
+    oa_display_name: Optional[str] = None
+    is_prof: Optional[bool] = None
+    perceived_as_male: Optional[bool] = None
+    host_dept: Optional[str] = None
+    has_research_group: Optional[bool] = None
+    group_size: Optional[int] = None
+    oa_uid: Optional[str] = None
+    group_url: Optional[str] = None
+    first_pub_year: Optional[int] = None
+    inst_ipeds_id: Optional[str] = None
+    notes: Optional[str] = None
+    college: Optional[str] = None

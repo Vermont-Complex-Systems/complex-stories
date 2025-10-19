@@ -6,7 +6,7 @@ IMPORT_DIR = import
 INPUT_DIR = input
 PDF_FILE = $(INPUT_DIR)/Final_FY24_Base_Pay.pdf
 CSV_FILE = $(IMPORT_DIR)/uvm_salaries.csv
-API_BASE = http://localhost:8000/datasets/academic-research-groups
+API_BASE = http://localhost:8000/datasets
 
 help:	## Show this help message
 	@echo "Academic Research Groups Annotation Workflow"
@@ -29,19 +29,22 @@ parse:	## Extract and parse UVM salary data from PDF to CSV
 	@echo "✅ Parsed $(shell wc -l < $(CSV_FILE) | xargs echo $$(($$1 - 1))) faculty records"
 	@echo "📊 CSV file: $(CSV_FILE)"
 
-import-data: parse	## Import parsed CSV data into PostgreSQL database
-	@echo "📤 Importing CSV data to PostgreSQL..."
-	@echo "🌐 Calling API endpoint: $(API_BASE)/import-csv"
-	@curl -X POST $(API_BASE)/import-csv -s | \
-		python3 -c "import sys, json; data=json.load(sys.stdin); print(f'✅ {data[\"message\"]}: {data[\"imported_count\"]} records')" || \
-		(echo "❌ Import failed. Is the FastAPI server running?"; exit 1)
+export-data: parse	## Import parsed CSV data into PostgreSQL database
+	@echo "📤 Uploading CSV data to PostgreSQL..."
+	@echo "🌐 Using improved upload script with API: $(API_BASE)"
+	@python3 export/upload_dataset.py --csv-file "$(CSV_FILE)" --api-base $(API_BASE) || \
+		(echo "❌ Import failed. Is the FastAPI server running on port 8001?"; exit 1)
+
+dry-run: parse	## Parse CSV and show preview without importing
+	@echo "🔍 Dry run - parsing CSV and showing preview..."
+	@python3 export/upload_dataset.py --csv-file "$(CSV_FILE)" --dry-run
 
 clean:	## Clean up generated files
 	@echo "🧹 Cleaning up..."
 	@rm -f $(CSV_FILE)
 	@echo "✅ Removed $(CSV_FILE)"
 
-all: parse import-data	## Run complete workflow: parse → import
+all: parse export-data	## Run complete workflow: parse → import
 
 # Default target
 .DEFAULT_GOAL := help

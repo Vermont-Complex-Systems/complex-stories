@@ -1,20 +1,19 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, delete
 import os
 import pandas as pd
-import numpy as np
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import io
 import time
 from label_studio_sdk import LabelStudio
 import logging
-from pydantic import BaseModel
 
 from dotenv import load_dotenv
 from ..core.database import get_db_session
-from ..models.annotation_datasets import AcademicResearchGroups
+from ..models.annotation_datasets import AcademicResearchGroups, AcademicResearchGroupCreate
 
 router = APIRouter()
 
@@ -107,64 +106,58 @@ def export_snapshot(project_id: int, export_type: str = "CSV") -> bytes:
         )
     )
 
-# Pydantic schemas for academic research groups
-class AcademicResearchGroupCreate(BaseModel):
-    payroll_name: str
-    payroll_year: int
-    position: Optional[str] = None
-    oa_display_name: Optional[str] = None
-    is_prof: Optional[bool] = None
-    perceived_as_male: Optional[bool] = None
-    host_dept: Optional[str] = None
-    has_research_group: Optional[bool] = None
-    group_size: Optional[int] = None
-    oa_uid: Optional[str] = None
-    group_url: Optional[str] = None
-    first_pub_year: Optional[int] = None
-    inst_ipeds_id: Optional[str] = None
-    notes: Optional[str] = None
-    college: Optional[str] = None
+@router.get("/academic-department")
+async def get_academic_department(inst_ipeds_id: int = 231174, year: int = 2023, format: str = "json"):
+    """Get department data from Label Studio - return JSON or download parquet."""
+    # Export data as CSV first
+    raw_bytes = export_snapshot(DEPARTMENT_PROJECT_ID, export_type="CSV")
+    raw_csv = raw_bytes.decode("utf-8")
 
-class AcademicResearchGroupUpdate(BaseModel):
-    payroll_name: Optional[str] = None
-    payroll_year: Optional[int] = None
-    position: Optional[str] = None
-    oa_display_name: Optional[str] = None
-    is_prof: Optional[bool] = None
-    perceived_as_male: Optional[bool] = None
-    host_dept: Optional[str] = None
-    has_research_group: Optional[bool] = None
-    group_size: Optional[int] = None
-    oa_uid: Optional[str] = None
-    group_url: Optional[str] = None
-    first_pub_year: Optional[int] = None
-    inst_ipeds_id: Optional[str] = None
-    notes: Optional[str] = None
-    college: Optional[str] = None
+    # Convert CSV to DataFrame
+    df = pd.read_csv(io.StringIO(raw_csv))
 
-class AcademicResearchGroupResponse(BaseModel):
-    id: int
-    payroll_name: str
-    payroll_year: int
-    position: Optional[str] = None
-    oa_display_name: Optional[str] = None
-    is_prof: Optional[bool] = None
-    perceived_as_male: Optional[bool] = None
-    host_dept: Optional[str] = None
-    has_research_group: Optional[bool] = None
-    group_size: Optional[int] = None
-    oa_uid: Optional[str] = None
-    group_url: Optional[str] = None
-    first_pub_year: Optional[int] = None
-    inst_ipeds_id: Optional[str] = None
-    notes: Optional[str] = None
-    college: Optional[str] = None
+    # Wrangle 
+    df.drop(['annotation_id', 'annotator', 'created_at', 'updated_at', 'lead_time', 'id'], axis=1, inplace=True)
+    df.fillna("", inplace=True)
+    
+    # Apply IPEDS filter if specified
+    if inst_ipeds_id and "inst_ipeds_id" in df.columns:
+        df = df[df['inst_ipeds_id'] == inst_ipeds_id]
 
-    class Config:
-        from_attributes = True
+    if year and "year" in df.columns:
+        df = df[df['year'] == year]
 
+    if format.lower() == "parquet":
+        # Convert to parquet and return as download
+        buffer = io.BytesIO()
+        df.to_parquet(buffer, index=False, engine="pyarrow")
+        buffer.seek(0)
+        parquet_bytes = buffer.read()
 
-@router.get("/academic-research-groups", response_model=List[AcademicResearchGroupResponse])
+        return StreamingResponse(
+            io.BytesIO(parquet_bytes),
+            media_type="application/octet-stream",
+            headers={"Content-Disposition": "attachment; filename=academic-department.parquet"}
+        )
+    else:
+        # Return JSON data (default)
+        rows = df.to_dict('records')
+
+        return rows
+
+@router.post("/academic-research-groups")
+async def create_academic_research_group(
+    group: AcademicResearchGroupCreate,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Create a new academic research group entry."""
+    db_group = AcademicResearchGroups(**group.model_dump())
+    db.add(db_group)
+    await db.commit()
+    await db.refresh(db_group)
+    return db_group
+
+@router.get("/academic-research-groups")
 async def get_academic_research_groups_list(
     skip: int = 0,
     payroll_year: Optional[int] = None,
@@ -172,7 +165,6 @@ async def get_academic_research_groups_list(
     db: AsyncSession = Depends(get_db_session)
 ):
     """Get academic research groups data from database - return JSON or download parquet."""
-    from sqlalchemy import select
 
     # Build query
     query = select(AcademicResearchGroups)
@@ -226,150 +218,7 @@ async def get_academic_research_groups_list(
         # Return JSON data (default)
         return annotations
 
-@router.get("/academic-department")
-async def get_academic_department(inst_ipeds_id: int = 231174, year: int = 2023, format: str = "json"):
-    """Get department data from Label Studio - return JSON or download parquet."""
-    # Export data as CSV first
-    raw_bytes = export_snapshot(DEPARTMENT_PROJECT_ID, export_type="CSV")
-    raw_csv = raw_bytes.decode("utf-8")
-
-    # Convert CSV to DataFrame
-    import io as io_module
-    df = pd.read_csv(io_module.StringIO(raw_csv))
-
-    # Wrangle 
-    df.drop(['annotation_id', 'annotator', 'created_at', 'updated_at', 'lead_time', 'id'], axis=1, inplace=True)
-    df.fillna("", inplace=True)
-    
-    # Apply IPEDS filter if specified
-    if inst_ipeds_id and "inst_ipeds_id" in df.columns:
-        df = df[df['inst_ipeds_id'] == inst_ipeds_id]
-
-    if year and "year" in df.columns:
-        df = df[df['year'] == year]
-
-    if format.lower() == "parquet":
-        # Convert to parquet and return as download
-        buffer = io.BytesIO()
-        df.to_parquet(buffer, index=False, engine="pyarrow")
-        buffer.seek(0)
-        parquet_bytes = buffer.read()
-
-        return StreamingResponse(
-            io.BytesIO(parquet_bytes),
-            media_type="application/octet-stream",
-            headers={"Content-Disposition": "attachment; filename=academic-department.parquet"}
-        )
-    else:
-        # Return JSON data (default)
-        rows = df.to_dict('records')
-
-        return rows
-
-
-
-# CRUD endpoints for academic research groups
-@router.get("/academic-research-groups/{oa_uid}", response_model=AcademicResearchGroupResponse)
-async def get_academic_research_group_by_uid(
-    oa_uid: str,
-    db: AsyncSession = Depends(get_db_session)
-):
-    """Get a specific faculty member by OpenAlex UID."""
-    from sqlalchemy import select
-
-    query = select(AcademicResearchGroups).where(AcademicResearchGroups.oa_uid == oa_uid)
-    result = await db.execute(query)
-    group = result.scalar_one_or_none()
-
-    if not group:
-        raise HTTPException(status_code=404, detail="Faculty member not found")
-    return group
-
-
-@router.post("/academic-research-groups", response_model=AcademicResearchGroupResponse)
-async def create_academic_research_group(
-    group: AcademicResearchGroupCreate,
-    db: AsyncSession = Depends(get_db_session)
-):
-    """Create a new academic research group entry."""
-    db_group = AcademicResearchGroups(**group.model_dump())
-    db.add(db_group)
-    await db.commit()
-    await db.refresh(db_group)
-    return db_group
-
-
-@router.put("/academic-research-groups/{oa_uid}", response_model=AcademicResearchGroupResponse)
-async def update_academic_research_group(
-    oa_uid: str,
-    group_update: AcademicResearchGroupUpdate,
-    db: AsyncSession = Depends(get_db_session)
-):
-    """Update an academic research group entry by OpenAlex UID."""
-    from sqlalchemy import select
-
-    query = select(AcademicResearchGroups).where(AcademicResearchGroups.oa_uid == oa_uid)
-    result = await db.execute(query)
-    group = result.scalar_one_or_none()
-
-    if not group:
-        raise HTTPException(status_code=404, detail="Faculty member not found")
-
-    update_data = group_update.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(group, field, value)
-
-    await db.commit()
-    await db.refresh(group)
-    return group
-
-
-@router.put("/academic-research-groups/by-id/{record_id}", response_model=AcademicResearchGroupResponse)
-async def update_academic_research_group_by_id(
-    record_id: int,
-    group_update: AcademicResearchGroupUpdate,
-    db: AsyncSession = Depends(get_db_session)
-):
-    """Update an academic research group entry by database ID."""
-    from sqlalchemy import select
-
-    query = select(AcademicResearchGroups).where(AcademicResearchGroups.id == record_id)
-    result = await db.execute(query)
-    group = result.scalar_one_or_none()
-
-    if not group:
-        raise HTTPException(status_code=404, detail="Faculty member not found")
-
-    update_data = group_update.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(group, field, value)
-
-    await db.commit()
-    await db.refresh(group)
-    return group
-
-
-@router.delete("/academic-research-groups/{oa_uid}")
-async def delete_academic_research_group(
-    oa_uid: str,
-    db: AsyncSession = Depends(get_db_session)
-):
-    """Delete an academic research group entry by OpenAlex UID."""
-    from sqlalchemy import select
-
-    query = select(AcademicResearchGroups).where(AcademicResearchGroups.oa_uid == oa_uid)
-    result = await db.execute(query)
-    group = result.scalar_one_or_none()
-
-    if not group:
-        raise HTTPException(status_code=404, detail="Faculty member not found")
-
-    await db.delete(group)
-    await db.commit()
-    return {"message": "Faculty member entry deleted successfully"}
-
-
-@router.post("/academic-research-groups/bulk", response_model=List[AcademicResearchGroupResponse])
+@router.post("/academic-research-groups/bulk")
 async def bulk_create_academic_research_groups(
     groups: List[AcademicResearchGroupCreate],
     db: AsyncSession = Depends(get_db_session)
@@ -387,96 +236,148 @@ async def bulk_create_academic_research_groups(
 
     return db_groups
 
-
-# Import endpoint for loading CSV data
-@router.post("/academic-research-groups/import-csv")
-async def import_csv_data(
+@router.post("/academic-research-groups/import")
+async def import_research_groups_data(
+    records: List[Dict[str, Any]],
+    clear_existing: bool = True,
     db: AsyncSession = Depends(get_db_session)
 ):
-    """Import UVM salaries CSV data into database."""
-    import csv
-    from pathlib import Path
-
-    # Path to the CSV file - use annotated version
-    csv_path = Path(__file__).parent.parent.parent / "scripts/label-studio/academic-research-groups/import/academic-research-groups2.csv"
-
-    if not csv_path.exists():
-        raise HTTPException(status_code=404, detail=f"CSV file not found: {csv_path}")
-
+    """Import academic research groups data from request payload."""
     try:
-        # Clear existing data (optional)
-        from sqlalchemy import delete
-        await db.execute(delete(AcademicResearchGroups))
+        if clear_existing:
+            # Clear existing data
+            await db.execute(delete(AcademicResearchGroups))
 
         imported_count = 0
+        batch = []
+        batch_size = 100
 
-        # Read and import CSV
-        with open(csv_path, 'r', encoding='utf-8') as file:
-            reader = csv.DictReader(file)
+        for row in records:
+            # Helper function to parse boolean values
+            def parse_bool(value):
+                if value is None or value == '':
+                    return None
+                if value in ('1.0', '1', 1, True, 'true', 'True'):
+                    return True
+                if value in ('0.0', '0', 0, False, 'false', 'False'):
+                    return False
+                return None
 
-            batch = []
-            batch_size = 100
-
-            for row in reader:
-                # Helper function to parse boolean values
-                def parse_bool(value):
-                    if not value or value == '':
-                        return None
-                    if value == '1.0' or value == '1':
-                        return True
-                    if value == '0.0' or value == '0':
-                        return False
+            # Helper function to parse integers
+            def parse_int(value):
+                if value is None or value == '':
+                    return None
+                try:
+                    return int(float(value))  # Handle values like "231174.0"
+                except (ValueError, TypeError):
                     return None
 
-                # Helper function to parse integers
-                def parse_int(value):
-                    if not value or value == '':
-                        return None
-                    try:
-                        return int(float(value))  # Handle values like "231174.0"
-                    except (ValueError, TypeError):
-                        return None
+            # Helper function to clean strings
+            def clean_string(value):
+                if value is None or value == '':
+                    return None
+                return str(value).strip()
 
-                # Convert CSV row to database record
-                record = AcademicResearchGroups(
-                    payroll_name=row['payroll_name'] if row['payroll_name'] else None,
-                    payroll_year=parse_int(row['payroll_year']),
-                    position=row['position'] if row['position'] else None,
-                    oa_display_name=row['oa_display_name'] if row['oa_display_name'] else None,
-                    is_prof=parse_bool(row['is_prof']),
-                    perceived_as_male=parse_bool(row['perceived_as_male']),
-                    host_dept=row['host_dept'] if row['host_dept'] else None,
-                    has_research_group=parse_bool(row['has_research_group']),
-                    group_size=parse_int(row['group_size']),
-                    oa_uid=row['oa_uid'] if row['oa_uid'] else None,
-                    group_url=row['group_url'] if row['group_url'] else None,
-                    first_pub_year=parse_int(row['first_pub_year']),
-                    inst_ipeds_id=row['inst_ipeds_id'].replace('.0', '') if row['inst_ipeds_id'] else None,  # Keep as string, remove .0
-                    notes=row['notes'] if row['notes'] else None,
-                    college=row['college'] if row['college'] else None,
-                )
+            # Convert row to database record with validation
+            record = AcademicResearchGroups(
+                payroll_name=clean_string(row.get('payroll_name')),
+                payroll_year=parse_int(row.get('payroll_year')),
+                position=clean_string(row.get('position')),
+                oa_display_name=clean_string(row.get('oa_display_name')),
+                is_prof=parse_bool(row.get('is_prof')),
+                perceived_as_male=parse_bool(row.get('perceived_as_male')),
+                host_dept=clean_string(row.get('host_dept')),
+                has_research_group=parse_bool(row.get('has_research_group')),
+                group_size=parse_int(row.get('group_size')),
+                oa_uid=clean_string(row.get('oa_uid')),
+                group_url=clean_string(row.get('group_url')),
+                first_pub_year=parse_int(row.get('first_pub_year')),
+                inst_ipeds_id=clean_string(row.get('inst_ipeds_id', '')).replace('.0', '') if row.get('inst_ipeds_id') else None,
+                notes=clean_string(row.get('notes')),
+                college=clean_string(row.get('college')),
+            )
 
-                batch.append(record)
+            # Validate required fields
+            if not record.payroll_name:
+                continue  # Skip records without required payroll_name
 
-                # Process batch
-                if len(batch) >= batch_size:
-                    db.add_all(batch)
-                    await db.commit()
-                    imported_count += len(batch)
-                    batch = []
+            batch.append(record)
 
-            # Process remaining records
-            if batch:
+            # Process batch
+            if len(batch) >= batch_size:
                 db.add_all(batch)
                 await db.commit()
                 imported_count += len(batch)
+                batch = []
+
+        # Process remaining records
+        if batch:
+            db.add_all(batch)
+            await db.commit()
+            imported_count += len(batch)
 
         return {
-            "message": "CSV data imported successfully",
+            "message": "Data imported successfully",
             "imported_count": imported_count,
-            "csv_path": str(csv_path)
+            "records_received": len(records)
         }
 
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+
+@router.get("/academic-research-groups/{record_id}")
+async def get_academic_research_group_by_id(
+    record_id: int,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Get a specific faculty member by database ID."""
+
+    query = select(AcademicResearchGroups).where(AcademicResearchGroups.id == record_id)
+    result = await db.execute(query)
+    group = result.scalar_one_or_none()
+
+    if not group:
+        raise HTTPException(status_code=404, detail="Faculty member not found")
+    return group
+
+@router.put("/academic-research-groups/{record_id}")
+async def update_academic_research_group_by_id(
+    record_id: int,
+    group_update: Dict[str, Any],
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Update an academic research group entry by database ID."""
+
+    query = select(AcademicResearchGroups).where(AcademicResearchGroups.id == record_id)
+    result = await db.execute(query)
+    group = result.scalar_one_or_none()
+
+    if not group:
+        raise HTTPException(status_code=404, detail="Faculty member not found")
+
+    update_data = {k: v for k, v in group_update.items() if v is not None}
+    for field, value in update_data.items():
+        setattr(group, field, value)
+
+    await db.commit()
+    await db.refresh(group)
+    return group
+
+@router.delete("/academic-research-groups/{record_id}")
+async def delete_academic_research_group(
+    record_id: int,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Delete an academic research group entry by database ID."""
+
+    query = select(AcademicResearchGroups).where(AcademicResearchGroups.id == record_id)
+    result = await db.execute(query)
+    group = result.scalar_one_or_none()
+
+    if not group:
+        raise HTTPException(status_code=404, detail="Faculty member not found")
+
+    await db.delete(group)
+    await db.commit()
+    return {"message": "Faculty member entry deleted successfully"}
