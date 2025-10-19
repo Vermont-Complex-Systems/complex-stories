@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import settings
 from .core.database import connect_to_database, close_database_connection
-from .routers import open_academic_analytics, datasets
+from .routers import open_academic_analytics, datasets, auth
 from .internal import admin
 
 app = FastAPI(
@@ -17,6 +17,14 @@ app = FastAPI(
 @app.on_event("startup")
 async def startup_event():
     await connect_to_database()
+
+    # Create tables if they don't exist
+    from .core.database import database
+    from .models import Base
+
+    if database.engine:
+        async with database.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -32,6 +40,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router, prefix="/auth", tags=["authentication"])
 app.include_router(open_academic_analytics.router, prefix="/open-academic-analytics", tags=["academics"])
 app.include_router(datasets.router, prefix="/datasets", tags=["datasets"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])

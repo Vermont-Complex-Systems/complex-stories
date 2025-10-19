@@ -4,6 +4,8 @@ Script to import current faculty data into Label Studio project.
 
 This script reads the current uvm_profs_2023 data and imports it as tasks
 into the Label Studio project for annotation/correction.
+
+IMPORTANT: WE'RE NOT USING IT ANYMORE BUT KEEP IT FOR REFERENCE.
 """
 
 import os

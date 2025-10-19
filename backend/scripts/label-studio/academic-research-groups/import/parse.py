@@ -121,9 +121,21 @@ def extract_salary_data_from_pdf(pdf_path):
                         'clinical professor' not in job_title.lower()):
                         employees.append({
                             'payroll_name': f"{last_name},{first_name}",
-                            'job_title': job_title,
-                            'base_pay_numeric': int(salary.replace('$', '').replace(',', '')),
-                            'payroll_year': 2023
+                            'payroll_year': 2023,
+                            'position': job_title,
+                            'oa_display_name': None,
+                            'is_prof': None,
+                            'perceived_as_male': None,
+                            'host_dept': None,
+                            'has_research_group': None,
+                            'group_size': None,
+                            'oa_uid': None,
+                            'group_url': None,
+                            'first_pub_year': None,
+                            'inst_ipeds_id': None,
+                            'notes': None,
+                            'last_updated': None,
+                            'college': None
                         })
     
     doc.close()
@@ -133,7 +145,14 @@ def extract_salary_data_from_pdf(pdf_path):
 employees = extract_salary_data_from_pdf('../input/Final_FY24_Base_Pay.pdf')
 
 # Save to CSV
+fieldnames = [
+    'payroll_name', 'payroll_year', 'position', 'oa_display_name', 'is_prof',
+    'perceived_as_male', 'host_dept', 'has_research_group', 'group_size',
+    'oa_uid', 'group_url', 'first_pub_year', 'inst_ipeds_id', 'notes',
+    'last_updated', 'college'
+]
+
 with open('uvm_salaries.csv', 'w', newline='', encoding='utf-8') as f:
-    writer = csv.DictWriter(f, fieldnames=['payroll_name', 'job_title', 'base_pay_numeric', 'payroll_year'])
+    writer = csv.DictWriter(f, fieldnames=fieldnames)
     writer.writeheader()
     writer.writerows(employees)

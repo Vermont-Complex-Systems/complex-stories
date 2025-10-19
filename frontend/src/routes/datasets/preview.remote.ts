@@ -4,7 +4,7 @@ import { query } from '$app/server';
 import * as v from 'valibot';
 
 export const getDatasets = query(async() => {
-  const apiUrl = `https://api.complexstories.uvm.edu/datasets/`;
+  const apiUrl = `http://localhost:8000/datasets/`;
 
   const response = await fetch(apiUrl);
 
@@ -19,7 +19,17 @@ export const getDatasets = query(async() => {
 export const previewDataset = query(v.string(), async (slug) => {
     console.log('previewDataset called with:', slug);
 
-    const response = await fetch(`https://api.complexstories.uvm.edu/datasets/${slug}`);
+    // Use localhost for development
+    const apiBase = 'http://localhost:8000/datasets';
+    let response;
+
+    if (slug === 'academic-research-groups') {
+      // Use the new annotations endpoint without limit to show all records
+      response = await fetch(`${apiBase}/academic-research-groups`);
+    } else {
+      // Fallback for other datasets
+      response = await fetch(`${apiBase}/${slug}`);
+    }
 
     if (!response.ok) {
       console.error('API response not ok:', response.status, response.statusText);
