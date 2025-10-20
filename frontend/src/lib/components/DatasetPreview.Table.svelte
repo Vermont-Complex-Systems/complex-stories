@@ -5,11 +5,8 @@
 
 	let { dataset } = $props();
 
-	// Get current user
-	const currentUser = $derived(getCurrentUser());
-
 	// Extract columns from the first row if data exists
-	const columns = $derived(dataset && dataset.length > 0 ? Object.keys(dataset[0]).slice(1,dataset.length) : []);
+	const columns = $derived(dataset && dataset.length > 0 ? Object.keys(dataset[0]).slice(1) : []);
 	const rowCount = $derived(dataset ? dataset.length : 0);
 	const displayData = $derived(dataset || []);
 
@@ -20,10 +17,6 @@
 	let editingCell = $state(null);
 	let editValue = $state('');
 
-	function isEditable(column) {
-		return editableFields.includes(column);
-	}
-
 	function formatValue(value, column) {
 		// Display boolean values as 1/0
 		if (column === 'is_prof' || column === 'perceived_as_male' || column === 'has_research_group') {
@@ -32,11 +25,6 @@
 			if (value === null || value === undefined) return '';
 		}
 		return value ?? '';
-	}
-
-	function startEdit(rowIndex, column, currentValue) {
-		editingCell = `${rowIndex}-${column}`;
-		editValue = formatValue(currentValue, column);
 	}
 
 	function cancelEdit() {
@@ -93,58 +81,117 @@
 	</div>
 </div>
 
-{#if dataset && dataset.length > 0}
-	<div class="file-viewer">
-		<div class="table-wrapper">
-			<table class="data-table">
-				<thead>
-					<tr>
-						<th class="row-number-header">#</th>
-						{#each columns as column}
-							<th class="column-header">{column}</th>
-						{/each}
-					</tr>
-				</thead>
-				<tbody>
-					{#each displayData as row, index}
-						<tr class="data-row">
-							<td class="row-number">{index + 1}</td>
+{#await getCurrentUser()}
+	<!-- Loading user data -->
+	{#if dataset && dataset.length > 0}
+		<div class="file-viewer">
+			<div class="table-wrapper">
+				<table class="data-table">
+					<thead>
+						<tr>
+							<th class="row-number-header">#</th>
 							{#each columns as column}
-								{#if column !== 'id'}
-									
-								{/if}
-								<td class="data-cell" class:editable={isEditable(column)}>
-									{#if editingCell === `${index}-${column}`}
-										<input
-											bind:value={editValue}
-											onblur={() => saveEdit(row, column)}
-											onkeydown={(e) => {
-												if (e.key === 'Enter') saveEdit(row, column);
-												if (e.key === 'Escape') cancelEdit();
-											}}
-											autofocus
-										/>
-									{:else}
-										<span
-											onclick={() => isEditable(column) && startEdit(index, column, row[column])}
-											class:clickable={isEditable(column)}
-										>
-											{formatValue(row[column], column)}
-										</span>
-									{/if}
-								</td>
+								<th class="column-header">{column}</th>
 							{/each}
 						</tr>
-					{/each}
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						{#each displayData as row, index}
+							<tr class="data-row">
+								<td class="row-number">{index + 1}</td>
+								{#each columns as column}
+									<td class="data-cell">
+										<span>{formatValue(row[column], column)}</span>
+									</td>
+								{/each}
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
 		</div>
+	{:else}
+		<div class="empty-state">
+			<p>No data to preview</p>
+		</div>
+	{/if}
+{:then currentUser}
+	<!-- User data loaded, show editable table -->
+	{@const isEditable = (column) => editableFields.includes(column)}
+	{@const canEditRow = (row) => {
+		if (!currentUser) return false;
+		if (currentUser.role === 'admin') return true;
+		if (currentUser.role === 'annotator') return true;
+		if (currentUser.role === 'faculty') {
+			return currentUser.payroll_name === row.payroll_name;
+		}
+		return false;
+	}}
+	{@const startEdit = (rowIndex, column, currentValue, row) => {
+		if (!canEditRow(row)) {
+			console.log('Edit not allowed for this row');
+			return;
+		}
+		editingCell = `${rowIndex}-${column}`;
+		editValue = formatValue(currentValue, column);
+	}}
+
+	{#if dataset && dataset.length > 0}
+		<div class="file-viewer">
+			<div class="table-wrapper">
+				<table class="data-table">
+					<thead>
+						<tr>
+							<th class="row-number-header">#</th>
+							{#each columns as column}
+								<th class="column-header">{column}</th>
+							{/each}
+						</tr>
+					</thead>
+					<tbody>
+						{#each displayData as row, index}
+							<tr class="data-row">
+								<td class="row-number">{index + 1}</td>
+								{#each columns as column}
+									<td class="data-cell" class:editable={isEditable(column) && canEditRow(row)}>
+										{#if editingCell === `${index}-${column}`}
+											<input
+												bind:value={editValue}
+												onblur={() => saveEdit(row, column)}
+												onkeydown={(e) => {
+													if (e.key === 'Enter') saveEdit(row, column);
+													if (e.key === 'Escape') cancelEdit();
+												}}
+												autofocus
+											/>
+										{:else}
+											<span
+												onclick={() => isEditable(column) && canEditRow(row) && startEdit(index, column, row[column], row)}
+												class:clickable={isEditable(column) && canEditRow(row)}
+											>
+												{formatValue(row[column], column)}
+											</span>
+										{/if}
+									</td>
+								{/each}
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	{:else}
+		<div class="empty-state">
+			<p>No data to preview</p>
+		</div>
+	{/if}
+{:catch error}
+	<!-- Error loading user -->
+	<div class="error">
+		<h3>Error loading user data</h3>
+		<p>{error.message}</p>
 	</div>
-{:else}
-	<div class="empty-state">
-		<p>No data to preview</p>
-	</div>
-{/if}
+{/await}
 
 <style>
     .file-meta {

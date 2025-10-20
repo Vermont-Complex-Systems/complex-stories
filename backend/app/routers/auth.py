@@ -37,6 +37,7 @@ class UserResponse(BaseModel):
     username: str
     email: str
     role: str
+    payroll_name: Optional[str] = None
     is_active: bool
     created_at: datetime
     last_login: Optional[datetime] = None
@@ -219,3 +220,65 @@ async def update_user_role(
     await db.commit()
 
     return {"message": f"User role updated to {role}"}
+
+
+@router.post("/create-users-from-payroll")
+async def create_users_from_payroll(
+    current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Create users from AcademicResearchGroups payroll data (admin only)."""
+    from ..models.annotation_datasets import AcademicResearchGroups
+
+    # Get unique payroll names from the dataset
+    query = select(AcademicResearchGroups.payroll_name).distinct()
+    result = await db.execute(query)
+    payroll_names = [row[0] for row in result.fetchall() if row[0]]
+
+    created_users = []
+    for payroll_name in payroll_names:
+        # Convert "Chevalier,Samuel" to username "chevalier_samuel"
+        if ',' not in payroll_name:
+            continue
+
+        last_name, first_name = payroll_name.split(',', 1)
+        username = f"{last_name.strip().lower()}_{first_name.strip().lower()}"
+        email = f"{username}@uvm.edu"
+
+        # Check if user already exists
+        existing_query = select(User).where(User.username == username)
+        existing_result = await db.execute(existing_query)
+        existing_user = existing_result.scalar_one_or_none()
+
+        if existing_user:
+            # Update payroll_name if missing
+            if not existing_user.payroll_name:
+                existing_user.payroll_name = payroll_name
+                await db.commit()
+            continue
+
+        # Create new user
+        password_hash = get_password_hash("changeMe123!")  # Default password
+        new_user = User(
+            username=username,
+            email=email,
+            password_hash=password_hash,
+            role="faculty",
+            payroll_name=payroll_name,
+            is_active=True
+        )
+
+        db.add(new_user)
+        created_users.append({
+            "username": username,
+            "email": email,
+            "payroll_name": payroll_name,
+            "role": "faculty"
+        })
+
+    await db.commit()
+
+    return {
+        "message": f"Created {len(created_users)} faculty users",
+        "users": created_users
+    }
