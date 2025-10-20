@@ -118,8 +118,9 @@ def prepare_for_deduplication(df):
            )
 
 @dg.asset(
-    kinds={"export"},
+    kinds={"postgres"},
     deps=["uvm_publications", "umap_embeddings"],
+    group_name="export"
 )
 def paper_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """Export publications data as parquet for static frontend"""
@@ -234,7 +235,7 @@ def paper_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
     paper_data = df_processed.to_dict('records')
 
     # POST to the database API (local development) in batches
-    api_url = "http://127.0.0.1:8000/open-academic-analytics/papers/bulk"
+    api_url = "https://api.complexstories.uvm.edu/admin/open-academic-analytics/papers/bulk"
     
     try: 
         if paper_data:

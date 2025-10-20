@@ -2,11 +2,10 @@ from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional, List, Dict, Any
 from ..core.database import get_db_session
-
+from ..routers.auth import get_admin_user
+from ..models.auth import User
 router = APIRouter()
-
-
-# PostgreSQL-based endpoints for processed academic data
+admin_router = APIRouter()
 
 @router.get("/papers/{author_name}")
 async def get_papers_for_author(
@@ -132,7 +131,6 @@ async def get_papers_for_author(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching papers: {str(e)}")
 
-
 @router.get("/authors")
 async def get_all_authors(
     ipeds_id: Optional[str] = Query(None, description="IPEDS ID to filter by institution (defaults to UVM)"),
@@ -196,7 +194,6 @@ async def get_all_authors(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching authors: {str(e)}")
-
 
 @router.get("/coauthors/{author_name}")
 async def get_coauthors_for_author(
@@ -289,10 +286,14 @@ async def get_coauthors_for_author(
         raise HTTPException(status_code=500, detail=f"Error fetching coauthors: {str(e)}")
 
 
-# POST endpoints for Dagster to upload processed data
-@router.post("/papers/bulk")
+# ================================
+# Admin Operations
+# ================================
+
+@admin_router.post("/papers/bulk")
 async def upload_papers_bulk(
     papers: List[Dict[str, Any]],
+    current_user: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db_session)
 ) -> Dict[str, Any]:
     """
@@ -366,9 +367,10 @@ async def upload_papers_bulk(
         raise HTTPException(status_code=500, detail=f"Error uploading papers: {str(e)}")
 
 
-@router.post("/coauthors/bulk")
+@admin_router.post("/coauthors/bulk")
 async def upload_coauthors_bulk(
     coauthors: List[Dict[str, Any]],
+    current_user: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db_session)
 ) -> Dict[str, Any]:
     """
@@ -399,3 +401,4 @@ async def upload_coauthors_bulk(
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Error uploading coauthors: {str(e)}")
+

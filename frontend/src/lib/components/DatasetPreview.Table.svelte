@@ -603,7 +603,7 @@
 	}
 
 	.data-cell {
-		padding: 8px 16px;
+		padding: 4px 16px;
 		border-bottom: 1px solid #d0d7de;
 		color: #24292f;
 		white-space: nowrap;

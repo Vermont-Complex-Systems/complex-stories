@@ -5,6 +5,7 @@ from dagster_duckdb import DuckDBResource
 @dg.asset(
     kinds={"duckdb"},
     deps=["uvm_publications"],
+    group_name="transform"
 )
 def coauthor_institutions(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """

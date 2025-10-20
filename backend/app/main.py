@@ -43,7 +43,12 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/auth", tags=["authentication"])
 app.include_router(open_academic_analytics.router, prefix="/open-academic-analytics", tags=["academics"])
 app.include_router(datasets.router, prefix="/datasets", tags=["datasets"])
-app.include_router(admin.router, prefix="/admin", tags=["admin"])
+app.include_router(admin.router, prefix="/admin", tags=["admin"], include_in_schema=False)
+
+# Admin endpoints (secured with admin authentication)
+app.include_router(auth.admin_router, prefix="/admin/auth", tags=["admin"], include_in_schema=False)
+app.include_router(datasets.admin_router, prefix="/admin/datasets", tags=["admin"], include_in_schema=False)
+app.include_router(open_academic_analytics.admin_router, prefix="/admin/open-academic-analytics", tags=["admin"], include_in_schema=False)
 
 
 @app.get("/")

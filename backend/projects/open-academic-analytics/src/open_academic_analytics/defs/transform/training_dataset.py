@@ -4,6 +4,7 @@ from dagster_duckdb import DuckDBResource
 @dg.asset(
     kinds={"transform"},
     deps=["yearly_collaborations", "coauthor_institutions"], 
+    group_name="modelling"
 )
 def training_dataset(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """Create training dataset by aggregating coauthor data into wide format with all required features"""

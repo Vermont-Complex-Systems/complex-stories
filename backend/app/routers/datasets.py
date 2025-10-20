@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
+from sqlalchemy import select
 import os
 import pandas as pd
 from pathlib import Path
@@ -14,8 +14,11 @@ import logging
 from dotenv import load_dotenv
 from ..core.database import get_db_session
 from ..models.annotation_datasets import AcademicResearchGroups, AcademicResearchGroupCreate
+from ..routers.auth import get_admin_user
+from ..models.auth import User
 
 router = APIRouter()
+admin_router = APIRouter()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("export_snapshots")
@@ -145,9 +148,10 @@ async def get_academic_department(inst_ipeds_id: int = 231174, year: int = 2023,
 
         return rows
 
-@router.post("/academic-research-groups")
+@admin_router.post("/academic-research-groups")
 async def create_academic_research_group(
     group: AcademicResearchGroupCreate,
+    current_user: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db_session)
 ):
     """Create a new academic research group entry."""
@@ -185,15 +189,15 @@ async def get_academic_research_groups_list(
             'payroll_name': annotation.payroll_name,
             'payroll_year': annotation.payroll_year,
             'position': annotation.position,
-            'oa_display_name': annotation.oa_display_name,
-            'is_prof': annotation.is_prof,
+            # 'oa_display_name': annotation.oa_display_name,
+            # 'is_prof': annotation.is_prof,
             'perceived_as_male': annotation.perceived_as_male,
-            'host_dept': annotation.host_dept,
             'has_research_group': annotation.has_research_group,
             'group_size': annotation.group_size,
             'oa_uid': annotation.oa_uid,
-            'group_url': annotation.group_url,
             'first_pub_year': annotation.first_pub_year,
+            'host_dept': annotation.host_dept,
+            'group_url': annotation.group_url,
             'inst_ipeds_id': annotation.inst_ipeds_id,
             'college': annotation.college,
             'notes': annotation.notes
@@ -218,42 +222,76 @@ async def get_academic_research_groups_list(
     else:
         return data
 
-@router.post("/academic-research-groups/bulk")
-async def bulk_create_academic_research_groups(
-    groups: List[AcademicResearchGroupCreate],
+@router.get("/academic-research-groups/{record_id}")
+async def get_academic_research_group_by_id(
+    record_id: int,
     db: AsyncSession = Depends(get_db_session)
 ):
-    """Bulk create academic research group entries."""
-    db_groups = []
-    for group in groups:
-        db_group = AcademicResearchGroups(**group.model_dump())
-        db.add(db_group)
-        db_groups.append(db_group)
+    """Get a specific faculty member by database ID."""
+
+    query = select(AcademicResearchGroups).where(AcademicResearchGroups.id == record_id)
+    result = await db.execute(query)
+    group = result.scalar_one_or_none()
+
+    if not group:
+        raise HTTPException(status_code=404, detail="Faculty member not found")
+    return group
+
+@admin_router.put("/academic-research-groups/{record_id}")
+async def update_academic_research_group_by_id(
+    record_id: int,
+    group_update: Dict[str, Any],
+    current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Update an academic research group entry by database ID."""
+
+    query = select(AcademicResearchGroups).where(AcademicResearchGroups.id == record_id)
+    result = await db.execute(query)
+    group = result.scalar_one_or_none()
+
+    if not group:
+        raise HTTPException(status_code=404, detail="Faculty member not found")
+
+    update_data = {k: v for k, v in group_update.items() if v is not None}
+    for field, value in update_data.items():
+        setattr(group, field, value)
 
     await db.commit()
-    for db_group in db_groups:
-        await db.refresh(db_group)
+    await db.refresh(group)
+    return group
 
-    # Automatically sync users from payroll data after successful bulk create
-    from ..routers.auth import sync_users_from_payroll
-    user_sync_result = await sync_users_from_payroll(db)
+@admin_router.delete("/academic-research-groups/{record_id}")
+async def delete_academic_research_group(
+    record_id: int,
+    current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Delete an academic research group entry by database ID."""
+
+    query = select(AcademicResearchGroups).where(AcademicResearchGroups.id == record_id)
+    result = await db.execute(query)
+    group = result.scalar_one_or_none()
+
+    if not group:
+        raise HTTPException(status_code=404, detail="Faculty member not found")
+
+    await db.delete(group)
     await db.commit()
+    return {"message": "Faculty member entry deleted successfully"}
 
-    return {
-        "groups": db_groups,
-        "user_sync": user_sync_result
-    }
-
-@router.post("/academic-research-groups/import")
+@admin_router.post("/academic-research-groups/import")
 async def import_research_groups_data(
     records: List[Dict[str, Any]],
     clear_existing: bool = True,
+    current_user: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db_session)
 ):
     """Import academic research groups data from request payload."""
     try:
         if clear_existing:
             # Clear existing data
+            from sqlalchemy import delete
             await db.execute(delete(AcademicResearchGroups))
 
         imported_count = 0
@@ -340,58 +378,30 @@ async def import_research_groups_data(
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
 
-@router.get("/academic-research-groups/{record_id}")
-async def get_academic_research_group_by_id(
-    record_id: int,
+
+@admin_router.post("/academic-research-groups/bulk")
+async def bulk_create_academic_research_groups(
+    groups: List[AcademicResearchGroupCreate],
+    current_user: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db_session)
 ):
-    """Get a specific faculty member by database ID."""
-
-    query = select(AcademicResearchGroups).where(AcademicResearchGroups.id == record_id)
-    result = await db.execute(query)
-    group = result.scalar_one_or_none()
-
-    if not group:
-        raise HTTPException(status_code=404, detail="Faculty member not found")
-    return group
-
-@router.put("/academic-research-groups/{record_id}")
-async def update_academic_research_group_by_id(
-    record_id: int,
-    group_update: Dict[str, Any],
-    db: AsyncSession = Depends(get_db_session)
-):
-    """Update an academic research group entry by database ID."""
-
-    query = select(AcademicResearchGroups).where(AcademicResearchGroups.id == record_id)
-    result = await db.execute(query)
-    group = result.scalar_one_or_none()
-
-    if not group:
-        raise HTTPException(status_code=404, detail="Faculty member not found")
-
-    update_data = {k: v for k, v in group_update.items() if v is not None}
-    for field, value in update_data.items():
-        setattr(group, field, value)
+    """Bulk create academic research group entries."""
+    db_groups = []
+    for group in groups:
+        db_group = AcademicResearchGroups(**group.model_dump())
+        db.add(db_group)
+        db_groups.append(db_group)
 
     await db.commit()
-    await db.refresh(group)
-    return group
+    for db_group in db_groups:
+        await db.refresh(db_group)
 
-@router.delete("/academic-research-groups/{record_id}")
-async def delete_academic_research_group(
-    record_id: int,
-    db: AsyncSession = Depends(get_db_session)
-):
-    """Delete an academic research group entry by database ID."""
-
-    query = select(AcademicResearchGroups).where(AcademicResearchGroups.id == record_id)
-    result = await db.execute(query)
-    group = result.scalar_one_or_none()
-
-    if not group:
-        raise HTTPException(status_code=404, detail="Faculty member not found")
-
-    await db.delete(group)
+    # Automatically sync users from payroll data after successful bulk create
+    from ..routers.auth import sync_users_from_payroll
+    user_sync_result = await sync_users_from_payroll(db)
     await db.commit()
-    return {"message": "Faculty member entry deleted successfully"}
+
+    return {
+        "groups": db_groups,
+        "user_sync": user_sync_result
+    }

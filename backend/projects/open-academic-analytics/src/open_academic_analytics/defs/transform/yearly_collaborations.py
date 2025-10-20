@@ -4,6 +4,7 @@ from dagster_duckdb import DuckDBResource
 @dg.asset(
     kinds={"duckdb"},
     deps=["paper_upload"],
+    group_name="transform"
 )
 def yearly_collaborations(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """

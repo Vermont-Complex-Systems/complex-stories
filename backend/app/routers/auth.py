@@ -13,18 +13,12 @@ from ..core.auth import (
     create_credentials_exception
 )
 from ..models.auth import User
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional
 
 router = APIRouter()
+admin_router = APIRouter()
 security = HTTPBearer()
-
-
-class UserRegister(BaseModel):
-    username: str
-    email: EmailStr
-    password: str
-    role: str = "annotator"  # Default role
 
 
 class UserLogin(BaseModel):
@@ -96,44 +90,7 @@ async def get_admin_user(current_user: User = Depends(get_current_active_user)) 
     return current_user
 
 
-@router.post("/register", response_model=UserResponse)
-async def register_user(
-    user_data: UserRegister,
-    db: AsyncSession = Depends(get_db_session)
-):
-    """Register a new user."""
-    # Check if username already exists
-    query = select(User).where(User.username == user_data.username)
-    result = await db.execute(query)
-    if result.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered"
-        )
-
-    # Check if email already exists
-    query = select(User).where(User.email == user_data.email)
-    result = await db.execute(query)
-    if result.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
-
-    # Create new user
-    hashed_password = get_password_hash(user_data.password)
-    db_user = User(
-        username=user_data.username,
-        email=user_data.email,
-        password_hash=hashed_password,
-        role=user_data.role
-    )
-
-    db.add(db_user)
-    await db.commit()
-    await db.refresh(db_user)
-
-    return db_user
+# Public registration removed for security - users created by admins only
 
 
 @router.post("/login", response_model=Token)
@@ -180,7 +137,7 @@ async def get_current_user_info(current_user: User = Depends(get_current_active_
     return current_user
 
 
-@router.get("/users", response_model=list[UserResponse])
+@admin_router.get("/users", response_model=list[UserResponse])
 async def list_users(
     _current_user: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db_session)
@@ -192,7 +149,7 @@ async def list_users(
     return users
 
 
-@router.put("/users/{user_id}/role")
+@admin_router.put("/users/{user_id}/role")
 async def update_user_role(
     user_id: int,
     role: str,
@@ -298,7 +255,7 @@ async def sync_users_from_payroll(db: AsyncSession) -> dict:
     }
 
 
-@router.post("/create-users-from-payroll")
+@admin_router.post("/create-users-from-payroll")
 async def create_users_from_payroll(
     _current_user: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db_session)

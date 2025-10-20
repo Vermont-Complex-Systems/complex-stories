@@ -4,6 +4,7 @@ from dagster_duckdb import DuckDBResource
 @dg.asset(
         description="📋 Load UVM Professors 2023 dataset from Complex Stories FastAPI backend (now with consistent data)",
         kinds={"duckdb"},
+        group_name="import"
     )
 def uvm_profs_2023(duckdb: DuckDBResource) -> dg.MaterializeResult:
     
@@ -16,18 +17,21 @@ def uvm_profs_2023(duckdb: DuckDBResource) -> dg.MaterializeResult:
         row_count = conn.execute(
             f"""
             CREATE OR REPLACE TABLE oa.raw.uvm_profs_2023 as (
-                SELECT 
-                    is_prof, 
-                    group_size, 
-                    perceived_as_male, 
-                    host_dept AS department, 
-                    college, 
-                    has_research_group, 
-                    'https://openalex.org/' || oa_uid AS ego_author_id, 
-                    group_url, 
+                SELECT
+                    group_size,
+                    perceived_as_male,
+                    host_dept AS department,
+                    college,
+                    has_research_group,
+                    'https://openalex.org/' || oa_uid AS ego_author_id,
+                    group_url,
                     CAST(first_pub_year AS INTEGER) as first_pub_year,
-                    payroll_name, 
-                    position
+                    payroll_name,
+                    position,
+                    CASE
+                        WHEN LOWER(position) LIKE '%professor%' THEN 1
+                        ELSE 0
+                    END AS is_prof
                 FROM read_parquet('{api_url}')
                 WHERE oa_uid IS NOT NULL
             )

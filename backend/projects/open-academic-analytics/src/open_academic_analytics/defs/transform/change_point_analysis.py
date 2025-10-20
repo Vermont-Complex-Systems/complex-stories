@@ -4,6 +4,7 @@ from dagster_duckdb import DuckDBResource
 @dg.asset(
     kinds={"transform"},
     deps=["training_dataset"], 
+    group_name="modelling"
 )
 def change_point_analysis(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """Add change point analysis (changing_rate) to training dataset"""

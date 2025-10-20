@@ -269,6 +269,7 @@ def determine_fetch_start_date(ego_author_id: str, conn) -> Optional[str]:
     description="📚 Fetch all academic papers for 2023 UVM faculties from OpenAlex database.",
     kinds={"openalex"}, 
     deps=["uvm_profs_2023", "uvm_profs_sync_status"],  
+    group_name="import"
 )
 def uvm_publications(
     oa_resource: OpenAlexResource,
@@ -334,9 +335,43 @@ def uvm_publications(
                     
                     total_works_processed += len(works)
                 
+                # Clean up publications that are now before the corrected first_pub_year
+                if corrected_first_year:
+                    # First count how many publications will be deleted
+                    count_to_delete = conn.execute("""
+                        SELECT COUNT(DISTINCT p.id)
+                        FROM oa.raw.publications p
+                        JOIN oa.raw.authorships a ON p.id = a.work_id
+                        WHERE a.author_id = ? AND p.publication_year < ?
+                    """, [ego_author_id, corrected_first_year]).fetchone()[0]
+
+                    if count_to_delete > 0:
+                        # Delete the publications
+                        conn.execute("""
+                            DELETE FROM oa.raw.publications
+                            WHERE id IN (
+                                SELECT p.id
+                                FROM oa.raw.publications p
+                                JOIN oa.raw.authorships a ON p.id = a.work_id
+                                WHERE a.author_id = ? AND p.publication_year < ?
+                            )
+                        """, [ego_author_id, corrected_first_year])
+
+                        # Clean up orphaned authorships for this author
+                        conn.execute("""
+                            DELETE FROM oa.raw.authorships
+                            WHERE author_id = ? AND work_id NOT IN (
+                                SELECT DISTINCT id FROM oa.raw.publications
+                            )
+                        """, [ego_author_id])
+
+                        dg.get_dagster_logger().info(
+                            f"Cleaned up {count_to_delete} publications before corrected first year {corrected_first_year} for {ego_author_id}"
+                        )
+
                 # Update sync status (whether we found works or not)
                 update_uvm_profs_sync_status(conn, ego_author_id)
-                
+
                 dg.get_dagster_logger().info(f"Processed {ego_author_id}: {len(works)} works")
                     
             except Exception as e:
@@ -385,7 +420,8 @@ def uvm_publications(
 
 @dg.asset(
     kinds={"duckdb"},
-    deps=["uvm_profs_2023"]
+    deps=["uvm_profs_2023"],
+    group_name="import"
 )
 def uvm_profs_sync_status(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """Track when each professor was last synced with OpenAlex"""

@@ -104,6 +104,7 @@ def fetch_author_publication_range(oa_client: OpenAlexClient, author_id: str) ->
 @dg.asset(
     kinds={"openalex"},
     deps=["uvm_publications"],
+    group_name="transform"
 )
 def coauthor_cache(
     oa_resource: OpenAlexResource,

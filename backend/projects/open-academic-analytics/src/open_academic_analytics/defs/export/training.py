@@ -8,6 +8,7 @@ STATIC_DATA_PATH = Path("../../../../../static/data")
 @dg.asset(
     kinds={"export"},
     deps=["change_point_analysis"], 
+    group_name="export"
 )
 def training_parquet(duckdb: DuckDBResource) -> dg.MaterializeResult:
     """Export final training data with all required columns matching the expected schema"""
