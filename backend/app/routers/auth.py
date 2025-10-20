@@ -238,7 +238,22 @@ async def sync_users_from_payroll(db: AsyncSession) -> dict:
             continue
 
         last_name, first_name = payroll_name.split(',', 1)
-        username = f"{last_name.strip().lower()}_{first_name.strip().lower()}"
+
+        # Clean up names: handle hyphens, periods, apostrophes, and spaces
+        # For last names: replace hyphens with underscores to preserve compound names
+        # For first names: take only the first part, remove special characters
+
+        # Clean last name: replace hyphens/spaces with underscores, remove other special chars
+        clean_last = last_name.strip().lower()
+        clean_last = clean_last.replace('-', '_').replace(' ', '_')
+        clean_last = ''.join(c for c in clean_last if c.isalpha() or c == '_')
+
+        # Clean first name: take only first part, preserve hyphens in compound first names
+        first_part = first_name.strip().split()[0]  # Take only first part before space
+        clean_first = first_part.lower().replace('-', '_')
+        clean_first = ''.join(c for c in clean_first if c.isalpha() or c == '_')
+
+        username = f"{clean_last}_{clean_first}"
         email = f"{username}@uvm.edu"
 
         # Check if user already exists
