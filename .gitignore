@@ -167,5 +167,5 @@ venv.bak/
 # PyPI configuration file
 .pypirc
 frontend/.mcp.json
-backend/scripts/label-studio/academic-research-groups/import/*.csv
-backend/scripts/label-studio/academic-research-groups/input/*.pdf
+backend/scripts/academic-research-groups/import/*.csv
+backend/scripts/academic-research-groups/input/*.pdf
