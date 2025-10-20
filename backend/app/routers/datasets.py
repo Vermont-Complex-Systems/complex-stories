@@ -14,7 +14,7 @@ import logging
 from dotenv import load_dotenv
 from ..core.database import get_db_session
 from ..models.annotation_datasets import AcademicResearchGroups, AcademicResearchGroupCreate
-from ..routers.auth import get_admin_user
+from ..routers.auth import get_admin_user, get_current_active_user
 from ..models.auth import User
 
 router = APIRouter()
@@ -237,11 +237,11 @@ async def get_academic_research_group_by_id(
         raise HTTPException(status_code=404, detail="Faculty member not found")
     return group
 
-@admin_router.put("/academic-research-groups/{record_id}")
+@router.put("/academic-research-groups/{record_id}")
 async def update_academic_research_group_by_id(
     record_id: int,
     group_update: Dict[str, Any],
-    current_user: User = Depends(get_admin_user),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db_session)
 ):
     """Update an academic research group entry by database ID."""
@@ -253,6 +253,17 @@ async def update_academic_research_group_by_id(
     if not group:
         raise HTTPException(status_code=404, detail="Faculty member not found")
 
+    # Role-based access control
+    if current_user.role == 'admin' or current_user.role == 'annotator':
+        # Admins and annotators can edit any record
+        pass
+    elif current_user.role == 'faculty':
+        # Faculty can only edit their own records
+        if group.payroll_name != current_user.payroll_name:
+            raise HTTPException(status_code=403, detail="You can only edit your own record")
+    else:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+
     update_data = {k: v for k, v in group_update.items() if v is not None}
     for field, value in update_data.items():
         setattr(group, field, value)
@@ -261,10 +272,10 @@ async def update_academic_research_group_by_id(
     await db.refresh(group)
     return group
 
-@admin_router.delete("/academic-research-groups/{record_id}")
+@router.delete("/academic-research-groups/{record_id}")
 async def delete_academic_research_group(
     record_id: int,
-    current_user: User = Depends(get_admin_user),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db_session)
 ):
     """Delete an academic research group entry by database ID."""
@@ -275,6 +286,17 @@ async def delete_academic_research_group(
 
     if not group:
         raise HTTPException(status_code=404, detail="Faculty member not found")
+
+    # Role-based access control
+    if current_user.role == 'admin' or current_user.role == 'annotator':
+        # Admins and annotators can delete any record
+        pass
+    elif current_user.role == 'faculty':
+        # Faculty can only delete their own records
+        if group.payroll_name != current_user.payroll_name:
+            raise HTTPException(status_code=403, detail="You can only delete your own record")
+    else:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     await db.delete(group)
     await db.commit()

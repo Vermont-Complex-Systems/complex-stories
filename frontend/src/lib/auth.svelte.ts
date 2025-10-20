@@ -12,7 +12,6 @@ class AuthState {
 				try {
 					this.#authToken = storedToken
 					this.#currentUser = JSON.parse(storedUser)
-					console.log('Auth restored from localStorage:', { username: this.#currentUser?.username, role: this.#currentUser?.role })
 				} catch (e) {
 					localStorage.removeItem('auth_token')
 					localStorage.removeItem('auth_user')
@@ -22,13 +21,10 @@ class AuthState {
 	}
 
 	get isLoggedIn() {
-		const result = this.#authToken !== null
-		console.log('isLoggedIn check:', { authToken: this.#authToken ? 'present' : 'null', result })
-		return result
+		return this.#authToken !== null
 	}
 
 	get user() {
-		console.log('getUser check:', { currentUser: this.#currentUser })
 		return this.#currentUser
 	}
 
@@ -37,7 +33,6 @@ class AuthState {
 	}
 
 	setAuthData(token: string, userData: any) {
-		console.log('setAuthData called with:', { token: token?.substring(0, 20) + '...', user: userData })
 		this.#authToken = token
 		this.#currentUser = userData
 

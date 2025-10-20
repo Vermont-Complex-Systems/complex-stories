@@ -2,6 +2,7 @@
 <script>
 	import { quickUpdateAnnotation, quickDeleteAnnotation } from '$lib/api/annotations.remote';
 	import { getCurrentUser } from '$lib/api/auth.remote';
+	import { getAuthToken } from '$lib/auth.svelte';
 	import * as d3 from "d3";
 
 	let { dataset, datasetName = 'academic-research-groups', filters: routeFilters = {} } = $props();
