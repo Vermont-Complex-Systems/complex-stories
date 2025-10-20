@@ -63,8 +63,7 @@ def send_to_api(records: List[Dict[str, Any]], api_base_url: str, clear_existing
 def main():
     parser = argparse.ArgumentParser(description='Import academic research groups data')
     parser.add_argument('--csv-file',
-                       default='../import/academic-research-groups2.csv',
-                       help='Path to CSV file (default: ../import/academic-research-groups2.csv, also available: ../import/uvm_salaries_2022.csv)')
+                       help='Path to CSV file.')
     parser.add_argument('--api-base',
                        default='http://localhost:8000/datasets',
                        help='API base URL (default: http://localhost:8000/datasets)')

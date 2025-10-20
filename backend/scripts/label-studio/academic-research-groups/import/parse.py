@@ -118,6 +118,7 @@ def extract_salary_data_from_pdf(pdf_path, year):
                     if ('professor' in job_title.lower() and
                         '(com)' not in job_title.lower() and
                         'emeritus' not in job_title.lower() and
+                        'Extension' not in job_title.lower() and
                         'clinical professor' not in job_title.lower()):
                         employees.append({
                             'payroll_name': f"{last_name},{first_name}",

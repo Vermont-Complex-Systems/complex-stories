@@ -194,3 +194,22 @@ export const quickUpdateAnnotation = command(
 	}
 )
 
+// Convenience command for quick delete without full form validation (requires authentication)
+export const quickDeleteAnnotation = command(
+	v.object({
+		id: v.pipe(v.number(), v.minValue(1)),
+	}),
+	async ({ id }) => {
+		if (!isLoggedIn()) {
+			error(401, 'You must be logged in to delete annotations')
+		}
+
+		await apiCall(`/academic-research-groups/${id}`, {
+			method: 'DELETE',
+		})
+
+		// Refresh the annotations list
+		getAnnotations().refresh()
+	}
+)
+

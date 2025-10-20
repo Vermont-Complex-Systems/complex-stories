@@ -203,7 +203,7 @@ class InitDuckDBResource(DuckDBResource):
 
 
 database_resource = InitDuckDBResource(
-    database="/tmp/oa.duckdb"
+    database="~/oa.duckdb"
 )
 
 class SemanticScholarResource(dg.ConfigurableResource):

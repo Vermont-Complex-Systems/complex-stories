@@ -29,7 +29,6 @@ class AcademicResearchGroups(Base):
     def __repr__(self):
         return f"<AcademicResearchGroups(id={self.id}, payroll_name='{self.payroll_name}', payroll_year={self.payroll_year})>"
 
-
 # Pydantic schemas for API validation
 class AcademicResearchGroupCreate(BaseModel):
     payroll_name: str

@@ -2,7 +2,29 @@
 	import PreviewTable from "$lib/components/DatasetPreview.Table.svelte"
     import { page } from '$app/state';
 
-	let { dataset } = $props();
+	let { dataset, datasetName = 'academic-research-groups', filters = {} } = $props();
+
+	// Extract unique filters from dataset for breadcrumb
+	const breadcrumbFilters = $derived(() => {
+		if (!dataset || dataset.length === 0) return {};
+
+		const result = {};
+		const firstRow = dataset[0];
+
+		// Get unique inst_ipeds_id if all rows have the same value
+		const instIds = [...new Set(dataset.map(row => row.inst_ipeds_id).filter(id => id))];
+		if (instIds.length === 1) {
+			result.inst_ipeds_id = instIds[0];
+		}
+
+		// Get unique payroll_year if all rows have the same value
+		const years = [...new Set(dataset.map(row => row.payroll_year).filter(year => year))];
+		if (years.length === 1) {
+			result.payroll_year = years[0];
+		}
+
+		return result;
+	});
 </script>
 
 <div class="dataset-preview-container">
@@ -11,6 +33,15 @@
 			<nav class="breadcrumb">
 				<a href="/datasets" class="breadcrumb-link">datasets</a>
 				<span class="breadcrumb-separator">/</span>
+				<span class="breadcrumb-item">{datasetName}</span>
+				{#if breadcrumbFilters.inst_ipeds_id}
+					<span class="breadcrumb-separator">/</span>
+					<span class="breadcrumb-item">{breadcrumbFilters.inst_ipeds_id}</span>
+				{/if}
+				{#if breadcrumbFilters.payroll_year}
+					<span class="breadcrumb-separator">/</span>
+					<span class="breadcrumb-item">{breadcrumbFilters.payroll_year}</span>
+				{/if}
 			</nav>
 			<div class="file-header">
 				<div class="file-info">
@@ -80,6 +111,11 @@
 		color: #656d76;
 	}
 
+	.breadcrumb-item {
+		color: #24292f;
+		font-weight: 600;
+	}
+
 	.file-header {
 		display: flex;
 		align-items: center;
@@ -144,6 +180,10 @@
 	:global(.dark) .preview-header {
 		background: #161b22;
 		border-color: #30363d;
+	}
+
+	:global(.dark) .breadcrumb-item {
+		color: #f0f6fc;
 	}
 
 	

@@ -178,28 +178,29 @@ async def get_academic_research_groups_list(
     result = await db.execute(query)
     annotations = result.scalars().all()
 
+    data = []
+    for annotation in annotations:
+        data.append({
+            'id': annotation.id,
+            'payroll_name': annotation.payroll_name,
+            'payroll_year': annotation.payroll_year,
+            'position': annotation.position,
+            'oa_display_name': annotation.oa_display_name,
+            'is_prof': annotation.is_prof,
+            'perceived_as_male': annotation.perceived_as_male,
+            'host_dept': annotation.host_dept,
+            'has_research_group': annotation.has_research_group,
+            'group_size': annotation.group_size,
+            'oa_uid': annotation.oa_uid,
+            'group_url': annotation.group_url,
+            'first_pub_year': annotation.first_pub_year,
+            'inst_ipeds_id': annotation.inst_ipeds_id,
+            'college': annotation.college,
+            'notes': annotation.notes
+        })
+    
     if format.lower() == "parquet":
         # Convert to DataFrame for parquet export
-        data = []
-        for annotation in annotations:
-            data.append({
-                'id': annotation.id,
-                'payroll_name': annotation.payroll_name,
-                'payroll_year': annotation.payroll_year,
-                'position': annotation.position,
-                'oa_display_name': annotation.oa_display_name,
-                'is_prof': annotation.is_prof,
-                'perceived_as_male': annotation.perceived_as_male,
-                'host_dept': annotation.host_dept,
-                'has_research_group': annotation.has_research_group,
-                'group_size': annotation.group_size,
-                'oa_uid': annotation.oa_uid,
-                'group_url': annotation.group_url,
-                'first_pub_year': annotation.first_pub_year,
-                'inst_ipeds_id': annotation.inst_ipeds_id,
-                'notes': annotation.notes,
-                'college': annotation.college
-            })
 
         df = pd.DataFrame(data)
 
@@ -215,8 +216,7 @@ async def get_academic_research_groups_list(
             headers={"Content-Disposition": "attachment; filename=academic-research-groups.parquet"}
         )
     else:
-        # Return JSON data (default)
-        return annotations
+        return data
 
 @router.post("/academic-research-groups/bulk")
 async def bulk_create_academic_research_groups(

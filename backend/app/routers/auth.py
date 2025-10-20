@@ -222,6 +222,12 @@ async def update_user_role(
     return {"message": f"User role updated to {role}"}
 
 
+#################################
+#                               #
+#     USERS FROM PAYROLL        #
+#                               #
+#################################
+
 async def sync_users_from_payroll(db: AsyncSession) -> dict:
     """Internal function to sync users from AcademicResearchGroups payroll data."""
     from ..models.annotation_datasets import AcademicResearchGroups
