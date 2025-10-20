@@ -1,6 +1,3 @@
-// Svelte 5 rune-based auth state
-// Simple reactive authentication state using modern Svelte patterns
-
 class AuthState {
 	#authToken = $state<string | null>(null)
 	#currentUser = $state<any>(null)

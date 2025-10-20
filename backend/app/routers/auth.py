@@ -1,10 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from pydantic import BaseModel, EmailStr
-from typing import Optional
 
 from ..core.database import get_db_session
 from ..core.auth import (
@@ -15,11 +13,13 @@ from ..core.auth import (
     create_credentials_exception
 )
 from ..models.auth import User
+from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 router = APIRouter()
 security = HTTPBearer()
 
-# Pydantic schemas
+
 class UserRegister(BaseModel):
     username: str
     email: EmailStr
@@ -161,7 +161,7 @@ async def login_user(
         )
 
     # Update last login
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now(timezone.utc)
     await db.commit()
 
     # Create access token
@@ -182,7 +182,7 @@ async def get_current_user_info(current_user: User = Depends(get_current_active_
 
 @router.get("/users", response_model=list[UserResponse])
 async def list_users(
-    current_user: User = Depends(get_admin_user),
+    _current_user: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db_session)
 ):
     """List all users (admin only)."""
@@ -196,14 +196,14 @@ async def list_users(
 async def update_user_role(
     user_id: int,
     role: str,
-    current_user: User = Depends(get_admin_user),
+    _current_user: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db_session)
 ):
     """Update user role (admin only)."""
-    if role not in ["admin", "annotator"]:
+    if role not in ["admin", "annotator", "faculty"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid role. Must be 'admin' or 'annotator'"
+            detail="Invalid role. Must be 'admin', 'annotator', or 'faculty'"
         )
 
     query = select(User).where(User.id == user_id)
@@ -224,7 +224,7 @@ async def update_user_role(
 
 @router.post("/create-users-from-payroll")
 async def create_users_from_payroll(
-    current_user: User = Depends(get_admin_user),
+    _current_user: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db_session)
 ):
     """Create users from AcademicResearchGroups payroll data (admin only)."""

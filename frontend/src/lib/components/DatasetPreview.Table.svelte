@@ -33,7 +33,6 @@
 	}
 
 	async function saveEdit(row, column) {
-		console.log('saveEdit called:', { row, column, id: row.id, editValue });
 
 		// Check if we have id for identification
 		if (!row.id) {
@@ -55,14 +54,12 @@
 
 		try {
 			// Use id-based update (now unified API)
-			console.log('Using id-based update:', { id: row.id, field: column, value });
 			await quickUpdateAnnotation({
 				id: row.id,
 				field: column,
 				value: value
 			});
 
-			console.log('Update successful');
 			// Update local data
 			row[column] = value;
 			cancelEdit();
@@ -129,7 +126,6 @@
 	}}
 	{@const startEdit = (rowIndex, column, currentValue, row) => {
 		if (!canEditRow(row)) {
-			console.log('Edit not allowed for this row');
 			return;
 		}
 		editingCell = `${rowIndex}-${column}`;
