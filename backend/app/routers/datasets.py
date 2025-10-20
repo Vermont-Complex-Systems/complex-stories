@@ -234,7 +234,15 @@ async def bulk_create_academic_research_groups(
     for db_group in db_groups:
         await db.refresh(db_group)
 
-    return db_groups
+    # Automatically sync users from payroll data after successful bulk create
+    from ..routers.auth import sync_users_from_payroll
+    user_sync_result = await sync_users_from_payroll(db)
+    await db.commit()
+
+    return {
+        "groups": db_groups,
+        "user_sync": user_sync_result
+    }
 
 @router.post("/academic-research-groups/import")
 async def import_research_groups_data(
@@ -316,10 +324,16 @@ async def import_research_groups_data(
             await db.commit()
             imported_count += len(batch)
 
+        # Automatically sync users from payroll data after successful import
+        from ..routers.auth import sync_users_from_payroll
+        user_sync_result = await sync_users_from_payroll(db)
+        await db.commit()
+
         return {
             "message": "Data imported successfully",
             "imported_count": imported_count,
-            "records_received": len(records)
+            "records_received": len(records),
+            "user_sync": user_sync_result
         }
 
     except Exception as e:

@@ -11,8 +11,9 @@ import requests
 from pathlib import Path
 import sys
 
-UVM_PAYROLL_2024_URL = "https://uvmd10.drup2.uvm.edu/d10-files/documents/2024-07/Final_FY24_Base_Pay.pdf"
-# UVM_PAYROLL_2023_URL = "https://uvmd10.drup2.uvm.edu/d10-files/documents/2024-07/Final_FY23_Base_Pay.pdf"
+# UVM_PAYROLL_URL = "https://uvmd10.drup2.uvm.edu/d10-files/documents/2024-07/Final_FY24_Base_Pay.pdf"
+# UVM_PAYROLL_URL = "https://uvmd10.drup2.uvm.edu/d10-files/documents/2024-07/Final_FY23_Base_Pay.pdf"
+UVM_PAYROLL_URL = "https://www.uvm.edu/d10-files/documents/2024-12/2024-2025-Base-Pay.pdf"
 
 def download_pdf(url, output_path):
     """Download PDF from URL to local path."""
@@ -33,11 +34,11 @@ def main():
     script_dir = Path(__file__).parent
 
     # Extract filename from URL
-    pdf_filename = UVM_PAYROLL_2024_URL.split("/")[-1]
+    pdf_filename = UVM_PAYROLL_URL.split("/")[-1]
     pdf_path = script_dir / pdf_filename
 
     try:
-        download_pdf(UVM_PAYROLL_2024_URL, pdf_path)
+        download_pdf(UVM_PAYROLL_URL, pdf_path)
 
         print(f"\n🎉 Download complete!")
         print(f"   Raw PDF: {pdf_path}")

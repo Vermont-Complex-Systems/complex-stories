@@ -152,17 +152,4 @@ export const updateUserRole = form(
 	}
 )
 
-// CREATE users from payroll data (admin only)
-export const createUsersFromPayroll = command(
-	async () => {
-		const data = await apiCall('/create-users-from-payroll', {
-			method: 'POST',
-		})
-
-		// Refresh users list
-		getAllUsers().refresh()
-
-		return data
-	}
-)
 

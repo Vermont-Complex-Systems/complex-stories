@@ -222,12 +222,8 @@ async def update_user_role(
     return {"message": f"User role updated to {role}"}
 
 
-@router.post("/create-users-from-payroll")
-async def create_users_from_payroll(
-    _current_user: User = Depends(get_admin_user),
-    db: AsyncSession = Depends(get_db_session)
-):
-    """Create users from AcademicResearchGroups payroll data (admin only)."""
+async def sync_users_from_payroll(db: AsyncSession) -> dict:
+    """Internal function to sync users from AcademicResearchGroups payroll data."""
     from ..models.annotation_datasets import AcademicResearchGroups
 
     # Get unique payroll names from the dataset
@@ -254,7 +250,6 @@ async def create_users_from_payroll(
             # Update payroll_name if missing
             if not existing_user.payroll_name:
                 existing_user.payroll_name = payroll_name
-                await db.commit()
             continue
 
         # Create new user
@@ -276,9 +271,18 @@ async def create_users_from_payroll(
             "role": "faculty"
         })
 
-    await db.commit()
-
     return {
         "message": f"Created {len(created_users)} faculty users",
         "users": created_users
     }
+
+
+@router.post("/create-users-from-payroll")
+async def create_users_from_payroll(
+    _current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Create users from AcademicResearchGroups payroll data (admin only)."""
+    result = await sync_users_from_payroll(db)
+    await db.commit()
+    return result

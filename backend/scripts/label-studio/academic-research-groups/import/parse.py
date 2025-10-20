@@ -2,7 +2,7 @@ import fitz  # PyMuPDF
 import csv
 import re
 
-def extract_salary_data_from_pdf(pdf_path):
+def extract_salary_data_from_pdf(pdf_path, year):
     """Extract salary data from PDF with columnar layout."""
     
     # Common job title keywords to help identify where name ends
@@ -121,7 +121,7 @@ def extract_salary_data_from_pdf(pdf_path):
                         'clinical professor' not in job_title.lower()):
                         employees.append({
                             'payroll_name': f"{last_name},{first_name}",
-                            'payroll_year': 2023,
+                            'payroll_year': year,
                             'position': job_title,
                             'oa_display_name': None,
                             'is_prof': None,
@@ -142,7 +142,8 @@ def extract_salary_data_from_pdf(pdf_path):
     return employees
 
 # Extract from PDF
-employees = extract_salary_data_from_pdf('../input/Final_FY24_Base_Pay.pdf')
+YEAR = 2024
+employees = extract_salary_data_from_pdf('../input/Final_FY23_Base_Pay.pdf', YEAR)
 
 # Save to CSV
 fieldnames = [
@@ -152,7 +153,7 @@ fieldnames = [
     'last_updated', 'college'
 ]
 
-with open('uvm_salaries.csv', 'w', newline='', encoding='utf-8') as f:
+with open(f'uvm_salaries_{YEAR}.csv', 'w', newline='', encoding='utf-8') as f:
     writer = csv.DictWriter(f, fieldnames=fieldnames)
     writer.writeheader()
     writer.writerows(employees)

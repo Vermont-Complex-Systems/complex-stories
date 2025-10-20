@@ -7,7 +7,6 @@ Follows best practices by separating data parsing from storage.
 """
 
 import csv
-import json
 import requests
 import sys
 from pathlib import Path
@@ -43,8 +42,8 @@ def send_to_api(records: List[Dict[str, Any]], api_base_url: str, clear_existing
     """Send parsed records to the backend API."""
     url = f"{api_base_url}/academic-research-groups/import"
 
-    payload = {
-        "records": records,
+    # Send records as the main payload with clear_existing as query parameter
+    params = {
         "clear_existing": clear_existing
     }
 
@@ -53,7 +52,7 @@ def send_to_api(records: List[Dict[str, Any]], api_base_url: str, clear_existing
     }
 
     try:
-        response = requests.post(url, json=payload, headers=headers, timeout=300)
+        response = requests.post(url, json=records, params=params, headers=headers, timeout=300)
         response.raise_for_status()
         return response.json()
 
@@ -64,8 +63,8 @@ def send_to_api(records: List[Dict[str, Any]], api_base_url: str, clear_existing
 def main():
     parser = argparse.ArgumentParser(description='Import academic research groups data')
     parser.add_argument('--csv-file',
-                       default='import/uvm-salaries.csv',
-                       help='Path to CSV file (default: import/uvm-salaries.csv)')
+                       default='../import/academic-research-groups2.csv',
+                       help='Path to CSV file (default: ../import/academic-research-groups2.csv, also available: ../import/uvm_salaries_2022.csv)')
     parser.add_argument('--api-base',
                        default='http://localhost:8000/datasets',
                        help='API base URL (default: http://localhost:8000/datasets)')
@@ -102,6 +101,17 @@ def main():
 
         if result['records_received'] != result['imported_count']:
             print(f"⚠️  Warning: {result['records_received'] - result['imported_count']} records were skipped")
+
+        # Show user sync results if available
+        if 'user_sync' in result:
+            user_sync = result['user_sync']
+            print(f"👥 {user_sync['message']}")
+            if 'users' in user_sync and user_sync['users']:
+                print(f"   New users created:")
+                for user in user_sync['users']:
+                    print(f"   - {user['username']} ({user['payroll_name']})")
+            else:
+                print(f"   No new users needed to be created")
 
     except Exception as e:
         print(f"❌ Import failed: {e}")
