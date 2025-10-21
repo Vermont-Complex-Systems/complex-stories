@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit'
-import { command, form, query } from '$app/server'
+import { command, form, query, getRequestEvent } from '$app/server'
 import * as v from 'valibot'
 import {
 	userSchema,
@@ -7,9 +7,11 @@ import {
 	registerUserSchema,
 	loginUserSchema,
 	updateUserRoleSchema,
+	changePasswordSchema,
 	type RegisterUser,
 	type LoginUser,
-	type UpdateUserRole
+	type UpdateUserRole,
+	type ChangePassword
 } from '$lib/schema/auth'
 
 // API base URL
@@ -46,24 +48,13 @@ async function apiCall(endpoint: string, options: RequestInit = {}) {
 	return response.json()
 }
 
-// REGISTER new user
-export const registerUser = form(
-	registerUserSchema,
-	async (userData: RegisterUser) => {
-		const data = await apiCall('/register', {
-			method: 'POST',
-			body: JSON.stringify(userData),
-		})
-
-		// Validate response data
-		return v.parse(userSchema, data)
-	}
-)
 
 // LOGIN user
 export const loginUser = form(
 	loginUserSchema,
 	async (credentials: LoginUser) => {
+		const { cookies } = getRequestEvent()
+
 		const data = await apiCall('/login', {
 			method: 'POST',
 			body: JSON.stringify(credentials),
@@ -72,7 +63,22 @@ export const loginUser = form(
 		// Validate response data
 		const tokenData = v.parse(tokenSchema, data)
 
-		// Store auth token and user data
+		// Set server-side cookies (the SvelteKit way!)
+		cookies.set('auth_token', tokenData.access_token, {
+			path: '/',
+			maxAge: 30 * 24 * 60 * 60, // 30 days
+			sameSite: 'lax',
+			httpOnly: false // Allow client-side access for compatibility
+		})
+
+		cookies.set('auth_user', JSON.stringify(tokenData.user), {
+			path: '/',
+			maxAge: 30 * 24 * 60 * 60, // 30 days
+			sameSite: 'lax',
+			httpOnly: false // Allow client-side access for compatibility
+		})
+
+		// Also store client-side for immediate reactivity
 		setAuthData(tokenData.access_token, tokenData.user)
 
 		// Refresh user info
@@ -82,9 +88,16 @@ export const loginUser = form(
 	}
 )
 
-// LOGOUT user (client-side only)
+// LOGOUT user
 export const logoutUser = command(
 	async () => {
+		const { cookies } = getRequestEvent()
+
+		// Clear server-side cookies
+		cookies.delete('auth_token', { path: '/' })
+		cookies.delete('auth_user', { path: '/' })
+
+		// Clear client-side data
 		clearAuthData()
 
 		// Refresh user state
@@ -149,6 +162,19 @@ export const updateUserRole = form(
 		getAllUsers().refresh()
 
 		return { success: true, user_id, role }
+	}
+)
+
+// CHANGE password
+export const changePassword = form(
+	changePasswordSchema,
+	async ({ current_password, new_password }: ChangePassword) => {
+		await apiCall('/change-password', {
+			method: 'PUT',
+			body: JSON.stringify({ current_password, new_password }),
+		})
+
+		return { success: true }
 	}
 )
 

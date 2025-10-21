@@ -182,10 +182,6 @@
 		border-color: #30363d;
 	}
 
-	:global(.dark) .breadcrumb-item {
-		color: #f0f6fc;
-	}
-
 	
 	/* Mobile responsive */
 	@media (max-width: 768px) {

@@ -2,7 +2,6 @@
 <script>
 	import { quickUpdateAnnotation, quickDeleteAnnotation } from '$lib/api/annotations.remote';
 	import { getCurrentUser } from '$lib/api/auth.remote';
-	import { getAuthToken } from '$lib/auth.svelte';
 	import * as d3 from "d3";
 
 	let { dataset, datasetName = 'academic-research-groups', filters: routeFilters = {} } = $props();
@@ -16,6 +15,10 @@
 	let showAutocomplete = $state(false);
 	let autocompleteOptions = $state([]);
 	let selectedOptionIndex = $state(-1);
+
+	// Track save feedback
+	let savedCell = $state(null);
+	let saveMessage = $state('');
 
 	// Track row deletion
 	let selectedRowIndex = $state(null);
@@ -117,29 +120,29 @@
 	}
 
 	function handleKeyboardNavigation(e, row, column) {
-		if (!showAutocomplete) return;
-
 		switch (e.key) {
 			case 'ArrowDown':
-				e.preventDefault();
-				selectedOptionIndex = selectedOptionIndex < autocompleteOptions.length - 1
-					? selectedOptionIndex + 1
-					: selectedOptionIndex;
+				if (showAutocomplete) {
+					e.preventDefault();
+					selectedOptionIndex = selectedOptionIndex < autocompleteOptions.length - 1
+						? selectedOptionIndex + 1
+						: selectedOptionIndex;
+				}
 				break;
 			case 'ArrowUp':
-				e.preventDefault();
-				selectedOptionIndex = selectedOptionIndex > 0
-					? selectedOptionIndex - 1
-					: -1;
+				if (showAutocomplete) {
+					e.preventDefault();
+					selectedOptionIndex = selectedOptionIndex > 0
+						? selectedOptionIndex - 1
+						: -1;
+				}
 				break;
 			case 'Enter':
 				e.preventDefault();
-				if (selectedOptionIndex >= 0 && selectedOptionIndex < autocompleteOptions.length) {
+				if (showAutocomplete && selectedOptionIndex >= 0 && selectedOptionIndex < autocompleteOptions.length) {
 					selectAutocomplete(autocompleteOptions[selectedOptionIndex]);
-					saveEdit(row, column);
-				} else {
-					saveEdit(row, column);
 				}
+				saveEdit(row, column);
 				break;
 			case 'Escape':
 				e.preventDefault();
@@ -178,7 +181,7 @@
 		}
 
 		try {
-			// Use quick delete command (same pattern as quickUpdateAnnotation)
+			// Use quick delete command - no token needed!
 			await quickDeleteAnnotation({ id: row.id });
 
 			// Remove from local dataset
@@ -215,7 +218,7 @@
 		}
 
 		try {
-			// Use id-based update (now unified API)
+			// Use id-based update - no token needed!
 			await quickUpdateAnnotation({
 				id: row.id,
 				field: column,
@@ -224,9 +227,33 @@
 
 			// Update local data
 			row[column] = value;
+
+			// Show success feedback
+			const cellId = `${displayData.indexOf(row)}-${column}`;
+			savedCell = cellId;
+			saveMessage = 'Saved ✓';
+
+			// Clear feedback after 2 seconds
+			setTimeout(() => {
+				savedCell = null;
+				saveMessage = '';
+			}, 2000);
+
 			cancelEdit();
 		} catch (error) {
 			console.error('Failed to update:', error);
+
+			// Show error feedback
+			const cellId = `${displayData.indexOf(row)}-${column}`;
+			savedCell = cellId;
+			saveMessage = 'Error ✗';
+
+			// Clear feedback after 3 seconds
+			setTimeout(() => {
+				savedCell = null;
+				saveMessage = '';
+			}, 3000);
+
 			cancelEdit();
 		}
 	}
@@ -379,12 +406,19 @@
 												{/if}
 											</div>
 										{:else}
-											<span
-												onclick={() => isEditable(column) && canEditRow(row) && startEdit(index, column, row[column], row)}
-												class:clickable={isEditable(column) && canEditRow(row)}
-											>
-												{formatValue(row[column], column)}
-											</span>
+											<div class="cell-content">
+												<span
+													onclick={() => isEditable(column) && canEditRow(row) && startEdit(index, column, row[column], row)}
+													class:clickable={isEditable(column) && canEditRow(row)}
+												>
+													{formatValue(row[column], column)}
+												</span>
+												{#if savedCell === `${index}-${column}`}
+													<span class="save-feedback" class:success={saveMessage.includes('✓')} class:error={saveMessage.includes('✗')}>
+														{saveMessage}
+													</span>
+												{/if}
+											</div>
 										{/if}
 									</td>
 								{/each}
@@ -638,6 +672,42 @@
 
 	.clickable:hover {
 		background-color: #e1f5fe;
+	}
+
+	.cell-content {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+	}
+
+	.save-feedback {
+		font-size: 11px;
+		font-weight: 500;
+		padding: 2px 6px;
+		border-radius: 3px;
+		margin-left: 8px;
+		opacity: 0;
+		animation: fadeInOut 2s ease-in-out;
+	}
+
+	.save-feedback.success {
+		background: #d4edda;
+		color: #155724;
+		border: 1px solid #c3e6cb;
+	}
+
+	.save-feedback.error {
+		background: #f8d7da;
+		color: #721c24;
+		border: 1px solid #f5c6cb;
+	}
+
+	@keyframes fadeInOut {
+		0% { opacity: 0; transform: translateY(-2px); }
+		20% { opacity: 1; transform: translateY(0); }
+		80% { opacity: 1; transform: translateY(0); }
+		100% { opacity: 0; transform: translateY(-2px); }
 	}
 
 	.input-container {

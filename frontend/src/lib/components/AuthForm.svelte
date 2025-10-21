@@ -1,17 +1,5 @@
 <script lang="ts">
-	import { loginUser, registerUser, getCurrentUser, logoutUser } from '$lib/api/auth.remote'
-
-	type Props = {
-		mode?: 'login' | 'register'
-	}
-
-	let { mode = 'login' }: Props = $props()
-	let showRegister = $state(mode === 'register')
-
-	// Clear form when switching modes
-	const toggleMode = () => {
-		showRegister = !showRegister
-	}
+	import { loginUser, getCurrentUser, logoutUser } from '$lib/api/auth.remote'
 </script>
 
 {#await getCurrentUser()}
@@ -29,42 +17,22 @@
 	{:else}
 		<div class="auth-form">
 			<div class="form-header">
-				<h2>{showRegister ? 'Register' : 'Login'}</h2>
-				<button onclick={toggleMode} class="toggle-mode">
-					{showRegister ? 'Already have an account? Login' : 'Need an account? Register'}
-				</button>
+				<h2>Login</h2>
 			</div>
 
-			<form {...showRegister ? registerUser : loginUser}>
+			<form {...loginUser}>
 				<div class="form-group">
 					<label for="username">Username</label>
 					<input name="username" type="text" required />
 				</div>
-
-				{#if showRegister}
-					<div class="form-group">
-						<label for="email">Email</label>
-						<input name="email" type="email" required />
-					</div>
-				{/if}
 
 				<div class="form-group">
 					<label for="password">Password</label>
 					<input name="password" type="password" required />
 				</div>
 
-				{#if showRegister}
-					<div class="form-group">
-						<label for="role">Role</label>
-						<select name="role">
-							<option value="annotator">Annotator</option>
-							<option value="admin">Admin</option>
-						</select>
-					</div>
-				{/if}
-
 				<button type="submit" class="submit-btn">
-					{showRegister ? 'Register' : 'Login'}
+					Login
 				</button>
 			</form>
 		</div>
@@ -113,14 +81,6 @@
 		color: #333;
 	}
 
-	.toggle-mode {
-		background: none;
-		border: none;
-		color: #007bff;
-		text-decoration: underline;
-		cursor: pointer;
-		font-size: 0.9rem;
-	}
 
 	.form-group {
 		margin-bottom: 1rem;

@@ -1,7 +1,8 @@
 <script>
 	import { base } from "$app/paths";
 	import { afterNavigate } from "$app/navigation";
-	import { X, Youtube, Github, MessageCircle, Linkedin } from "@lucide/svelte";
+	import { X, Youtube, Github, MessageCircle, Linkedin, User } from "@lucide/svelte";
+	import { getCurrentUser } from '$lib/api/auth.remote';
 	
 	let { visible, close } = $props();
 	
@@ -49,6 +50,28 @@
 				<li><a href="{base}/blog">Blog</a></li>
 				<li><a href="https://vermont-complex-systems.github.io/datasets/" target="_blank" rel="noreferrer">Datasets</a></li>
 				<li><a href="{base}/research-at-uvm">Groups@UVM</a></li>
+				<li>
+					{#await getCurrentUser()}
+						<!-- Loading auth state -->
+					{:then user}
+						{#if user}
+							<a href="{base}/auth">
+								<User class="icon" size={18} />
+								<span>{user.username}</span>
+							</a>
+						{:else}
+							<a href="{base}/auth">
+								<User class="icon" size={18} />
+								<span>Log in</span>
+							</a>
+						{/if}
+					{:catch}
+						<a href="{base}/auth">
+							<User class="icon" size={18} />
+							<span>Log in</span>
+						</a>
+					{/await}
+				</li>
 			</ul>
 		</div>
 		

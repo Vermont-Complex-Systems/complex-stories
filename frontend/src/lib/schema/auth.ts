@@ -39,9 +39,16 @@ export const updateUserRoleSchema = v.object({
 	role: v.string()
 })
 
+// Change password schema
+export const changePasswordSchema = v.object({
+	current_password: v.pipe(v.string(), v.minLength(1)),
+	new_password: v.pipe(v.string(), v.minLength(8))
+})
+
 // Type exports
 export type User = v.InferOutput<typeof userSchema>
 export type Token = v.InferOutput<typeof tokenSchema>
 export type RegisterUser = v.InferInput<typeof registerUserSchema>
 export type LoginUser = v.InferInput<typeof loginUserSchema>
 export type UpdateUserRole = v.InferInput<typeof updateUserRoleSchema>
+export type ChangePassword = v.InferInput<typeof changePasswordSchema>
