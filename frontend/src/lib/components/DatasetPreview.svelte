@@ -1,5 +1,6 @@
 <script>
 	import PreviewTable from "$lib/components/DatasetPreview.Table.svelte"
+	import { Download, Printer } from '@lucide/svelte';
     import { page } from '$app/state';
 
 	let { dataset, datasetName = 'academic-research-groups', filters = {} } = $props();
@@ -47,15 +48,11 @@
 				<div class="file-info">
 					<div class="file-actions">
 						<a href="https://api.complexstories.uvm.edu/datasets/{page.params.slug}?format=parquet" class="btn btn-download" target="_blank">
-							<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-								<path d="M7.47 10.78a.75.75 0 001.06 0l3.75-3.75a.75.75 0 00-1.06-1.06L8.75 8.44V1.75a.75.75 0 00-1.5 0v6.69L4.78 5.97a.75.75 0 00-1.06 1.06l3.75 3.75zM3.75 13a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5z"/>
-							</svg>
+							<Download size={16} />
 							Download
 						</a>
 						<button class="btn btn-secondary" onclick={() => window.print()}>
-							<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-								<path d="M5 1a2 2 0 00-2 2v1h10V3a2 2 0 00-2-2H5zM4 7a1 1 0 011-1h6a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1V7zm8 0v3h1a1 1 0 001-1V7a1 1 0 00-1-1h-1z"/>
-							</svg>
+							<Printer size={16} />
 							Print
 						</button>
 					</div>
@@ -65,7 +62,7 @@
 	</section>
 
 	<section class="file-content">
-		<PreviewTable {dataset} />
+		<PreviewTable {dataset} {datasetName} />
 	</section>
 </div>
 
