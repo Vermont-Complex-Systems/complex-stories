@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import settings
 from .core.database import connect_to_database, close_database_connection
-from .routers import open_academic_analytics, datasets, auth
+from .routers import open_academic_analytics, datasets, auth, wikimedia
 from .internal import admin
 
 app = FastAPI(
@@ -43,6 +43,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/auth", tags=["authentication"])
 app.include_router(open_academic_analytics.router, prefix="/open-academic-analytics", tags=["academics"])
 app.include_router(datasets.router, prefix="/datasets", tags=["datasets"])
+app.include_router(wikimedia.router, prefix="/wikimedia", tags=["wikimedia"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"], include_in_schema=False)
 
 # Admin endpoints (secured with admin authentication)
@@ -59,3 +60,5 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+

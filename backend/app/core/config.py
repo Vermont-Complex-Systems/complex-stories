@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     version: str = "0.1.0"
 
     # CORS settings
-    allowed_origins: List[str] = ["http://localhost:5173", "http://localhost:3000", "https://complexstories.uvm.edu"]
+    allowed_origins: List[str] = ["http://localhost:5173", "http://localhost:5176", "http://localhost:3000", "https://complexstories.uvm.edu"]
 
     # PostgreSQL Database settings
     postgres_host: str = "localhost"
@@ -17,10 +17,12 @@ class Settings(BaseSettings):
     postgres_user: str = "postgres"
     postgres_password: str = ""
 
-    label_studio_api_key: str
-    label_studio_url: str
-    faculty_project_id: int
-    department_project_id: int
+    # label_studio_api_key: str
+    # label_studio_url: str
+    # faculty_project_id: int
+    # department_project_id: int
+
+    mongodb_uri: str
     
     # API settings
     api_host: str = "0.0.0.0"
