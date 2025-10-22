@@ -1,6 +1,6 @@
 <script>
 	import { quickUpdateAnnotation, quickDeleteAnnotation } from '$lib/api/annotations.remote';
-	import EditableTable from './EditableTable.svelte';
+	import EditableTable from '$lib/components/EditableTable.svelte';
 
 	let { dataset, datasetName = 'academic-research-groups', filters: routeFilters = {} } = $props();
 
