@@ -20,15 +20,16 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
+        cache-dependency-path: 'frontend/package-lock.json'
 
     - name: Install dependencies
-      run: npm ci
+      run: cd frontend && npm ci
 
     - name: Build application
-      run: npm run build
+      run: cd frontend && npm run build
 
     - name: Run tests (if you have any)
-      run: npm test --if-present
+      run: cd frontend && npm test --if-present
 
   deploy:
     needs: build
@@ -52,9 +53,11 @@ jobs:
         ssh -i ~/.ssh/deploy_key ${{ secrets.VM_USERNAME }}@${{ secrets.VM_HOST }} << 'EOF'
           cd ~/complex-stories-main
           git pull origin main
+          cd frontend
           npm ci --only=production
           npm install
           npm run build
+          cd ..
           pm2 restart complex-stories-main
           
           # Wait for app to start
