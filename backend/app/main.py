@@ -1,0 +1,64 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from .core.config import settings
+from .core.database import connect_to_database, close_database_connection
+from .routers import open_academic_analytics, datasets, auth, wikimedia
+from .internal import admin
+
+app = FastAPI(
+    title=settings.app_name,
+    description="Backend API for Complex Stories data platform",
+    version=settings.version,
+    debug=settings.debug,
+)
+
+# Database events
+@app.on_event("startup")
+async def startup_event():
+    await connect_to_database()
+
+    # Create tables if they don't exist
+    from .core.database import database
+    from .models import Base
+
+    if database.engine:
+        async with database.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await close_database_connection()
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(auth.router, prefix="/auth", tags=["authentication"])
+app.include_router(open_academic_analytics.router, prefix="/open-academic-analytics", tags=["academics"])
+app.include_router(datasets.router, prefix="/datasets", tags=["datasets"])
+app.include_router(wikimedia.router, prefix="/wikimedia", tags=["wikimedia"])
+app.include_router(admin.router, prefix="/admin", tags=["admin"], include_in_schema=False)
+
+# Admin endpoints (secured with admin authentication)
+app.include_router(auth.admin_router, prefix="/admin/auth", tags=["admin"], include_in_schema=False)
+app.include_router(datasets.admin_router, prefix="/admin/datasets", tags=["admin"], include_in_schema=False)
+app.include_router(open_academic_analytics.admin_router, prefix="/admin/open-academic-analytics", tags=["admin"], include_in_schema=False)
+
+
+@app.get("/")
+async def root():
+    return {"message": "Complex Stories API", "version": "0.1.0"}
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+
