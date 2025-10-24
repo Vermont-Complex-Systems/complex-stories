@@ -46,6 +46,11 @@ class Token(BaseModel):
     user: UserResponse
 
 
+class ChangePassword(BaseModel):
+    current_password: str
+    new_password: str
+
+
 # Dependency to get current user from token
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
@@ -135,6 +140,34 @@ async def login_user(
 async def get_current_user_info(current_user: User = Depends(get_current_active_user)):
     """Get current user information."""
     return current_user
+
+
+@router.put("/change-password")
+async def change_password(
+    password_data: ChangePassword,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Change user password."""
+    # Verify current password
+    if not verify_password(password_data.current_password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+
+    # Validate new password
+    if len(password_data.new_password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be at least 8 characters long"
+        )
+
+    # Update password
+    current_user.password_hash = get_password_hash(password_data.new_password)
+    await db.commit()
+
+    return {"message": "Password changed successfully"}
 
 
 @admin_router.get("/users", response_model=list[UserResponse])

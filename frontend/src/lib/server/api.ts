@@ -1,7 +1,9 @@
 // Clean server-side API utilities
 // Simple functions that can be used in load functions, server actions, etc.
 
-const API_BASE = 'http://localhost:8000'
+import { API_BASE } from '$env/static/private'
+
+const API_BASE_URL = API_BASE || 'http://localhost:3001'
 
 async function getAnnotations(filters: { skip?: number; payroll_year?: number } = {}) {
     const params = new URLSearchParams()
@@ -9,7 +11,7 @@ async function getAnnotations(filters: { skip?: number; payroll_year?: number } 
     if (filters.payroll_year !== undefined) params.append('payroll_year', filters.payroll_year.toString())
 
     const queryString = params.toString()
-    const url = `${API_BASE}/datasets/academic-research-groups${queryString ? `?${queryString}` : ''}`
+    const url = `${API_BASE_URL}/datasets/academic-research-groups${queryString ? `?${queryString}` : ''}`
 
     const response = await fetch(url)
     if (!response.ok) throw Error(`💣️ Failed to fetch annotations: ${response.status}`)
@@ -17,13 +19,13 @@ async function getAnnotations(filters: { skip?: number; payroll_year?: number } 
 }
 
 async function getAnnotationById(id: number) {
-    const response = await fetch(`${API_BASE}/datasets/academic-research-groups/${id}`)
+    const response = await fetch(`${API_BASE_URL}/datasets/academic-research-groups/${id}`)
     if (!response.ok) throw Error(`💣️ Failed to fetch annotation ${id}: ${response.status}`)
     return await response.json()
 }
 
 async function updateAnnotation(id: number, data: any, token: string) {
-    const response = await fetch(`${API_BASE}/datasets/academic-research-groups/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/datasets/academic-research-groups/${id}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -36,7 +38,7 @@ async function updateAnnotation(id: number, data: any, token: string) {
 }
 
 async function deleteAnnotation(id: number, token: string) {
-    const response = await fetch(`${API_BASE}/datasets/academic-research-groups/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/datasets/academic-research-groups/${id}`, {
         method: 'DELETE',
         headers: {
             'Authorization': `Bearer ${token}`
@@ -47,7 +49,7 @@ async function deleteAnnotation(id: number, token: string) {
 }
 
 async function createAnnotation(data: any, token: string) {
-    const response = await fetch(`${API_BASE}/datasets/academic-research-groups`, {
+    const response = await fetch(`${API_BASE_URL}/datasets/academic-research-groups`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -92,7 +94,7 @@ async function getTopNgrams(filters: {
     if (filters.topN !== undefined) params.append('topN', filters.topN.toString())
 
     const queryString = params.toString()
-    const url = `${API_BASE}/wikimedia/top-ngrams${queryString ? `?${queryString}` : ''}`
+    const url = `${API_BASE_URL}/wikimedia/top-ngrams${queryString ? `?${queryString}` : ''}`
 
     console.log('Full URL:', url)
     console.log('Query string:', queryString)

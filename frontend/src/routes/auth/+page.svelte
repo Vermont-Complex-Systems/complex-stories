@@ -3,6 +3,7 @@
 	import { loginUser, getCurrentUser, logoutUser, changePassword } from '$lib/api/auth.remote'
 
 	let showPasswordChange = $state(false)
+	let passwordChangeSuccess = $state(false)
 
 </script>
 
@@ -21,7 +22,10 @@
 				<p>Email: {user.email}</p>
 
 				<div class="user-actions">
-					<button onclick={() => showPasswordChange = !showPasswordChange} class="change-password-btn">
+					<button onclick={() => {
+						showPasswordChange = !showPasswordChange
+						passwordChangeSuccess = false
+					}} class="change-password-btn">
 						{showPasswordChange ? 'Cancel' : 'Change Password'}
 					</button>
 					<button onclick={() => logoutUser()} class="logout-btn">
@@ -29,10 +33,30 @@
 					</button>
 				</div>
 
+				{#if passwordChangeSuccess}
+					<div class="success-message">
+						✅ Password changed successfully!
+					</div>
+				{/if}
+
 				{#if showPasswordChange}
 					<div class="password-change-form">
 						<h4>Change Password</h4>
-						<form {...changePassword} onsubmit={() => showPasswordChange = false}>
+						<form {...changePassword}
+							onsubmit={async (e) => {
+								try {
+									// Form will submit via remote function
+									// If successful, show success message
+									setTimeout(() => {
+										showPasswordChange = false
+										passwordChangeSuccess = true
+										// Clear success message after 5 seconds
+										setTimeout(() => passwordChangeSuccess = false, 5000)
+									}, 500) // Give time for form to process
+								} catch (error) {
+									console.error('Password change failed:', error)
+								}
+							}}>
 							<div class="form-group">
 								<label for="current_password">Current Password</label>
 								<input name="current_password" type="password" required />

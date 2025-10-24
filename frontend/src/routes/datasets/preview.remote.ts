@@ -2,9 +2,13 @@
 
 import { query } from '$app/server';
 import * as v from 'valibot';
+import { API_BASE } from '$env/static/private';
+
+const API_BASE_URL = API_BASE || 'http://localhost:3001';
 
 export const getDatasets = query(async() => {
-  const apiUrl = `http://localhost:8000/datasets/`;
+  // API base URL - automatically switches based on environment
+  const apiUrl = `${API_BASE_URL}/datasets/`;
 
   const response = await fetch(apiUrl);
 
@@ -19,8 +23,8 @@ export const getDatasets = query(async() => {
 export const previewDataset = query(v.string(), async (slug) => {
     console.log('previewDataset called with:', slug);
 
-    // Use localhost for development
-    const apiBase = 'http://localhost:8000/datasets';
+    // API base URL - automatically switches based on environment
+    const apiBase = `${API_BASE_URL}/datasets`;
     let response;
 
     if (slug === 'academic-research-groups') {
