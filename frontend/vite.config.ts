@@ -6,6 +6,10 @@ import path from "path";
 import { enhancedImages } from '@sveltejs/enhanced-img';
 import dsv from "@rollup/plugin-dsv";
 
+
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+
 const { version } = JSON.parse(readFileSync("package.json", "utf8"));
 const timestamp = timeFormat("%Y-%m-%d-%H:%M")(new Date());
 

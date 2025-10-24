@@ -26,6 +26,8 @@ jobs:
       run: cd frontend && npm ci
 
     - name: Build application
+      env:
+        API_BASE: ${{ secrets.API_BASE }}
       run: cd frontend && npm run build
 
     - name: Run tests (if you have any)

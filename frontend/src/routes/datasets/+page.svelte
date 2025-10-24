@@ -53,6 +53,7 @@
 		</div>
 	</div>
 {:catch error}
+	{console.log(error)}
 	<p>Error: {error.message}</p>
 {/await}
 

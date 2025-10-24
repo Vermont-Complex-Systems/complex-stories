@@ -6,7 +6,7 @@ IMPORT_DIR = import
 INPUT_DIR = input
 PDF_FILE = $(INPUT_DIR)/Final_FY24_Base_Pay.pdf
 CSV_FILE = $(IMPORT_DIR)/uvm_salaries.csv
-API_BASE = http://localhost:8000/datasets
+API_BASE = https://complexstories.uvm.edu/datasets
 
 help:	## Show this help message
 	@echo "Academic Research Groups Annotation Workflow"

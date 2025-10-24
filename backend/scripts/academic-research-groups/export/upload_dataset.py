@@ -12,7 +12,10 @@ import sys
 from pathlib import Path
 from typing import List, Dict, Any
 import argparse
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def parse_csv(csv_path: Path) -> List[Dict[str, Any]]:
     """Parse CSV file and return list of records."""
@@ -38,9 +41,9 @@ def parse_csv(csv_path: Path) -> List[Dict[str, Any]]:
     return records
 
 
-def send_to_api(records: List[Dict[str, Any]], api_base_url: str, clear_existing: bool = True) -> Dict[str, Any]:
+def send_to_api(records: List[Dict[str, Any]], jwt_token, api_base_url: str, clear_existing: bool = True) -> Dict[str, Any]:
     """Send parsed records to the backend API."""
-    url = f"{api_base_url}/academic-research-groups/import"
+    url = f"{api_base_url}/admin/datasets/academic-research-groups/import"
 
     # Send records as the main payload with clear_existing as query parameter
     params = {
@@ -48,11 +51,12 @@ def send_to_api(records: List[Dict[str, Any]], api_base_url: str, clear_existing
     }
 
     headers = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {jwt_token}'  # 👈 JWT token here
     }
 
     try:
-        response = requests.post(url, json=records, params=params, headers=headers, timeout=300)
+        response = requests.post(url, json=records, params=params, headers=headers, timeout=300, verify=False)
         response.raise_for_status()
         return response.json()
 
@@ -65,8 +69,8 @@ def main():
     parser.add_argument('--csv-file',
                        help='Path to CSV file.')
     parser.add_argument('--api-base',
-                       default='http://localhost:8000/datasets',
-                       help='API base URL (default: http://localhost:8000/datasets)')
+                       default='https://api.complexstories.uvm.edu',
+                       help='API base URL (default: https://api.complexstories.uvm.edu)')
     parser.add_argument('--no-clear',
                        action='store_true',
                        help='Do not clear existing data before import')
@@ -79,6 +83,7 @@ def main():
     # Resolve CSV path relative to script directory
     script_dir = Path(__file__).parent
     csv_path = script_dir / args.csv_file
+    jwt_token = os.getenv("JWT_TOKEN")
 
     try:
         print(f"📄 Parsing CSV file: {csv_path}")
@@ -92,7 +97,7 @@ def main():
             return
 
         print(f"📤 Sending data to API: {args.api_base}")
-        result = send_to_api(records, args.api_base, clear_existing=not args.no_clear)
+        result = send_to_api(records, jwt_token, args.api_base, clear_existing=not args.no_clear)
 
         print(f"✅ {result['message']}")
         print(f"📊 Records received: {result['records_received']}")

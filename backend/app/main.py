@@ -26,6 +26,29 @@ async def startup_event():
         async with database.engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
+        # Create admin user if it doesn't exist
+        from .core.database import get_db_session
+        from .models.auth import User
+        from .core.auth import get_password_hash
+        from sqlalchemy import select
+
+        async for db in get_db_session():
+            result = await db.execute(select(User).where(User.username == "admin"))
+            if not result.scalar_one_or_none():
+                admin = User(
+                    username="admin",
+                    email="admin@complexstories.uvm.edu",
+                    password_hash=get_password_hash("admin123"),
+                    role="admin",
+                    is_active=True
+                )
+                db.add(admin)
+                await db.commit()
+                print("✅ Admin user created: admin / admin123")
+            else:
+                print("ℹ️ Admin user already exists")
+            break
+
 @app.on_event("shutdown")
 async def shutdown_event():
     await close_database_connection()

@@ -11,9 +11,9 @@ import requests
 from pathlib import Path
 import sys
 
-# UVM_PAYROLL_URL = "https://uvmd10.drup2.uvm.edu/d10-files/documents/2024-07/Final_FY24_Base_Pay.pdf"
+UVM_PAYROLL_URL = "https://uvmd10.drup2.uvm.edu/d10-files/documents/2024-07/Final_FY24_Base_Pay.pdf"
 # UVM_PAYROLL_URL = "https://uvmd10.drup2.uvm.edu/d10-files/documents/2024-07/Final_FY23_Base_Pay.pdf"
-UVM_PAYROLL_URL = "https://www.uvm.edu/d10-files/documents/2024-12/2024-2025-Base-Pay.pdf"
+# UVM_PAYROLL_URL = "https://www.uvm.edu/d10-files/documents/2024-12/2024-2025-Base-Pay.pdf"
 
 def download_pdf(url, output_path):
     """Download PDF from URL to local path."""

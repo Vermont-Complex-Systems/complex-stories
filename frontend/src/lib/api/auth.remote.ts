@@ -13,16 +13,17 @@ import {
 	type UpdateUserRole,
 	type ChangePassword
 } from '$lib/schema/auth'
+import { API_BASE } from '$env/static/private'
 
-// API base URL
-const API_BASE = 'http://localhost:8000/auth'
+// API base URL - uses environment variable with fallback
+const API_BASE_URL = `${API_BASE || 'http://localhost:3001'}/auth`
 
 // Import auth client for token management
 import { getAuthToken, setAuthData, clearAuthData } from '$lib/auth.svelte'
 
 // Helper function for API calls with auth header
 async function apiCall(endpoint: string, options: RequestInit = {}) {
-	const url = `${API_BASE}${endpoint}`
+	const url = `${API_BASE_URL}${endpoint}`
 
 	const headers: Record<string, string> = {
 		'Content-Type': 'application/json',
