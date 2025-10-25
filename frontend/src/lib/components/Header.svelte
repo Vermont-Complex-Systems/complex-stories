@@ -107,8 +107,6 @@
 
 <Menu visible={isMenuOpen} close={closeMenu} />
 
-<!-- <ConstructionBanner /> -->
-
 <style>
   .header {
     position: sticky;
@@ -289,13 +287,6 @@
     text-transform: uppercase;
   }
 
-  .username {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 8rem;
-  }
-
   /* Button styles */
   .icon-button {
     display: flex;
@@ -310,12 +301,6 @@
     border: none;
     cursor: pointer;
     transition: all var(--transition-medium);
-  }
-
-  .icon-button svg {
-    width: 1.25rem;  /* w-5 = 20px */
-    height: 1.25rem; /* h-5 = 20px */
-    fill: currentColor;
   }
 
   .icon-button:hover {

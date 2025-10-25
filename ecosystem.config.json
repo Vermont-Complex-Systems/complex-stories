@@ -32,6 +32,7 @@
       "cwd": "/users/j/s/jstonge1/complex-stories-dev/backend",
       "env": {
         "DAGSTER_HOME": "/users/j/s/jstonge1/.dagster",
+        "DAGSTER_WEBSERVER_PORT": "3002",
         "POSTGRES_HOST": "localhost",
         "POSTGRES_PORT": "5432",
         "POSTGRES_DB": "complex_stories",

@@ -2,6 +2,8 @@ import dagster as dg
 from dagster_duckdb import DuckDBResource
 import requests
 
+from ..resources import get_api_headers, get_api_base_url
+
 @dg.asset(
     kinds={"duckdb"},
     deps=["yearly_collaborations", "coauthor_institutions", "coauthor_cache", "uvm_profs_2023"],
@@ -217,11 +219,15 @@ def coauthor_database_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
             dg.get_dagster_logger().info(f"Total records to upload: {len(coauthor_data)}")
 
         # POST to the database API in batches to avoid timeouts
-        api_url = "https://api.complexstories.uvm.edu/admin/open-academic-analytics/coauthors/bulk"
+        api_base = get_api_base_url()
+        api_url = f"{api_base}/admin/open-academic-analytics/coauthors/bulk"
         batch_size = 10_000  # Process 100k records at a time
         total_uploaded = 0
 
         try:
+            # Get authentication headers
+            headers = get_api_headers()
+
             # Process in batches
             for i in range(0, len(coauthor_data), batch_size):
                 batch = coauthor_data[i:i + batch_size]
@@ -230,7 +236,13 @@ def coauthor_database_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
 
                 dg.get_dagster_logger().info(f"Uploading batch {batch_num}/{total_batches} ({len(batch)} records)")
 
-                response = requests.post(api_url, json=batch, verify=False, timeout=120)
+                response = requests.post(
+                    api_url,
+                    json=batch,
+                    headers=headers,
+                    verify=False,
+                    timeout=120
+                )
 
                 # Log response details for debugging
                 dg.get_dagster_logger().info(f"Batch {batch_num} response status: {response.status_code}")

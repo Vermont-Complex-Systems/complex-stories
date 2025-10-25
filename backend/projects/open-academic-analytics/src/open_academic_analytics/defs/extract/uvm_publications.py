@@ -14,7 +14,6 @@ Warning: Hidden loop here
 """
 
 import dagster as dg
-from shared.clients.openalex import OpenAlexClient
 from dagster_duckdb import DuckDBResource
 from open_academic_analytics.defs.resources import OpenAlexResource
 from typing import Dict, List, Tuple, Optional

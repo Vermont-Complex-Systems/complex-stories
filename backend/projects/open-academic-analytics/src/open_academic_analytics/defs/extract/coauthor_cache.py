@@ -7,7 +7,6 @@ it as far as we can tell.
 """
 
 import dagster as dg
-from shared.clients.openalex import OpenAlexClient
 from dagster_duckdb import DuckDBResource
 from open_academic_analytics.defs.resources import OpenAlexResource
 from typing import List, Tuple, Optional
@@ -37,12 +36,12 @@ def get_external_coauthors_to_process(conn) -> List[Tuple[str, str]]:
     
     return [(row[0], row[1]) for row in result]
 
-def fetch_author_publication_range(oa_client: OpenAlexClient, author_id: str) -> Tuple[Optional[int], Optional[int]]:
+def fetch_author_publication_range(oa_resource: OpenAlexResource, author_id: str) -> Tuple[Optional[int], Optional[int]]:
     """Get first/last pub year in a single API call using group_by"""
     try:
         clean_id = author_id.replace('https://openalex.org/', '')
-
         # Single API call using group_by to get year statistics
+        oa_client = oa_resource.get_client()
         response = oa_client.request("works", {
             "filter": f"author.id:{clean_id}",
             "group_by": "publication_year",

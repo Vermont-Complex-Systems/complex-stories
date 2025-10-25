@@ -4,8 +4,9 @@ Enhanced paper processing asset combining SQL efficiency with pandas flexibility
 import dagster as dg
 from dagster_duckdb import DuckDBResource
 import numpy as np
-import pandas as pd
 import requests
+
+from ..resources import get_api_headers, get_api_base_url
 
 
 # Data filtering settings
@@ -234,23 +235,33 @@ def paper_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
     # Convert to API-ready format
     paper_data = df_processed.to_dict('records')
 
-    # POST to the database API (local development) in batches
-    api_url = "https://api.complexstories.uvm.edu/admin/open-academic-analytics/papers/bulk"
-    
-    try: 
+    # POST to the database API with admin authentication
+    api_base = get_api_base_url()
+    api_url = f"{api_base}/admin/open-academic-analytics/papers/bulk"
+
+    try:
         if paper_data:
             dg.get_dagster_logger().info(f"Sample record keys: {list(paper_data[0].keys())}")
             dg.get_dagster_logger().info(f"Total records to upload: {len(paper_data)}")
-        
-        response = requests.post(api_url, json=paper_data, verify=False, timeout=120)
+
+        # Get authentication headers
+        headers = get_api_headers()
+
+        response = requests.post(
+            api_url,
+            json=paper_data,
+            headers=headers,
+            verify=False,
+            timeout=120
+        )
 
         # Log response details for debugging
         if response.status_code != 200:
             dg.get_dagster_logger().error(f"Response content: {response.text[:1000]}")
-
             response.raise_for_status()
-        
+
         upload_status = "success"
+        dg.get_dagster_logger().info(f"Successfully uploaded {len(paper_data)} papers to API")
 
     except requests.exceptions.RequestException as e:
         dg.get_dagster_logger().error(f"Failed to upload paper data: {str(e)}")

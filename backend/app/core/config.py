@@ -17,12 +17,20 @@ class Settings(BaseSettings):
     postgres_user: str = "postgres"
     postgres_password: str = ""
 
-    # label_studio_api_key: str
-    # label_studio_url: str
+    admin_username: str
+    admin_password: str
+
+    api_base:str
+
+    label_studio_api_key: str
+    label_studio_url: str
     # faculty_project_id: int
     # department_project_id: int
 
     mongodb_uri: str
+    mongodb_uri_old: str
+    
+    s2_api_key: str
     
     # API settings
     api_host: str = "0.0.0.0"
