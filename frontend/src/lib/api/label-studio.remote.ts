@@ -13,7 +13,7 @@ export const getLabelStudioProjects = query(async () => {
 		console.error("API call failed:", error)
 		throw error
 	}
-})
+}, { ssr: false })
 
 export const getLabelStudioAgreement = query(
 	v.optional(v.object({
@@ -23,5 +23,6 @@ export const getLabelStudioAgreement = query(
 	async (params = {}) => {
 		const { projectId = 75, forceRefresh = false } = params
 		return await api.getLabelStudioAgreement(projectId, forceRefresh)
-	}
+	},
+	{ ssr: false }
 )
