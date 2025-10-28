@@ -1,5 +1,5 @@
 <script>
-	import { getLabelStudioAgreement } from '$lib/api/label-studio.remote';
+	import { getLabelStudioAgreement } from '$lib/api/annotations.remote';
 	import { Avatar } from "bits-ui";
 
 	let projectId = $state(75);
