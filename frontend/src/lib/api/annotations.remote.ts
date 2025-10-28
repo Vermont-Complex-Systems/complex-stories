@@ -2,10 +2,13 @@ import { query, command, getRequestEvent } from '$app/server'
 import { api } from '$lib/server/api'
 import * as v from 'valibot'
 
-// Cache annotations data
-let annotations = await api.getAnnotations()
+// Cache annotations data - lazy loading to avoid top-level await
+let annotations: any[] | null = null
 
 export const getAnnotations = query(async () => {
+	if (annotations === null) {
+		annotations = await api.getAnnotations()
+	}
 	return annotations
 })
 
