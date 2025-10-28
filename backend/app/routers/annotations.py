@@ -70,7 +70,16 @@ def export_snapshot(project_id: int, export_type: str = "CSV", force_refresh: bo
 
     while retry_count < max_retries:
         try:
-            ls = LabelStudio(base_url=LABEL_STUDIO_URL, api_key=LABEL_STUDIO_API_KEY)
+            # Disable SSL verification for local development
+            import httpx
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+            ls = LabelStudio(
+                base_url=LABEL_STUDIO_URL,
+                api_key=LABEL_STUDIO_API_KEY,
+                httpx_client=httpx.Client(verify=False)
+            )
 
             # Create export job
             export_job = ls.projects.exports.create(
@@ -178,7 +187,15 @@ def get_user_info(user_id: int) -> Dict[str, Any]:
         Dictionary with user information (email, username, etc.)
     """
     try:
-        ls = LabelStudio(base_url=LABEL_STUDIO_URL, api_key=LABEL_STUDIO_API_KEY)
+        # Disable SSL verification for local development
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+        ls = LabelStudio(
+            base_url=LABEL_STUDIO_URL,
+            api_key=LABEL_STUDIO_API_KEY,
+            verify_ssl=False  # Disable SSL verification for local dev
+        )
 
         # Use the SDK to get user info
         user_data = ls.users.get(id=user_id)
