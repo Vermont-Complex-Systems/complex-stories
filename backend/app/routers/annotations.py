@@ -188,13 +188,14 @@ def get_user_info(user_id: int) -> Dict[str, Any]:
     """
     try:
         # Disable SSL verification for local development
+        import httpx
         import urllib3
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         ls = LabelStudio(
             base_url=LABEL_STUDIO_URL,
             api_key=LABEL_STUDIO_API_KEY,
-            verify_ssl=False  # Disable SSL verification for local dev
+            httpx_client=httpx.Client(verify=False)
         )
 
         # Use the SDK to get user info
