@@ -17,10 +17,11 @@ class Settings(BaseSettings):
     postgres_user: str = "postgres"
     postgres_password: str = ""
 
-    # label_studio_api_key: str
-    # label_studio_url: str
-    # faculty_project_id: int
-    # department_project_id: int
+    # Label Studio settings
+    label_studio_url: str = ""
+    label_studio_api_key: str = ""
+    faculty_project_id: str = "42"
+    department_project_id: str = ""
 
     mongodb_uri: str
     
@@ -31,6 +32,13 @@ class Settings(BaseSettings):
     # Security
     secret_key: str = "your-secret-key-here"
     admin_token: str = "fake-super-secret-token"
+    admin_username: str = "admin"
+    admin_password: str = "admin123"
+
+    # External APIs
+    api_base: str = "http://localhost:8000"
+    s2_api_key: str = ""
+    mongodb_uri_old: str = ""
 
     # Data pipeline settings
     data_output_path: str = "../frontend/static/data"

@@ -2,10 +2,13 @@ import { query, command, getRequestEvent } from '$app/server'
 import { api } from '$lib/server/api'
 import * as v from 'valibot'
 
-// Cache annotations data
-let annotations = await api.getAnnotations()
+// Cache annotations data - lazy loading to avoid top-level await
+let annotations: any[] | null = null
 
 export const getAnnotations = query(async () => {
+	if (annotations === null) {
+		annotations = await api.getAnnotations()
+	}
 	return annotations
 })
 
@@ -60,5 +63,29 @@ export const quickDeleteAnnotation = command(
 
 		await getAnnotations().refresh()
 		return { success: true, id }
+	}
+)
+
+// Label Studio specific remote functions
+export const getLabelStudioProjects = query(async () => {
+	console.log("getLabelStudioProjects remote function called")
+	try {
+		const result = await api.getLabelStudioProjects()
+		console.log("API call successful, result:", result)
+		return result
+	} catch (error) {
+		console.error("API call failed:", error)
+		throw error
+	}
+})
+
+export const getLabelStudioAgreement = query(
+	v.optional(v.object({
+		projectId: v.optional(v.number()),
+		forceRefresh: v.optional(v.boolean())
+	})),
+	async (params = {}) => {
+		const { projectId = 75, forceRefresh = false } = params
+		return await api.getLabelStudioAgreement(projectId, forceRefresh)
 	}
 )

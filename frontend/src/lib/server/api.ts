@@ -108,11 +108,35 @@ async function getTopNgrams(filters: {
     return await response.json()
 }
 
+async function getLabelStudioProjects() {
+    const url = `${API_BASE_URL}/annotations/`
+    console.log(`Fetching Label Studio projects from: ${url}`)
+    console.log(`API_BASE_URL is: ${API_BASE_URL}`)
+    const response = await fetch(url)
+    console.log(`Response status: ${response.status}`)
+    if (!response.ok) throw Error(`💣️ Failed to fetch Label Studio projects: ${response.status}`)
+    return await response.json()
+}
+
+async function getLabelStudioAgreement(projectId: number = 75, forceRefresh: boolean = false) {
+    const params = new URLSearchParams()
+    if (forceRefresh) params.append('force_refresh', 'true')
+
+    const queryString = params.toString()
+    const url = `${API_BASE_URL}/annotations/projects/${projectId}/agreement${queryString ? `?${queryString}` : ''}`
+
+    const response = await fetch(url)
+    if (!response.ok) throw Error(`💣️ Failed to fetch agreement data for project ${projectId}: ${response.status}`)
+    return await response.json()
+}
+
 export const api = {
     getAnnotations,
     getAnnotationById,
     updateAnnotation,
     deleteAnnotation,
     createAnnotation,
-    getTopNgrams
+    getTopNgrams,
+    getLabelStudioProjects,
+    getLabelStudioAgreement
 }
