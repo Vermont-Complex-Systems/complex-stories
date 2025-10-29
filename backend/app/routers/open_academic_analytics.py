@@ -4,6 +4,8 @@ from typing import Optional, List, Dict, Any
 from ..core.database import get_db_session
 from ..routers.auth import get_admin_user
 from ..models.auth import User
+import duckdb
+import os
 router = APIRouter()
 admin_router = APIRouter()
 
@@ -13,7 +15,7 @@ async def get_papers_for_author(
     filter_big_papers: bool = Query(False, description="Filter out papers with >25 coauthors"),
     limit: Optional[int] = Query(None, description="Limit number of results"),
     db: AsyncSession = Depends(get_db_session)
-) -> Dict[str, Any]:
+) -> List[Dict[str, Any]]:
     """
     Get processed papers data for a specific author.
 
@@ -117,16 +119,7 @@ async def get_papers_for_author(
             }
             papers_data.append(paper_dict)
 
-        return {
-            "author_name": author_name,
-            "total_papers": len(papers_data),
-            "filters_applied": {
-                "filter_big_papers": filter_big_papers,
-                "max_coauthors": 25 if filter_big_papers else None,
-                "limit": limit
-            },
-            "papers": papers_data
-        }
+        return papers_data
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching papers: {str(e)}")
@@ -136,7 +129,7 @@ async def get_all_authors(
     ipeds_id: Optional[str] = Query(None, description="IPEDS ID to filter by institution (defaults to UVM)"),
     year: Optional[int] = Query(None, description="Year to filter faculty list (defaults to 2023)"),
     db: AsyncSession = Depends(get_db_session)
-) -> Dict[str, Any]:
+) -> List[Dict[str, Any]]:
     """
     Get all available authors with their current age, last publication year, and paper count.
 
@@ -185,12 +178,7 @@ async def get_all_authors(
                 "last_pub_year": row.last_pub_year
             })
 
-        return {
-            "total_authors": len(authors),
-            "institution": effective_ipeds_id,
-            "year": effective_year,
-            "authors": authors
-        }
+        return authors
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching authors: {str(e)}")
@@ -201,7 +189,7 @@ async def get_coauthors_for_author(
     filter_big_papers: bool = Query(False, description="Filter out papers with >25 coauthors"),
     limit: Optional[int] = Query(None, description="Limit number of results"),
     db: AsyncSession = Depends(get_db_session)
-) -> Dict[str, Any]:
+) -> List[Dict[str, Any]]:
     """
     Get processed coauthor data for a specific author.
 
@@ -271,19 +259,72 @@ async def get_coauthors_for_author(
             }
             coauthors_data.append(coauthor_dict)
 
-        return {
-            "author_name": author_name,
-            "total_coauthor_records": len(coauthors_data),
-            "filters_applied": {
-                "filter_big_papers": filter_big_papers,
-                "max_coauthors": 25 if filter_big_papers else None,
-                "limit": limit
-            },
-            "coauthors": coauthors_data
-        }
+        return coauthors_data
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching coauthors: {str(e)}")
+
+@router.get("/embeddings")
+async def get_embeddings_data() -> List[Dict[str, Any]]:
+    """
+    Get processed embeddings data for research visualization.
+
+    Replicates the EmbeddingsData function from the frontend using DuckDB.
+    Returns papers with UMAP embeddings joined with training data.
+    """
+    try:
+        # Create DuckDB connection
+        conn = duckdb.connect()
+
+        # Register parquet files (adjust paths as needed)
+        data_dir = os.path.join(os.path.dirname(__file__), '../../data')
+        training_path = os.path.join(data_dir, 'open-academic-analytics/training_data.parquet')
+        paper_path = os.path.join(data_dir, 'paper.parquet')
+
+        # Check if files exist
+        if not os.path.exists(training_path):
+            raise HTTPException(status_code=404, detail=f"Training data not found at {training_path}")
+        if not os.path.exists(paper_path):
+            raise HTTPException(status_code=404, detail=f"Paper data not found at {paper_path}")
+
+        # Execute the complex SQL query
+        result = conn.execute(f"""
+            WITH exploded_depts AS (
+                SELECT
+                    DISTINCT t.name,
+                    t.aid as oa_uid,
+                    t.has_research_group,
+                    trim(unnest(string_split(t.host_dept, ';'))) as host_dept,
+                    t.perceived_as_male,
+                    t.college,
+                    t.group_url,
+                    t.group_size
+                FROM read_parquet('{training_path}') t
+                WHERE oa_uid IS NOT NULL
+            )
+            SELECT
+                DISTINCT doi, p.*,
+                strftime(publication_date::DATE, '%Y-%m-%d') as pub_date,
+                e.host_dept, e.college
+            FROM read_parquet('{paper_path}') p
+            LEFT JOIN exploded_depts e ON p.ego_author_id = 'https://openalex.org/' || e.oa_uid
+            WHERE p.umap_1 IS NOT NULL
+            ORDER BY
+                CASE WHEN ego_author_id = 'https://openalex.org/A5040821463' THEN 1 ELSE 0 END,
+                RANDOM()
+            LIMIT 6000
+        """).fetchdf()
+
+        # Convert to list of dictionaries
+        embeddings_data = result.to_dict('records')
+
+        # Close connection
+        conn.close()
+
+        return embeddings_data
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching embeddings data: {str(e)}")
 
 
 # ================================
@@ -401,4 +442,40 @@ async def upload_coauthors_bulk(
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Error uploading coauthors: {str(e)}")
+
+
+@admin_router.post("/training/bulk")
+async def upload_training_bulk(
+    training_records: List[Dict[str, Any]],
+    current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db_session)
+) -> Dict[str, Any]:
+    """
+    Bulk upload processed training data from Dagster pipeline.
+    """
+    try:
+        from ..models.academic import Training
+        from sqlalchemy.dialects.postgresql import insert
+
+        # Use upsert approach with composite key
+        for training_data in training_records:
+            stmt = insert(Training).values(**training_data)
+            # Update all fields if conflict on composite primary key (aid, pub_year)
+            stmt = stmt.on_conflict_do_update(
+                index_elements=['aid', 'pub_year'],
+                set_={key: stmt.excluded[key] for key in training_data.keys() if key not in ['aid', 'pub_year']}
+            )
+            await db.execute(stmt)
+
+        await db.commit()
+
+        return {
+            "status": "success",
+            "training_processed": len(training_records),
+            "message": f"Successfully processed {len(training_records)} training records (inserted or updated)"
+        }
+
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error uploading training data: {str(e)}")
 

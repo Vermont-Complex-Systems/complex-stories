@@ -126,3 +126,55 @@ class Coauthor(Base):
 
     def __repr__(self):
         return f"<Coauthor(ego='{self.ego_display_name}', coauthor='{self.coauthor_display_name}', year={self.publication_year})>"
+
+
+class Training(Base):
+    """Training data table - processed collaboration data for research analysis"""
+    __tablename__ = "training"
+
+    # Composite primary key
+    aid = Column(String, primary_key=True)  # Author ID
+    pub_year = Column(Integer, primary_key=True)  # Publication year
+
+    # Author info
+    name = Column(String)
+
+    # Age category collaboration counts
+    older = Column(Integer)  # Collaborations with older researchers
+    same = Column(Integer)   # Collaborations with same-age researchers
+    younger = Column(Integer)  # Collaborations with younger researchers
+
+    # Author metadata
+    author_age = Column(Integer)
+    institution = Column(String)
+
+    # Collaboration patterns
+    existing_collab = Column(Integer)  # Existing collaborations (continued)
+    new_collab = Column(Integer)      # New collaborations (first time)
+    age_category = Column(String)     # Age category for this record
+    shared_institutions = Column(String)
+
+    # Calculated metrics
+    counts = Column(Integer)          # Total collaborations
+    prop_younger = Column(Float)      # Proportion of younger collaborators
+    total_coauth = Column(Integer)    # Total coauthorships
+    nb_papers = Column(Integer)       # Number of papers published
+    density = Column(Float)           # Network density
+
+    # Professor metadata
+    is_prof = Column(Boolean)
+    group_size = Column(Integer)
+    perceived_as_male = Column(Boolean)
+    host_dept = Column(String)
+    college = Column(String)
+    has_research_group = Column(Boolean)
+    oa_uid = Column(String)           # OpenAlex author ID
+    group_url = Column(String)
+    first_pub_year = Column(Integer)
+    payroll_name = Column(String)
+    position = Column(String)
+    notes = Column(Text)
+    changing_rate = Column(Float)     # Collaboration pattern change rate
+
+    def __repr__(self):
+        return f"<Training(name='{self.name}', year={self.pub_year}, collaborations={self.counts})>"

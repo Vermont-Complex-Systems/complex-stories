@@ -3,7 +3,7 @@ from dagster_duckdb import DuckDBResource
 
 @dg.asset(
     kinds={"transform"},
-    deps=["yearly_collaborations", "coauthor_institutions"], 
+    deps=["coauthor_database_upload"],
     group_name="modelling"
 )
 def training_dataset(duckdb: DuckDBResource) -> dg.MaterializeResult:
@@ -12,31 +12,31 @@ def training_dataset(duckdb: DuckDBResource) -> dg.MaterializeResult:
     with duckdb.get_connection() as conn:
         # Schemas are auto-initialized by InitDuckDBResource
         
-        # Check if yearly_collaborations table exists, if not, throw helpful error
+        # Check if processed_coauthors_final table exists, if not, throw helpful error
         try:
-            conn.execute("SELECT COUNT(*) FROM oa.transform.yearly_collaborations LIMIT 1")
+            conn.execute("SELECT COUNT(*) FROM oa.transform.processed_coauthors_final LIMIT 1")
         except Exception as e:
-            raise Exception(f"yearly_collaborations table not found. Please materialize the yearly_collaborations asset first. Error: {e}")
+            raise Exception(f"processed_coauthors_final table not found. Please materialize the coauthor_database_upload asset first. Error: {e}")
         
         # Create the main training dataset with all the required columns
         conn.execute("""
             CREATE OR REPLACE TABLE oa.transform.training_dataset AS 
             WITH coauthor_base AS (
-                SELECT 
-                    yc.ego_author_id as aid,
-                    yc.ego_display_name as name,
-                    yc.publication_year as pub_year,
-                    yc.ego_age as author_age,
-                    ci_uvm.primary_institution as institution,
-                    
+                SELECT
+                    pc.ego_author_id as aid,
+                    pc.ego_display_name as name,
+                    pc.publication_year as pub_year,
+                    pc.ego_age as author_age,
+                    pc.primary_institution as institution,
+
                     -- Coauthor information
-                    yc.coauthor_display_name,
-                    yc.coauthor_age,
-                    yc.age_category,
-                    yc.yearly_collabo,
-                    yc.all_times_collabo,
-                    yc.shared_institutions,
-                    
+                    pc.coauthor_display_name,
+                    pc.coauthor_age,
+                    pc.age_category,
+                    pc.yearly_collabo,
+                    pc.all_times_collabo,
+                    pc.shared_institutions,
+
                     -- UVM professor metadata
                     prof.is_prof,
                     prof.group_size,
@@ -49,19 +49,16 @@ def training_dataset(duckdb: DuckDBResource) -> dg.MaterializeResult:
                     prof.payroll_name,
                     prof.position,
                     prof.notes
-                    
-                FROM oa.transform.yearly_collaborations yc
-                LEFT JOIN oa.raw.uvm_profs_2023 prof 
-                    ON yc.ego_author_id = prof.ego_author_id
-                LEFT JOIN oa.transform.coauthor_institutions ci_uvm 
-                    ON yc.ego_author_id = ci_uvm.id
-                    AND yc.publication_year = ci_uvm.publication_year
-                
+
+                FROM oa.transform.processed_coauthors_final pc
+                LEFT JOIN oa.raw.uvm_profs_2023 prof
+                    ON pc.ego_author_id = prof.ego_author_id
+
                 -- Only include UVM professors with valid data
                 WHERE prof.ego_author_id IS NOT NULL
-                    AND yc.ego_display_name IS NOT NULL
-                    AND yc.age_category IS NOT NULL
-                    AND yc.age_category != 'unknown'
+                    AND pc.ego_display_name IS NOT NULL
+                    AND pc.age_category IS NOT NULL
+                    AND pc.age_category != 'unknown'
             ),
             
             -- Create wide format for age categories
@@ -104,12 +101,12 @@ def training_dataset(duckdb: DuckDBResource) -> dg.MaterializeResult:
             
             -- Get paper counts from paper data
             paper_counts AS (
-                SELECT 
+                SELECT
                     ego_author_id as aid,
                     ego_display_name as name,
                     publication_year as pub_year,
                     COUNT(*) as nb_papers
-                FROM oa.transform.yearly_collaborations
+                FROM oa.transform.processed_coauthors_final
                 GROUP BY ego_author_id, ego_display_name, publication_year
             )
             

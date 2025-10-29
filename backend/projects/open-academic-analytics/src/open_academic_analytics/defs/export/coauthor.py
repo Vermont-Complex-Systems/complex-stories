@@ -210,6 +210,12 @@ def coauthor_database_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
             for key, value in record.items():
                 record[key] = clean_for_json(value)
 
+        # Save processed data to DuckDB for downstream assets
+        import pandas as pd
+        df_coauthors = pd.DataFrame(coauthor_data)
+        conn.execute("CREATE OR REPLACE TABLE oa.transform.processed_coauthors_final AS SELECT * FROM df_coauthors")
+        dg.get_dagster_logger().info(f"Saved {len(df_coauthors)} processed coauthor records to DuckDB table")
+
         # Debug: Log first record for troubleshooting
         if coauthor_data:
             dg.get_dagster_logger().info(f"Sample record keys: {list(coauthor_data[0].keys())}")

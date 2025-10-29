@@ -1,6 +1,7 @@
 // src/lib/stories/open-academic-analytics/state.svelte.ts
 import { registerParquetFile, query } from '$lib/utils/duckdb.js';
 import { coauthorURL, departmentURL, paperURL, trainingUrl, uvmProfsURL } from './data/loader.js';
+import { loadDoddsPaperData, loadDoddsCoauthorData, loadUvmProfsData, loadEmbeddingsData } from './data.remote.js';
 
 export const dashboardState = $state({
     selectedAuthor: 'Peter Sheridan Dodds',
@@ -87,39 +88,59 @@ export async function EmbeddingsData() {
 }
 
 export async function trainingAggData(authorName) {
-    await registerTables();
-    const result = await query(`
-       WITH exploded_depts AS (
-            SELECT 
-                DISTINCT t.payroll_name as name,
-                trim(unnest(string_split(t.host_dept, ';'))) as department,
-                *
-            FROM uvm_profs_2023 t
-        )
-        SELECT *
-        FROM exploded_depts e
-        WHERE inst_ipeds_id = 231174 AND payroll_year = 2023
-        ORDER BY has_research_group, perceived_as_male, oa_uid
-        `);
-    return result;
+    const uvmProfs = await loadUvmProfsData();
+
+    // Explode departments (split host_dept by ';')
+    const exploded = [];
+    uvmProfs.forEach(prof => {
+        if (prof.host_dept) {
+            const departments = prof.host_dept.split(';').map(dept => dept.trim());
+            departments.forEach(department => {
+                exploded.push({
+                    ...prof,
+                    name: prof.payroll_name,
+                    department: department
+                });
+            });
+        } else {
+            exploded.push({
+                ...prof,
+                name: prof.payroll_name,
+                department: null
+            });
+        }
+    });
+
+    // Sort by has_research_group, perceived_as_male, oa_uid
+    exploded.sort((a, b) => {
+        if (a.has_research_group !== b.has_research_group) {
+            return (b.has_research_group || 0) - (a.has_research_group || 0);
+        }
+        if (a.perceived_as_male !== b.perceived_as_male) {
+            return (a.perceived_as_male || 0) - (b.perceived_as_male || 0);
+        }
+        return (a.oa_uid || '').localeCompare(b.oa_uid || '');
+    });
+
+    return exploded;
 }
 
 // App Init (once) - Only load essential data
 export async function initializeApp() {
     dataState.isInitializing = true;
     dataState.trainingAggData = await trainingAggData();
-    dataState.DoddsPaperData = await DoddsPaperData();
-    dataState.DoddsCoauthorData = await DoddsCoauthorData();
+    dataState.DoddsPaperData = await loadDoddsPaperData();
+    dataState.DoddsCoauthorData = await loadDoddsCoauthorData();
     dataState.isInitializing = false;
 }
 
 // New function: Load embeddings only when needed
-export async function loadEmbeddingsData() {
+export async function loadEmbeddingsDataRemote() {
     if (dataState.EmbeddingsData) return; // Already loaded
-    
+
     dataState.loadingEmbeddings = true;
     try {
-        dataState.EmbeddingsData = await EmbeddingsData();
+        dataState.EmbeddingsData = await loadEmbeddingsData();
     } catch (error) {
         dataState.error = error;
     } finally {

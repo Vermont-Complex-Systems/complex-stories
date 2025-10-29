@@ -87,19 +87,20 @@ In Svelte 5, instead of passing props all the way down, we can centralize our lo
 ```
 .
 ├── data/
-| └──loader.js
-└── components/
-  ├── CoauthorChart.svelte
-  ├── Dashboard.svelte
-  ├── Index.svelte
-  ├── PaperChart.svelte
-  ├── sidebar
-  │   ├── AuthorAgeFilter.svelte
-  │   ├── NodeColor.coauthor.svelte
-  │   ├── DataInfo.svelte
-  │   └── SelectAuthors.svelte
-  ├── Sidebar.svelte 
-  └── state.svelte.ts // centralized states to manage dashboard
+| └──copy.json
+├── components/
+│ ├── CoauthorChart.svelte
+│ ├── Dashboard.svelte
+│ ├── Index.svelte
+│ ├── PaperChart.svelte
+│ ├── sidebar
+│ │   ├── AuthorAgeFilter.svelte
+│ │   ├── NodeColor.coauthor.svelte
+│ │   ├── DataInfo.svelte
+│ │   └── SelectAuthors.svelte
+│ └── Sidebar.svelte 
+├── data.remote.js // Remote functions to load data from backend
+└── state.svelte.ts // centralized states to manage dashboard
 ```
 
 Here, `DataInfo.svelte` is a simple component that summarize statistics for a selected author, derived from the `selectedAuthors` reactive variables in `SelectAuthors.svelte`. As users change the selected author, the twin charts (`PaperChart.svelte` and `CoauthorChart.svelte`) are updating too, both called from our main `Dashboard.svelte` component. Additionally, `SelectAuthors.svelte` depends on the global `AuthorAgeFilter.svelte`, which decide what authors are displayed in the first place based on the academic age distribution. Arguably, it is in the nature of dashboard to create such intricate dependencies. `NodeColor.coauthor.svelte` is one example of a nested component that specify the color of nodes in the coauthor chart. There are many more.
