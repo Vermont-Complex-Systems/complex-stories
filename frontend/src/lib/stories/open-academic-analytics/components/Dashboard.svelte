@@ -3,11 +3,10 @@
 
   import CoauthorChart from './CoauthorChart.svelte';
   import PaperChart from './PaperChart.svelte';
-  import { data } from '../state.svelte';
+  import { data } from '$stories/open-academic-analytics/state.svelte.ts';
   import { innerWidth } from 'svelte/reactivity/window';
-  import { calculateChartWidth, calculateChartHeight, spacing } from '../utils/layout.js';
-
-  import {  getCombinedDateRange } from '../utils/combinedChartUtils.js';
+  import { calculateChartWidth, calculateChartHeight, spacing } from '$stories/open-academic-analytics/utils/layout.js';
+  import {  getCombinedDateRange } from '$stories/open-academic-analytics/utils/combinedChartUtils.js';
   
   // Calculate available width for charts considering sidebar and layout
   let width = $derived(
