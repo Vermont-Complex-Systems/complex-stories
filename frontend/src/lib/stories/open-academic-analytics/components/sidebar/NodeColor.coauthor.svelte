@@ -1,5 +1,5 @@
 <script>
-  import { dashboardState } from '../../state.svelte.js';
+  import { dashboardState } from '../state.svelte.js';
   import { Palette } from "@lucide/svelte";
 </script>
 

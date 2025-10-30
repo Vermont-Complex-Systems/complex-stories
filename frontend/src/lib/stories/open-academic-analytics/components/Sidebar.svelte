@@ -1,7 +1,7 @@
 <script>
     import { Accordion, Button } from "bits-ui";
     import { User, Palette, Users, RotateCcw, UserCheck, ChevronRight, ChevronLeft, ChevronDown, ChevronUp } from "@lucide/svelte";
-    import { uiState, dashboardState, toggleSidebar } from '../state.svelte.js';
+    import { uiState, dashboardState, toggleSidebar } from './state.svelte.js';
     
     import SelectAuthors from './sidebar/SelectAuthors.svelte';
     import AuthorAgeFilter from './sidebar/AuthorAgeFilter.svelte';
