@@ -23,6 +23,7 @@ export default defineConfig({
 		alias: {
 			$data: path.resolve("./src/data"),
 			$styles: path.resolve("./src/styles"),
+			$stories: path.resolve("./src/lib/stories"),
 		}
 	},
 	optimizeDeps: {

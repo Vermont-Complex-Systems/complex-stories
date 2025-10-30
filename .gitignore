@@ -171,3 +171,4 @@ backend/scripts/academic-research-groups/import/*.csv
 backend/scripts/academic-research-groups/input/*.pdf
 backend/scripts/academic-research-groups/hand/academic-research-groups.parquet
 backend/projects/data-luminosity/scripts/results/
+*.hpp

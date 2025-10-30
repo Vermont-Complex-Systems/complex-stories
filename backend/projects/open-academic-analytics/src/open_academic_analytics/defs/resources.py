@@ -5,10 +5,11 @@ import os
 
 from shared.clients.semantic_scholar import SemanticScholarClient
 from shared.clients.openalex import OpenAlexClient
-from shared.clients.complex_stories_api import ComplexStoriesAPIResource
+from shared.clients.complex_stories_api import ComplexStoriesAPIClient
+from dotenv import load_dotenv
 
 logger = dg.get_dagster_logger()
-
+load_dotenv()
 
 class InitDuckDBResource(DuckDBResource):
     """A DuckDB resource that ensures schema/tables exist on initialization."""
@@ -201,7 +202,6 @@ class InitDuckDBResource(DuckDBResource):
 
         logger.info("DuckDB schema initialized successfully.")
 
-
 database_resource = InitDuckDBResource(
     database="~/oa.duckdb"
 )
@@ -235,6 +235,17 @@ class OpenAlexResource(dg.ConfigurableResource):
             max_requests_per_second=self.max_requests_per_second,
             max_requests_per_day=self.max_requests_per_day,
             base_url=self.base_url,
+        )
+
+class ComplexStoriesAPIResource(dg.ConfigurableResource):
+    """Complex Stories FastAPI client resource"""
+    base_url: str = os.environ.get('API_BASE', 'https://api.complexstories.uvm.edu')
+    timeout: int = 30
+
+    def get_client(self) -> ComplexStoriesAPIClient:
+        return ComplexStoriesAPIClient(
+            base_url=self.base_url,
+            timeout=self.timeout
         )
 
 @dg.definitions  

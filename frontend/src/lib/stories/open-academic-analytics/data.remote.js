@@ -2,6 +2,9 @@
 import { query } from "$app/server";
 import * as v from "valibot"
 import { error } from '@sveltejs/kit';
+import { API_BASE } from '$env/static/private'
+
+const API_BASE_URL = API_BASE || 'http://localhost:3001'
 
 export const loadPaperData = query(
     v.object({
@@ -9,14 +12,14 @@ export const loadPaperData = query(
         filterBigPapers: v.boolean()
      }),
     async ({authorName, filterBigPapers}) => {
-    const response = await fetch(`https://api.complexstories.uvm.edu/open-academic-analytics/papers/${authorName}?filter_big_papers=${filterBigPapers}`);
+    const response = await fetch(`${API_BASE_URL}/open-academic-analytics/papers/${authorName}?filter_big_papers=${filterBigPapers}`);
     if (!response.ok) error(404, 'Not found');
-    const data = await response.json();
-    const papers = data.papers.map(paper => ({
+    const papers = await response.json();
+    const processedPapers = papers.map(paper => ({
           ...paper,
           pub_date: new Date(paper.publication_date).toISOString().split('T')[0]
     }));
-    return { papers };
+    return processedPapers;
   });
 
 export const loadCoauthorData = query(
@@ -25,18 +28,19 @@ export const loadCoauthorData = query(
         filterBigPapers: v.boolean()
      }),
     async ({authorName, filterBigPapers}) => {
-    const response = await fetch(`https://api.complexstories.uvm.edu/open-academic-analytics/coauthors/${authorName}?filter_big_papers=${filterBigPapers}`);
+    const response = await fetch(`${API_BASE_URL}/open-academic-analytics/coauthors/${authorName}?filter_big_papers=${filterBigPapers}`);
     if (!response.ok) error(404, 'Not found');
-    const data = await response.json();
-    const coauthors = data.coauthors.map(coauthor => ({
+    const coauthors = await response.json();
+    const processedCoauthors = coauthors.map(coauthor => ({
           ...coauthor,
           pub_date: new Date(coauthor.publication_date).toISOString().split('T')[0]
     }));
-    return { coauthors };
+    return processedCoauthors;
   });
 
 export const loadAvailableAuthors = query(async () => {
-    const response = await fetch(`https://api.complexstories.uvm.edu/open-academic-analytics/authors`);
+    const response = await fetch(`${API_BASE_URL}/open-academic-analytics/authors`);
     if (!response.ok) error(404, 'Not found');
-    return response.json()
+    const authors = await response.json();
+    return authors;
   });

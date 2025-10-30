@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 from typing import Optional, List, Dict, Any
 from ..core.database import get_db_session
 from ..routers.auth import get_admin_user
@@ -13,7 +14,7 @@ async def get_papers_for_author(
     filter_big_papers: bool = Query(False, description="Filter out papers with >25 coauthors"),
     limit: Optional[int] = Query(None, description="Limit number of results"),
     db: AsyncSession = Depends(get_db_session)
-) -> Dict[str, Any]:
+) -> List[Dict[str, Any]]:
     """
     Get processed papers data for a specific author.
 
@@ -117,16 +118,7 @@ async def get_papers_for_author(
             }
             papers_data.append(paper_dict)
 
-        return {
-            "author_name": author_name,
-            "total_papers": len(papers_data),
-            "filters_applied": {
-                "filter_big_papers": filter_big_papers,
-                "max_coauthors": 25 if filter_big_papers else None,
-                "limit": limit
-            },
-            "papers": papers_data
-        }
+        return papers_data
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching papers: {str(e)}")
@@ -136,7 +128,7 @@ async def get_all_authors(
     ipeds_id: Optional[str] = Query(None, description="IPEDS ID to filter by institution (defaults to UVM)"),
     year: Optional[int] = Query(None, description="Year to filter faculty list (defaults to 2023)"),
     db: AsyncSession = Depends(get_db_session)
-) -> Dict[str, Any]:
+) -> List[Dict[str, Any]]:
     """
     Get all available authors with their current age, last publication year, and paper count.
 
@@ -185,12 +177,7 @@ async def get_all_authors(
                 "last_pub_year": row.last_pub_year
             })
 
-        return {
-            "total_authors": len(authors),
-            "institution": effective_ipeds_id,
-            "year": effective_year,
-            "authors": authors
-        }
+        return authors
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching authors: {str(e)}")
@@ -201,7 +188,7 @@ async def get_coauthors_for_author(
     filter_big_papers: bool = Query(False, description="Filter out papers with >25 coauthors"),
     limit: Optional[int] = Query(None, description="Limit number of results"),
     db: AsyncSession = Depends(get_db_session)
-) -> Dict[str, Any]:
+) -> List[Dict[str, Any]]:
     """
     Get processed coauthor data for a specific author.
 
@@ -271,19 +258,94 @@ async def get_coauthors_for_author(
             }
             coauthors_data.append(coauthor_dict)
 
-        return {
-            "author_name": author_name,
-            "total_coauthor_records": len(coauthors_data),
-            "filters_applied": {
-                "filter_big_papers": filter_big_papers,
-                "max_coauthors": 25 if filter_big_papers else None,
-                "limit": limit
-            },
-            "coauthors": coauthors_data
-        }
+        return coauthors_data
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching coauthors: {str(e)}")
+
+@router.get("/embeddings")
+async def get_embeddings_data(db: AsyncSession = Depends(get_db_session)) -> List[Dict[str, Any]]:
+    """
+    Get processed embeddings data for research visualization.
+
+    Returns papers with UMAP embeddings joined with training data from PostgreSQL database.
+    """
+    try:
+            # Execute the complex SQL query using PostgreSQL
+            query = text("""
+                WITH exploded_depts AS (
+                    SELECT
+                        DISTINCT t.name,
+                        t.oa_uid,
+                        t.has_research_group,
+                        trim(unnest(string_to_array(t.host_dept, ';'))) as host_dept,
+                        t.perceived_as_male,
+                        t.college,
+                        t.group_url,
+                        t.group_size
+                    FROM training t
+                    WHERE oa_uid IS NOT NULL
+                )
+                SELECT
+                    p.doi,
+                    p.id,
+                    p.ego_author_id,
+                    p.ego_display_name,
+                    p.title,
+                    p.publication_year,
+                    p.publication_date,
+                    TO_CHAR(p.publication_date, 'YYYY-MM-DD') as pub_date,
+                    p.cited_by_count,
+                    p.umap_1,
+                    p.umap_2,
+                    p.abstract,
+                    p."s2FieldsOfStudy",
+                    p."fieldsOfStudy",
+                    p.coauthor_names,
+                    e.host_dept,
+                    e.college
+                FROM papers p
+                LEFT JOIN exploded_depts e ON (
+                    p.ego_author_id = 'https://openalex.org/' || e.oa_uid OR
+                    p.ego_author_id = e.oa_uid
+                )
+                WHERE p.umap_1 IS NOT NULL
+                ORDER BY
+                    CASE WHEN p.ego_author_id = 'https://openalex.org/A5040821463' THEN 0 ELSE 1 END,
+                    RANDOM()
+                LIMIT 6000
+            """)
+
+            result = await db.execute(query)
+            rows = result.fetchall()
+
+            # Convert to list of dictionaries
+            embeddings_data = []
+            for row in rows:
+                embeddings_data.append({
+                    "doi": row.doi,
+                    "id": row.id,
+                    "ego_author_id": row.ego_author_id,
+                    "ego_display_name": row.ego_display_name,
+                    "title": row.title,
+                    "publication_year": row.publication_year,
+                    "publication_date": row.publication_date.isoformat() if row.publication_date else None,
+                    "pub_date": row.pub_date,
+                    "cited_by_count": row.cited_by_count,
+                    "umap_1": row.umap_1,
+                    "umap_2": row.umap_2,
+                    "abstract": row.abstract,
+                    "s2FieldsOfStudy": row.s2FieldsOfStudy,
+                    "fieldsOfStudy": row.fieldsOfStudy,
+                    "coauthor_names": row.coauthor_names,
+                    "host_dept": row.host_dept,
+                    "college": row.college
+                })
+
+            return embeddings_data
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching embeddings data: {str(e)}")
 
 
 # ================================
@@ -401,4 +463,40 @@ async def upload_coauthors_bulk(
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Error uploading coauthors: {str(e)}")
+
+
+@admin_router.post("/training/bulk")
+async def upload_training_bulk(
+    training_records: List[Dict[str, Any]],
+    current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db_session)
+) -> Dict[str, Any]:
+    """
+    Bulk upload processed training data from Dagster pipeline.
+    """
+    try:
+        from ..models.academic import Training
+        from sqlalchemy.dialects.postgresql import insert
+
+        # Use upsert approach with composite key
+        for training_data in training_records:
+            stmt = insert(Training).values(**training_data)
+            # Update all fields if conflict on composite primary key (aid, pub_year)
+            stmt = stmt.on_conflict_do_update(
+                index_elements=['aid', 'pub_year'],
+                set_={key: stmt.excluded[key] for key in training_data.keys() if key not in ['aid', 'pub_year']}
+            )
+            await db.execute(stmt)
+
+        await db.commit()
+
+        return {
+            "status": "success",
+            "training_processed": len(training_records),
+            "message": f"Successfully processed {len(training_records)} training records (inserted or updated)"
+        }
+
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error uploading training data: {str(e)}")
 

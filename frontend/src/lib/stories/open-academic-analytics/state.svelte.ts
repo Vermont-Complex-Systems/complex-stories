@@ -1,4 +1,4 @@
-import { loadPaperData, loadCoauthorData, loadAvailableAuthors } from '../api/data.remote.js';
+import { loadPaperData, loadCoauthorData, loadAvailableAuthors } from '$stories/open-academic-analytics/data.remote.js';
 
 // UI State - Controls layout and appearance
 export const uiState = $state({
@@ -32,8 +32,7 @@ export const data = $state({
 export async function initializeApp() {
     try {
         data.isInitializing = true;
-        const result = await loadAvailableAuthors();
-        data.availableAuthors = result.authors;
+        data.availableAuthors = await loadAvailableAuthors();
         data.error = null;
         data.isInitializing = false;
     } catch (error) {
@@ -49,11 +48,8 @@ export async function loadSelectedAuthor() {
         data.isLoadingAuthor = true;
         data.error = null;
 
-        const paperResult = await loadPaperData({authorName: dashboardState.selectedAuthor, filterBigPapers: dashboardState.filterBigPapers});
-        const coauthorResult = await loadCoauthorData({authorName: dashboardState.selectedAuthor, filterBigPapers: dashboardState.filterBigPapers});
-
-        data.paper = paperResult.papers;
-        data.coauthor = coauthorResult.coauthors;
+        data.paper = await loadPaperData({authorName: dashboardState.selectedAuthor, filterBigPapers: dashboardState.filterBigPapers});
+        data.coauthor = await loadCoauthorData({authorName: dashboardState.selectedAuthor, filterBigPapers: dashboardState.filterBigPapers});
 
         data.isLoadingAuthor = false;
     } catch (error) {

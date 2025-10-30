@@ -1,6 +1,6 @@
 <script>
   import { Accordion } from "bits-ui";
-  import { dashboardState, unique } from '../state.svelte.ts';
+  import { dashboardState, unique } from '$stories/open-academic-analytics/state.svelte.js';
   import { UserCheck } from "@lucide/svelte";
 
   // Filter authors by age if filter is active

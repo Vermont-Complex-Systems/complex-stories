@@ -2,19 +2,12 @@
   import * as d3 from 'd3';
   import DodgeChart from '$lib/components/helpers/DodgeChart.svelte';
   
-  let { 
-    displayData = [], 
-    rawData = [],
-    width, height, timeScale, 
-    colorMode = 'age_diff', 
-    colorScale = null, 
-    trainingData = null,
+  let {
+    displayData = [],
+    width, height, timeScale,
     onBrushSelection = () => {} // Callback for brush selection
   } = $props();
 
-  
-  // Check if we have training data
-  let hasTrainingData = $derived(trainingData && trainingData.length > 0);
   let hasData = $derived(displayData && displayData.length > 0);
 
   // Brush state
@@ -22,10 +15,7 @@
   let svgElement = $state(null);
   let brush = null;
 
-  // Use onMount instead of $effect to avoid infinite loops
-  import { onMount } from 'svelte';
-  
-  onMount(() => {
+  $effect(() => {
     if (!svgElement) return;
 
     // Create vertical brush (brushY) instead of full brush
@@ -46,21 +36,13 @@
   });
 
   function handleBrush(event) {
-    const selection = event.selection;
-    brushSelection = selection;
+    brushSelection = event.selection;
 
-    if (selection) {
-      // For vertical brush, selection is [y0, y1]
-      const [y0, y1] = selection;
-      
-      const brushedPoints = displayData.filter(point => {
-        return point.y >= y0 && point.y <= y1;
-      });
-
-      // Call callback with selected points
+    if (event.selection) {
+      const [y0, y1] = event.selection;
+      const brushedPoints = displayData.filter(point => point.y >= y0 && point.y <= y1);
       onBrushSelection(brushedPoints);
     } else {
-      // No selection - clear
       onBrushSelection([]);
     }
   }
@@ -80,9 +62,6 @@
     return `Coauthor: ${point.coauthor_display_name}\nYear: ${point.publication_year}\nAge difference: ${point.age_diff} years\nTotal collaborations: ${point.all_times_collabo}\nShared Institution: ${institutionName}`;
   }
 
-  function handleChartClick(event) {
-    dashboardState.highlightedCoauthor = null;
-  }
 
   // Enhanced display data with brush selection - using $derived.by to avoid side effects
   let enhancedDisplayData = $derived.by(() => {
@@ -111,14 +90,13 @@
         <g class="brush-layer"></g>
       </svg>
       
-      <DodgeChart 
+      <DodgeChart
         displayData={enhancedDisplayData}
         {width}
         {height}
         {timeScale}
         gridStyle="full"
         formatTooltip={formatCoauthorTooltip}
-        onChartClick={handleChartClick}
       />
     </div>
   </div>

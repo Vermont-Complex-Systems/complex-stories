@@ -1,8 +1,8 @@
 <script>
   import * as d3 from 'd3';
   import DodgeChart from '$lib/components/helpers/DodgeChart.svelte';
-  import { processPaperData } from './utils/paperUtils.js';
-  import { data, dashboardState } from './state.svelte.ts';
+  import { processPaperData } from '$stories/open-academic-analytics/utils/paperUtils.js';
+  import { data, dashboardState } from '$stories/open-academic-analytics/state.svelte.ts';
   
   let { width, height, timeScale } = $props();
   

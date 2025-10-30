@@ -21,46 +21,51 @@
 
   // Step 1: Extract coauthor names from selection
   let selectedCoauthorNames = $derived(
-    new Set(selectedCoauthors.map(c => c.ego_display_name))
+    new Set(selectedCoauthors.map(c => c.coauthor_name))
   );
 
-  
-  // Step 2: Filter embedding data to only Peter's papers - FIXED: Use full URL format
-  let petersPapers = $derived(
-    embeddingData.filter(point => point.ego_author_id === 'https://openalex.org/A5040821463')
-  );
-  
-  
-  // Step 3: From Peter's papers, find which ones have selected coauthors
-  let highlightedPaperIndices = $derived.by(() => {
-    if (selectedCoauthors.length === 0) return new Set();
-    
-    const highlighted = new Set();
-    
-    petersPapers.forEach((paper, originalIndex) => {
-      const hasSelectedCoauthor = [...selectedCoauthorNames].some(name => 
-        paper.coauthor_names?.includes(name)
-      );
-      
-      // FIXED: Use publication_year instead of pub_year
-      const isInTimeRange = !timeRange || 
-        (paper.publication_year >= timeRange[0] && paper.publication_year <= timeRange[1]);
-      
-      if (hasSelectedCoauthor && isInTimeRange) {
-        // Find the original index in embeddingData
-        const embeddingIndex = embeddingData.indexOf(paper);
-        highlighted.add(embeddingIndex);
+  // Create arrays for highlighted and non-highlighted points
+  let { highlightedPoints, nonHighlightedPoints } = $derived.by(() => {
+    const highlighted = [];
+    const nonHighlighted = [];
+
+    embeddingData.forEach((point, i) => {
+      const isPeterDodds = point.ego_author_id === 'https://openalex.org/A5040821463';
+
+      let shouldHighlight = false;
+      if (isPeterDodds && selectedCoauthors.length > 0) {
+        const hasSelectedCoauthor = [...selectedCoauthorNames].some(name =>
+          point.coauthor_names?.includes(name)
+        );
+
+        const isInTimeRange = !timeRange ||
+          (point.publication_year >= timeRange[0] && point.publication_year <= timeRange[1]);
+
+        shouldHighlight = hasSelectedCoauthor && isInTimeRange;
+      }
+
+      const pointData = {
+        ...point,
+        index: i,
+        fieldValue: getFieldValue(point),
+        shouldHighlight
+      };
+
+      if (shouldHighlight) {
+        highlighted.push(pointData);
+      } else {
+        nonHighlighted.push(pointData);
       }
     });
-    
-    return highlighted;
+
+    return { highlightedPoints: highlighted, nonHighlightedPoints: nonHighlighted };
   });
 
   // Calculate inner dimensions
   let innerWidth = $derived(width - adjustedMargin.left - adjustedMargin.right);
   let innerHeight = $derived(height - adjustedMargin.top - adjustedMargin.bottom);
 
-  let colorFOS = $state('college')
+  let colorFOS = $state('s2FieldsOfStudy')
 
   // Get unique fields of study
   const uniqueFields = $derived([...new Set(embeddingData.map(d => {
@@ -128,11 +133,7 @@
   let mouseY = $state(0);
 
   function handleMouseEnter(event, point, i) {
-    // FIXED: Use full URL format consistently
-    const isPeterDodds = point.ego_author_id === 'https://openalex.org/A5040821463';
-    const shouldHighlight = isPeterDodds && highlightedPaperIndices.has(i);
-  
-    const shouldShowTooltip = (selectedCoauthors.length === 0 && !timeRange) || shouldHighlight;
+    const shouldShowTooltip = (selectedCoauthors.length === 0 && !timeRange) || point.shouldHighlight;
   
     if (shouldShowTooltip) {
       mouseX = event.clientX;
@@ -225,26 +226,41 @@
         />
       {/each}
       
-      <!-- Data points -->
-      {#each embeddingData as point, i}
-        {@const isPeterDodds = point.ego_author_id === 'https://openalex.org/A5040821463'}
-        {@const shouldHighlight = isPeterDodds && highlightedPaperIndices.has(i)}
-        {@const fieldValue = getFieldValue(point)}
-        {@const isNullField = fieldValue === null}
+      <!-- Non-highlighted points -->
+      {#each nonHighlightedPoints as point}
+        {@const isNullField = point.fieldValue === null}
         <circle
           cx={xScale(+point.umap_1)}
           cy={yScale(+point.umap_2)}
-          r={shouldHighlight ? "6" : "4"}
-          fill={shouldHighlight ? "red" : zScale(fieldValue)}
-          stroke={shouldHighlight ? "black" : null}
+          r="4"
+          fill={zScale(point.fieldValue)}
           opacity={
-            shouldHighlight ? 1 : 
-            (selectedCoauthors.length > 0 || timeRange) ? 
-              (isNullField ? 0.15 : 0.3) : 
+            (selectedCoauthors.length > 0 || timeRange) ?
+              (isNullField ? 0.15 : 0.3) :
               (isNullField ? 0.3 : 0.7)
           }
           class="data-point"
-          onmouseenter={(e) => handleMouseEnter(e, point, i)}
+          role="button"
+          tabindex="0"
+          onmouseenter={(e) => handleMouseEnter(e, point, point.index)}
+          onmouseleave={handleMouseLeave}
+        />
+      {/each}
+
+      <!-- Highlighted points on top -->
+      {#each highlightedPoints as point}
+        <circle
+          cx={xScale(+point.umap_1)}
+          cy={yScale(+point.umap_2)}
+          r="6"
+          fill="red"
+          stroke="black"
+          stroke-width="1"
+          opacity="1"
+          class="data-point highlighted"
+          role="button"
+          tabindex="0"
+          onmouseenter={(e) => handleMouseEnter(e, point, point.index)}
           onmouseleave={handleMouseLeave}
         />
       {/each}
