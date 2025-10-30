@@ -21,10 +21,9 @@
 
   // Step 1: Extract coauthor names from selection
   let selectedCoauthorNames = $derived(
-    new Set(selectedCoauthors.map(c => c.ego_display_name))
+    new Set(selectedCoauthors.map(c => c.coauthor_name))
   );
 
-  
   // Step 2: Filter embedding data to only Peter's papers - FIXED: Use full URL format
   let petersPapers = $derived(
     embeddingData.filter(point => point.ego_author_id === 'https://openalex.org/A5040821463')
@@ -34,25 +33,25 @@
   // Step 3: From Peter's papers, find which ones have selected coauthors
   let highlightedPaperIndices = $derived.by(() => {
     if (selectedCoauthors.length === 0) return new Set();
-    
+
     const highlighted = new Set();
-    
+
     petersPapers.forEach((paper, originalIndex) => {
-      const hasSelectedCoauthor = [...selectedCoauthorNames].some(name => 
+      const hasSelectedCoauthor = [...selectedCoauthorNames].some(name =>
         paper.coauthor_names?.includes(name)
       );
-      
+
       // FIXED: Use publication_year instead of pub_year
-      const isInTimeRange = !timeRange || 
+      const isInTimeRange = !timeRange ||
         (paper.publication_year >= timeRange[0] && paper.publication_year <= timeRange[1]);
-      
+
       if (hasSelectedCoauthor && isInTimeRange) {
         // Find the original index in embeddingData
         const embeddingIndex = embeddingData.indexOf(paper);
         highlighted.add(embeddingIndex);
       }
     });
-    
+
     return highlighted;
   });
 
@@ -60,7 +59,7 @@
   let innerWidth = $derived(width - adjustedMargin.left - adjustedMargin.right);
   let innerHeight = $derived(height - adjustedMargin.top - adjustedMargin.bottom);
 
-  let colorFOS = $state('college')
+  let colorFOS = $state('s2FieldsOfStudy')
 
   // Get unique fields of study
   const uniqueFields = $derived([...new Set(embeddingData.map(d => {
@@ -225,28 +224,49 @@
         />
       {/each}
       
-      <!-- Data points -->
+      <!-- Data points - render non-highlighted first, then highlighted on top -->
       {#each embeddingData as point, i}
         {@const isPeterDodds = point.ego_author_id === 'https://openalex.org/A5040821463'}
         {@const shouldHighlight = isPeterDodds && highlightedPaperIndices.has(i)}
         {@const fieldValue = getFieldValue(point)}
         {@const isNullField = fieldValue === null}
-        <circle
-          cx={xScale(+point.umap_1)}
-          cy={yScale(+point.umap_2)}
-          r={shouldHighlight ? "6" : "4"}
-          fill={shouldHighlight ? "red" : zScale(fieldValue)}
-          stroke={shouldHighlight ? "black" : null}
-          opacity={
-            shouldHighlight ? 1 : 
-            (selectedCoauthors.length > 0 || timeRange) ? 
-              (isNullField ? 0.15 : 0.3) : 
-              (isNullField ? 0.3 : 0.7)
-          }
-          class="data-point"
-          onmouseenter={(e) => handleMouseEnter(e, point, i)}
-          onmouseleave={handleMouseLeave}
-        />
+        {#if !shouldHighlight}
+          <circle
+            cx={xScale(+point.umap_1)}
+            cy={yScale(+point.umap_2)}
+            r="4"
+            fill={zScale(fieldValue)}
+            opacity={
+              (selectedCoauthors.length > 0 || timeRange) ?
+                (isNullField ? 0.15 : 0.3) :
+                (isNullField ? 0.3 : 0.7)
+            }
+            class="data-point"
+            onmouseenter={(e) => handleMouseEnter(e, point, i)}
+            onmouseleave={handleMouseLeave}
+          />
+        {/if}
+      {/each}
+
+      <!-- Highlighted points rendered on top -->
+      {#each embeddingData as point, i}
+        {@const isPeterDodds = point.ego_author_id === 'https://openalex.org/A5040821463'}
+        {@const shouldHighlight = isPeterDodds && highlightedPaperIndices.has(i)}
+        {@const fieldValue = getFieldValue(point)}
+        {#if shouldHighlight}
+          <circle
+            cx={xScale(+point.umap_1)}
+            cy={yScale(+point.umap_2)}
+            r="6"
+            fill="red"
+            stroke="black"
+            stroke-width="1"
+            opacity="1"
+            class="data-point highlighted"
+            onmouseenter={(e) => handleMouseEnter(e, point, i)}
+            onmouseleave={handleMouseLeave}
+          />
+        {/if}
       {/each}
 
       <!-- {#each annotations as annotation}

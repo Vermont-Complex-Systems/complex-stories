@@ -14,142 +14,165 @@
   import Spinner from '$lib/components/helpers/Spinner.svelte'
   import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 
-  import { dataState, initializeApp, loadEmbeddingsData } from '../state.svelte.ts';
+  import { loadDoddsPaperData, loadDoddsCoauthorData, loadUvmProfsData, loadEmbeddingsData } from '../data.remote.js';
 
   let { story, data } = $props();
-    
-  // Initialize on component mount
-  initializeApp();
-  
+
   const doddsSection = data.zoomingIn;
-  
+
   let isDark = $state(false);
-  
   let width = $state(innerWidth.current);
-  
   let height = 1800;
   let scrollyIndex = $state();
-  
-  // Intersection Observer for lazy loading
-  let embeddingSectionElement = $state();
-  
-  // Svelte 5 effect for intersection observer
-  $effect(() => {
-    if (!embeddingSectionElement) return;
-    
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && !dataState.EmbeddingsData && !dataState.loadingEmbeddings) {
-            loadEmbeddingsData();
-          }
-        });
-      },
-      { 
-        rootMargin: '1000px' // Start loading before it comes into view
-      }
-    );
-    
-    observer.observe(embeddingSectionElement);
-    
-    return () => observer.disconnect();
-  });
+
+  // Process UVM profs data similar to the old trainingAggData function
+  async function processTrainingAggData() {
+    const uvmProfs = await loadUvmProfsData();
+
+    // Explode departments (split host_dept by ';')
+    const exploded = [];
+    uvmProfs.forEach(prof => {
+        if (prof.host_dept) {
+            const departments = prof.host_dept.split(';').map(dept => dept.trim());
+            departments.forEach(department => {
+                exploded.push({
+                    ...prof,
+                    name: prof.payroll_name,
+                    department: department
+                });
+            });
+        } else {
+            exploded.push({
+                ...prof,
+                name: prof.payroll_name,
+                department: null
+            });
+        }
+    });
+
+    // Sort by has_research_group, perceived_as_male, oa_uid
+    exploded.sort((a, b) => {
+        if (a.has_research_group !== b.has_research_group) {
+            return (b.has_research_group || 0) - (a.has_research_group || 0);
+        }
+        if (a.perceived_as_male !== b.perceived_as_male) {
+            return (a.perceived_as_male || 0) - (b.perceived_as_male || 0);
+        }
+        return (a.oa_uid || '').localeCompare(b.oa_uid || '');
+    });
+
+    return exploded;
+  }
+
+  // Create promise for initial data loading
+  const initialDataPromise = Promise.all([
+    processTrainingAggData(),
+    loadDoddsPaperData(),
+    loadDoddsCoauthorData()
+  ]);
+
 </script>
 
 <Nav bind:isDark />
 
-{#if dataState.isInitializing}
+{#await initialDataPromise}
   <div class="loading-container">
     <Spinner />
   </div>
-{:else}
+{:then [trainingAggData, DoddsPaperData, DoddsCoauthorData]}
+  <article id="uvm-groups-story">
 
-<article id="uvm-groups-story">
-  
-  <header class="story-header">
-    <div class="header-content">
-      <div class="header-text">
-        <h1>Mapping the Research Ecosystem of the University of Vermont</h1>
-        <div class="article-meta">
-          <p class="author">By <a href="{base}/author/jonathan-st-onge">Jonathan St-Onge</a></p>
-          <p class="date">May 16, 2025</p>
+    <header class="story-header">
+      <div class="header-content">
+        <div class="header-text">
+          <h1>Mapping the Research Ecosystem of the University of Vermont</h1>
+          <div class="article-meta">
+            <p class="author">By <a href="{base}/author/jonathan-st-onge">Jonathan St-Onge</a></p>
+            <p class="date">May 16, 2025</p>
+          </div>
+        </div>
+        <div class="logo-container">
+          <img src="{base}/UVM_Seal_Gr.png" alt="University of Vermont Seal" class="logo light-seal" />
+          <img src="{base}/UVM_Seal_Gold.png" alt="University of Vermont Seal" class="logo dark-seal" />
         </div>
       </div>
-      <div class="logo-container">
-        <img src="{base}/UVM_Seal_Gr.png" alt="University of Vermont Seal" class="logo light-seal" />
-        <img src="{base}/UVM_Seal_Gold.png" alt="University of Vermont Seal" class="logo dark-seal" />
+    </header>
+
+    <section id="introduction">
+      <Intro data={trainingAggData}/>
+    </section>
+
+    <section id="story" class="story">
+
+      <h2>Zooming in</h2>
+      <p>To better understand faculty career trajectories, we build a simple timeline plot showing how scientific productivity coevolves withsocial collaborations. As a faculty member advances in his career—call him Peter—it is expected that his patterns of collaborations willchange. We are interested in a few relevant features to determine from the data when Peter started his research group.</p>
+
+      <div class="scrolly-container">
+          <div class="scrolly-chart">
+            <MorphingChart
+              {scrollyIndex}
+              {DoddsCoauthorData}
+              {DoddsPaperData}
+              {width} {height} />
+          </div>
+
+          <div class="scrolly-content">
+            <div class="spacer"></div>
+            <Scrolly bind:value={scrollyIndex}>
+              {#each doddsSection as text, i}
+                {@const active = scrollyIndex === i}
+                <div class="step" class:active>
+                  {#if text.type === 'markdown'}
+                    <p><Md text={text.value}/></p>
+                  {:else}
+                    <p>{@html text.value}</p>
+                  {/if}
+                </div>
+              {/each}
+            </Scrolly>
+            <div class="spacer"></div>
+          </div>
+        </div>
+    </section>
+
+    <!-- Embedding section -->
+    <section class="embeddings" id="embeddings">
+      <h2>Embeddings</h2>
+      <p>Instead of using time to position papers, we can also use embeddings to position similar papers closer together in space. To do so, we use the <a href="https://allenai.org/blog/specter2-adapting-scientific-document-embeddings-to-multiple-fields-and-task-formats-c95686c06567">Specter2 model</a>, accessible via Semantic Scholar's API, which has the benefit of taking into account the similarity of paper titles and abstracts, but also the relative proximity in citation space. That is, a paper can be similar in terms of content but pushed apart by virtue of being cited by different communities. We use <a href="https://umap-learn.readthedocs.io/en/latest/">UMAP</a> to project down the high-dimensional embedding space onto a two-dimensional cartesian plane.</p>
+
+      <p>Taking Peter again as our example, what is of interest to us is how his exploration of this embedding space might have been modified by his diverse coauthors. We situate Peter's papers within the backdrop of papers written by the UVM 2023 faculty (the papers themselves can be older than that):</p>
+
+      <div class="embeddings-container">
+        {#await Promise.all([loadEmbeddingsData(), Promise.resolve(DoddsCoauthorData)])}
+          <div class="loading-container">
+            <Spinner />
+          </div>
+        {:then [embeddingData, coauthorData]}
+          <EmbeddingSection {embeddingData} {coauthorData}/>
+        {:catch error}
+          <div class="error-container">
+            <p>Error loading embeddings: {error.message}</p>
+          </div>
+        {/await}
       </div>
-    </div>
-  </header>
+      <p>On desktop, we show that by brushing over the years we can see that Peter focused on a mixed bag of computational sciences early on (2015-2016), which makes sense. Starting in 2020-2021, he made incursions into health science. From ground truth, we know that this corresponds to different periods for his lab, with the Mass Mutual funding coming in later on.</p>
 
-  <section id="introduction">
-    <Intro data={dataState.trainingAggData}/>
-  </section>
-  
-  <section id="story" class="story">  
+      <p>There are a few issues with this plot, such as reducing the high-dimensionality of papers onto two dimensions. Another issue is that earlier papers have worse embedding coverage, which is too bad (we might fix that later on by running the embedding model ourselves).</p>
 
-    <h2>Zooming in</h2>
-    <p>To better understand faculty career trajectories, we build a simple timeline plot showing how scientific productivity coevolves withsocial collaborations. As a faculty member advances in his career—call him Peter—it is expected that his patterns of collaborations willchange. We are interested in a few relevant features to determine from the data when Peter started his research group.</p>
-      
-    <div class="scrolly-container">
-        <div class="scrolly-chart">
-          <MorphingChart 
-            {scrollyIndex} 
-            DoddsCoauthorData={dataState.DoddsCoauthorData} 
-            DoddsPaperData={dataState.DoddsPaperData} 
-            {width} {height} />
-        </div>
+      <p>All that being said, this plot remains highly informative for getting a glimpse of the UVM ecosystem, and exploring how different periods in collaboration are reflected in how faculty might explore topics.</p>
+    </section>
 
-        <div class="scrolly-content">
-          <div class="spacer"></div>
-          <Scrolly bind:value={scrollyIndex}>
-            {#each doddsSection as text, i}
-              {@const active = scrollyIndex === i}
-              <div class="step" class:active>
-                {#if text.type === 'markdown'}
-                  <p><Md text={text.value}/></p>
-                {:else}
-                  <p>{@html text.value}</p>
-                {/if}
-              </div>
-            {/each}
-          </Scrolly>
-          <div class="spacer"></div>
-        </div>
-      </div>
-  </section>
-
-  <!-- Embedding section with intersection observer -->
-  <section class="embeddings" id="embeddings" bind:this={embeddingSectionElement}>
-    <h2>Embeddings</h2>
-    <p>Instead of using time to position papers, we can also use embeddings to position similar papers closer together in space. To do so, we use the <a href="https://allenai.org/blog/specter2-adapting-scientific-document-embeddings-to-multiple-fields-and-task-formats-c95686c06567">Specter2 model</a>, accessible via Semantic Scholar's API, which has the benefit of taking into account the similarity of paper titles and abstracts, but also the relative proximity in citation space. That is, a paper can be similar in terms of content but pushed apart by virtue of being cited by different communities. We use <a href="https://umap-learn.readthedocs.io/en/latest/">UMAP</a> to project down the high-dimensional embedding space onto a two-dimensional cartesian plane.</p>
-    
-    <p>Taking Peter again as our example, what is of interest to us is how his exploration of this embedding space might have been modified by his diverse coauthors. We situate Peter's papers within the backdrop of papers written by the UVM 2023 faculty (the papers themselves can be older than that):</p>
-
-    <div class="embeddings-container">
-      {#if dataState.loadingEmbeddings}
-        <div class="loading-container">
-          <Spinner />
-        </div>
-      {:else if dataState.EmbeddingsData}
-        <EmbeddingSection embeddingData={dataState.EmbeddingsData} coauthorData={dataState.DoddsCoauthorData}/>
-    {/if}
-    </div>
-    <p>On desktop, we show that by brushing over the years we can see that Peter focused on a mixed bag of computational sciences early on (2015-2016), which makes sense. Starting in 2020-2021, he made incursions into health science. From ground truth, we know that this corresponds to different periods for his lab, with the Mass Mutual funding coming in later on.</p>
-
-    <p>There are a few issues with this plot, such as reducing the high-dimensionality of papers onto two dimensions. Another issue is that earlier papers have worse embedding coverage, which is too bad (we might fix that later on by running the embedding model ourselves).</p>
-
-    <p>All that being said, this plot remains highly informative for getting a glimpse of the UVM ecosystem, and exploring how different periods in collaboration are reflected in how faculty might explore topics.</p>
-  </section>
-
-  <section id="conclusion">
-    <h2>Conclusion</h2>
-    <p>We started out by looking at the broader picture of how many groups there were at UVM. Then, we zoomed in on a particular faculty, trying to better understand the coevolution of collaborations and productivity. Our analysis remains limited, as we didn't analyze how the patterns we noticed in the timeline plot generalized to other researchers. This is for a future post.</p>
-    <p>In the meantime, you want to carry the same analysis to other faculties at UVM? Visit <a href="{base}/open-academic-analytics">our dashboard</a> for more.</p>
-  </section>
-</article>
-
-{/if}
+    <section id="conclusion">
+      <h2>Conclusion</h2>
+      <p>We started out by looking at the broader picture of how many groups there were at UVM. Then, we zoomed in on a particular faculty, trying to better understand the coevolution of collaborations and productivity. Our analysis remains limited, as we didn't analyze how the patterns we noticed in the timeline plot generalized to other researchers. This is for a future post.</p>
+      <p>In the meantime, you want to carry the same analysis to other faculties at UVM? Visit <a href="{base}/open-academic-analytics">our dashboard</a> for more.</p>
+    </section>
+  </article>
+{:catch error}
+  <div class="error-container">
+    <p>Error loading data: {error.message}</p>
+  </div>
+{/await}
 
 <style>
     

@@ -4,14 +4,16 @@
   import BrushableCoauthorChart from './BrushableCoauthorChart.svelte';
   import * as d3 from 'd3';
   import { innerWidth } from 'svelte/reactivity/window';
-  import { dashboardState } from '../state.svelte';
   import { ageColorScale, processCoauthorData, getCombinedDateRange, parseDate } from '../utils/combinedChartUtils2'
   
   let { embeddingData, coauthorData } = $props();
-  
+
   let isMobile = $derived(innerWidth.current <= 1200);
 
-  $inspect(embeddingData);
+  // Local state for dashboard settings (previously in state.svelte)
+  let colorMode = $state('age_diff');
+  let highlightedCoauthor = $state(null);
+
 
   // Process coauthor data into positioned points
   let processedCoauthorData = $derived.by(() => {
@@ -41,7 +43,6 @@
     return processedCoauthorData.map(point => {
       // Get the value for coloring
       let colorValue;
-      const colorMode = dashboardState.colorMode;
       if (colorMode === 'age_diff') {
         colorValue = point.age_category;
       } else if (colorMode === 'acquaintance') {
@@ -77,8 +78,8 @@
       }
       
       // Apply highlight filter
-      if (dashboardState.highlightedCoauthor) {
-        const isHighlightedCoauthor = point.ego_display_name === dashboardState.highlightedCoauthor;
+      if (highlightedCoauthor) {
+        const isHighlightedCoauthor = point.ego_display_name === highlightedCoauthor;
         opacity *= isHighlightedCoauthor ? 1 : 0.2;
       }
       

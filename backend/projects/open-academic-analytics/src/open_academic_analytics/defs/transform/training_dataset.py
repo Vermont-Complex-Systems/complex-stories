@@ -47,8 +47,7 @@ def training_dataset(duckdb: DuckDBResource) -> dg.MaterializeResult:
                     prof.group_url,
                     prof.first_pub_year,
                     prof.payroll_name,
-                    prof.position,
-                    prof.notes
+                    prof.position
 
                 FROM oa.transform.processed_coauthors_final pc
                 LEFT JOIN oa.raw.uvm_profs_2023 prof
@@ -66,7 +65,7 @@ def training_dataset(duckdb: DuckDBResource) -> dg.MaterializeResult:
                 SELECT 
                     aid, name, pub_year, author_age, institution,
                     is_prof, group_size, perceived_as_male, host_dept, college,
-                    has_research_group, group_url, first_pub_year, payroll_name, position, notes,
+                    has_research_group, group_url, first_pub_year, payroll_name, position, 
                     
                     -- Age category counts
                     SUM(CASE WHEN age_category = 'older' THEN yearly_collabo ELSE 0 END) as older,
@@ -80,7 +79,7 @@ def training_dataset(duckdb: DuckDBResource) -> dg.MaterializeResult:
                 GROUP BY 
                     aid, name, pub_year, author_age, institution,
                     is_prof, group_size, perceived_as_male, host_dept, college,
-                    has_research_group, group_url, first_pub_year, payroll_name, position, notes
+                    has_research_group, group_url, first_pub_year, payroll_name, position
             ),
             
             -- Calculate acquaintance relationships (existing vs new collaborations)

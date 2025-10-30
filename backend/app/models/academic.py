@@ -173,7 +173,6 @@ class Training(Base):
     first_pub_year = Column(Integer)
     payroll_name = Column(String)
     position = Column(String)
-    notes = Column(Text)
     changing_rate = Column(Float)     # Collaboration pattern change rate
 
     def __repr__(self):

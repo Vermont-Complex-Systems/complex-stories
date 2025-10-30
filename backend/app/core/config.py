@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     faculty_project_id: str = "42"
     department_project_id: str = ""
 
+    fastapi_admin_token: str = ""
+
     mongodb_uri: str
     
     # API settings

@@ -1,11 +1,10 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 from typing import Optional, List, Dict, Any
 from ..core.database import get_db_session
 from ..routers.auth import get_admin_user
 from ..models.auth import User
-import duckdb
-import os
 router = APIRouter()
 admin_router = APIRouter()
 
@@ -265,63 +264,85 @@ async def get_coauthors_for_author(
         raise HTTPException(status_code=500, detail=f"Error fetching coauthors: {str(e)}")
 
 @router.get("/embeddings")
-async def get_embeddings_data() -> List[Dict[str, Any]]:
+async def get_embeddings_data(db: AsyncSession = Depends(get_db_session)) -> List[Dict[str, Any]]:
     """
     Get processed embeddings data for research visualization.
 
-    Replicates the EmbeddingsData function from the frontend using DuckDB.
-    Returns papers with UMAP embeddings joined with training data.
+    Returns papers with UMAP embeddings joined with training data from PostgreSQL database.
     """
     try:
-        # Create DuckDB connection
-        conn = duckdb.connect()
-
-        # Register parquet files (adjust paths as needed)
-        data_dir = os.path.join(os.path.dirname(__file__), '../../data')
-        training_path = os.path.join(data_dir, 'open-academic-analytics/training_data.parquet')
-        paper_path = os.path.join(data_dir, 'paper.parquet')
-
-        # Check if files exist
-        if not os.path.exists(training_path):
-            raise HTTPException(status_code=404, detail=f"Training data not found at {training_path}")
-        if not os.path.exists(paper_path):
-            raise HTTPException(status_code=404, detail=f"Paper data not found at {paper_path}")
-
-        # Execute the complex SQL query
-        result = conn.execute(f"""
-            WITH exploded_depts AS (
+            # Execute the complex SQL query using PostgreSQL
+            query = text("""
+                WITH exploded_depts AS (
+                    SELECT
+                        DISTINCT t.name,
+                        t.oa_uid,
+                        t.has_research_group,
+                        trim(unnest(string_to_array(t.host_dept, ';'))) as host_dept,
+                        t.perceived_as_male,
+                        t.college,
+                        t.group_url,
+                        t.group_size
+                    FROM training t
+                    WHERE oa_uid IS NOT NULL
+                )
                 SELECT
-                    DISTINCT t.name,
-                    t.aid as oa_uid,
-                    t.has_research_group,
-                    trim(unnest(string_split(t.host_dept, ';'))) as host_dept,
-                    t.perceived_as_male,
-                    t.college,
-                    t.group_url,
-                    t.group_size
-                FROM read_parquet('{training_path}') t
-                WHERE oa_uid IS NOT NULL
-            )
-            SELECT
-                DISTINCT doi, p.*,
-                strftime(publication_date::DATE, '%Y-%m-%d') as pub_date,
-                e.host_dept, e.college
-            FROM read_parquet('{paper_path}') p
-            LEFT JOIN exploded_depts e ON p.ego_author_id = 'https://openalex.org/' || e.oa_uid
-            WHERE p.umap_1 IS NOT NULL
-            ORDER BY
-                CASE WHEN ego_author_id = 'https://openalex.org/A5040821463' THEN 1 ELSE 0 END,
-                RANDOM()
-            LIMIT 6000
-        """).fetchdf()
+                    p.doi,
+                    p.id,
+                    p.ego_author_id,
+                    p.ego_display_name,
+                    p.title,
+                    p.publication_year,
+                    p.publication_date,
+                    TO_CHAR(p.publication_date, 'YYYY-MM-DD') as pub_date,
+                    p.cited_by_count,
+                    p.umap_1,
+                    p.umap_2,
+                    p.abstract,
+                    p."s2FieldsOfStudy",
+                    p."fieldsOfStudy",
+                    p.coauthor_names,
+                    e.host_dept,
+                    e.college
+                FROM papers p
+                LEFT JOIN exploded_depts e ON (
+                    p.ego_author_id = 'https://openalex.org/' || e.oa_uid OR
+                    p.ego_author_id = e.oa_uid
+                )
+                WHERE p.umap_1 IS NOT NULL
+                ORDER BY
+                    CASE WHEN p.ego_author_id = 'https://openalex.org/A5040821463' THEN 0 ELSE 1 END,
+                    RANDOM()
+                LIMIT 6000
+            """)
 
-        # Convert to list of dictionaries
-        embeddings_data = result.to_dict('records')
+            result = await db.execute(query)
+            rows = result.fetchall()
 
-        # Close connection
-        conn.close()
+            # Convert to list of dictionaries
+            embeddings_data = []
+            for row in rows:
+                embeddings_data.append({
+                    "doi": row.doi,
+                    "id": row.id,
+                    "ego_author_id": row.ego_author_id,
+                    "ego_display_name": row.ego_display_name,
+                    "title": row.title,
+                    "publication_year": row.publication_year,
+                    "publication_date": row.publication_date.isoformat() if row.publication_date else None,
+                    "pub_date": row.pub_date,
+                    "cited_by_count": row.cited_by_count,
+                    "umap_1": row.umap_1,
+                    "umap_2": row.umap_2,
+                    "abstract": row.abstract,
+                    "s2FieldsOfStudy": row.s2FieldsOfStudy,
+                    "fieldsOfStudy": row.fieldsOfStudy,
+                    "coauthor_names": row.coauthor_names,
+                    "host_dept": row.host_dept,
+                    "college": row.college
+                })
 
-        return embeddings_data
+            return embeddings_data
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching embeddings data: {str(e)}")

@@ -74,7 +74,7 @@ export function createCoauthorPoint(d, targetY, collaborationScale) {
     y: targetY,
     r: radius,
     type: 'coauthor',
-    coauthor_name: d.coauthor_name,
+    coauthor_name: d.coauthor_display_name,
     publication_year: d.publication_year,
     date: d.pub_date,
     age_diff: d.age_diff,
