@@ -2,7 +2,7 @@
   import * as d3 from 'd3';
   import DodgeChart from '$lib/components/helpers/DodgeChart.svelte';
   import { processPaperData } from '../utils/paperUtils.js';
-  import { data, dashboardState } from './state.svelte.js';
+  import { data, dashboardState } from '../state.svelte.js';
   
   let { width, height, timeScale } = $props();
   

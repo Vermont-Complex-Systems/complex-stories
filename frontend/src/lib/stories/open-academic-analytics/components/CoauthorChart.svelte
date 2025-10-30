@@ -2,7 +2,7 @@
   import * as d3 from 'd3';
   import DodgeChart2 from '$lib/components/helpers/DodgeChart2.svelte';
   import Legend from './CoauthorChart.Legend.svelte';
-  import { dashboardState, data } from './state.svelte';
+  import { dashboardState, data } from '../state.svelte';
   import { 
     ageColorScale, 
     acquaintanceColorScale, 

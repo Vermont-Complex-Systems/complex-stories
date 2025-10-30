@@ -2,11 +2,11 @@
     import * as d3 from 'd3';
     import DataTable from '$lib/components/helpers/NiceTable.svelte';
     import Spinner from '$lib/components/helpers/Spinner.svelte'
-    import {  dashboardState, uiState, data, initializeApp, loadSelectedAuthor } from './state.svelte.js';
+    import {  dashboardState, uiState, data, initializeApp, loadSelectedAuthor } from '../state.svelte.js';
     import Dashboard from './Dashboard.svelte';
     import Nav from './Nav.svelte';
     import Sidebar from './Sidebar.svelte';
-    import { loadPaperData } from './data.remote.js';
+    
     // Initialize on component mount
     initializeApp();
 
