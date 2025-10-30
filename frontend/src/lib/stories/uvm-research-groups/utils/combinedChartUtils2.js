@@ -20,10 +20,10 @@ export function processCoauthorData(coauthorData, width, height, timeScale) {
     return [];
   }
 
-  const MARGIN_LEFT = 40;
-  const MARGIN_RIGHT = 40;
+  const MARGIN_LEFT = 10;
+  const MARGIN_RIGHT = 10;
   const effectiveWidth = width - MARGIN_LEFT - MARGIN_RIGHT;
-  const centerX = effectiveWidth / 2;
+  const centerX = effectiveWidth / 2 + MARGIN_LEFT; // Move points right by 30px (up in rotated view)
   
   // Get the actual collaboration range from your data
   const collaborationCounts = coauthorData.map(d => +d.all_times_collabo || 1);

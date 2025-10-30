@@ -4,17 +4,18 @@
   import BrushableCoauthorChart from './BrushableCoauthorChart.svelte';
   import * as d3 from 'd3';
   import { innerWidth } from 'svelte/reactivity/window';
-  import { ageColorScale, processCoauthorData, getCombinedDateRange, parseDate } from '../utils/combinedChartUtils2'
+  import { ageColorScale, processCoauthorData, parseDate } from '../utils/combinedChartUtils2'
   
   let { embeddingData, coauthorData } = $props();
 
-  let isMobile = $derived(innerWidth.current <= 1200);
+  let chartWidth = 250
+  const chartHeight = 1045
 
-  // Local state for dashboard settings (previously in state.svelte)
+  let isMobile = $derived(innerWidth.current <= 1200);
   let colorMode = $state('age_diff');
   let highlightedCoauthor = $state(null);
-
-
+  let selectedCoauthors = $state([]);
+  
   // Process coauthor data into positioned points
   let processedCoauthorData = $derived.by(() => {
     if (!filteredCoauthorData || filteredCoauthorData.length === 0) return [];
@@ -33,9 +34,6 @@
       .domain([paddedMinDate,paddedMaxDate ])
       .range([50, chartHeight - 50]); // MARGIN_TOP to height - MARGIN_BOTTOM
   });
-
-  let chartWidth = 280
-  const chartHeight = 1045
 
   let styledCoauthorData = $derived.by(() => {
     if (!processedCoauthorData.length) return [];
@@ -93,14 +91,6 @@
   });
 
   let filteredCoauthorData = coauthorData;
-
-  let selectedCoauthors = $state([]);
-  
-  // Extract both coauthor IDs and time range
-  let highlightedIds = $derived(
-    selectedCoauthors.map(coauthor => coauthor.coauth_aid).filter(Boolean)
-  );
-
 
   let timeRange = $derived.by(() => {
     if (selectedCoauthors.length === 0) return null;
