@@ -14,7 +14,7 @@
   import Spinner from '$lib/components/helpers/Spinner.svelte'
   import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 
-  import { loadDoddsPaperData, loadDoddsCoauthorData, loadUvmProfsData, loadEmbeddingsData } from '../data.remote.js';
+  import { loadDoddsPaperData, loadDoddsCoauthorData, loadUvmProfsData, loadEmbeddingsData } from './data.remote.js';
 
   let { story, data } = $props();
 
