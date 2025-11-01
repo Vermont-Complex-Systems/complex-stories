@@ -8,89 +8,6 @@ from ..core.database import get_mongo_client, get_wikimedia_db, get_optimized_co
 
 router = APIRouter()
 
-@router.get("/datasets")
-async def get_wikimedia_datasets():
-    """Get available Wikimedia MongoDB datasets"""
-    try:
-        wikimedia_db = get_wikimedia_db()
-
-        # Get collection stats for en_1grams
-        stats = wikimedia_db.command("collstats", "en_1grams")
-
-        return {
-            "datasets": [
-                {
-                    "name": "wikimedia-en-1grams",
-                    "display_name": "Wikimedia English 1-grams",
-                    "description": "English unigram frequencies from Wikimedia data, providing insights into language usage patterns and word frequencies.",
-                    "type": "mongodb",
-                    "database": "wikimedia",
-                    "collection": "en_1grams",
-                    "document_count": stats.get("count", 0),
-                    "size_mb": round(stats.get("size", 0) / (1024 * 1024), 2),
-                    "keywords": ["language", "frequency", "unigrams", "wikimedia", "natural language processing"]
-                }
-            ]
-        }
-    except Exception as e:
-        return {
-            "error": str(e),
-            "datasets": []
-        }
-
-
-@router.get("/test-connection")
-async def test_wikimedia_connection():
-    """Test MongoDB connection by accessing wikimedia.en_1grams collection"""
-    try:
-        wikimedia_db = get_wikimedia_db()
-        en_1grams = get_optimized_collection(wikimedia_db, "en_1grams", "search")
-
-        doc = en_1grams.find_one({})
-        if doc and "_id" in doc:
-            doc["_id"] = str(doc["_id"])
-        return doc
-    except Exception as e:
-        return {
-            "status": "error",
-            "error": str(e)
-        }
-
-
-@router.get("/sample/{collection}")
-async def get_collection_sample(
-    collection: str,
-    limit: int = Query(1, ge=1, le=10, description="Number of sample documents (1-10)")
-):
-    """Get sample documents from a Wikimedia MongoDB collection"""
-    try:
-        wikimedia_db = get_wikimedia_db()
-
-        # Security: only allow specific collections
-        allowed_collections = ["en_1grams"]
-        if collection not in allowed_collections:
-            raise HTTPException(status_code=400, detail=f"Collection '{collection}' not allowed. Allowed: {allowed_collections}")
-
-        coll = get_optimized_collection(wikimedia_db, collection, "analytics")
-
-        # Get sample documents
-        documents = list(coll.find().limit(limit))
-
-        # Convert ObjectId to string for JSON serialization
-        for doc in documents:
-            if "_id" in doc:
-                doc["_id"] = str(doc["_id"])
-
-        return {
-            "collection": collection,
-            "limit": limit,
-            "total_documents": len(documents),
-            "documents": documents
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 class NgramResult(BaseModel):
     types: str
     counts: int
@@ -265,44 +182,6 @@ async def search_term(
 
         return {
             "termData": clean_results,
-            "duration": duration
-        }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/count")
-async def get_count(
-    date: str = Query(..., description="Date in ISO format (YYYY-MM-DD)"),
-    country: str = Query(..., description="Country name")
-):
-    """Get document count for a specific date and country"""
-    try:
-        client = get_mongo_client()
-        wikimedia_db = client.get_database("wikimedia")
-        coll = wikimedia_db.get_collection("en_1grams")
-
-        start_time = time.time()
-
-        # Parse date
-        try:
-            parsed_date = datetime.fromisoformat(date.replace('Z', '+00:00'))
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=f"Invalid date format: {e}")
-
-        # Execute count query in thread pool
-        def execute_count():
-            return coll.count_documents({"date": parsed_date, "country": country})
-
-        loop = asyncio.get_event_loop()
-        count = await loop.run_in_executor(None, execute_count)
-
-        duration = (time.time() - start_time) * 1000
-        print(f"getCount query took {duration:.2f}ms")
-
-        return {
-            "count": count,
             "duration": duration
         }
 
