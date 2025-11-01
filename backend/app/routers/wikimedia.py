@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
-from typing import Dict, List
+from typing import Dict, List, Optional
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import time
 import asyncio
 from ..core.database import get_mongo_client
@@ -97,15 +97,17 @@ async def get_collection_sample(
 class NgramResult(BaseModel):
     types: str
     counts: int
-    probs: float
-    totalunique: int
+    probs: Optional[float] = None
+    totalunique: Optional[int] = None
 
 
-@router.get("/top-ngrams")
+@router.get("/top-ngrams", response_model_exclude_unset=True)
 async def get_top_ngrams(
     dates: str = Query("2024-10-10,2024-10-20", description="Date or comma-separated dates (ISO format)"),
     countries: str = Query("United States", description="Country or comma-separated countries"),
-    topN: int = Query(10000, ge=1, le=100000, description="Maximum number of ngrams to return")
+    topN: int = Query(10000, ge=1, le=100000, description="Maximum number of ngrams to return"),
+    include_probs: bool = Query(False, description="Include probability calculations"),
+    include_totalunique: bool = Query(False, description="Include total unique count")
 ) -> Dict[str, List[NgramResult]]:
     """
     Get top N-grams for given dates and countries.
@@ -178,18 +180,34 @@ async def get_top_ngrams(
 
                 # Filter out NaN ngrams before processing
                 valid_docs = [doc for doc in docs if doc.get("ngram") is not None and str(doc.get("ngram")).lower() != "nan"]
-                total_count = sum(get_pv_count(doc) for doc in valid_docs)
-                total_unique = len(valid_docs)
 
-                results[key] = [
-                    NgramResult(
-                        types=str(doc.get("ngram", "")),
-                        counts=get_pv_count(doc),
-                        probs=(get_pv_count(doc) / total_count) if total_count > 0 else 0.0,
-                        totalunique=total_unique
-                    )
-                    for doc in valid_docs
-                ]
+                # Only calculate these if requested (performance optimization)
+                total_count = None
+                total_unique = None
+                if include_probs:
+                    total_count = sum(get_pv_count(doc) for doc in valid_docs)
+                if include_totalunique:
+                    total_unique = len(valid_docs)
+
+                # Build results with conditional field inclusion
+                ngram_results = []
+                for doc in valid_docs:
+                    # Start with required fields
+                    result_kwargs = {
+                        "types": str(doc.get("ngram", "")),
+                        "counts": get_pv_count(doc)
+                    }
+
+                    # Only add optional fields if requested
+                    if include_probs and total_count > 0:
+                        result_kwargs["probs"] = get_pv_count(doc) / total_count
+
+                    if include_totalunique:
+                        result_kwargs["totalunique"] = total_unique
+
+                    ngram_results.append(NgramResult(**result_kwargs))
+
+                results[key] = ngram_results
 
         # Log performance and payload info
         duration = (time.time() - start_time) * 1000  # Convert to milliseconds
