@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 import time
 import asyncio
-from ..core.database import get_mongo_client
+from ..core.database import get_mongo_client, get_wikimedia_db, get_optimized_collection
 
 router = APIRouter()
 
@@ -12,8 +12,7 @@ router = APIRouter()
 async def get_wikimedia_datasets():
     """Get available Wikimedia MongoDB datasets"""
     try:
-        client = get_mongo_client()
-        wikimedia_db = client.get_database("wikimedia")
+        wikimedia_db = get_wikimedia_db()
 
         # Get collection stats for en_1grams
         stats = wikimedia_db.command("collstats", "en_1grams")
@@ -44,9 +43,8 @@ async def get_wikimedia_datasets():
 async def test_wikimedia_connection():
     """Test MongoDB connection by accessing wikimedia.en_1grams collection"""
     try:
-        client = get_mongo_client()
-        database = client.get_database("wikimedia")
-        en_1grams = database.get_collection("en_1grams")
+        wikimedia_db = get_wikimedia_db()
+        en_1grams = get_optimized_collection(wikimedia_db, "en_1grams", "search")
 
         doc = en_1grams.find_one({})
         if doc and "_id" in doc:
@@ -66,15 +64,14 @@ async def get_collection_sample(
 ):
     """Get sample documents from a Wikimedia MongoDB collection"""
     try:
-        client = get_mongo_client()
-        wikimedia_db = client.get_database("wikimedia")
+        wikimedia_db = get_wikimedia_db()
 
         # Security: only allow specific collections
         allowed_collections = ["en_1grams"]
         if collection not in allowed_collections:
             raise HTTPException(status_code=400, detail=f"Collection '{collection}' not allowed. Allowed: {allowed_collections}")
 
-        coll = wikimedia_db.get_collection(collection)
+        coll = get_optimized_collection(wikimedia_db, collection, "analytics")
 
         # Get sample documents
         documents = list(coll.find().limit(limit))
