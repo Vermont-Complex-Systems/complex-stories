@@ -5,6 +5,7 @@ from typing import Optional, List, Dict, Any
 from ..core.database import get_db_session
 from ..routers.auth import get_admin_user
 from ..models.auth import User
+
 router = APIRouter()
 admin_router = APIRouter()
 
@@ -271,6 +272,8 @@ async def get_embeddings_data(db: AsyncSession = Depends(get_db_session)) -> Lis
     Returns papers with UMAP embeddings joined with training data from PostgreSQL database.
     """
     try:
+            await db.execute(text("SET duckdb.force_execution = true"))
+            
             # Execute the complex SQL query using PostgreSQL
             query = text("""
                 WITH exploded_depts AS (
