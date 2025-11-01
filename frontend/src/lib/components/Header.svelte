@@ -87,8 +87,8 @@
 		{/await}
 
 		<div class="logo-container">
-			<a href="{base}/" class="logo-link">
-				<img src="{base}/vcsi-bumper-sticker-horizontal.jpg" alt="Home" class="logo" />
+			<a href="https://vermontcomplexsystems.org/" class="logo-link">
+				<img src="{base}/vcsi-bumper-sticker-horizontal-arial-transparent.png" alt="Home" class="logo" />
 			</a>
 		</div>
 
