@@ -13,7 +13,7 @@
 </script>
 
 <svelte:head>
-	<script async defer src="https://cloud.umami.is/script.js" data-website-id="44b340b0-d307-4438-8fb4-4e17f1767354"></script>
+	<script async defer src="https://cloud.umami.is/script.js" data-website-id="9748947b-5af8-4053-b1a5-8e74f48eb7e2"></script>
 </svelte:head>
 
 {#if showHeader}

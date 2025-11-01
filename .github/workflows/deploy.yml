@@ -60,7 +60,7 @@ jobs:
           npm install
           npm run build
           cd ..
-          pm2 restart complex-stories-main
+          pm2 restart ecosystem.config.json
           
           # Wait for app to start
           sleep 10
