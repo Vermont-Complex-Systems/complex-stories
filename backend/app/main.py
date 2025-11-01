@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 from .core.config import settings
 from .core.database import connect_to_database, close_database_connection
@@ -61,6 +62,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add Gzip compression middleware
+# Compress responses > 1000 bytes (1KB) to reduce transfer time
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["authentication"])
