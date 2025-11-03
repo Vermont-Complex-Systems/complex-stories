@@ -111,7 +111,11 @@ def coauthor_database_upload(duckdb: DuckDBResource, complex_stories_api: Comple
                         ELSE NULL
                     END as coauthor_age
 
-                FROM oa.transform.processed_coauthors
+                FROM oa.transform.processed_coauthors pc
+                -- Join sync status to filter for recently updated professors
+                JOIN oa.cache.uvm_profs_sync_status sync ON pc.ego_author_id = sync.ego_author_id
+                -- Only include coauthors for professors synced in the last 24 hours
+                WHERE sync.last_synced_date >= NOW() - INTERVAL '1 day'
             )
             SELECT
                 -- UVM professor information
@@ -228,7 +232,7 @@ def coauthor_database_upload(duckdb: DuckDBResource, complex_stories_api: Comple
             upload_result = client.bulk_upload(
                 endpoint="open-academic-analytics/coauthors/bulk",
                 data=coauthor_data,
-                batch_size=10000
+                batch_size=100_000
             )
 
             return dg.MaterializeResult(

@@ -23,7 +23,7 @@ class AcademicResearchGroups(Base):
     first_pub_year = Column(Integer, nullable=True)
     inst_ipeds_id = Column(String(50), nullable=True)
     notes = Column(Text, nullable=True)
-    last_updated = Column(DateTime(timezone=True), server_default=func.now())
+    last_updated = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     college = Column(String(255), nullable=True)
 
     def __repr__(self):

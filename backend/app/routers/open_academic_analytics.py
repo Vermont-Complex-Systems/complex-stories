@@ -149,23 +149,21 @@ async def get_all_authors(
         # Fast query using just the coauthor table
         # Paper counts can be added later if needed via a separate endpoint
 
-        query = select(
-            Coauthor.ego_display_name,
-            func.max(Coauthor.ego_age).label('current_age'),
-            func.max(Coauthor.publication_year).label('last_pub_year')
-        ).where(
-            (Coauthor.ego_display_name.is_not(None)) &
-            (Coauthor.ego_age.is_not(None))
-            # TODO: Add institution and year filtering when data model supports it
-            # & (Coauthor.institution_ipeds_id == effective_ipeds_id)
-            # & (Coauthor.faculty_year == effective_year)
-        ).group_by(
-            Coauthor.ego_display_name
-        ).order_by(
-            Coauthor.ego_display_name
-        )
+        # Simple query to get authors with research group status
+        query = text("""
+            SELECT
+                c.ego_display_name,
+                MAX(c.ego_age) as current_age,
+                MAX(c.publication_year) as last_pub_year,
+                COALESCE(MAX(t.has_research_group::int), 0) as has_research_group
+            FROM coauthors c
+            LEFT JOIN training t ON c.ego_display_name = t.name
+            WHERE c.ego_display_name IS NOT NULL
+                AND c.ego_age IS NOT NULL
+            GROUP BY c.ego_display_name
+            ORDER BY c.ego_display_name
+        """)
 
-        # Execute query
         result = await db.execute(query)
         authors_data = result.all()
 
@@ -175,7 +173,8 @@ async def get_all_authors(
             authors.append({
                 "ego_display_name": row.ego_display_name,
                 "current_age": row.current_age,
-                "last_pub_year": row.last_pub_year
+                "last_pub_year": row.last_pub_year,
+                "has_research_group": bool(row.has_research_group)
             })
 
         return authors
@@ -396,6 +395,24 @@ async def upload_papers_bulk(
             filtered_data = {k: v for k, v in paper_data.items() if k in expected_fields}
             filtered_papers.append(filtered_data)
 
+        # Get unique ego_author_ids from the incoming papers
+        # These represent ONLY professors that were recently synced (safe to cleanup)
+        ego_author_ids = list(set(paper['ego_author_id'] for paper in filtered_papers if 'ego_author_id' in paper))
+
+        # Clean up existing papers for recently synced professors
+        # This is safe because exports are filtered to only include recently updated professors
+        if ego_author_ids:
+            from sqlalchemy import text
+
+            cleanup_stmt = """
+            DELETE FROM papers
+            WHERE ego_author_id = ANY(:ego_author_ids)
+            """
+
+            result = await db.execute(text(cleanup_stmt), {"ego_author_ids": ego_author_ids})
+            deleted_count = result.rowcount
+            logger.info(f"Deleted {deleted_count} existing papers for {len(ego_author_ids)} recently synced professors")
+
         # Use efficient bulk insert with correct composite key
         try:
             stmt = insert(Paper)
@@ -444,8 +461,32 @@ async def upload_coauthors_bulk(
     try:
         from ..models.academic import Coauthor
         from sqlalchemy.dialects.postgresql import insert
+        from sqlalchemy import text
+        import logging
 
-        # Use upsert approach instead of delete + insert to handle batching
+        logger = logging.getLogger(__name__)
+        logger.info(f"Starting bulk upload of {len(coauthors)} coauthors")
+
+        if not coauthors:
+            return {"status": "success", "coauthor_records_processed": 0, "message": "No coauthors to process"}
+
+        # Get unique ego_author_ids from the incoming coauthors
+        # These represent ONLY professors that were recently synced (safe to cleanup)
+        ego_author_ids = list(set(coauthor['ego_author_id'] for coauthor in coauthors if 'ego_author_id' in coauthor))
+
+        # Clean up existing coauthors for recently synced professors
+        # This is safe because exports are filtered to only include recently updated professors
+        if ego_author_ids:
+            cleanup_stmt = """
+            DELETE FROM coauthors
+            WHERE ego_author_id = ANY(:ego_author_ids)
+            """
+
+            result = await db.execute(text(cleanup_stmt), {"ego_author_ids": ego_author_ids})
+            deleted_count = result.rowcount
+            logger.info(f"Deleted {deleted_count} existing coauthor records for {len(ego_author_ids)} recently synced professors")
+
+        # Use efficient batch upsert approach
         for coauthor_data in coauthors:
             stmt = insert(Coauthor).values(**coauthor_data)
             # Update all fields if conflict on primary key
@@ -457,10 +498,14 @@ async def upload_coauthors_bulk(
 
         await db.commit()
 
+        logger.info(f"Successfully processed {len(coauthors)} coauthor records")
+
         return {
             "status": "success",
             "coauthor_records_processed": len(coauthors),
-            "message": f"Successfully processed {len(coauthors)} coauthor records (inserted or updated)"
+            "professors_updated": len(ego_author_ids),
+            "previous_records_deleted": deleted_count if ego_author_ids else 0,
+            "message": f"Successfully processed {len(coauthors)} coauthor records for {len(ego_author_ids)} recently synced professors"
         }
 
     except Exception as e:
@@ -502,4 +547,89 @@ async def upload_training_bulk(
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Error uploading training data: {str(e)}")
+
+
+@router.get("/training/{author_name}")
+async def get_training_data(
+    author_name: str,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Get aggregated training data for change point analysis by author name.
+    Returns collaboration patterns by age and research group status.
+    """
+    try:
+        # Query to get training data for change point analysis
+        # Create rows for each age category (older, same, younger) per year
+        query = text("""
+            WITH age_data AS (
+                SELECT
+                    author_age as pub_year,
+                    older as counts,
+                    'older' as age_category,
+                    has_research_group,
+                    college,
+                    changing_rate
+                FROM training
+                WHERE name = :author_name AND older > 0
+
+                UNION ALL
+
+                SELECT
+                    author_age as pub_year,
+                    same as counts,
+                    'same' as age_category,
+                    has_research_group,
+                    college,
+                    changing_rate
+                FROM training
+                WHERE name = :author_name AND same > 0
+
+                UNION ALL
+
+                SELECT
+                    author_age as pub_year,
+                    younger as counts,
+                    'younger' as age_category,
+                    has_research_group,
+                    college,
+                    changing_rate
+                FROM training
+                WHERE name = :author_name AND younger > 0
+            )
+            SELECT
+                pub_year,
+                counts,
+                age_category,
+                has_research_group,
+                college,
+                COALESCE(changing_rate, 0) as changing_rate
+            FROM age_data
+            ORDER BY pub_year, age_category
+        """)
+
+        result = await db.execute(query, {"author_name": author_name})
+        training_data = result.fetchall()
+
+        if not training_data:
+            raise HTTPException(status_code=404, detail=f"No training data found for author: {author_name}")
+
+        # Convert to list of dictionaries
+        columns = ['pub_year', 'counts', 'age_category', 'has_research_group', 'college', 'changing_rate']
+        result_data = [
+            {col: float(val) if val is not None and col not in ['age_category', 'college'] else val for col, val in zip(columns, row)}
+            for row in training_data
+        ]
+
+        return {
+            "status": "success",
+            "author": author_name,
+            "training_data": result_data,
+            "count": len(result_data)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching training data: {str(e)}")
 

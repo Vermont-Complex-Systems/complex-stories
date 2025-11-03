@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
     deps=["change_point_analysis"],
     group_name="export"
 )
-def training_database_upload(duckdb: DuckDBResource, stories_resources: ComplexStoriesAPIResource) -> dg.MaterializeResult:
+def training_database_upload(duckdb: DuckDBResource, complex_stories_api: ComplexStoriesAPIResource) -> dg.MaterializeResult:
     """Export final training data to PostgreSQL database via FastAPI bulk endpoint"""
 
     with duckdb.get_connection() as conn:
@@ -72,23 +72,27 @@ def training_database_upload(duckdb: DuckDBResource, stories_resources: ComplexS
         training_records = training_df.to_dict('records')
 
         # Upload to database using the API resource
-        stories_resources = ComplexStoriesAPIResource()
-        client = stories_resources.get_client()
-        logger.info(f"Starting upload of {len(training_records)} training records...")
+        try:
+            client = complex_stories_api.get_client()
+            logger.info(f"Starting upload of {len(training_records)} training records...")
 
-        # Debug: Check first record structure
-        if training_records:
-            logger.info(f"Sample record fields: {list(training_records[0].keys())}")
+            # Debug: Check first record structure
+            if training_records:
+                logger.info(f"Sample record fields: {list(training_records[0].keys())}")
 
-        upload_result = client.bulk_upload(
-            endpoint="open-academic-analytics/training/bulk",
-            data=training_records,
-            batch_size=10000,
-            timeout=300
-        )
-        successful_uploads = upload_result["records_uploaded"]
-        batches_processed = upload_result["batches_processed"]
-        logger.info(f"Training upload completed: {successful_uploads}/{len(training_records)} records uploaded successfully")
+            upload_result = client.bulk_upload(
+                endpoint="open-academic-analytics/training/bulk",
+                data=training_records,
+                batch_size=10000,
+                timeout=300
+            )
+            successful_uploads = upload_result["records_uploaded"]
+            batches_processed = upload_result["batches_processed"]
+            logger.info(f"Training upload completed: {successful_uploads}/{len(training_records)} records uploaded successfully")
+
+        except Exception as e:
+            logger.error(f"Failed to upload training data: {str(e)}")
+            raise
 
         return dg.MaterializeResult(
             metadata={

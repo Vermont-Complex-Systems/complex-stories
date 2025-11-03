@@ -1,19 +1,9 @@
 <script>
-  import { Accordion } from "bits-ui";
   import { dashboardState, unique } from '$stories/open-academic-analytics/state.svelte.js';
   import { UserCheck } from "@lucide/svelte";
 
-  // Filter authors by age if filter is active
-  let filteredAuthors = $derived.by(() => {
-    if (!dashboardState.authorAgeFilter) return unique.authors;
-    
-    const [minAge, maxAge] = dashboardState.authorAgeFilter;
-    return unique.authors.filter(author => {
-      // Now unique.authors contains objects with current_age
-      const age = author.current_age || 0;
-      return age >= minAge && age <= maxAge;
-    });
-  });
+  // Use centralized filtered authors from state
+  let filteredAuthors = $derived(unique.filteredAuthors);
     
   // Extract author names from filtered authors
   let authorNames = $derived.by(() => {
@@ -37,14 +27,11 @@
 </script>
 
 <!-- Author Selection Filter -->
-<Accordion.Item value="author-select">
-  <Accordion.Header>
-    <Accordion.Trigger class="accordion-trigger">
-      <UserCheck size={16} />
-      Select Author {filterStatus}
-    </Accordion.Trigger>
-  </Accordion.Header>
-  <Accordion.Content class="accordion-content">
+<div class="widget-container">
+  <div class="widget-header">
+    <UserCheck size={16} />
+    <span class="widget-title">Select Author {filterStatus}</span>
+  </div>
     <div class="control-section">
       <select 
         multiple 
@@ -58,43 +45,27 @@
           </option>
         {/each}
       </select>
-      <p class="filter-info">
-        Select an author to filter all data. Only one can be selected at a time.
-        {#if dashboardState.authorAgeFilter}
-          <br><em>List filtered by age range.</em>
-        {/if}
-      </p>
     </div>
-  </Accordion.Content>
-</Accordion.Item>
+</div>
 
 <style>
-  :global(.accordion-trigger) {
+  .widget-container {
+    margin-bottom: 1.5rem;
+  }
+
+  .widget-header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    width: 100%;
-    padding: 0.75rem;
-    font-size: var(--font-size-small);
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .widget-title {
+    font-size: var(--font-size-xsmall);
     font-weight: var(--font-weight-medium);
     color: var(--color-fg);
-    background: transparent;
-    border: none;
-    border-radius: var(--border-radius);
-    transition: background-color var(--transition-medium) ease;
-    cursor: pointer;
-  }
-
-  :global(.accordion-trigger:hover) {
-    background-color: var(--color-gray-100);
-  }
-
-  :global(.dark .accordion-trigger:hover) {
-    background-color: var(--color-gray-800);
-  }
-
-  :global(.accordion-content) {
-    padding: 0 0.75rem 1rem 0.75rem;
   }
 
   .control-section {
@@ -102,6 +73,7 @@
     flex-direction: column;
     gap: 0.5rem;
   }
+
 
   .filter-select-multiple {
     padding: 0.5rem;

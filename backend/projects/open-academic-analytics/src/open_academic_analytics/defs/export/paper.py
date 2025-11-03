@@ -3,9 +3,9 @@ Enhanced paper processing asset combining SQL efficiency with pandas flexibility
 """
 import dagster as dg
 from dagster_duckdb import DuckDBResource
+from open_academic_analytics.defs.resources import ComplexStoriesAPIResource
 import numpy as np
 import pandas as pd
-import requests
 
 
 # Data filtering settings
@@ -122,7 +122,7 @@ def prepare_for_deduplication(df):
     deps=["uvm_publications", "umap_embeddings"],
     group_name="export"
 )
-def paper_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
+def paper_upload(duckdb: DuckDBResource, complex_stories_api: ComplexStoriesAPIResource) -> dg.MaterializeResult:
     """Export publications data as parquet for static frontend"""
 
     # Static path for exported data
@@ -205,9 +205,14 @@ def paper_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
         -- Join embeddings
         LEFT JOIN oa.transform.umap_embeddings u ON p.doi = u.doi
 
+        -- Join sync status to filter for recently updated professors
+        JOIN oa.cache.uvm_profs_sync_status sync ON uvm.ego_author_id = sync.ego_author_id
+
         -- Basic filters
         WHERE p.doi IS NOT NULL
         AND p.title IS NOT NULL
+        -- Only export papers for professors synced in the last 24 hours
+        AND sync.last_synced_date >= NOW() - INTERVAL '1 day'
         ORDER BY uvm.ego_author_id DESC, p.publication_year
         """).df()
 
@@ -234,29 +239,28 @@ def paper_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
     # Convert to API-ready format
     paper_data = df_processed.to_dict('records')
 
-    # POST to the database API (local development) in batches
-    api_url = "https://api.complexstories.uvm.edu/admin/open-academic-analytics/papers/bulk"
-    
-    try: 
-        if paper_data:
-            dg.get_dagster_logger().info(f"Sample record keys: {list(paper_data[0].keys())}")
-            dg.get_dagster_logger().info(f"Total records to upload: {len(paper_data)}")
-        
-        response = requests.post(api_url, json=paper_data, verify=False, timeout=120)
+    # Debug: Log first record for troubleshooting
+    if paper_data:
+        dg.get_dagster_logger().info(f"Sample record keys: {list(paper_data[0].keys())}")
+        dg.get_dagster_logger().info(f"Total records to upload: {len(paper_data)}")
 
-        # Log response details for debugging
-        if response.status_code != 200:
-            dg.get_dagster_logger().error(f"Response content: {response.text[:1000]}")
+    # Upload to database using the API resource
+    try:
+        client = complex_stories_api.get_client()
+        upload_result = client.bulk_upload(
+            endpoint="open-academic-analytics/papers/bulk",
+            data=paper_data,
+            batch_size=10000,
+            timeout=300
+        )
 
-            response.raise_for_status()
-        
-        upload_status = "success"
+        successful_uploads = upload_result["records_uploaded"]
+        batches_processed = upload_result["batches_processed"]
+        dg.get_dagster_logger().info(f"Paper upload completed: {successful_uploads}/{len(paper_data)} records uploaded successfully")
 
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
         dg.get_dagster_logger().error(f"Failed to upload paper data: {str(e)}")
-        if hasattr(e, 'response') and e.response is not None:
-            dg.get_dagster_logger().error(f"Error response content: {e.response.text[:1000]}")
-        upload_status = f"failed: {str(e)}"
+        raise
 
     # Also save processed data to DuckDB for downstream assets
     with duckdb.get_connection() as conn:
@@ -323,8 +327,8 @@ def paper_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
             "after_mislabel_filter": "applied",
             "final_count": len(df_processed)
         },
-        "api_endpoint": api_url,
-        "upload_status": upload_status,
+        "successful_uploads": successful_uploads,
+        "batches_processed": batches_processed,
         "configuration_used": {
             "accepted_work_types": ACCEPTED_WORK_TYPES,
             "filter_patterns_count": len(FILTER_TITLE_PATTERNS)

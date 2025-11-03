@@ -152,7 +152,8 @@ class InitDuckDBResource(DuckDBResource):
                 ego_author_id VARCHAR PRIMARY KEY,
                 last_synced_date TIMESTAMP,
                 paper_count INTEGER,
-                needs_update BOOLEAN DEFAULT TRUE
+                needs_update BOOLEAN DEFAULT TRUE,
+                prof_data_last_updated TIMESTAMP  -- Track when professor data was last modified
             )
         """)
 
@@ -196,7 +197,8 @@ class InitDuckDBResource(DuckDBResource):
                 has_research_group BOOLEAN,
                 perceived_as_male BOOLEAN,
                 position VARCHAR,
-                notes VARCHAR
+                notes VARCHAR,
+                last_updated TIMESTAMP
             )
         """)
 

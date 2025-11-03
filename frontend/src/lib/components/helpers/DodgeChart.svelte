@@ -196,6 +196,7 @@
     display: block;
     overflow: visible;
     max-width: 100%;
+    margin: 0 auto;
   }
 
   /* Chart styling */

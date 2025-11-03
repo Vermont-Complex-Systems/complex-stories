@@ -129,7 +129,7 @@ export function getEffectiveChartDimensions(width, height) {
   return {
     width: width - margins.left - margins.right,
     height: height - margins.top - margins.bottom,
-    centerX: (width - margins.left - margins.right) / 2
+    centerX: margins.left + (width - margins.left - margins.right) / 2
   };
 }
 

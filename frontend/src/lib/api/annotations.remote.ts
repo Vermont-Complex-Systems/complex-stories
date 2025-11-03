@@ -33,9 +33,11 @@ export const quickUpdateAnnotation = command(
 		const result = await api.updateAnnotation(id, updateData, locals.token)
 
 		// Update cached data optimistically
-		const index = annotations.findIndex(a => a.id === id)
-		if (index !== -1) {
-			annotations[index][field] = value
+		if (annotations !== null) {
+			const index = annotations.findIndex(a => a.id === id)
+			if (index !== -1) {
+				annotations[index][field] = value
+			}
 		}
 
 		return result
@@ -56,9 +58,11 @@ export const quickDeleteAnnotation = command(
 		await api.deleteAnnotation(id, locals.token)
 
 		// Remove from cached data optimistically
-		const index = annotations.findIndex(a => a.id === id)
-		if (index !== -1) {
-			annotations.splice(index, 1)
+		if (annotations !== null) {
+			const index = annotations.findIndex(a => a.id === id)
+			if (index !== -1) {
+				annotations.splice(index, 1)
+			}
 		}
 
 		await getAnnotations().refresh()
