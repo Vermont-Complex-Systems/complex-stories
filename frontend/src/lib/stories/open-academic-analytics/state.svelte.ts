@@ -12,10 +12,11 @@ export const dashboardState = $state({
     selectedCollege: 'College of Engineering and Mathematical Sciences',
     coauthorNodeColor: 'age_diff',
     paperNodeSize: 'cited_by_count',
-    ageFilter: null,
+    authorAgeFilter: null,
     clickedCoauthor: null,
     filterBigPapers: true,
-    highlightedCoauthor: null
+    highlightedCoauthor: null,
+    researchGroupFilter: 'all' // 'all', 'with_group', 'without_group'
 });
 
 export const data = $state({
@@ -72,6 +73,34 @@ class DerivedData {
 
     authors = $derived(data.availableAuthors || []);
 
+    // Filtered authors based on age and research group filters
+    filteredAuthors = $derived.by(() => {
+        let authors = this.authors || [];
+
+        // Apply age filter
+        if (dashboardState.authorAgeFilter) {
+            const [minAge, maxAge] = dashboardState.authorAgeFilter;
+            authors = authors.filter(author => {
+                const age = author.current_age || 0;
+                return age >= minAge && age <= maxAge;
+            });
+        }
+
+        // Apply research group filter
+        if (dashboardState.researchGroupFilter && dashboardState.researchGroupFilter !== 'all') {
+            switch (dashboardState.researchGroupFilter) {
+                case 'with_group':
+                    authors = authors.filter(author => author.has_research_group === true);
+                    break;
+                case 'without_group':
+                    authors = authors.filter(author => author.has_research_group === false);
+                    break;
+            }
+        }
+
+        return authors;
+    });
+
     colleges = $derived.by(() => {
         if (!data.trainingAggData || data.trainingAggData.length === 0) return [];
         return [...new Set(data.trainingAggData
@@ -115,6 +144,24 @@ if (typeof window !== 'undefined') {
 
 export function toggleSidebar() {
     uiState.sidebarCollapsed = !uiState.sidebarCollapsed;
+}
+
+// Auto-select author from filtered results - this needs to be called from a component
+export function initializeAutoSelection() {
+    $effect(() => {
+        const filteredAuthors = unique.filteredAuthors;
+        const currentAuthor = dashboardState.selectedAuthor;
+
+        // Only auto-select if we have filtered authors and current author is not in the filtered list
+        if (filteredAuthors && filteredAuthors.length > 0) {
+            const currentAuthorInFiltered = filteredAuthors.some(author => author.ego_display_name === currentAuthor);
+
+            if (!currentAuthorInFiltered) {
+                // Select the first author from filtered results
+                dashboardState.selectedAuthor = filteredAuthors[0].ego_display_name;
+            }
+        }
+    });
 }
 
 // Helper action for updating filters

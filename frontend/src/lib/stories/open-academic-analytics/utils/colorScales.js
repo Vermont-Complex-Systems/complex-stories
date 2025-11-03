@@ -13,12 +13,12 @@ export const acquaintanceColorScale = d3.scaleThreshold()
 
 // Institution-based color scale (dynamic, so we export a factory function)
 export function createInstitutionColorScale(institutions) {
-  return d3.scaleOrdinal(d3.schemeTableau10).domain(institutions);
+  return d3.scaleOrdinal(d3.schemeObservable10).domain(institutions);
 }
 
 // Shared institutions color scale (dynamic, so we export a factory function)
 export function createSharedInstitutionColorScale(sharedInstitutions) {
-  return d3.scaleOrdinal(d3.schemeTableau10).domain(sharedInstitutions);
+  return d3.scaleOrdinal(d3.schemeObservable10).domain(sharedInstitutions);
 }
 
 // Color constants for easy access

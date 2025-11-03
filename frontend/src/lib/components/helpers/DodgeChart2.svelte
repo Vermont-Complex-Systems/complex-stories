@@ -133,6 +133,7 @@
   .chart-svg {
     display: block;
     overflow: visible;
+    margin: 0 auto;
   }
 
   .chart-wrapper :global(.year-label) {

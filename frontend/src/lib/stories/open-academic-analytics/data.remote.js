@@ -44,3 +44,20 @@ export const loadAvailableAuthors = query(async () => {
     const authors = await response.json();
     return authors;
   });
+
+export const loadTrainingData = query(
+    v.object({
+        authorName: v.string()
+    }),
+    async ({authorName}) => {
+        const response = await fetch(`${API_BASE_URL}/open-academic-analytics/training/${encodeURIComponent(authorName)}`);
+        if (!response.ok) {
+            if (response.status === 404) {
+                return []; // Return empty array for no data found
+            }
+            error(response.status, 'Failed to load training data');
+        }
+        const data = await response.json();
+        return data.training_data || [];
+    }
+);

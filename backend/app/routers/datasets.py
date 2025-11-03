@@ -95,7 +95,8 @@ async def get_academic_research_groups_list(
             'group_url': annotation.group_url,
             'inst_ipeds_id': annotation.inst_ipeds_id,
             'college': annotation.college,
-            'notes': annotation.notes
+            'notes': annotation.notes,
+            'last_updated': annotation.last_updated
         })
     
     if format.lower() == "parquet":

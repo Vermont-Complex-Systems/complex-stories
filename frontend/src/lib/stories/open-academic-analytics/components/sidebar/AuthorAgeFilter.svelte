@@ -1,9 +1,27 @@
 <script>
   import * as d3 from 'd3';
   import { dashboardState, unique } from '$stories/open-academic-analytics/state.svelte.js';
+  import { Baby } from "@lucide/svelte";
 
-  let availableAuthors = $derived(unique.authors);      // ✅ Clean
-  
+  // Use authors filtered by research group (but not age filter yet)
+  let availableAuthors = $derived.by(() => {
+    let authors = unique.authors || [];
+
+    // Apply research group filter only (not age filter)
+    if (dashboardState.researchGroupFilter && dashboardState.researchGroupFilter !== 'all') {
+      switch (dashboardState.researchGroupFilter) {
+        case 'with_group':
+          authors = authors.filter(author => author.has_research_group === true);
+          break;
+        case 'without_group':
+          authors = authors.filter(author => author.has_research_group === false);
+          break;
+      }
+    }
+
+    return authors;
+  });
+
   // Extract age data from available authors and calculate range
   let authorAgeData = $derived.by(() => {
     if (!availableAuthors || availableAuthors.length === 0) return { ages: [], min: 0, max: 100 };
@@ -130,9 +148,22 @@
       return age >= min && age <= max;
     }).length;
   });
+
+  // Show filter status like ResearchGroupFilter does
+  let filterStatus = $derived.by(() => {
+    if (!selectedAgeRange) return '';
+    const total = availableAuthors?.length || 0;
+    const filtered = filteredAuthorCount;
+    return `(${filtered} of ${total} authors)`;
+  });
 </script>
 
 <div class="age-filter-section">
+  <div class="filter-header">
+    <Baby size={14} />
+    <span class="filter-title">Author Age {filterStatus}</span>
+  </div>
+
   <div class="filter-section">
     
     <!-- Range display -->
@@ -208,6 +239,22 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .filter-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .filter-title {
+    font-size: var(--font-size-xsmall);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-fg);
   }
 
   .filter-section {

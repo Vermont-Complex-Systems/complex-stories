@@ -1,18 +1,22 @@
 import dagster as dg
 from dagster_duckdb import DuckDBResource
+from open_academic_analytics.defs.resources import ComplexStoriesAPIResource
 
 @dg.asset(
         description="📋 Load UVM Professors 2023 dataset from Complex Stories FastAPI backend (now with consistent data)",
         kinds={"duckdb"},
         group_name="import"
     )
-def uvm_profs_2023(duckdb: DuckDBResource) -> dg.MaterializeResult:
+def uvm_profs_2023(duckdb: DuckDBResource, complex_stories_api: ComplexStoriesAPIResource) -> dg.MaterializeResult:
     
     with duckdb.get_connection() as conn:
         # params
         payroll_year=2023
         ipeds_id=231174
-        api_url= f"https://api.complexstories.uvm.edu/datasets/academic-research-groups?inst_ipeds_id={ipeds_id}&year={payroll_year}&format=parquet"
+
+        # Use the API client's base URL to construct the parquet URL
+        client = complex_stories_api.get_client()
+        api_url = f"{client.base_url}/datasets/academic-research-groups?inst_ipeds_id={ipeds_id}&year={payroll_year}&format=parquet"
         
         row_count = conn.execute(
             f"""
@@ -28,6 +32,7 @@ def uvm_profs_2023(duckdb: DuckDBResource) -> dg.MaterializeResult:
                     CAST(first_pub_year AS INTEGER) as first_pub_year,
                     payroll_name,
                     position,
+                    last_updated,
                     CASE
                         WHEN LOWER(position) LIKE '%professor%' THEN 1
                         ELSE 0
