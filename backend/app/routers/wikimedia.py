@@ -19,7 +19,7 @@ class NgramResult(BaseModel):
 async def get_top_ngrams(
     dates: str = Query("2024-10-10,2024-10-20", description="Date or comma-separated dates (ISO format)"),
     countries: str = Query("United States", description="Country or comma-separated countries"),
-    topN: int = Query(10000, ge=1, le=100000, description="Maximum number of ngrams to return"),
+    topN: int = Query(10000, description="Number of ngrams to return"),
     include_probs: bool = Query(False, description="Include probability calculations"),
     include_totalunique: bool = Query(False, description="Include total unique count")
 ) -> Dict[str, List[NgramResult]]:
