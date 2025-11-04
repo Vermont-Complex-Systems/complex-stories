@@ -138,9 +138,21 @@ async def get_top_ngrams(
 @router.get("/search-term/{term}")
 async def search_term(
     term: str,
-    country: str = Query("United States", description="Country to search in")
+    country: str = Query("United States", description="Country to search in"),
+    date: Optional[str] = Query(None, description="Optional date filter (YYYY-MM-DD)")
 ):
-    """Search for a specific ngram term"""
+    """
+    Search for a specific ngram term.
+
+    Args:
+        term: The ngram term to search for
+        country: Country to search in (default: "United States")
+        date: Optional date filter in YYYY-MM-DD format. If provided, returns data for only that date.
+              If omitted, returns all available dates for the term and country.
+
+    Returns:
+        Dictionary containing termData array and query duration
+    """
     try:
         client = get_mongo_client()
         wikimedia_db = client.get_database("wikimedia")
@@ -148,12 +160,23 @@ async def search_term(
 
         start_time = time.time()
 
+        # Build query based on whether date is provided
+        query = {
+            "country": country,
+            "ngram": term.lower()
+        }
+
+        # Add date filter if provided
+        if date:
+            try:
+                parsed_date = datetime.fromisoformat(date.replace('Z', '+00:00'))
+                query["date"] = parsed_date
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=f"Invalid date format. Use YYYY-MM-DD: {e}")
+
         # Execute search query in thread pool
         def execute_search():
-            cursor = coll.find({
-                "country": country,
-                "ngram": term.lower()
-            }).max_time_ms(25000)
+            cursor = coll.find(query).max_time_ms(25000)
             return list(cursor)
 
         loop = asyncio.get_event_loop()
