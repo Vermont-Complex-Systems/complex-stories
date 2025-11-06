@@ -7,12 +7,12 @@
     import Controls from './Controls.svelte';
     import TrustCircles from './TrustCircles.svelte';
     import IndividualPoints from './IndividualPoints.svelte';
-    import DataPanel from './DataPanel.svelte';
+    // import DataPanel from './DataPanel.svelte';
     import { institutionColorMap, getInstitutionColor } from '../utils/institutionColors.js';
 
     // load data
     import trust_circles from '../data/trust_circles.csv';
-    import trust_circles_individual from '../data/trust_circles_individual.csv';
+    // import trust_circles_individual from '../data/trust_circles_individual.csv';
 
     let {
         scrollyIndex,
@@ -249,21 +249,21 @@
                         style="transition: r 0.8s ease-in-out, stroke-width 0.3s ease, opacity 0.3s ease; pointer-events: none;"
                     />
                 {/each}
-                <!-- {#if scrollyIndex === 1 && !isCollapsed}
-                    <IndividualPoints {scrollyIndex} individualPoints={individualPoints()} />
-                {/if} -->
             </svg>
         </div>
-
+        
+        <!-- {#if scrollyIndex === 1 && !isCollapsed}
+            <IndividualPoints {scrollyIndex} individualPoints={individualPoints()} />
+        {/if} -->
 
         <!-- DataPanel - only during main scrolly story, NOT in dashboard -->
-        {#if !isDashboard}
+        <!-- {#if !isDashboard}
             <div class="data-panel-wrapper"
                 class:visible={isStorySection}
                 class:fade-out={conclusionVisible}>
                 <DataPanel {highlightCircle} {selectedDemCategory} {selectedValue} {isDashboard} bind:isCollapsed />
             </div>
-        {/if}
+        {/if} -->
 
         <!-- Trust Distribution Chart in bottom right - only during main scrolly story, NOT in dashboard -->
         {#if !isDashboard}

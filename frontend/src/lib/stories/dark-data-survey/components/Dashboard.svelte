@@ -1,6 +1,6 @@
 <script>
     import TrustEvo from './TrustEvo.svelte';
-    import DataPanel from './DataPanel.svelte';
+    // import DataPanel from './DataPanel.svelte';
     import TrustDistributionChart from './TrustDistributionChart.svelte';
     import trust_circles from '../data/trust_circles.csv';
     import { scaleSequential } from 'd3-scale';
@@ -101,12 +101,12 @@
 
     <div class="visualization-container">
         <div class="left-panel">
-            <DataPanel
+            <!-- <DataPanel
                 {highlightCircle}
                 {selectedDemCategory}
                 {selectedValue}
                 isDashboard={true}
-                isCollapsed={false} />
+                isCollapsed={false} /> -->
         </div>
 
         <div class="center-viz">

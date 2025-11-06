@@ -3,6 +3,7 @@ import { base } from "$app/paths";
 import { scaleSequential } from 'd3-scale';
 import { interpolateRdYlGn } from 'd3-scale-chromatic';
 import { innerWidth, outerHeight } from 'svelte/reactivity/window';
+
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
 import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
@@ -10,10 +11,11 @@ import Scrolly from '$lib/components/helpers/Scrolly.svelte';
 
 import TrustEvo from './TrustEvo.svelte';
 import Survey from './Survey.svelte';
-import Dashboard from './Dashboard.svelte';
 import ConsentPopup from './ConsentPopup.svelte';
+import Dashboard from './Dashboard.svelte';
 
 import { renderContent, scrollyContent } from './Snippets.svelte';
+import { postAnswer, upsertAnswer } from '../data/data.remote.js';
 
 let { story, data } = $props();
 
@@ -36,27 +38,33 @@ $effect(() => {
     }
 });
 
-// Helper to safely post answers
-async function saveAnswer(field, value) {
+// Helper to safely post answers - returns a promise for await usage
+function saveAnswer(field, value) {
     if (!userFingerprint) {
         console.warn('Fingerprint not ready yet, skipping save');
-        return;
+        return Promise.resolve();
     }
-    try {
-        const response = await fetch('/api/survey', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fingerprint: userFingerprint, value, field })
-        });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to save');
-        }
+    // Fields that need string-to-ordinal conversion
+    const stringToOrdinalFields = ['consent', 'socialMediaPrivacy', 'institutionPreferences', 'demographicsMatter'];
 
-        console.log(`Successfully saved ${field}: ${value}`);
-    } catch (err) {
-        console.error(`Failed to save ${field}:`, err);
+    // Fields that already have numeric values
+    const numericFields = ['relativePreferences', 'govPreferences', 'polPreferences', 'age', 'gender_ord', 'orientation_ord', 'race_ord'];
+
+    // Handle special cases
+    if (field === 'platformMatters') {
+        // Convert array to comma-separated string for storage
+        const stringValue = Array.isArray(value) ? value.join(',') : value;
+        return upsertAnswer({ fingerprint: userFingerprint, field, value: stringValue });
+    } else if (stringToOrdinalFields.includes(field)) {
+        return postAnswer({ fingerprint: userFingerprint, field, value });
+    } else if (numericFields.includes(field)) {
+        // Convert string numbers to integers
+        const numericValue = parseInt(value, 10);
+        return upsertAnswer({ fingerprint: userFingerprint, field, value: numericValue });
+    } else {
+        console.error(`Unknown field: ${field}`);
+        return Promise.reject(new Error(`Unknown field: ${field}`));
     }
 }
 
@@ -138,12 +146,10 @@ $effect(() => {
         </div>
     </div>
 
-    <!-- Text Intro -->
     <section id="intro">
         {@render renderContent(data.intro)}
     </section>
 
-    <!-- ScrollyPlot -->
     <section id="story">
         <div class="scrolly-container" bind:this={storySection}>
             <div class="scrolly-chart">
@@ -164,15 +170,14 @@ $effect(() => {
         {@render renderContent(data.conclusion)}
     </section>
 
-    <!-- Interactive Dashboard -->
     <section id="dashboard" bind:this={dashboardSection}>
         <Dashboard {width} {height} />
     </section>
 </article>
 
-<div class="corner-image" class:hidden={conclusionVisible || dashboardVisible}>
+<!-- <div class="corner-image" class:hidden={conclusionVisible || dashboardVisible}>
     <img src="{base}/common/thumbnails/screenshots/dark-data.png" alt="Dark data visualization" />
-</div>
+</div> -->
 
 <style>
 /* -----------------------------

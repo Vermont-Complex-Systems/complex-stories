@@ -1,9 +1,10 @@
 <script module>
     import Scrolly from '$lib/components/helpers/Scrolly.svelte';
     import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
+    
     import Question from './Survey.Question.svelte';
-    import BarChartRank from './BarChartRank.svelte';
-    import {countCategory} from '../data/data.remote'
+    // import BarChartRank from './BarChartRank.svelte';
+    // import {countCategory} from '../data/data.remote'
 
     export { renderContent, scrollyContent, surveyScrollyContent };
 </script>
@@ -26,7 +27,7 @@
             <Md text={value}/>
         <!-- Each component should be added here. A bit sloppy. -->
         {:else if type === "component"}
-            {#if component === "chart-rank"}
+            <!-- {#if component === "chart-rank"}
                 {#await countCategory("TP_Social")}
                     load..
                 {:then data} 
@@ -34,7 +35,7 @@
                         <BarChartRank {data} fill={'types'}/>
                     </div>
                 {/await}    
-            {/if}
+            {/if} -->
         {:else if type === "markdown"}
             <Md text={value}/>
         {/if}
