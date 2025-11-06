@@ -40,6 +40,15 @@ class Settings(BaseSettings):
     # External APIs
     api_base: str = "http://localhost:8000"
     s2_api_key: str = ""
+    
+    sciscidb_data_root: str = ""
+    s2_data_root: str = ""
+    oa_data_root: str = ""
+    
+    duckdb_path: str = ""
+    duckdb_temp: str = ""
+
+    postgres_uri: str = ""
     mongodb_uri_old: str = ""
 
     # Data pipeline settings
