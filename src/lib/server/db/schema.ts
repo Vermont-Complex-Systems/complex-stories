@@ -1,4 +1,4 @@
-import { sqliteTable, integer, text, customType } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, integer, text, real, customType } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 // Custom ordinal type for survey responses (1-3 scale typically)
@@ -19,14 +19,23 @@ export const surveyResponses = sqliteTable('survey_responses', {
 	id: integer('id').primaryKey(),
 	// Browser fingerprint for duplicate prevention (unique constraint)
 	fingerprint: text('fingerprint').notNull().unique(),
+	// Consent (accepted/declined)
+	consent: text('consent'),
 	// Q1: Social media privacy (1=private, 2=mixed, 3=public)
 	socialMediaPrivacy: ordinalResponse('social_media_privacy'),
-	// Q2: Platform matters (1=no, 2=sometimes, 3=yes)
-	platformMatters: ordinalResponse('platform_matters'),
-	// Q3: Institution preferences (1=mostly same, 2=depends context, 3=vary greatly)
-	institutionPreferences: ordinalResponse('institution_preferences'),
-	// Q4: Demographics matter (1=no, 2=somewhat, 3=yes)
-	demographicsMatter: ordinalResponse('demographics_matter'),
+	// Q2: Which social media platforms (stored as JSON array)
+	platformMatters: text('platform_matters'),
+	// Q3: Comfort sharing PII with relatives (1-7 scale)
+	relativePreferences: integer('relative_preferences'),
+	// Q4: Comfort sharing PII with government (1-7 scale)
+	govPreferences: integer('gov_preferences'),
+	// Q5: Comfort sharing PII with police (1-7 scale)
+	polPreferences: integer('pol_preferences'),
+	// Demographics - optional
+	age: text('age'),
+	gender_ord: integer('gender_ord'),
+	orientation_ord: integer('orientation_ord'),
+	race_ord: integer('race_ord'),
 	// Timestamp (SQLite uses integer for timestamps)
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()

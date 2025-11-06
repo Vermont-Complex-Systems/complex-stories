@@ -3,25 +3,70 @@ import { base } from "$app/paths";
 import { scaleSequential } from 'd3-scale';
 import { interpolateRdYlGn } from 'd3-scale-chromatic';
 import { innerWidth, outerHeight } from 'svelte/reactivity/window';
+import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
 import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 import Scrolly from '$lib/components/helpers/Scrolly.svelte';
 
 import TrustEvo from './TrustEvo.svelte';
 import Survey from './Survey.svelte';
+import Dashboard from './Dashboard.svelte';
+import ConsentPopup from './ConsentPopup.svelte';
 
-import { renderContent, scrollyContent, surveyContent } from './Snippets.svelte';
+import { renderContent, scrollyContent } from './Snippets.svelte';
 
 let { story, data } = $props();
 
+// Consent state
+let hasConsented = $state(false);
+
+// Generate browser fingerprint using FingerprintJS
+let userFingerprint = $state('');
+
+$effect(() => {
+    if (typeof window !== 'undefined') {
+        FingerprintJS.load().then(fp => {
+            return fp.get();
+        }).then(result => {
+            userFingerprint = result.visitorId;
+            console.log('Fingerprint loaded:', userFingerprint);
+        }).catch(err => {
+            console.error('Failed to load fingerprint:', err);
+        });
+    }
+});
+
+// Helper to safely post answers
+async function saveAnswer(field, value) {
+    if (!userFingerprint) {
+        console.warn('Fingerprint not ready yet, skipping save');
+        return;
+    }
+    try {
+        const response = await fetch('/api/survey', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fingerprint: userFingerprint, value, field })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to save');
+        }
+
+        console.log(`Successfully saved ${field}: ${value}`);
+    } catch (err) {
+        console.error(`Failed to save ${field}:`, err);
+    }
+}
 
 // Generate people data using imported function
 
 let selectedDemographic = $state('white_men');
 
 // Scrolly state management - separate states for survey and story
-let surveyScrollyState = $state({ 
-    scrollyIndex: undefined,
+let surveyScrollyState = $state({
+    scrollyIndex: 0,
     isMobile: false,
     isTablet: false
 });
@@ -41,6 +86,8 @@ let height = $state(outerHeight.current);
 let storySection = $state();
 let conclusionSection = $state();
 let conclusionVisible = $state(false);
+let dashboardSection = $state();
+let dashboardVisible = $state(false);
 
 // Detect when conclusion section is visible
 $effect(() => {
@@ -48,18 +95,34 @@ $effect(() => {
         const observer = new IntersectionObserver((entries) => {
             conclusionVisible = entries[0].isIntersecting;
         }, { threshold: 0.3 });
-        
+
         observer.observe(conclusionSection);
-        
+
+        return () => observer.disconnect();
+    }
+});
+
+// Detect when dashboard section is visible
+$effect(() => {
+    if (typeof window !== 'undefined' && dashboardSection) {
+        const observer = new IntersectionObserver((entries) => {
+            dashboardVisible = entries[0].isIntersecting;
+        }, { threshold: 0.3 });
+
+        observer.observe(dashboardSection);
+
         return () => observer.disconnect();
     }
 });
 
 </script>
 
+<!-- Consent Popup -->
+<ConsentPopup onAccept={() => hasConsented = true} {userFingerprint} {saveAnswer} />
+
 <article id="dark-data-survey">
-    
-    <Survey bind:scrollyState={surveyScrollyState} />
+
+    <Survey bind:scrollyState={surveyScrollyState} {userFingerprint} {saveAnswer} />
 
     <div class="title">
         <h1>{data.title}</h1>
@@ -67,7 +130,7 @@ $effect(() => {
 
         <div class="article-meta">
             <p class="author">
-                By {@html data.author1} and {@html data.author2}
+                By <a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/jonathan-st-onge>Jonathan St-Onge</a> and <a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/juniper-lisa-lovato>Juniper Lovato</a>
             </p>
             <p class="date">
                 {data.date}
@@ -81,15 +144,13 @@ $effect(() => {
     </section>
 
     <!-- ScrollyPlot -->
-    <h2>{data.ScrolylSectionTitle}</h2>
     <section id="story">
         <div class="scrolly-container" bind:this={storySection}>
             <div class="scrolly-chart">
                 <TrustEvo
-                    scrollyIndex={storyScrollyState.scrollyIndex} 
-                    {selectedDemographic} 
+                    scrollyIndex={storyScrollyState.scrollyIndex}
                     {width} {height}
-                    isStorySection={true}
+                    isStorySection={storyScrollyState.scrollyIndex !== undefined}
                     {storySection}
                     {conclusionVisible} />
             </div>
@@ -102,156 +163,165 @@ $effect(() => {
     <section id="conclusion" bind:this={conclusionSection}>
         {@render renderContent(data.conclusion)}
     </section>
+
+    <!-- Interactive Dashboard -->
+    <section id="dashboard" bind:this={dashboardSection}>
+        <Dashboard {width} {height} />
+    </section>
 </article>
 
-<div class="corner-image" class:hidden={conclusionVisible}>
+<div class="corner-image" class:hidden={conclusionVisible || dashboardVisible}>
     <img src="{base}/common/thumbnails/screenshots/dark-data.png" alt="Dark data visualization" />
 </div>
 
 <style>
+/* -----------------------------
+   Global Dark Mode Context
+----------------------------- */
+:global(body:has(#dark-data-survey)) {
+    overflow-x: hidden;
+    background-color: #2b2b2b;
+    color: #ffffff;
+    font-family: var(--sans);
+}
 
-    :global(body:has(#dark-data-survey)) {
-        overflow-x: hidden;
-        background-color: #2b2b2b;
-        color: #ffffff;
-    }
+/* Headings */
+:global(body:has(#dark-data-survey)) h1,
+:global(body:has(#dark-data-survey)) h2 {
+    font-family: var(--serif);
+    max-width: 450px;
+    margin: 6rem auto 1rem auto;
+    text-align: center;
+}
 
-    :global(body:has(#dark-data-survey)) h1, h2 {
-        font-family: var(--serif);
-        max-width: 450px;
-        font-size: var(--font-size-giant);
-        margin: 6rem auto 1rem auto;
-        text-align: center;
-    }    
+:global(body:has(#dark-data-survey)) h1 {
+    font-size: var(--font-size-giant);
+}
 
-    :global(body:has(#dark-data-survey)) .title {
-        margin: 0 auto 5rem auto;
+:global(body:has(#dark-data-survey)) h2 {
+    font-size: var(--font-size-medium);
+    font-weight: 400;
+    margin: 0 auto 3rem auto;
+}
+
+/* -----------------------------
+   Text & Paragraphs
+----------------------------- */
+:global(#dark-data-survey p) {
+    color: whitesmoke;
+}
+
+/* Make sure intro & conclusion text remain white */
+:global(#intro p),
+:global(#conclusion p) {
+    color: whitesmoke;
+}
+
+/* Scrolly text specifically black for readability */
+:global(.scrolly-container .markdown-content),
+:global(.scrolly-container .markdown-content p) {
+    color: black !important;
+}
+
+/* -----------------------------
+   Title & Meta Section
+----------------------------- */
+.title {
+    margin: 0 auto 5rem auto;
+    text-align: center;
+}
+
+.article-meta {
+    margin: -1rem auto 2rem auto;
+    max-width: 30rem;
+    font-family: var(--sans);
+    text-align: center;
+}
+
+.article-meta .author {
+    font-size: var(--font-size-medium);
+    margin: -1rem auto 2rem auto;
+    max-width: 30rem;
+    font-family: var(--sans);
+    text-align: center;
+}
+
+.article-meta .author a {
+    font-size: var(--font-size-medium);
+    color: var(--color-gray-300);
+    margin: 0 0 0.25rem 0;
+    font-weight: 500;
+}
+
+.article-meta .date {
+    font-size: var(--font-size-small);
+    color: var(--color-tertiary-gray);
+    margin: 0;
+    font-weight: 400;
+}
+
+/* -----------------------------
+   Scrolly Section
+----------------------------- */
+.scrolly-container {
+    position: relative;
+    min-height: 100vh;
+}
+
+.scrolly-chart {
+    position: sticky;
+    top: calc(50vh - 500px);
+    height: fit-content;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* -----------------------------
+   Corner Image
+----------------------------- */
+.corner-image {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    max-width: 10rem;
+    z-index: 10;
+    opacity: 1;
+    transition: opacity 0.6s ease;
+}
+
+.corner-image.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.corner-image img {
+    width: 100%;
+    height: auto;
+    transition: opacity 0.3s ease;
+}
+
+.corner-image:hover img {
+    opacity: 1;
+}
+
+/* -----------------------------
+   Responsive Adjustments
+----------------------------- */
+@media (max-width: 768px) {
+    :global(body:has(#dark-data-survey)) h1 {
+        font-size: 4rem;
     }
 
     :global(body:has(#dark-data-survey)) h2 {
-        font-size: var(--font-size-medium);
-        font-weight: 400;
-        margin: 0 auto 3rem auto;
-        text-align: center;
-    }    
-    
-    :global(body:has(#dark-data-survey)) p {
-        color: whitesmoke !important;
-    }
-    
-    /* Ensure intro text is white */
-    :global(#intro p) {
-        color: whitesmoke !important;
-    }    
-    
-    :global(#conclusion p) {
-        color: whitesmoke !important;
-    }    
-    
-    /* Make scrolly content black for readability */
-    :global(.scrolly-container .markdown-content),
-    :global(.scrolly-container .markdown-content p) {
-        color: black !important;
-    }    
-
-    .logo-container {
-        margin: 1rem auto 0 auto;
-        max-width: 8rem;
-        position: relative;
+        font-size: 2rem;
     }
 
-    .article-meta {
-        margin: -1rem auto 2rem auto;
-        font-family: var(--sans);
-        max-width: 30rem;
-        text-align: center;
-    }
-    
     .article-meta .author {
-        font-size: var(--font-size-medium);
-        color: var(--color-secondary-gray);
-        margin: 0 0 0.25rem 0;
-        font-weight: 500;
-        text-align: center !important;
+        font-size: var(--font-size-large);
     }
-    
+
     .article-meta .date {
-        font-size: var(--font-size-small);
-        color: var(--color-tertiary-gray);
-        margin: 0;
-        font-weight: 400;
-        text-align: center !important;
+        font-size: var(--font-size-medium);
     }
-
-
-
-    /* -----------------------------
-
-    Scrolly 
-
-    ----------------------------- */
-
-    /* centered layout for text and plot */
-    .scrolly-container {
-        position: relative;
-        min-height: 100vh;
-
-    }
-    
-    /* make the plot sticky and centered - circle plot */
-    .scrolly-chart {
-        position: sticky;
-        top: calc(50vh - 500px);
-        height: fit-content;
-        z-index: 1;
-        pointer-events: none;
-    }
-
-    @media (max-width: 768px) {
-        :global(body:has(#dark-data-survey)) h1 {
-            font-size: 4rem !important;
-        }
-        
-        :global(body:has(#dark-data-survey)) h2 {
-            font-size: 2rem !important;
-        }
-        
-        .article-meta .author {
-            font-size: var(--font-size-large) !important;
-        }
-        
-        .article-meta .date {
-            font-size: var(--font-size-medium) !important;
-        }
-        
-        .logo-container {
-            max-width: 6rem;
-        }
-    }
-
-    .corner-image {
-        position: fixed;
-        bottom: 2rem;
-        left: 2rem;
-        max-width: 10rem;
-        z-index: 10;
-        opacity: 1;
-        transition: opacity 0.6s ease;
-    }
-
-    .corner-image.hidden {
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    .corner-image img {
-        width: 100%;
-        height: auto;
-        transition: opacity 0.3s ease;
-    }
-
-    .corner-image:hover img {
-        opacity: 1;
-    }
-
+}
 </style>
