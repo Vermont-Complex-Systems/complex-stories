@@ -20,15 +20,18 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
+        cache-dependency-path: 'frontend/package-lock.json'
 
     - name: Install dependencies
-      run: npm ci
+      run: cd frontend && npm ci
 
     - name: Build application
-      run: npm run build
+      env:
+        API_BASE: ${{ secrets.API_BASE }}
+      run: cd frontend && npm run build
 
     - name: Run tests (if you have any)
-      run: npm test --if-present
+      run: cd frontend && npm test --if-present
 
   deploy:
     needs: build
@@ -50,17 +53,20 @@ jobs:
     - name: Deploy to VM
       run: |
         ssh -i ~/.ssh/deploy_key ${{ secrets.VM_USERNAME }}@${{ secrets.VM_HOST }} << 'EOF'
-          cd ~/complex-stories
+          cd ~/complex-stories-main
           git pull origin main
+          cd frontend
           npm ci --only=production
+          npm install
           npm run build
-          pm2 restart complex-stories
+          cd ..
+          pm2 restart ecosystem.config.json
           
           # Wait for app to start
           sleep 10
           
           # Health check
-          if pm2 describe complex-stories | grep -q "online"; then
+          if pm2 describe complex-stories-main | grep -q "online"; then
             echo "✅ Deployment successful - app is online"
             exit 0
           else

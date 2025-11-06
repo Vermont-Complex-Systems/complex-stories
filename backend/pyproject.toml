@@ -1,0 +1,38 @@
+[project]
+name = "complex-stories-backend"
+version = "0.1.0"
+description = "Complex Stories Backend - FastAPI + Data Pipelines"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "dagster>=1.11.12",
+    "dagster-dg-cli>=1.11.12",
+    "dagster-duckdb>=0.27.12",
+    "dagster-webserver>=1.11.12",
+    "fastapi[standard]>=0.118.0",
+    "sqlalchemy>=2.0.0",
+    "psycopg[binary,pool]>=3.1.0",
+    "alembic>=1.13.0",
+    "pandas>=2.3.3",
+    "pyarrow>=21.0.0",
+    "pydantic-settings>=2.11.0",
+    "umap-learn>=0.5.9.post2",
+    "fastparquet>=2024.11.0",
+    "ipykernel>=6.30.1",
+    "shared",
+    "pymongo>=4.15.3",
+    "label-studio-sdk>=2.0.12",
+    "pymupdf>=1.26.5",
+    "passlib[argon2]>=1.7.4",
+    "python-jose[cryptography]>=3.3.0",
+]
+
+[tool.uv.workspace]
+members = [
+    "shared",
+]
+
+[tool.uv.sources]
+shared = { workspace = true, editable = true }
+
+
