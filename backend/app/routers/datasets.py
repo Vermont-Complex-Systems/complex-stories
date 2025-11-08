@@ -6,7 +6,7 @@ import pandas as pd
 from typing import List, Dict, Any, Optional
 import io
 from ..core.database import get_db_session
-from ..models.annotation_datasets import AcademicResearchGroups, AcademicResearchGroupCreate
+from ..models.annotation_datasets import AcademicResearchGroups, AcademicResearchGroupCreate, GoogleScholarVenues
 from ..routers.auth import get_admin_user, get_current_active_user
 from ..models.auth import User
 
@@ -27,6 +27,19 @@ def get_available_datasets() -> List[Dict[str, Any]]:
         "endpoints": {
             "json": "/datasets/academic-research-groups",
             "parquet": "/datasets/academic-research-groups?format=parquet"
+        }
+    })
+
+    # Google Scholar venues dataset (overthinking-fos)
+    datasets.append({
+        "name": "google-scholar-venues",
+        "description": "Google Scholar top venues by field with h5-index metrics",
+        "format": "Dynamic (JSON/Parquet)",
+        "source": "Database",
+        "keywords": ["overthinking-fos", "venues", "google-scholar", "h5-index", "fields-of-study"],
+        "endpoints": {
+            "json": "/datasets/google-scholar-venues",
+            "parquet": "/datasets/google-scholar-venues?format=parquet"
         }
     })
 
@@ -133,7 +146,8 @@ async def get_academic_research_group_by_id(
         raise HTTPException(status_code=404, detail="Faculty member not found")
     return group
 
-@router.put("/academic-research-groups/{record_id}")
+
+@admin_router.put("/academic-research-groups/{record_id}")
 async def update_academic_research_group_by_id(
     record_id: int,
     group_update: Dict[str, Any],
@@ -168,7 +182,7 @@ async def update_academic_research_group_by_id(
     await db.refresh(group)
     return group
 
-@router.delete("/academic-research-groups/{record_id}")
+@admin_router.delete("/academic-research-groups/{record_id}")
 async def delete_academic_research_group(
     record_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -323,3 +337,115 @@ async def bulk_create_academic_research_groups(
         "groups": db_groups,
         "user_sync": user_sync_result
     }
+
+@router.get("/google-scholar-venues")
+async def get_google_scholar_venues(
+    format: str = "json",
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Get Google Scholar venues data - return JSON or download parquet."""
+
+    query = select(GoogleScholarVenues).order_by(GoogleScholarVenues.h5_index.desc())
+    result = await db.execute(query)
+    venues = result.scalars().all()
+
+    data = []
+    for venue in venues:
+        data.append({
+            'source': venue.source,
+            'venue': venue.venue,
+            'field': venue.field,
+            'h5_index': venue.h5_index,
+            'h5_median': venue.h5_median
+        })
+
+    if format.lower() == "parquet":
+        # Convert to DataFrame for parquet export
+        df = pd.DataFrame(data)
+
+        # Convert to parquet and return as download
+        buffer = io.BytesIO()
+        df.to_parquet(buffer, index=False, engine="pyarrow")
+        buffer.seek(0)
+        parquet_bytes = buffer.read()
+
+        return StreamingResponse(
+            io.BytesIO(parquet_bytes),
+            media_type="application/octet-stream",
+            headers={"Content-Disposition": "attachment; filename=google-scholar-venues.parquet"}
+        )
+    else:
+        return data
+
+@admin_router.post("/google-scholar-venues/import")
+async def import_google_scholar_data(
+    records: List[Dict[str, Any]],
+    clear_existing: bool = True,
+    current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Import Google Scholar venue data from request payload."""
+    try:
+        if clear_existing:
+            # Clear existing data
+            from sqlalchemy import delete
+            await db.execute(delete(GoogleScholarVenues))
+
+        imported_count = 0
+        batch = []
+        batch_size = 100
+
+        for row in records:
+            # Helper function to clean strings
+            def clean_string(value):
+                if value is None or value == '':
+                    return None
+                return str(value).strip()
+
+            # Helper function to parse integers
+            def parse_int(value):
+                if value is None or value == '':
+                    return None
+                try:
+                    return int(float(value))
+                except (ValueError, TypeError):
+                    return None
+
+            # Convert row to database record with validation
+            record = GoogleScholarVenues(
+                source=clean_string(row.get('source')),
+                venue=clean_string(row.get('venue')),
+                field=clean_string(row.get('field')),
+                h5_index=parse_int(row.get('h5_index')),
+                h5_median=parse_int(row.get('h5_median'))
+            )
+
+            # Validate required fields
+            if not all([record.source, record.venue, record.field,
+                       record.h5_index is not None, record.h5_median is not None]):
+                continue  # Skip records with missing required fields
+
+            batch.append(record)
+
+            # Process batch
+            if len(batch) >= batch_size:
+                db.add_all(batch)
+                await db.commit()
+                imported_count += len(batch)
+                batch = []
+
+        # Process remaining records
+        if batch:
+            db.add_all(batch)
+            await db.commit()
+            imported_count += len(batch)
+
+        return {
+            "message": "Google Scholar venue data imported successfully",
+            "imported_count": imported_count,
+            "records_received": len(records)
+        }
+
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")

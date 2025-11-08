@@ -18,24 +18,25 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 
+
 def create_ducklake_tables_if_not_exist(conn: duckdb.DuckDBPyConnection):
     """Create DuckLake tables if they don't exist"""
-    
+
     # Check if tables exist
     tables = conn.execute("""
-        SELECT table_name 
-        FROM ducklake_table 
+        SELECT table_name
+        FROM ducklake_table
         WHERE table_name IN ('papers', 's2orc_v2')
     """).fetchall()
-    
+
     existing_tables = [t[0] for t in tables]
-    
+
     # Create papers table if needed
     if 'papers' not in existing_tables:
         logger.info("Creating papers table...")
         conn.execute("""
-            CREATE TABLE papers AS 
-            SELECT * FROM read_parquet('dummy.parquet') 
+            CREATE TABLE papers AS
+            SELECT * FROM read_parquet('dummy.parquet')
             WHERE 1=0
         """)
         logger.info("✓ Created papers table")
@@ -172,20 +173,20 @@ def main():
     )
     
     args = parser.parse_args()
-    
+
     try:
         update_ducklake(
             dataset_name=args.dataset,
             release_version=args.release_version
         )
-        
+
         print(f"\n🎉 SUCCESS!")
         print(f"📋 Dataset '{args.dataset}' is now in DuckLake")
         print(f"\n💡 Query it:")
-        print(f"   duckdb {config.duckdb_path}")
-        print(f"   > ATTACH 'ducklake:postgres:...' AS s2 (...);")
-        print(f"   > SELECT * FROM s2.{args.dataset.replace('-', '_')} LIMIT 10;")
-        
+        print(f"   duckdb")
+        print(f"   > ATTACH 'ducklake:postgres:...' AS scisciDB (...);")
+        print(f"   > SELECT * FROM scisciDB.{args.dataset.replace('-', '_')} LIMIT 10;")
+
     except Exception as e:
         print(f"❌ Export failed: {e}")
         sys.exit(1)

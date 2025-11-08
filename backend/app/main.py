@@ -68,7 +68,7 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Include routers
-app.include_router(auth.router, prefix="/auth", tags=["authentication"])
+app.include_router(auth.router, prefix="/auth", tags=["authentication"], include_in_schema=False)
 app.include_router(open_academic_analytics.router, prefix="/open-academic-analytics", tags=["academics"])
 app.include_router(datasets.router, prefix="/datasets", tags=["datasets"])
 app.include_router(wikimedia.router, prefix="/wikimedia", tags=["wikimedia"])
