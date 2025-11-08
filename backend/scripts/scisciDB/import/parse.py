@@ -59,17 +59,30 @@ def convert_s2orc_v2(conn: duckdb.DuckDBPyConnection, json_file: Path, output_fi
         (FORMAT PARQUET, COMPRESSION 'zstd')
     """)
 
-def convert_generic(conn: duckdb.DuckDBPyConnection, json_file: Path, output_file: Path) -> None:
+def convert_openalex(conn: duckdb.DuckDBPyConnection, json_file: Path, output_file: Path) -> None:
     """
-    Generic converter: Read JSON as-is, write to Parquet
-    Works for papers, authors, venues, etc.
+    OpenAlex converter: Handle problematic abstract_inverted_index field as VARCHAR
+    """
+    conn.execute(f"""
+        COPY (
+            SELECT
+                * EXCLUDE (abstract_inverted_index),
+                abstract_inverted_index::VARCHAR as abstract_inverted_index
+            FROM read_json_auto('{json_file}', ignore_errors=true)
+        )
+        TO '{output_file}' (FORMAT PARQUET, COMPRESSION 'zstd')
+    """)
+
+def convert_semantic_scholar(conn: duckdb.DuckDBPyConnection, json_file: Path, output_file: Path) -> None:
+    """
+    Semantic Scholar converter: Standard JSON to Parquet conversion
     """
     conn.execute(f"""
         COPY (SELECT * FROM read_json_auto('{json_file}', ignore_errors=true))
         TO '{output_file}' (FORMAT PARQUET, COMPRESSION 'zstd')
     """)
 
-def parse_json_to_parquet(dbname: str, dataset_name: str) -> Path:
+def parse_json_to_parquet(dbname: str, dataset_name: str, force: bool = False) -> Path:
     """
     Convert JSON/JSON.GZ files to Parquet format
     
@@ -107,26 +120,90 @@ def parse_json_to_parquet(dbname: str, dataset_name: str) -> Path:
         raise FileNotFoundError(f"No JSON files found in {dataset_input_dir}")
     
     print(f"[IMPORT] Found {len(json_files)} files to parse")
-    
+
+    # Cleanup and validation
+    cleanup_empty_parquet_files(dataset_input_dir)
+    json_files = filter_valid_json_files(json_files)
+
     # Setup DuckDB
     conn = duckdb.connect()
-    
+
     # Parse each file
+    parsed_files = process_json_files(conn, json_files, dataset_name, dbname, force)
+
+    if not parsed_files:
+        raise RuntimeError("No files were successfully parsed")
+
+    # Create manifest and finish
+    return create_manifest_and_finish(dataset_name, dataset_output_dir, json_files, parsed_files)
+
+def cleanup_empty_parquet_files(dataset_dir: Path) -> None:
+    """Remove any existing empty or broken parquet files."""
+    print(f"[IMPORT] Cleaning up empty parquet files...")
+    parquet_files = list(dataset_dir.glob("*.parquet")) + list(dataset_dir.glob("**/*.parquet"))
+    removed_count = 0
+
+    for parquet_file in parquet_files:
+        if parquet_file.stat().st_size < 130:  # Very small parquet files are likely empty/broken
+            print(f"[IMPORT]   Removing empty parquet: {parquet_file.name} ({parquet_file.stat().st_size} bytes)")
+            parquet_file.unlink()
+            removed_count += 1
+
+    if removed_count > 0:
+        print(f"[IMPORT] Removed {removed_count} empty parquet files")
+    else:
+        print(f"[IMPORT] No empty parquet files found")
+
+def filter_valid_json_files(json_files: list) -> list:
+    """Filter out empty JSON files that would cause issues."""
+    valid_files = []
+    for json_file in json_files:
+        file_size = json_file.stat().st_size
+        if file_size < 50:  # Skip files smaller than 10 bytes (essentially empty)
+            print(f"[IMPORT] ⚠️  Skipping empty JSON file: {json_file.name} ({file_size} bytes)")
+        else:
+            valid_files.append(json_file)
+
+    print(f"[IMPORT] Valid JSON files: {len(valid_files)}/{len(json_files)}")
+    return valid_files
+
+def should_skip_conversion(json_file: Path, force: bool = False) -> tuple[bool, Path]:
+    """Check if conversion should be skipped (parquet already exists)."""
+    output_file = json_file.parent / (json_file.stem.replace('.json', '') + '.parquet')
+
+    if force:
+        return False, output_file
+
+    if output_file.exists() and output_file.stat().st_size > 100:
+        return True, output_file
+    return False, output_file
+
+def process_json_files(conn: duckdb.DuckDBPyConnection, json_files: list, dataset_name: str, dbname: str, force: bool = False) -> list:
+    """Process all JSON files, converting to parquet where needed."""
     parsed_files = []
+
     for i, json_file in enumerate(sorted(json_files), 1):
-        # json_file = sorted(json_files)[156]
-        print(f"[IMPORT] Parsing {i}/{len(json_files)}: {json_file.name}")
-        
-        output_file = json_file.parent  / (json_file.stem.replace('.json', '') + '.parquet')
-        
+        print(f"[IMPORT] Processing {i}/{len(json_files)}: {json_file.name}")
+
+        # Check if we should skip conversion
+        should_skip, output_file = should_skip_conversion(json_file, force)
+
+        if should_skip:
+            print(f"[IMPORT]   ✓ Parquet already exists, skipping ({output_file.stat().st_size} bytes)")
+            parsed_files.append(output_file.name)
+            continue
+
         try:
-            # Choose converter based on dataset
+            # Choose converter based on dataset and database
             if dataset_name == 's2orc_v2':
                 convert_s2orc_v2(conn, json_file, output_file)
                 print(f"[IMPORT] Using s2orc_v2 converter (structured annotations)")
+            elif dbname == 'openalex':
+                convert_openalex(conn, json_file, output_file)
+                print(f"[IMPORT] Using OpenAlex converter (abstract_inverted_index as VARCHAR)")
             else:
-                convert_generic(conn, json_file, output_file)
-                print(f"[IMPORT] Using generic converter")
+                convert_semantic_scholar(conn, json_file, output_file)
+                print(f"[IMPORT] Using Semantic Scholar converter")
                 
             
             # Get file sizes
@@ -147,7 +224,11 @@ def parse_json_to_parquet(dbname: str, dataset_name: str) -> Path:
         except Exception as e:
             print(f"[IMPORT]   ✗ Failed: {e}")
             continue
-    
+
+    return parsed_files
+
+def create_manifest_and_finish(dataset_name: str, dataset_output_dir: Path, json_files: list, parsed_files: list) -> Path:
+    """Create manifest file and finish up the parsing process."""
     if not parsed_files:
         raise RuntimeError("No files were successfully parsed")
     
@@ -186,17 +267,25 @@ def main():
     )
     parser.add_argument(
         "db_name",
-        help="Database name (open-alex, semanticscholar.)"
+        help="Database name (openalex, s2, etc.)"
     )
     parser.add_argument(
         "dataset_name",
-        help="Dataset name (papers, authors, s2orc_v2, etc.)"
+        help="Dataset name (works, papers, authors, s2orc_v2, etc.)"
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force reparse all files, even if parquet already exists"
     )
     
     args = parser.parse_args()
     
     try:
-        parse_json_to_parquet(args.db_name, args.dataset_name)
+        if args.force:
+            print("🔄 Force mode enabled - will reparse all files")
+
+        parse_json_to_parquet(args.db_name, args.dataset_name, args.force)
         
         print(f"\n🎉 SUCCESS!")
         print(f"\n📋 Next steps:")

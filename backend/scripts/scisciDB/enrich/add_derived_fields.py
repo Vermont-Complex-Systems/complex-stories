@@ -24,6 +24,15 @@ import json
 #     WHERE o.corpusid = p.corpusid
 # );
 
+# Counting fields
+# SELECT
+#       list_filter(s2fieldsofstudy, x -> x.source = 's2-fos-model')[1].category as field,
+#       COUNT(*) as count
+#   FROM s2_papers
+#   WHERE s2fieldsofstudy IS NOT NULL
+#   GROUP BY field
+#   ORDER BY count DESC;
+
 def add_primary_field(import_dir: Path, output_dir: Path, dataset_name: str):
     """
     Add primary_s2field - similar to your MongoDB add_primary_s2field()

@@ -1,4 +1,4 @@
-.PHONY: all download parse load enrich export-subset
+.PHONY: all download parse reparse load enrich export-subset
 
 DATASET ?= papers
 DB ?= semanticscholar
@@ -17,6 +17,10 @@ download_oa:
 parse:
 	@echo "=== IMPORT: Parse $(DATASET) (from $(DB)) ==="
 	python import/parse.py $(DB) $(DATASET)
+
+reparse:
+	@echo "=== IMPORT: Force reparse $(DATASET) (from $(DB)) ==="
+	python import/parse.py $(DB) $(DATASET) --force
 
 load:
 	@echo "=== LOAD: Load to DuckLake ==="
