@@ -126,6 +126,77 @@
         <strong>TODO:</strong> Add aggregated bar chart by subcategories of venues (see google scholar for the subcategories).
     </InsightBox>
 
+     <p>You can explore the coverage of any specific field below:</p>
+
+    {#await getAllPapers()}
+        <p>Loading...</p>
+    {:then data}    
+        {@const filtered_data = data.filter((d) => d.field == selectedField && d.year >= minYear)}
+        {@const uniq_venues = new Set(filtered_data.map(d=>d.venue))}
+        
+        <div class="chart-container">
+            
+            <!-- Controls -->
+            <div class="controls">
+                <label>
+                Google Scholar Category:
+                {#await getFields()}
+                    <select disabled>
+                    <option>Loading venues...</option>
+                    </select>
+                {:then fields}
+                    <Select bind:value={selectedField} options={fields}/>
+                {:catch error}
+                    <select disabled>
+                    <option>Error loading venues</option>
+                    </select>
+                {/await}
+                </label>
+                
+                <label>
+                MinYear: {minYear}
+                <Slider bind:value={minYear}/>
+                </label>
+            </div>
+
+            <div class="chart2-container">
+
+                <Plot 
+                x={{tickRotate: 40, label: '', tickSpacing: 100}}
+                y={{grid: true, axis: 'right' }}
+                fy={{axis: false }}
+                frame
+                height={800}
+                maxWidth="400px"
+                marginRight={40}
+                marginLeft={25}
+                >
+                <BarY 
+                data={filtered_data}
+                x="year"
+                y="count"
+                fy="venue"
+                fillOpacity=0.1
+                font-size=13
+                stroke="black"
+                />
+                <Text 
+                data={filtered_data}
+                text={(d) => d.venue.length > 50 ? d.venue.slice(0,50)+'...' : d.venue}
+                fy="venue"
+                frameAnchor="top-left"
+                dx={5}
+                dy={5}
+                fontSize={12}
+                
+                fontFamily='sans-serif'
+                />
+            </Plot>
+            </div>
+            <p style="font-size: 0.8rem; display: flex; justify-content: center; align-items: center;">p.s. {Array.from(uniq_venues).length} / 20 venues are showing up with this approach.</p>
+        </div>
+    {/await}
+
 </div>
 </section>
 

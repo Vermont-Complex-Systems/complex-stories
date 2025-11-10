@@ -46,89 +46,97 @@ def get_duckdb_connection():
     conn.execute("USE scisciDB;")
     return conn
 
-def add_openalex_id_column(conn):
-    """
-    Add OpenAlex ID column to s2_papers table.
+def create_papers_lookup(conn):
+    """Create DOI-based lookup table between S2 papers and OpenAlex works."""
+    logger.info("Creating papers lookup table (S2 ↔ OpenAlex via DOI)...")
 
-    This function:
-    1. Adds oa_id column if it doesn't exist
-    2. Matches records between s2_papers and oa_works using normalized external IDs
-    3. Populates oa_id with OpenAlex identifier for matched records
-
-    Args:
-        conn: DuckDB connection with DuckLake attached
-    """
-
-    logger.info("Adding oa_id column to s2_papers...")
-
-    # Add column if it doesn't exist
     try:
-        conn.execute("ALTER TABLE s2_papers ADD COLUMN oa_id VARCHAR;")
-        logger.info("Added oa_id column to s2_papers")
-    except Exception as e:
-        if "already exists" in str(e).lower():
-            logger.info("oa_id column already exists")
-        else:
-            raise e
-
-    logger.info("using doi to merge...")
-
-    # Get total count for context
-    total_papers = conn.execute("SELECT COUNT(*) FROM s2_papers WHERE externalids.DOI IS NOT NULL").fetchone()[0]
-    logger.info(f"Found {total_papers:,} s2_papers with DOIs to match")
-
-    # Show progress bar during the long-running query
-    with tqdm(desc="Matching DOIs", unit=" papers", bar_format="{desc}: {elapsed} elapsed") as pbar:
-        start_time = time.time()
-
-        result = conn.execute("""
-            UPDATE s2_papers AS s2
-            SET oa_id = oa.ids.openalex
-            FROM oa_works AS oa
-            WHERE (
-                s2.externalids.DOI IS NOT NULL
-                AND oa.doi IS NOT NULL
-                AND s2.externalids.DOI = regexp_replace(oa.doi, '^https://doi.org/', '')
-            )
+        conn.execute(f"""
+            CREATE TABLE papersLookup (
+                corpusid INT32,
+                oa_id VARCHAR,
+                publication_year INT16,
+                match_method VARCHAR,
+                match_confidence FLOAT,
+                created_at TIMESTAMP
+            );
         """)
-
-        elapsed = time.time() - start_time
-        pbar.close()
-
-    rows_affected = result.rowcount if hasattr(result, 'rowcount') else 'Unknown'
-    logger.info(f"ID matching complete in {elapsed:.1f} seconds. Rows affected: {rows_affected}")
-
-    if isinstance(rows_affected, int) and total_papers > 0:
-        match_rate = (rows_affected / total_papers) * 100
-        logger.info(f"Match rate: {match_rate:.1f}% ({rows_affected:,} / {total_papers:,})")
-
-def sync_openalex_ids():
-    """
-    Main function to sync OpenAlex IDs with s2_papers.
-
-    This is the primary entry point for establishing the ID mapping
-    between S2 papers and OpenAlex works.
-    """
-
-    logger.info("Starting OpenAlex ID sync process...")
-
-    # Get connection
-    conn = get_duckdb_connection()
-
-    try:
-        # Add and populate oa_id column
-        add_openalex_id_column(conn)
-
-        logger.info("OpenAlex ID sync completed successfully!")
-        return stats
+        
+        conn.execute(f"""
+            ALTER TABLE papersLookup SET PARTITIONED BY (publication_year, match_method);
+        """)
+        
+        conn.execute(f"""
+            INSERT INTO papersLookup
+            SELECT 
+                s2.corpusid::INT32,
+                oa.id,
+                oa.publication_year::INT16,
+                'doi' as match_method,
+                1.0 as match_confidence,
+                CURRENT_TIMESTAMP as created_at
+            FROM s2_papers s2
+            JOIN oa_works oa
+                ON s2.externalids.DOI = REPLACE(oa.doi, 'https://doi.org/', '')
+                AND s2.externalids.DOI IS NOT NULL
+                AND oa.doi IS NOT NULL
+                AND oa.publication_year BETWEEN 1900 AND 2025;
+        """)
+        logger.info("✓ Papers lookup table created successfully")
 
     except Exception as e:
-        logger.error(f"Error during sync process: {e}")
+        logger.error(f"✗ Error creating papers lookup: {e}")
         raise
-    finally:
-        conn.close()
+
+def add_openalex_workid_to_s2papers(conn):
+    """Add OpenAlex work ID column directly to s2_papers table."""
+    logger.info("Adding OpenAlex work ID to s2_papers...")
+
+    conn.execute("ALTER TABLE s2_papers ADD COLUMN IF NOT EXISTS oa_work_id VARCHAR;")
+
+    conn.execute("""
+        UPDATE s2_papers s2
+        SET oa_work_id = oa.id
+        FROM oa_works oa
+        WHERE s2.externalids.DOI = REPLACE(oa.doi, 'https://doi.org/', '')
+            AND s2.externalids.DOI IS NOT NULL
+            AND oa.doi IS NOT NULL;
+    """)
+
+    # Get stats
+    total = conn.execute("SELECT COUNT(*) FROM s2_papers").fetchone()[0]
+    matched = conn.execute("SELECT COUNT(*) FROM s2_papers WHERE oa_work_id IS NOT NULL").fetchone()[0]
+
+    logger.info(f"Added OpenAlex IDs to {matched:,} out of {total:,} papers ({matched/total*100:.1f}%)")
 
 if __name__ == "__main__":
-    # Run the sync process
-    stats = sync_openalex_ids()
-    print(f"Sync complete! Matched {stats['matched_papers']:,} papers ({stats['match_rate']:.2%})")
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Sync S2 papers with OpenAlex works")
+    parser.add_argument("--operation",
+                       choices=["lookup", "workid", "all"],
+                       default="all",
+                       help="Which sync operation to run")
+
+    args = parser.parse_args()
+
+    try:
+        conn = get_duckdb_connection()
+
+        if args.operation == "lookup":
+            create_papers_lookup(conn)
+        elif args.operation == "workid":
+            add_openalex_workid_to_s2papers(conn)
+        elif args.operation == "all":
+            logger.info("Running all sync operations...")
+            create_papers_lookup(conn)
+            add_openalex_workid_to_s2papers(conn)
+
+        logger.info("Sync operations completed successfully!")
+
+    except Exception as e:
+        logger.error(f"Sync failed: {e}")
+        raise
+    finally:
+        if 'conn' in locals():
+            conn.close()

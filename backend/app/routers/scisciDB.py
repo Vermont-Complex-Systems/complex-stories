@@ -7,61 +7,100 @@ from typing import Optional, List, Dict, Any
 
 router = APIRouter()
 
-# New field metrics endpoints
-@router.post("/field-metrics/bulk")
-async def upload_field_metrics(
+# Unified metrics endpoints
+@router.post("/metrics/bulk")
+async def upload_metrics(
     data: List[Dict[str, Any]],
+    group_by: str = Query(description="Group by: field or venue"),
     db: AsyncSession = Depends(get_db_session)
 ):
-    """Bulk upload precomputed field metrics from export script."""
-    try:
-        # Simple approach: delete all existing data and insert new
-        await db.execute(text("DELETE FROM field_metrics"))
+    """Bulk upload precomputed metrics from export script."""
+    if group_by not in ["field", "venue"]:
+        raise HTTPException(status_code=400, detail="group_by must be either 'field' or 'venue'")
 
-        # Bulk insert new data
-        await db.execute(
-            text("INSERT INTO field_metrics (field, year, metric_type, count) VALUES (:field, :year, :metric_type, :count)"),
-            data
-        )
+    try:
+        if group_by == "field":
+            # Clear and insert field metrics
+            await db.execute(text("DELETE FROM field_metrics"))
+            await db.execute(
+                text("INSERT INTO field_metrics (field, year, metric_type, count) VALUES (:field, :year, :metric_type, :count)"),
+                data
+            )
+        elif group_by == "venue":
+            # Clear and insert venue metrics
+            await db.execute(text("DELETE FROM venue_metrics"))
+            await db.execute(
+                text("INSERT INTO venue_metrics (venue, year, metric_type, count) VALUES (:venue, :year, :metric_type, :count)"),
+                data
+            )
 
         await db.commit()
 
-        return {"message": f"Uploaded {len(data)} field-metric records"}
+        return {"message": f"Uploaded {len(data)} {group_by}-metric records"}
 
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
-@router.get("/field-metrics")
-async def get_precomputed_field_metrics(
+@router.get("/metrics")
+async def get_precomputed_metrics(
     start_year: int = Query(default=2000, ge=1900, le=2030),
     end_year: int = Query(default=2024, ge=1900, le=2030),
     fields: Optional[List[str]] = Query(default=None),
-    metric_types: Optional[List[str]] = Query(default=None, description="Metric types: total, has_abstract, has_full_text"),
+    venues: Optional[List[str]] = Query(default=None),
+    metric_types: Optional[List[str]] = Query(default=None, description="Metric types: total, has_abstract, has_fulltext"),
+    group_by: str = Query(default="field", description="Group by: field or venue"),
     db: AsyncSession = Depends(get_db_session)
 ) -> List[Dict[str, Any]]:
-    """Get field metrics from precomputed table."""
+    """Get metrics from precomputed tables. Supports both field and venue groupings."""
 
-    # Build dynamic query based on filters
+    if group_by not in ["field", "venue"]:
+        raise HTTPException(status_code=400, detail="group_by must be either 'field' or 'venue'")
+
+    # Build dynamic query based on grouping
     where_conditions = ["year >= :start_year", "year <= :end_year"]
     params = {"start_year": start_year, "end_year": end_year}
 
-    if fields:
-        where_conditions.append("field = ANY(:fields)")
-        params["fields"] = fields
+    if group_by == "field":
+        if fields:
+            where_conditions.append("field = ANY(:fields)")
+            params["fields"] = fields
 
-    if metric_types:
-        where_conditions.append("metric_type = ANY(:metric_types)")
-        params["metric_types"] = metric_types
+        where_clause = ' AND '.join(where_conditions)
+        if metric_types:
+            where_clause += " AND metric_type = ANY(:metric_types)"
+            params["metric_types"] = metric_types
 
-    query = text(f"""
-        SELECT field, year, metric_type, count
-        FROM field_metrics
-        WHERE {' AND '.join(where_conditions)}
-        ORDER BY field, year DESC, metric_type
-    """)
+        query = text(f"""
+            SELECT field, year, metric_type, count
+            FROM field_metrics
+            WHERE {where_clause}
+            ORDER BY field, year DESC, metric_type
+        """)
 
-    result = await db.execute(query, params)
-    rows = result.fetchall()
+        result = await db.execute(query, params)
+        rows = result.fetchall()
 
-    return [{"field": r[0], "year": r[1], "metric_type": r[2], "count": r[3]} for r in rows]
+        return [{"field": r[0], "year": r[1], "metric_type": r[2], "count": r[3]} for r in rows]
+
+    elif group_by == "venue":
+        if venues:
+            where_conditions.append("venue = ANY(:venues)")
+            params["venues"] = venues
+
+        where_clause = ' AND '.join(where_conditions)
+        if metric_types:
+            where_clause += " AND metric_type = ANY(:metric_types)"
+            params["metric_types"] = metric_types
+
+        query = text(f"""
+            SELECT venue, year, metric_type, count
+            FROM venue_metrics
+            WHERE {where_clause}
+            ORDER BY venue, year DESC, metric_type
+        """)
+
+        result = await db.execute(query, params)
+        rows = result.fetchall()
+
+        return [{"venue": r[0], "year": r[1], "metric_type": r[2], "count": r[3]} for r in rows]

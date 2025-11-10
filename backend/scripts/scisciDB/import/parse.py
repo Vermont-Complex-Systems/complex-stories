@@ -7,12 +7,15 @@ import argparse
 import sys
 from pathlib import Path
 import duckdb
-from duckdb.sqltypes import *
+
 import json
 import os
 from dotenv import load_dotenv
 
-columns = {
+sys.path.append(str(Path(__file__).parent.parent))
+from openalex_schema import sources_columns
+
+works_columns = {
     # --- Scalar fields ---
     "id": "VARCHAR",
     "doi": "VARCHAR",
@@ -124,7 +127,7 @@ def convert_s2orc_v2(conn: duckdb.DuckDBPyConnection, json_file: Path, output_fi
         (FORMAT PARQUET, COMPRESSION 'zstd')
     """)
 
-def convert_openalex(conn: duckdb.DuckDBPyConnection, json_file: Path, output_file: Path) -> None:
+def convert_openalex_works(conn: duckdb.DuckDBPyConnection, json_file: Path, output_file: Path) -> None:
     """
     OpenAlex converter: Explicit column types for all fields
 
@@ -135,7 +138,7 @@ def convert_openalex(conn: duckdb.DuckDBPyConnection, json_file: Path, output_fi
     COPY (
         SELECT * FROM read_json(
             '{json_file}',
-            columns={columns},
+            columns={works_columns},
             ignore_errors=true
         )
     )
@@ -143,9 +146,28 @@ def convert_openalex(conn: duckdb.DuckDBPyConnection, json_file: Path, output_fi
     (FORMAT PARQUET, COMPRESSION 'zstd');
     """)
 
-def convert_semantic_scholar(conn: duckdb.DuckDBPyConnection, json_file: Path, output_file: Path) -> None:
+def convert_openalex_sources(conn: duckdb.DuckDBPyConnection, json_file: Path, output_file: Path) -> None:
     """
-    Semantic Scholar converter: Standard JSON to Parquet conversion
+    OpenAlex converter: Explicit column types for all fields
+
+    Defines precise schema to prevent any auto-inference conflicts between JSON files.
+    Based on OpenAlex works API schema.
+    """
+    conn.execute(f"""
+    COPY (
+        SELECT * FROM read_json(
+            '{json_file}',
+            columns={sources_columns},
+            ignore_errors=true
+        )
+    )
+    TO '{output_file}' 
+    (FORMAT PARQUET, COMPRESSION 'zstd');
+    """)
+
+def convert_generic(conn: duckdb.DuckDBPyConnection, json_file: Path, output_file: Path) -> None:
+    """
+    Generic json to parquet converter using duckdb
     """
     conn.execute(f"""
         COPY (SELECT * FROM read_json_auto('{json_file}', ignore_errors=true))
@@ -269,10 +291,16 @@ def process_json_files(conn: duckdb.DuckDBPyConnection, json_files: list, datase
                 convert_s2orc_v2(conn, json_file, output_file)
                 print(f"[IMPORT] Using s2orc_v2 converter (structured annotations)")
             elif dbname == 'openalex':
-                convert_openalex(conn, json_file, output_file)
-                print(f"[IMPORT] Using OpenAlex converter (abstract_inverted_index as VARCHAR)")
+                if dataset_name == 'works':
+                    convert_openalex_works(conn, json_file, output_file)
+                elif dataset_name == 'works':
+                    convert_openalex_sources(conn, json_file, output_file)
+                else:
+                    convert_generic(conn, json_file, output_file)
+                print(f"[IMPORT] Using OpenAlex converter")
+
             else:
-                convert_semantic_scholar(conn, json_file, output_file)
+                convert_generic(conn, json_file, output_file)
                 print(f"[IMPORT] Using Semantic Scholar converter")
                 
             

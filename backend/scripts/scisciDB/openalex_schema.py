@@ -60,3 +60,39 @@ works_columns = {
     # --- Text-heavy ---
     "abstract_inverted_index": "VARCHAR"
 }
+
+sources_columns = {
+    # --- Scalar fields ---
+    "id": "VARCHAR",
+    "display_name": "VARCHAR",
+    "abbreviated_title": "VARCHAR",
+    "apc_usd": "INTEGER",
+    "cited_by_count": "INTEGER",
+    "country_code": "VARCHAR",
+    "created_date": "TIMESTAMP",
+    "updated_date": "TIMESTAMP",
+    "homepage_url": "VARCHAR",
+    "host_organization": "VARCHAR",
+    "host_organization_name": "VARCHAR",
+    "is_core": "BOOLEAN",
+    "is_in_doaj": "BOOLEAN",
+    "is_oa": "BOOLEAN",
+    "issn_l": "VARCHAR",
+    "type": "VARCHAR",
+    "works_api_url": "VARCHAR",
+    "works_count": "INTEGER",
+
+    # --- Arrays of simple values ---
+    "alternate_titles": "VARCHAR[]",
+    "host_organization_lineage": "VARCHAR[]",
+    "issn": "VARCHAR[]",
+
+    # --- Structured objects ---
+    "apc_prices": "STRUCT(price INTEGER, currency VARCHAR)[]",
+    "counts_by_year": "STRUCT(year INTEGER, works_count INTEGER, cited_by_count INTEGER)[]",
+    "ids": "STRUCT(fatcat VARCHAR, issn VARCHAR[], issn_l VARCHAR, mag INTEGER, openalex VARCHAR, wikidata VARCHAR)",
+    "societies": "STRUCT(url VARCHAR, organization VARCHAR)[]",
+    "summary_stats": "STRUCT(2yr_mean_citedness DOUBLE, h_index INTEGER, i10_index INTEGER)",
+    "x_concepts": "STRUCT(id VARCHAR, wikidata VARCHAR, display_name VARCHAR, level INTEGER, score DOUBLE)[]"
+}
+

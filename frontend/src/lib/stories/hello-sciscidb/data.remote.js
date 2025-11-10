@@ -157,3 +157,64 @@ export const getFieldsSocSci = query(async () => {
     }
 );
 
+// Get available fields from Google Scholar venues
+export const getFields = query(async () => {
+    const response = await fetch(`${API_BASE_URL}/datasets/google-scholar-venues`);
+    if (!response.ok) error(response.status, `API error: ${response.statusText}`);
+
+    const venues = await response.json();
+    const fields = [...new Set(venues.map(v => v.field))].sort();
+    console.log(`Got ${fields.length} unique fields from Google Scholar venues`);
+    return fields;
+});
+
+// Get venue-year-count data with field classification from Google Scholar
+export const getAllPapers = query(async () => {
+    try {
+        // Get venue metrics using the unified endpoint
+        const response = await fetch(`${API_BASE_URL}/scisciDB/metrics?group_by=venue&metric_types=total&start_year=1980`);
+        if (!response.ok) {
+            console.log('Venue metrics not available yet, returning empty array');
+            return [];
+        }
+
+        const venueMetrics = await response.json();
+
+        // Get Google Scholar venue fields for classification
+        const gsResponse = await fetch(`${API_BASE_URL}/datasets/google-scholar-venues`);
+        if (!gsResponse.ok) error(gsResponse.status, `API error: ${gsResponse.statusText}`);
+
+        const gsData = await gsResponse.json();
+        const venueToField = Object.fromEntries(gsData.map(v => [v.venue, v.field]));
+
+        // Combine venue metrics with field classification
+        const result = venueMetrics
+            .map(row => ({
+                venue: row.venue,
+                year: row.year,
+                count: row.count,
+                field: venueToField[row.venue] || 'Unknown'
+            }))
+            .sort((a, b) => a.venue.localeCompare(b.venue) || a.year - b.year);
+
+        console.log(`getAllPapers: Got ${result.length} venue-year records`);
+        return result;
+
+    } catch (e) {
+        console.log('getAllPapers error:', e.message);
+        return [];
+    }
+});
+
+
+// drizzle schema
+// export const papers = sqliteTable('papers', {
+//   venue: text('venue').notNull(),
+//   year: integer('year').notNull(),
+//   count: integer('count').notNull()
+// });
+
+// export const top_venue_google_scholar = sqliteTable('top_venue_google_scholar', {
+//   venue: text('venue').notNull(),
+//   field: text('field').notNull()
+// });

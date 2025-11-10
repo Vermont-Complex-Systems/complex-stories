@@ -1,10 +1,8 @@
-.PHONY: all download parse reparse load enrich export-subset create-views
+.PHONY: all download parse reparse load create-tables create-papers-lookup create-papers-lookup-bg create-views enrich enrich-topics enrich-categories export-subset export
 
 DATASET ?= papers
 DB ?= semanticscholar
-
-# Full pipeline
-all: download_s2 download_oa parse load enrich create-views
+GROUP_BY ?= field
 
 download_s2:
 	@echo "=== INPUT: Download $(DATASET) ==="
@@ -26,36 +24,40 @@ load:
 	@echo "=== LOAD: Load to DuckLake ==="
 	python load/load_to_ducklake.py --dataset $(DATASET)
 
+create-tables:
+	@echo "=== CREATE TABLES: Load parquet data with proper schemas ==="
+	python load/create_tables.py --tables all
+
+sync-papers-lookup:
+	@echo "=== SYNC: Create DOI-based mapping table ==="
+	python enrich/sync_db.py --operation lookup
+
+sync-openalex-ids:
+	@echo "=== SYNC: Add OpenAlex IDs to s2_papers ==="
+	python enrich/sync_db.py --operation workid
+
+sync-all:
+	@echo "=== SYNC: All S2 ↔ OpenAlex operations ==="
+	python enrich/sync_db.py --operation all
+	
+# Create optimized views with proper schema handling
+create-views:
+	@echo "=== CREATE VIEWS ==="
+	python load/create_views.py $(DB) $(DATASET)
+
 enrich:
 	@echo "=== ENRICH: Add derived fields ==="
 	python enrich/add_derived_fields.py --dataset $(DATASET)
 
-# Create optimized views with proper schema handling
-create-views:
-	@echo "=== CREATE VIEWS: OpenAlex works with schema fixes ==="
-	python load/create_views.py --openalex-works
+enrich-topics:
+	@echo "=== ENRICH: Add OpenAlex topics and concepts ==="
+	python enrich/add_derived_fields.py --dataset $(DATASET) --operation openalex_topics
 
-create-openalex-views:
-	@echo "=== CREATE VIEWS: OpenAlex works ==="
-	python load/create_views.py --openalex-works
+enrich-categories:
+	@echo "=== ENRICH: Extract topic categories ==="
+	python enrich/add_derived_fields.py --dataset $(DATASET) --operation topic_categories
 
-create-s2-views:
-	@echo "=== CREATE VIEWS: Semantic Scholar papers ==="
-	python load/create_views.py --s2-papers
+export:
+	@echo "=== EXPORT: Export counts by $(GROUP_BY) ==="
+	python export/counts.py --group-by $(GROUP_BY)
 
-create-all-views:
-	@echo "=== CREATE VIEWS: All available views ==="
-	python load/create_views.py --openalex-works --s2-papers
-
-list-views:
-	@echo "=== LIST VIEWS: Available views in DuckLake ==="
-	python load/create_views.py --list-views
-
-# Optional: Export subsets for FastAPI
-# export-ml-papers:
-# 	@echo "=== EXPORT: ML papers subset ==="
-# 	python export/export_ml_papers.py
-
-# export-author-index:
-# 	@echo "=== EXPORT: Author index ==="
-# 	python export/export_author_index.py
