@@ -128,7 +128,7 @@
 
      <p>You can explore the coverage of any specific field below:</p>
 
-    {#await getAllPapers()}
+    <!-- {#await getAllPapers()}
         <p>Loading...</p>
     {:then data}    
         {@const filtered_data = data.filter((d) => d.field == selectedField && d.year >= minYear)}
@@ -136,7 +136,6 @@
         
         <div class="chart-container">
             
-            <!-- Controls -->
             <div class="controls">
                 <label>
                 Google Scholar Category:
@@ -195,7 +194,7 @@
             </div>
             <p style="font-size: 0.8rem; display: flex; justify-content: center; align-items: center;">p.s. {Array.from(uniq_venues).length} / 20 venues are showing up with this approach.</p>
         </div>
-    {/await}
+    {/await} -->
 
 </div>
 </section>

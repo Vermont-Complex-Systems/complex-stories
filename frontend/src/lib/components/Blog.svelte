@@ -85,9 +85,9 @@
 
 <style>
   /* Override main element constraints for full-width layout */
-  :global(main:has(.blog-container)) {
+  :global(main#content:has(.blog-container)) {
     max-width: none;
-    padding: 0; /* Remove default padding to let column-screen handle spacing */
+    padding: 0 !important; /* Remove default padding to let column-screen handle spacing */
   }
 
   .blog-container {
@@ -96,7 +96,7 @@
   }
 
   .blog-hero {
-    padding: 2rem 4.5rem;
+    padding: 2rem var(--margin-left);
     text-align: center;
   }
 
@@ -190,7 +190,7 @@
 
   @media (max-width: 768px) {
     .blog-hero {
-      padding: 1rem 2rem;
+      padding: 1rem var(--margin-left-mobile);
       text-align: center;
     }
 

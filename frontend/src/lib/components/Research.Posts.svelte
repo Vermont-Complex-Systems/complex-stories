@@ -53,12 +53,12 @@
 <style>
   .blog-posts {
     margin: 2rem 0;
-    padding: 0 4.5rem;
+    padding: 0 var(--margin-left);
   }
 
   @media (max-width: 768px) {
     .blog-posts {
-      padding: 0 2rem;
+      padding: 0 var(--margin-left-mobile);
     }
   }
 

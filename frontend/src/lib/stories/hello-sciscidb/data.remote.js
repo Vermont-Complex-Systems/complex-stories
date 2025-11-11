@@ -12,12 +12,14 @@ export const metricData = query(
         start_year: v.integer(),
         end_year: v.integer(),
         fields: v.optional(v.array(v.string())),
-        metric_types: v.optional(v.array(v.string())) // 'total', 'has_abstract', 'has_full_text'
+        metric_types: v.optional(v.array(v.string())), // 'total', 'has_abstract', 'has_fulltext'
+        group_by: v.optional(v.string()) // 'field' or 'venue'
      }),
-    async ({start_year, end_year, fields, metric_types}) => {
+    async ({start_year, end_year, fields, metric_types, group_by = 'field'}) => {
     const params = new URLSearchParams({
         start_year: start_year.toString(),
-        end_year: end_year.toString()
+        end_year: end_year.toString(),
+        group_by: group_by
     });
 
     // Add field filters if provided
@@ -30,14 +32,14 @@ export const metricData = query(
         metric_types.forEach(metric => params.append('metric_types', metric));
     }
 
-    const url = `${API_BASE_URL}/scisciDB/field-metrics?${params}`;
-    console.log(`Fetching field metrics: ${url}`);
+    const url = `${API_BASE_URL}/scisciDB/metrics?${params}`;
+    console.log(`Fetching ${group_by} metrics: ${url}`);
 
     const response = await fetch(url);
     if (!response.ok) error(response.status, `API error: ${response.statusText}`);
 
     const results = await response.json();
-    console.log(`Got ${results.length} field-metric combinations!`);
+    console.log(`Got ${results.length} ${group_by}-metric combinations!`);
     return results;
   });
 
@@ -158,63 +160,13 @@ export const getFieldsSocSci = query(async () => {
 );
 
 // Get available fields from Google Scholar venues
-export const getFields = query(async () => {
-    const response = await fetch(`${API_BASE_URL}/datasets/google-scholar-venues`);
-    if (!response.ok) error(response.status, `API error: ${response.statusText}`);
+// export const getFields = query(async () => {
+//     const response = await fetch(`${API_BASE_URL}/datasets/google-scholar-venues`);
+//     if (!response.ok) error(response.status, `API error: ${response.statusText}`);
 
-    const venues = await response.json();
-    const fields = [...new Set(venues.map(v => v.field))].sort();
-    console.log(`Got ${fields.length} unique fields from Google Scholar venues`);
-    return fields;
-});
-
-// Get venue-year-count data with field classification from Google Scholar
-export const getAllPapers = query(async () => {
-    try {
-        // Get venue metrics using the unified endpoint
-        const response = await fetch(`${API_BASE_URL}/scisciDB/metrics?group_by=venue&metric_types=total&start_year=1980`);
-        if (!response.ok) {
-            console.log('Venue metrics not available yet, returning empty array');
-            return [];
-        }
-
-        const venueMetrics = await response.json();
-
-        // Get Google Scholar venue fields for classification
-        const gsResponse = await fetch(`${API_BASE_URL}/datasets/google-scholar-venues`);
-        if (!gsResponse.ok) error(gsResponse.status, `API error: ${gsResponse.statusText}`);
-
-        const gsData = await gsResponse.json();
-        const venueToField = Object.fromEntries(gsData.map(v => [v.venue, v.field]));
-
-        // Combine venue metrics with field classification
-        const result = venueMetrics
-            .map(row => ({
-                venue: row.venue,
-                year: row.year,
-                count: row.count,
-                field: venueToField[row.venue] || 'Unknown'
-            }))
-            .sort((a, b) => a.venue.localeCompare(b.venue) || a.year - b.year);
-
-        console.log(`getAllPapers: Got ${result.length} venue-year records`);
-        return result;
-
-    } catch (e) {
-        console.log('getAllPapers error:', e.message);
-        return [];
-    }
-});
-
-
-// drizzle schema
-// export const papers = sqliteTable('papers', {
-//   venue: text('venue').notNull(),
-//   year: integer('year').notNull(),
-//   count: integer('count').notNull()
+//     const venues = await response.json();
+//     const fields = [...new Set(venues.map(v => v.field))].sort();
+//     console.log(`Got ${fields.length} unique fields from Google Scholar venues`);
+//     return fields;
 // });
 
-// export const top_venue_google_scholar = sqliteTable('top_venue_google_scholar', {
-//   venue: text('venue').notNull(),
-//   field: text('field').notNull()
-// });

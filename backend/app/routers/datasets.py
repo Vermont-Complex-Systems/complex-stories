@@ -5,7 +5,9 @@ from sqlalchemy import select
 import pandas as pd
 from typing import List, Dict, Any, Optional
 import io
+import json
 from ..core.database import get_db_session
+from ..core.duckdb_client import get_duckdb_client
 from ..models.annotation_datasets import AcademicResearchGroups, AcademicResearchGroupCreate, GoogleScholarVenues
 from ..routers.auth import get_admin_user, get_current_active_user
 from ..models.auth import User
@@ -27,7 +29,8 @@ def get_available_datasets() -> List[Dict[str, Any]]:
         "endpoints": {
             "json": "/datasets/academic-research-groups",
             "parquet": "/datasets/academic-research-groups?format=parquet"
-        }
+        },
+        "streamable": False
     })
 
     # Google Scholar venues dataset (overthinking-fos)
@@ -41,6 +44,21 @@ def get_available_datasets() -> List[Dict[str, Any]]:
             "json": "/datasets/google-scholar-venues",
             "parquet": "/datasets/google-scholar-venues?format=parquet"
         }
+    })
+
+    # S2ORC arXiv full text dataset
+    datasets.append({
+        "name": "s2orc-arxiv",
+        "description": "S2ORC full text and annotations for arXiv papers (~2.78M documents)",
+        "format": "Streaming (NDJSON/CSV)",
+        "source": "DuckLake (scisciDB)",
+        "keywords": ["s2orc", "arxiv", "fulltext", "annotations", "bibliography"],
+        "endpoints": {
+            "stream": "/datasets/s2orc/arxiv/stream",
+            "stream_by_year": "/datasets/s2orc/arxiv/stream?year=2023"
+        },
+        "auth_required": True,
+        "note": "Requires JWT token in header: 'Authorization: Bearer <token>'"
     })
 
     return datasets
@@ -449,3 +467,171 @@ async def import_google_scholar_data(
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+    
+
+@router.get("/s2orc/arxiv/stream")
+async def stream_arxiv_texts(
+    year: Optional[int] = None,
+    format: str = "ndjson",  # ndjson or csv
+    user: User = Depends(get_current_active_user)
+):
+    """
+    Stream S2ORC arXiv papers with full text and annotations.
+
+    Requires JWT token in header: `Authorization: Bearer <token>`
+
+    Parameters:
+    - year: Optional filter by publication year
+    - format: Output format - 'ndjson' (default) or 'csv'
+
+    Returns streaming download of papers with:
+    - corpusid: S2 corpus ID
+    - year: Publication year
+    - text: Full paper text
+    - annotations: Bibliography references and other annotations
+    """
+    def generate_data():
+        try:
+            # Get DuckDB connection with scisciDB attached
+            duckdb_client = get_duckdb_client()
+            conn = duckdb_client.connect()
+
+            # Use materialized view for fast queries
+            query = """
+                SELECT
+                    corpusid,
+                    year,
+                    text,
+                    annotations
+                FROM arxiv_fulltext
+                WHERE 1=1
+            """
+
+            if year:
+                query += f" AND year = {year}"
+
+            # Execute query and stream results in batches
+            cursor = conn.execute(query)
+            batch_size = 1000
+
+            if format == "csv":
+                # CSV header
+                yield "corpusid,year,text,annotations\n"
+
+            while True:
+                batch = cursor.fetchmany(batch_size)
+                if not batch:
+                    break
+
+                for row in batch:
+                    corpusid, year_val, text, annotations = row
+
+                    if format == "ndjson":
+                        # NDJSON format - one JSON object per line
+                        data = {
+                            "corpusid": corpusid,
+                            "year": year_val,
+                            "text": text,
+                            "annotations": annotations
+                        }
+                        yield json.dumps(data, ensure_ascii=False) + "\n"
+
+                    elif format == "csv":
+                        # CSV format - escape quotes and newlines
+                        text_escaped = text.replace('"', '""').replace('\n', '\\n') if text else ""
+                        annotations_str = json.dumps(annotations) if annotations else ""
+                        annotations_escaped = annotations_str.replace('"', '""')
+
+                        yield f'"{corpusid}","{year_val}","{text_escaped}","{annotations_escaped}"\n'
+
+        except Exception as e:
+            # Stream error back to client
+            error_msg = {"error": f"Query failed: {str(e)}"}
+            yield json.dumps(error_msg) + "\n"
+        finally:
+            # Clean up connection
+            try:
+                duckdb_client.close()
+            except:
+                pass
+
+    # Set up streaming response
+    filename = f"arxiv_s2orc_{year or 'all'}.{format}"
+    media_type = "application/x-ndjson" if format == "ndjson" else "text/csv"
+
+    return StreamingResponse(
+        generate_data(),
+        media_type=media_type,
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "X-Content-Type-Options": "nosniff"
+        }
+    )
+
+@router.get("/s2orc/arxiv/stats")
+async def get_arxiv_stats(
+    user: User = Depends(get_current_active_user)
+):
+    """
+    Get S2ORC arXiv dataset statistics including yearly breakdown.
+
+    Requires JWT token in header: `Authorization: Bearer <token>`
+
+    Returns:
+    - total_papers: Total number of papers
+    - yearly_stats: Papers count by year
+    - size_estimates: Estimated dataset sizes
+    """
+    try:
+        # Get DuckDB connection with scisciDB attached
+        duckdb_client = get_duckdb_client()
+        conn = duckdb_client.connect()
+
+        # Get total count
+        total_query = "SELECT COUNT(*) FROM arxiv_fulltext"
+        total_result = conn.execute(total_query).fetchone()
+        total_papers = total_result[0] if total_result else 0
+
+        # Get yearly breakdown
+        yearly_query = """
+            SELECT
+                year,
+                COUNT(*) as paper_count,
+                AVG(LENGTH(text)) as avg_text_length
+            FROM arxiv_fulltext
+            WHERE year IS NOT NULL
+            GROUP BY year
+            ORDER BY year DESC
+        """
+        yearly_result = conn.execute(yearly_query).fetchall()
+
+        yearly_stats = {}
+        for row in yearly_result:
+            year, count, avg_length = row
+            yearly_stats[str(year)] = {
+                "papers": count,
+                "avg_text_length": int(avg_length) if avg_length else 0
+            }
+
+        # Calculate size estimates (rough approximation)
+        total_avg_length = conn.execute("SELECT AVG(LENGTH(text)) FROM arxiv_fulltext").fetchone()[0]
+        estimated_size_bytes = total_papers * (total_avg_length or 0) * 1.2  # Add overhead factor
+        estimated_size_gb = estimated_size_bytes / (1024**3)
+
+        return {
+            "total_papers": total_papers,
+            "yearly_stats": yearly_stats,
+            "estimated_size": {
+                "bytes": int(estimated_size_bytes),
+                "gb": round(estimated_size_gb, 2)
+            },
+            "avg_text_length": int(total_avg_length) if total_avg_length else 0
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
+    finally:
+        try:
+            duckdb_client.close()
+        except:
+            pass
