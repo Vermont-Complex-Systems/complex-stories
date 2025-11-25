@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 """
-INPUT step: Download raw S2ORC datasets from Semantic Scholar
-Follows principled data processing - downloads to input/ directory
+Download raw datasets from semantic scholar and openalex
 """
 import argparse
 import sys
 from pathlib import Path
 import requests
 import json
-import gzip
+import subprocess
 from typing import Optional, List
 import time
-import os
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import config
@@ -27,7 +25,7 @@ def download_s2_release(
     clean_slate: bool = False
 ) -> Path:
     """
-    Download Semantic Scolar dataset
+    Download Semantic Scholar dataset
     
     Args:
         dataset_name: Name of dataset (papers, authors, etc.)
@@ -40,7 +38,6 @@ def download_s2_release(
     print(f"[INPUT] Downloading S2ORC dataset: {dataset_name}")
     
     # Create output directory structure
-    # dataset_name = 'paper-ids'
     dataset_dir = config.s2_data_root / dataset_name
     
     if clean_slate and dataset_dir.exists():
@@ -68,19 +65,6 @@ def download_s2_release(
         # Use specified release or latest
         target_release = release_id if release_id else releases[-1]
         print(f"[INPUT] Target release: {target_release}")
-        
-        # Save release metadata
-        release_metadata = {
-            "release_id": target_release,
-            "dataset_name": dataset_name,
-            "download_timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "all_available_releases": releases
-        }
-        
-        # metadata_file = dataset_dir / "release_metadata.json"
-        # with open(metadata_file, 'w') as f:
-        #     json.dump(release_metadata, f, indent=2)
-        # print(f"[INPUT] Saved release metadata to {metadata_file.name}")
         
         # 2. Get dataset files
         dataset_url = f"https://api.semanticscholar.org/datasets/v1/release/{target_release}/dataset/{dataset_name}"
@@ -134,6 +118,7 @@ def download_s2_release(
         
         # Save download manifest
         manifest = {
+            "source": "semantic_scholar",
             "release_id": target_release,
             "dataset_name": dataset_name,
             "total_files": len(downloaded_files),
@@ -158,8 +143,8 @@ def download_s2_release(
         raise DownloadError(f"Download failed: {e}")
 
 
-def list_available_datasets(api_key: str) -> List[str]:
-    """List all available datasets from S2"""
+def list_s2_datasets(api_key: str) -> List[str]:
+    """List all available datasets from Semantic Scholar"""
     headers = {"x-api-key": api_key}
     
     # Get latest release
@@ -178,72 +163,170 @@ def list_available_datasets(api_key: str) -> List[str]:
     return response.json().get('datasets', [])
 
 
+def download_openalex(
+    entity_type: Optional[str] = None,
+    clean_slate: bool = False,
+    dry_run: bool = False
+) -> Path:
+    """
+    Download OpenAlex snapshot using AWS CLI
+    
+    Args:
+        entity_type: Specific entity (works, authors, etc.) or None for all
+        clean_slate: Whether to remove existing data first
+        dry_run: Show what would be downloaded without downloading
+        
+    Returns:
+        Path to downloaded dataset directory
+    """
+    print(f"[INPUT] Downloading OpenAlex snapshot")
+    
+    # Create output directory
+    dataset_dir = config.s2_data_root / "openalex"
+    
+    if clean_slate and dataset_dir.exists():
+        print(f"[INPUT] Removing existing directory: {dataset_dir}")
+        import shutil
+        shutil.rmtree(dataset_dir)
+    
+    dataset_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Build AWS S3 sync command
+    s3_path = "s3://openalex"
+    if entity_type:
+        s3_path = f"{s3_path}/data/{entity_type}"
+        local_path = dataset_dir / entity_type
+    else:
+        local_path = dataset_dir
+    
+    local_path.mkdir(parents=True, exist_ok=True)
+    
+    cmd = [
+        "aws", "s3", "sync",
+        s3_path,
+        str(local_path),
+        "--no-sign-request"
+    ]
+    
+    if dry_run:
+        cmd.append("--dryrun")
+    
+    print(f"[INPUT] Running: {' '.join(cmd)}")
+    
+    try:
+        # Run AWS CLI command
+        result = subprocess.run(
+            cmd,
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        
+        print(result.stdout)
+        
+        if not dry_run:
+            # Save download manifest
+            manifest = {
+                "source": "openalex",
+                "entity_type": entity_type or "all",
+                "s3_path": s3_path,
+                "download_timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            
+            manifest_file = dataset_dir / "download_manifest.json"
+            with open(manifest_file, 'w') as f:
+                json.dump(manifest, f, indent=2)
+            
+            print(f"\n[INPUT] ✓ Download complete!")
+            print(f"[INPUT] Location: {local_path}/")
+            print(f"[INPUT] Manifest: {manifest_file.name}")
+        
+        return dataset_dir
+        
+    except subprocess.CalledProcessError as e:
+        raise DownloadError(f"AWS CLI command failed: {e.stderr}")
+    except FileNotFoundError:
+        raise DownloadError(
+            "AWS CLI not found. Please install: pip install awscli"
+        )
+    except Exception as e:
+        raise DownloadError(f"Download failed: {e}")
+
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description="INPUT step: Download raw S2ORC datasets"
+        description="INPUT step: Download raw datasets",
+        epilog="""
+Examples:
+  # Semantic Scholar
+  %(prog)s papers
+  %(prog)s authors --release 2024-01-01
+  
+  # OpenAlex
+  %(prog)s openalex              # all entities
+  %(prog)s openalex-works        # just works
+  %(prog)s openalex-authors      # just authors
+        """
     )
+    
     parser.add_argument(
-        "dataset_name",
-        nargs='?',
-        help="Dataset to download (papers, authors, etc.)"
+        "dataset",
+        help="Dataset to download (papers, authors, openalex, openalex-works, etc.)"
     )
-    parser.add_argument(
-        "--output",
-        type=Path,
-        default=Path("input"),
-        help="Output directory (default: input/)"
-    )
-    parser.add_argument(
-        "--release",
-        help="Specific release ID (default: latest)"
-    )
-    parser.add_argument(
-        "--clean-slate",
-        action="store_true",
-        help="Remove existing data before downloading"
-    )
-    parser.add_argument(
-        "--list",
-        action="store_true",
-        help="List available datasets"
-    )
+    
+    parser.add_argument("--clean-slate", action="store_true", 
+                       help="Remove existing data before downloading")
+    parser.add_argument("--release", help="S2 release ID (default: latest)")
+    parser.add_argument("--dry-run", action="store_true",
+                       help="Show what would be downloaded without downloading")
+    parser.add_argument("--list", action="store_true",
+                       help="List available S2 datasets")
     
     args = parser.parse_args()
     
-    if args.list:
-        try:
-            datasets = list_available_datasets(config.s2_api_key)
-            print("Available datasets:")
+    try:
+        # List datasets
+        if args.list:
+            datasets = list_s2_datasets(config.s2_api_key)
+            print("Available Semantic Scholar datasets:")
             for dataset in datasets:
                 print(f"  - {dataset}")
             return
-        except Exception as e:
-            print(f"❌ Failed to list datasets: {e}")
-            sys.exit(1)
-    
-    # Download dataset
-    if not args.dataset_name:
-        parser.print_help()
-        sys.exit(1)
-    
-    try:
-        dataset_dir = download_s2_release(
-            dataset_name=args.dataset_name,
-            release_id=args.release,
-            clean_slate=args.clean_slate
-        )
         
-        print(f"\n🎉 SUCCESS!")
-        print(f"📁 Raw data saved to: {dataset_dir}")
-        print(f"\n📋 Next steps:")
-        print(f"   1. Run 'make import' to parse and validate")
-        print(f"   2. Run 'make export' to load into DuckLake")
+        # Infer source from dataset name
+        if args.dataset.startswith("openalex"):
+            # Handle: "openalex" or "openalex-works" or "openalex-authors"
+            parts = args.dataset.split("-", 1)
+            entity_type = parts[1] if len(parts) > 1 else None
+            
+            dataset_dir = download_openalex(
+                entity_type=entity_type,
+                clean_slate=args.clean_slate,
+                dry_run=args.dry_run
+            )
+        else:
+            # Semantic Scholar
+            dataset_dir = download_s2_release(
+                dataset_name=args.dataset,
+                release_id=args.release,
+                clean_slate=args.clean_slate
+            )
         
+        if not args.dry_run:
+            print(f"\n🎉 SUCCESS!")
+            print(f"📁 Raw data saved to: {dataset_dir}")
+            print(f"\n📋 Next steps:")
+            print(f"   1. Run 'make import' to parse and validate")
+            print(f"   2. Run 'make export' to load into DuckLake")
+    
     except DownloadError as e:
         print(f"❌ {e}")
         sys.exit(1)
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 
