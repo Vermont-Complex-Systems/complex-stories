@@ -43,8 +43,18 @@ def _(mo):
 
 @app.cell
 def _(mo):
+    _df = mo.sql(
+        f"""
+        SELECT * FROM __ducklake_metadata_scisciDB.ducklake_table WHERE end_snapshot IS NULL;
+        """
+    )
+    return
+
+
+@app.cell
+def _(mo):
     mo.md(r"""
-    ## Lets look at `s2_papers`
+    ## Lets take a look at `s2_papers`
 
     This is a big table
     """)
@@ -55,7 +65,7 @@ def _(mo):
 def _(mo):
     _df = mo.sql(
         f"""
-        SELECT ROUND(SUM(file_size_bytes) / 1e9, 2) as file_size_gigabytes
+        SELECT ROUND(SUM(file_size_bytes) / 1e9, 2) as file_size_gigabytes,
         FROM __ducklake_metadata_scisciDB.ducklake_data_file 
         WHERE table_id = 2;
         """
@@ -112,23 +122,16 @@ def _(mo):
 @app.cell
 def _(mo):
     mo.md(r"""
-    Now, say that we want to count number of papers by year
+    ### Looking at text availability
     """)
     return
 
 
 @app.cell
 def _(mo):
-    _df = mo.sql(
-        f"""
-        SELECT 
-            COUNT(*) as n, year 
-            FROM scisciDB.s2_papers 
-            WHERE 
-                year IS NOT NULL AND year > 1900
-            GROUP BY year;
-        """
-    )
+    mo.md(r"""
+    Now, say that we want to count number of papers by year
+    """)
     return
 
 
@@ -254,6 +257,81 @@ def _(mo):
     {plan.iloc[0,1]}
     </div>
     """)
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""
+    ### Looking at citation counts
+    """)
+    return
+
+
+@app.cell
+def _(mo):
+    _df = mo.sql(
+        f"""
+        SUMMARIZE (SELECT citationcount FROM scisciDB.s2_papers);
+        """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    _df = mo.sql(
+        f"""
+        SELECT 
+            journal.name,
+            SUM(TRY_CAST(citationcount AS INTEGER)) as total_citations
+        FROM scisciDB.s2_papers
+        WHERE journal.name IS NOT NULL
+        GROUP BY journal.name
+        ORDER BY total_citations DESC;
+        """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    journal_multi = mo.ui.multiselect(
+        options=['Nature', 'Science', 'Cell', 'PLOS ONE', 'Proceedings of the National Academy of Sciences of the United States of America'],
+        value=['Nature', 'Science', 'Proceedings of the National Academy of Sciences of the United States of America', 'Cell'],
+        label='Select Journals:'
+    )
+
+    journal_multi
+    return (journal_multi,)
+
+
+@app.cell
+def _(alt, journal_multi, mo):
+    results_multi = mo.sql(
+        f"""
+        SELECT 
+            journal.name as journal,
+            year, 
+            AVG(citationcount) AS avg_citation_count
+        FROM scisciDB.s2_papers 
+        WHERE journal.name IN {tuple(journal_multi.value)}
+          AND year BETWEEN 2000 AND 2024
+        GROUP BY journal.name, year 
+        ORDER BY year;
+        """
+    )
+
+    alt.Chart(results_multi).mark_line(point=True).encode(
+        x=alt.X('year:O', title='Year'),
+        y=alt.Y('avg_citation_count:Q', title='Average Citation Count'),
+        color=alt.Color('journal:N', title='Journal'),
+        tooltip=['journal', 'year', 'avg_citation_count']
+    ).properties(
+        title='Average Citations Over Time - Comparison',
+        width=700,
+        height=400
+    )
 
     return
 
