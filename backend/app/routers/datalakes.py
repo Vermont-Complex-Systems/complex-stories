@@ -2,7 +2,7 @@
 Datalakes API endpoints for querying registered ducklakes/datalakes.
 """
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Dict, Any, Optional, List
@@ -150,18 +150,45 @@ async def get_datalake_info(
 
 @router.get("/babynames/top-ngrams")
 async def get_babynames_top_ngrams(
-    start_year: Optional[int] = 1991,
-    end_year: Optional[int] = None,
-    location: str = "wikidata:Q30",  # Default to US
+    dates: List[str] = Query(default=["1991,1993"]),  # ["1950,1952"] or ["1950,1952", "1991,1993"]
+    locations: List[str] = Query(default=["wikidata:Q30"]),  # ["wikidata:Q30"] or ["wikidata:Q30", "wikidata:Q16"]
     sex: Optional[str] = 'M',
-    limit: int = 100,  # Default to top 100
+    limit: int = 100,
     db: AsyncSession = Depends(get_db_session)
 ):
-    """Get top baby names (1-grams) with aggregated counts.
+    """Get top baby names with flexible comparative analysis.
 
-    Year ranges are inclusive (start_year and end_year both included).
-    Returns names with total counts summed across the specified time period.
+    Supports:
+    - Single date range: dates=["1950,1952"]
+    - Dual date ranges: dates=["1950,1952", "1991,1993"] (requires single location)
+    - Single location: locations=["wikidata:Q30"]
+    - Multiple locations: locations=["wikidata:Q30", "wikidata:Q16"] (requires single date range)
+
+    Examples:
+    - Temporal comparison: dates=["1950,1952", "1991,1993"]&locations=["wikidata:Q30"]
+    - Geographic comparison: dates=["1950,1952"]&locations=["wikidata:Q30", "wikidata:Q16"]
+    - Simple query: dates=["1950,1952"]&locations=["wikidata:Q30"]
+
+    Returns structured data for comparison visualization.
     """
+
+    # Parse dates parameter
+    date_ranges = []
+    for date_range_str in dates:
+        years = [int(y) for y in date_range_str.split(',')]
+        if len(years) == 1:
+            years.append(years[0])  # Single year becomes range [year, year]
+        date_ranges.append(years)
+
+    # Parse locations parameter
+    location_list = locations
+
+    # Validation: if multiple date ranges, must have single location
+    if len(date_ranges) > 1 and len(location_list) > 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot specify multiple date ranges AND multiple locations. Choose one for comparison."
+        )
 
     # Look up babynames datalake
     query = select(Datalake).where(Datalake.dataset_id == "babynames")
@@ -169,10 +196,7 @@ async def get_babynames_top_ngrams(
     datalake = result.scalar_one_or_none()
 
     if not datalake:
-        raise HTTPException(
-            status_code=404,
-            detail="Babynames dataset not found"
-        )
+        raise HTTPException(status_code=404, detail="Babynames datalake not found")
 
     try:
         # Get DuckDB connection
@@ -186,53 +210,55 @@ async def get_babynames_top_ngrams(
         babynames_path = f"{datalake.data_location}/main/{babynames_metadata['path']}{babynames_metadata['file_path']}"
         adapter_path = f"{datalake.data_location}/main/{adapter_metadata['path']}{adapter_metadata['file_path']}"
 
-        # With default location, always return lightweight payload
-        # Aggregated query - sum counts by name across years
-        sql_query = f"""
-            SELECT
-                b.types,
-                SUM(b.counts) as counts
-            FROM read_parquet('{babynames_path}') b
-            LEFT JOIN read_parquet('{adapter_path}') a ON b.countries = a.local_id
-            WHERE 1=1
-        """
+        # Execute comparative queries
+        results = {}
 
-        # Add filters
-        if start_year and end_year:
-            sql_query += f" AND b.year BETWEEN {start_year} AND {end_year}"
-        elif start_year:
-            sql_query += f" AND b.year >= {start_year}"
-        elif end_year:
-            sql_query += f" AND b.year <= {end_year}"
+        # Query for each combination of date ranges and locations
+        for i, date_range in enumerate(date_ranges):
+            for j, location in enumerate(location_list):
+                # Create key for result structure
+                if len(date_ranges) > 1:
+                    # Temporal comparison: use readable date format
+                    if date_range[0] == date_range[1]:
+                        key = str(date_range[0])  # Single year: "1990"
+                    else:
+                        key = f"{date_range[0]}-{date_range[1]}"  # Range: "2010-2015"
+                elif len(location_list) > 1:
+                    # Geographic comparison: use location ID
+                    key = location.replace(":", "_").replace("-", "_")
+                else:
+                    key = "data"  # Single query, return simple format
 
-        if location:
-            # Filter by standardized entity ID (e.g., wikidata:Q30)
-            sql_query += f" AND a.entity_id = '{location}'"
+                sql_query = f"""
+                    SELECT
+                        b.types,
+                        SUM(b.counts) as counts
+                    FROM read_parquet('{babynames_path}') b
+                    LEFT JOIN read_parquet('{adapter_path}') a ON b.countries = a.local_id
+                    WHERE b.year BETWEEN {date_range[0]} AND {date_range[1]}
+                      AND a.entity_id = '{location}'
+                """
 
-        if sex:
-            # Filter by sex (M/F)
-            sql_query += f" AND b.sex = '{sex}'"
+                if sex:
+                    sql_query += f" AND b.sex = '{sex}'"
 
-        sql_query += f" GROUP BY b.types ORDER BY counts DESC LIMIT {limit}"
+                sql_query += f" GROUP BY b.types ORDER BY counts DESC LIMIT {limit}"
 
-        # Execute query
-        cursor = conn.execute(sql_query)
-        results = cursor.fetchall()
-        columns = [desc[0] for desc in cursor.description]
+                cursor = conn.execute(sql_query)
+                query_results = cursor.fetchall()
 
-        # Format results
-        data = []
-        for row in results:
-            data.append(dict(zip(columns, row)))
+                # Structure results for comparison or simple format
+                if key == "data":
+                    # Simple single query - return flat array for backwards compatibility
+                    return [{"types": row[0], "counts": row[1]} for row in query_results]
+                else:
+                    # Comparative query - return array directly under the key
+                    results[key] = [{"types": row[0], "counts": row[1]} for row in query_results]
 
-        # Return lightweight array directly
-        return data
+        return results
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Query failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
     finally:
         try:
             duckdb_client.close()
