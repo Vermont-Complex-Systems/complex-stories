@@ -25,13 +25,7 @@ dependencies = [
     "pymupdf>=1.26.5",
     "passlib[argon2]>=1.7.4",
     "python-jose[cryptography]>=3.3.0",
-    "toml>=0.10.2",
     "duckdb>=1.4.2",
-    "notebook>=7.5.0",
-    "matplotlib>=3.10.7",
-    "duckdb-engine>=0.17.0",
-    "marimo[sql]>=0.18.0",
-    "altair>=6.0.0",
 ]
 
 [tool.uv.workspace]

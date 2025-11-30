@@ -80,6 +80,7 @@ app.include_router(admin.router, prefix="/admin", tags=["admin"], include_in_sch
 # Admin endpoints (secured with admin authentication)
 app.include_router(auth.admin_router, prefix="/admin/auth", tags=["admin"], include_in_schema=False)
 app.include_router(datasets.admin_router, prefix="/admin/datasets", tags=["admin"], include_in_schema=False)
+app.include_router(scisciDB.admin_router, prefix="/admin/scisciDB", tags=["admin"], include_in_schema=False)
 app.include_router(datalakes.admin_router, prefix="/admin/datalakes", tags=["admin"], include_in_schema=False)
 app.include_router(open_academic_analytics.admin_router, prefix="/admin/open-academic-analytics", tags=["admin"], include_in_schema=False)
 app.include_router(annotations.admin_router, prefix="/admin/annotations", tags=["admin"], include_in_schema=False)

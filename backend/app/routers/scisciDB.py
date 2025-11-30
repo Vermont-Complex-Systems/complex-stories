@@ -6,9 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional, List, Dict, Any
 
 router = APIRouter()
+admin_router = APIRouter()
 
 # Unified metrics endpoints
-@router.post("/metrics/bulk")
+@admin_router.post("/metrics/bulk")
 async def upload_metrics(
     data: List[Dict[str, Any]],
     group_by: str = Query(description="Group by: field or venue"),
