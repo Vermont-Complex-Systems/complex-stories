@@ -4,7 +4,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 from .core.config import settings
 from .core.database import connect_to_database, close_database_connection
-from .routers import open_academic_analytics, datasets, auth, wikimedia, annotations, scisciDB
+from .routers import open_academic_analytics, datasets, auth, wikimedia, annotations, scisciDB, datalakes
 from .internal import admin
 
 app = FastAPI(
@@ -71,6 +71,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.include_router(auth.router, prefix="/auth", tags=["authentication"], include_in_schema=False)
 app.include_router(open_academic_analytics.router, prefix="/open-academic-analytics", tags=["academics"])
 app.include_router(datasets.router, prefix="/datasets", tags=["datasets"])
+app.include_router(datalakes.router, prefix="/datalakes", tags=["datalakes"])
 app.include_router(wikimedia.router, prefix="/wikimedia", tags=["wikimedia"])
 app.include_router(annotations.router, prefix="/annotations", tags=["annotations"])
 app.include_router(scisciDB.router, prefix="/scisciDB", tags=["scisciDB"])
@@ -79,6 +80,7 @@ app.include_router(admin.router, prefix="/admin", tags=["admin"], include_in_sch
 # Admin endpoints (secured with admin authentication)
 app.include_router(auth.admin_router, prefix="/admin/auth", tags=["admin"], include_in_schema=False)
 app.include_router(datasets.admin_router, prefix="/admin/datasets", tags=["admin"], include_in_schema=False)
+app.include_router(datalakes.admin_router, prefix="/admin/datalakes", tags=["admin"], include_in_schema=False)
 app.include_router(open_academic_analytics.admin_router, prefix="/admin/open-academic-analytics", tags=["admin"], include_in_schema=False)
 app.include_router(annotations.admin_router, prefix="/admin/annotations", tags=["admin"], include_in_schema=False)
 
