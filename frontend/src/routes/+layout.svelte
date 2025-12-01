@@ -31,7 +31,7 @@
 		flex: 1;
 		padding: 1rem 2rem 2rem;
 	}
-	
+
 	@media (max-width: 768px) {
 		#content {
 			padding: 0 1rem 1rem; /* Reduced top padding from 0.5rem to 0.25rem */
