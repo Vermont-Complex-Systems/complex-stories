@@ -26,7 +26,7 @@
                     value={alphaIndex}
                     oninput={(e) => {
                         alphaIndex = parseInt(e.target.value);
-                        allotax.setAlpha(alphas[alphaIndex]); // Update the class
+                        allotax.alpha = alphas[alphaIndex]; // Direct assignment since it's just an object
                     }}
                     class="alpha-slider"
                 />

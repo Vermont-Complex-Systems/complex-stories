@@ -62,33 +62,49 @@ async def register_datalake(
     current_user: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db_session)
 ):
-    """Register a new datalake."""
+    """Register a new datalake or update existing one."""
 
     # Check if dataset_id already exists
-    existing = await db.execute(
+    existing_result = await db.execute(
         select(Datalake).where(Datalake.dataset_id == datalake.dataset_id)
     )
-    if existing.scalar_one_or_none():
-        raise HTTPException(
-            status_code=400,
-            detail=f"Datalake with dataset_id '{datalake.dataset_id}' already exists"
-        )
+    existing_datalake = existing_result.scalar_one_or_none()
 
-    # Create new datalake entry
-    db_datalake = Datalake(**datalake.model_dump())
-    db.add(db_datalake)
-    await db.commit()
-    await db.refresh(db_datalake)
+    if existing_datalake:
+        # Update existing datalake
+        existing_datalake.data_location = datalake.data_location
+        existing_datalake.data_format = datalake.data_format
+        existing_datalake.description = datalake.description
+        existing_datalake.tables_metadata = datalake.tables_metadata
 
-    return {
-        "message": f"Datalake '{datalake.dataset_id}' registered successfully",
-        "datalake": {
-            "dataset_id": db_datalake.dataset_id,
-            "data_location": db_datalake.data_location,
-            "data_format": db_datalake.data_format,
-            "description": db_datalake.description
+        await db.commit()
+        await db.refresh(existing_datalake)
+
+        return {
+            "message": f"Datalake '{datalake.dataset_id}' updated successfully",
+            "datalake": {
+                "dataset_id": existing_datalake.dataset_id,
+                "data_location": existing_datalake.data_location,
+                "data_format": existing_datalake.data_format,
+                "description": existing_datalake.description
+            }
         }
-    }
+    else:
+        # Create new datalake entry
+        db_datalake = Datalake(**datalake.model_dump())
+        db.add(db_datalake)
+        await db.commit()
+        await db.refresh(db_datalake)
+
+        return {
+            "message": f"Datalake '{datalake.dataset_id}' registered successfully",
+            "datalake": {
+                "dataset_id": db_datalake.dataset_id,
+                "data_location": db_datalake.data_location,
+                "data_format": db_datalake.data_format,
+                "description": db_datalake.description
+            }
+        }
 
 
 @router.get("/{dataset_id}")
@@ -116,8 +132,10 @@ async def get_datalake_info(
             duckdb_client = get_duckdb_client()
             conn = duckdb_client.connect()
 
-            adapter_metadata = datalake.tables_metadata["adapter"]
-            adapter_file_path = f"{datalake.data_location}/main/{adapter_metadata['path']}{adapter_metadata['file_path']}"
+            # tables_metadata["adapter"] is now just the file path (handle both string and array formats)
+            adapter_path_raw = datalake.tables_metadata["adapter"]
+            adapter_filename = adapter_path_raw[0] if isinstance(adapter_path_raw, list) else adapter_path_raw
+            adapter_file_path = f"{datalake.data_location}/metadata.ducklake.files/main/adapter/{adapter_filename}"
 
             adapter_result = conn.execute(f"SELECT * FROM read_parquet('{adapter_file_path}')").fetchall()
 
@@ -204,11 +222,30 @@ async def get_babynames_top_ngrams(
         conn = duckdb_client.connect()
 
         # Use stored metadata to get exact file paths for current versions
-        babynames_metadata = datalake.tables_metadata.get("babynames", {})
-        adapter_metadata = datalake.tables_metadata.get("adapter", {})
+        if not datalake.tables_metadata:
+            raise HTTPException(
+                status_code=500,
+                detail="Datalake metadata is missing. Please re-register the datalake with proper tables_metadata."
+            )
 
-        babynames_path = f"{datalake.data_location}/main/{babynames_metadata['path']}{babynames_metadata['file_path']}"
-        adapter_path = f"{datalake.data_location}/main/{adapter_metadata['path']}{adapter_metadata['file_path']}"
+        # tables_metadata now contains direct file paths (handle both string and array formats)
+        babynames_path_raw = datalake.tables_metadata.get("babynames")
+        adapter_path_raw = datalake.tables_metadata.get("adapter")
+
+        if not babynames_path_raw or not adapter_path_raw:
+            raise HTTPException(
+                status_code=500,
+                detail="Missing babynames or adapter file paths. Required: tables_metadata.babynames and tables_metadata.adapter"
+            )
+
+        # Handle both string and array formats (some metadata might be stored as arrays)
+        babynames_filename = babynames_path_raw[0] if isinstance(babynames_path_raw, list) else babynames_path_raw
+        adapter_filename = adapter_path_raw[0] if isinstance(adapter_path_raw, list) else adapter_path_raw
+
+        # Construct full paths by combining data_location with the filenames
+        # For ducklake format, files are stored in metadata.ducklake.files/main/ subdirectories
+        babynames_path = f"{datalake.data_location}/metadata.ducklake.files/main/babynames/{babynames_filename}"
+        adapter_path = f"{datalake.data_location}/metadata.ducklake.files/main/adapter/{adapter_filename}"
 
         # Execute comparative queries
         results = {}
@@ -234,7 +271,7 @@ async def get_babynames_top_ngrams(
                         b.types,
                         SUM(b.counts) as counts
                     FROM read_parquet('{babynames_path}') b
-                    LEFT JOIN read_parquet('{adapter_path}') a ON b.countries = a.local_id
+                    LEFT JOIN read_parquet('{adapter_path}') a ON b.geo = a.local_id
                     WHERE b.year BETWEEN {date_range[0]} AND {date_range[1]}
                       AND a.entity_id = '{location}'
                 """

@@ -22,7 +22,7 @@
                 <span class="info-value">{title[1]}</span>
             </div>
             
-            {#if isDataReady}
+            {#if isDataReady && me && rtd}
                 <div class="stats">
                     <div class="stat">
                         <span class="stat-label">Items</span>
