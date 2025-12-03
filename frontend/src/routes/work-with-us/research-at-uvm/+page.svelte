@@ -3,7 +3,7 @@
   import Meta from "$lib/components/Meta.svelte";
   import Research from "$lib/components/Research.svelte";
 
-  let { data } = $props();
+  let../../research-at-uvm/$types.js { data } = $props();
   const { posts } = data;
 
 </script>
