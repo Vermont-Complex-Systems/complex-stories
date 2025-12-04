@@ -168,8 +168,9 @@ async def get_datalake_info(
 
 @router.get("/babynames/top-ngrams")
 async def get_babynames_top_ngrams(
-    dates: List[str] = Query(default=["1991,1993"]),  # ["1950,1952"] or ["1950,1952", "1991,1993"]
-    locations: List[str] = Query(default=["wikidata:Q30"]),  # ["wikidata:Q30"] or ["wikidata:Q30", "wikidata:Q16"]
+    dates: str = Query(default="1991,1993"),  # First date range
+    dates2: Optional[str] = Query(default=None),  # Optional second date range
+    locations: str = Query(default="wikidata:Q30"),  # Single location
     sex: Optional[str] = 'M',
     limit: int = 100,
     db: AsyncSession = Depends(get_db_session)
@@ -190,23 +191,24 @@ async def get_babynames_top_ngrams(
     Returns structured data for comparison visualization.
     """
 
-    # Parse dates parameter
+    # Parse dates parameters
     date_ranges = []
-    for date_range_str in dates:
-        years = [int(y) for y in date_range_str.split(',')]
-        if len(years) == 1:
-            years.append(years[0])  # Single year becomes range [year, year]
-        date_ranges.append(years)
 
-    # Parse locations parameter
-    location_list = locations
+    # Parse first date range
+    years1 = [int(y) for y in dates.split(',')]
+    if len(years1) == 1:
+        years1.append(years1[0])  # Single year becomes range [year, year]
+    date_ranges.append(years1)
 
-    # Validation: if multiple date ranges, must have single location
-    if len(date_ranges) > 1 and len(location_list) > 1:
-        raise HTTPException(
-            status_code=400,
-            detail="Cannot specify multiple date ranges AND multiple locations. Choose one for comparison."
-        )
+    # Parse optional second date range
+    if dates2:
+        years2 = [int(y) for y in dates2.split(',')]
+        if len(years2) == 1:
+            years2.append(years2[0])  # Single year becomes range [year, year]
+        date_ranges.append(years2)
+
+    # Single location (no longer a list)
+    location_list = [locations]
 
     # Look up babynames datalake
     query = select(Datalake).where(Datalake.dataset_id == "babynames")
@@ -279,19 +281,36 @@ async def get_babynames_top_ngrams(
                 if sex:
                     sql_query += f" AND b.sex = '{sex}'"
 
-                sql_query += f" GROUP BY b.types ORDER BY counts DESC LIMIT {limit}"
+                sql_query += f"""
+                    GROUP BY b.types
+                    ORDER BY counts DESC
+                    LIMIT {limit}
+                """
 
                 cursor = conn.execute(sql_query)
                 query_results = cursor.fetchall()
 
+    
                 # Structure results for comparison or simple format
-                if key == "data":
-                    # Simple single query - return flat array for backwards compatibility
-                    return [{"types": row[0], "counts": row[1]} for row in query_results]
-                else:
-                    # Comparative query - return array directly under the key
-                    results[key] = [{"types": row[0], "counts": row[1]} for row in query_results]
+                try:
+                    if key == "data":
+                        # Simple single query - return flat array for backwards compatibility
+                        formatted_results = []
+                        for i, row in enumerate(query_results):
+                            formatted_results.append({"types": row[0], "counts": row[1]})
+                        return formatted_results
+                    else:
+                        # Comparative query - return array directly under the key
+                        formatted_results = []
+                        for i, row in enumerate(query_results):
+                            formatted_results.append({"types": row[0], "counts": row[1]})
+                        results[key] = formatted_results
+                except Exception as format_error:
+                    print(f"❌ Error formatting results: {format_error}")
+                    print(f"❌ Raw query_results: {query_results}")
+                    raise
 
+        print(f"🔍 Final results object: {results}")
         return results
 
     except Exception as e:

@@ -16,12 +16,54 @@
 
     function handleValueChange(newValue) {
         console.log('onValueChange triggered:', newValue);
-        value = newValue;
+
+        // If we're in single-year mode, enforce that both values stay the same
+        if (value[0] === value[1] && newValue[0] !== newValue[1]) {
+            // Don't allow range creation - keep the year that was moved
+            const movedYear = newValue[0] !== value[0] ? newValue[0] : newValue[1];
+            value = [movedYear, movedYear];
+        } else {
+            value = newValue;
+        }
     }
 
     function resetToRange() {
         const currentYear = value[0];
         value = [currentYear - 5, currentYear + 5]; // Create a 5-year range around current value
+    }
+
+    // Handle single year dragging
+    let isDraggingSingleYear = $state(false);
+    let dragStartX = $state(0);
+    let dragStartValue = $state(0);
+
+    function handleRangeMouseDown(e) {
+        if (value[0] === value[1]) {
+            isDraggingSingleYear = true;
+            dragStartX = e.clientX;
+            dragStartValue = value[0];
+
+            const handleMouseMove = (moveEvent) => {
+                if (!isDraggingSingleYear) return;
+
+                const deltaX = moveEvent.clientX - dragStartX;
+                const rangeWidth = e.currentTarget.parentElement.offsetWidth;
+                const totalRange = max - min;
+                const deltaValue = Math.round((deltaX / rangeWidth) * totalRange);
+
+                const newYear = Math.max(min, Math.min(max, dragStartValue + deltaValue));
+                value = [newYear, newYear];
+            };
+
+            const handleMouseUp = () => {
+                isDraggingSingleYear = false;
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+            };
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        }
     }
 </script>
 
@@ -44,37 +86,45 @@
         {step}
         class="slider-root"
     >
-        {#snippet children({ thumbItems })}
+        {#snippet children({ thumbItems, tickItems })}
             <span class="slider-track">
-                <Slider.Range class="slider-range" />
+                <Slider.Range
+                    class="slider-range {value[0] === value[1] ? 'single-year-draggable' : ''}"
+                    onmousedown={handleRangeMouseDown}
+                />
             </span>
 
             {#each thumbItems as { index } (index)}
                 <Slider.Thumb
                     {index}
                     class="slider-thumb {index === 0 ? 'thumb-left' : 'thumb-right'} {value[0] === value[1] ? 'same-value' : ''}"
-                    disabled={value[0] === value[1] && index === 1}
+                    disabled={value[0] === value[1]}
                 >
                     {#if index === 0}
                         <span class="year-label-left">{value[index]}</span>
 
-                        <!-- UPDATED HERE -->
                         <span
                             class="bracket-handle"
-                            style:pointer-events={value[0] === value[1] && index === 1 ? "none" : "auto"}
+                            style:pointer-events={value[0] === value[1] ? "none" : "auto"}
                         >|</span>
 
                     {:else if value[0] !== value[1]}
-                        <!-- UPDATED HERE -->
                         <span
                             class="bracket-handle"
-                            style:pointer-events={value[0] === value[1] && index === 1 ? "none" : "auto"}
+                            style:pointer-events={value[0] === value[1] ? "none" : "auto"}
                         >|</span>
 
                         <span class="year-label-right">{value[index]}</span>
                     {/if}
                 </Slider.Thumb>
             {/each}
+
+            <!-- Add tick marks at min and max -->
+            <Slider.Tick index={0} />
+            <Slider.TickLabel index={0} position="bottom">{min}</Slider.TickLabel>
+
+            <Slider.Tick index={tickItems.length - 1} />
+            <Slider.TickLabel index={tickItems.length - 1} position="bottom">{max}</Slider.TickLabel>
 
         {/snippet}
     </Slider.Root>
@@ -159,6 +209,22 @@
         pointer-events: none;
     }
 
+    :global(.slider-range.single-year-draggable) {
+        pointer-events: auto;
+        cursor: grab;
+        transition: all 150ms ease;
+    }
+
+    :global(.slider-range.single-year-draggable:hover) {
+        background: var(--color-good-blue-hover);
+        transform: scaleY(1.2);
+    }
+
+    :global(.slider-range.single-year-draggable:active) {
+        cursor: grabbing;
+        transform: scaleY(1.3);
+    }
+
     :global(.slider-thumb) {
         display: flex;
         align-items: center;
@@ -191,10 +257,20 @@
         transform: scale(1.1);
     }
 
+    :global(.slider-thumb[disabled]) .bracket-handle {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    :global(.slider-thumb[disabled]) .bracket-handle:hover {
+        transform: none;
+    }
+
 
     :global(.slider-thumb:focus-visible) {
         outline: 2px solid var(--color-good-blue);
         outline-offset: 2px;
         border-radius: var(--border-radius);
     }
+
 </style>

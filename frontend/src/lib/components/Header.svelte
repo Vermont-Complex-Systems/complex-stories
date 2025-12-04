@@ -36,7 +36,7 @@
 	}
 </script>
 
-<ModeWatcher />
+<!-- <ModeWatcher /> -->
 
 <header class="header">
 	<div class="header-left">

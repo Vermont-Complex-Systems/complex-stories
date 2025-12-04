@@ -1,35 +1,19 @@
 <script>
     import Sidebar from './Sidebar.svelte';
     import { Dashboard } from 'allotaxonometer-ui';
-    import { uiState, dataState } from '../state.svelte.ts';
-
+    import { uiState, allotax } from '../state.svelte.ts';
 </script>
 
-
 <div class="app-container">
-    <div class="layout">
-        <aside class="sidebar-container {uiState.sidebarCollapsed ? 'collapsed' : ''}">
+        <div class="layout">
+            <aside class="sidebar-container {uiState.sidebarCollapsed ? 'collapsed' : ''}">
                 <Sidebar />
             </aside>
             
-            <main class="main-content {uiState.sidebarCollapsed ? 'collapsed-sidebar' : ''}">
-                {#if dataState.isLoading}
-                    <div class="loading-container">
-                        <div class="loading-content">
-                            <div class="spinner"></div>
-                            <p class="loading-text">Loading baby names data...</p>
-                        </div>
-                    </div>
-                {:else if dataState.error}
-                    <div class="loading-container">
-                        <div class="loading-content">
-                            <p class="error-text">Error: {dataState.error}</p>
-                        </div>
-                    </div>
-                {:else if dataState.allotax.isDataReady}
-                    <Dashboard
-                        {...dataState.allotax}
-                        WordshiftWidth={400}
+            <main class="main-content {uiState.sidebarCollapsed ? 'collapsed-sidebar' : ''}">     
+                {#if allotax.isDataReady}
+                    <Dashboard 
+                        {...allotax} WordshiftWidth={400}
                         />
                 {:else}
                     <div class="loading-container">
@@ -138,13 +122,6 @@
     .loading-text {
         font-size: 1rem;
         color: var(--color-fg);
-        margin: 0;
-        font-family: var(--font-body);
-    }
-
-    .error-text {
-        font-size: 1rem;
-        color: #ef4444;
         margin: 0;
         font-family: var(--font-body);
     }
