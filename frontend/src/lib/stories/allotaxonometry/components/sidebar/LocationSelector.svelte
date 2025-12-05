@@ -63,12 +63,12 @@
     .selector-label {
         font-size: var(--12px, 0.75rem);
         font-weight: var(--font-weight-medium, 500);
-        color: var(--color-text-primary, #333);
+        color: var(--color-text-primary);
     }
 
     .current-selection {
         font-size: var(--11px, 0.69rem);
-        color: var(--color-text-secondary, #666);
+        color: var(--color-text-secondary);
         font-weight: var(--font-weight-normal, 400);
     }
 
@@ -81,11 +81,11 @@
     .error-dropdown {
         width: 100%;
         padding: 0.75rem 1rem;
-        border: 1px solid var(--color-border, #ddd);
+        border: 1px solid var(--color-border);
         border-radius: 6px;
         font-size: 0.875rem;
-        background-color: white;
-        color: var(--color-text-primary, #333);
+        background-color: var(--color-bg);
+        color: var(--color-text-primary);
     }
 
     .location-dropdown {

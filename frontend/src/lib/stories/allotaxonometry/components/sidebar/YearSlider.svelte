@@ -144,6 +144,7 @@
         cursor: pointer;
         pointer-events: auto; /* allow clicking */
         z-index: 20;
+        color: var(--color-text);
     }
 
     .reset-on-bracket-label {
@@ -158,6 +159,7 @@
         right: 1.5rem;
         font-size: 11px;
         pointer-events: none;
+        color: var(--color-text);
     }
 
     .year-label-right {
@@ -166,6 +168,7 @@
         left: 1.5rem;
         font-size: 11px;
         pointer-events: none;
+        color: var(--color-text);
     }
 
     :global(.slider-root) {
@@ -181,7 +184,7 @@
         position: relative;
         flex: 1;
         height: 0.5rem;
-        background: #e5e7eb;
+        background: var(--color-border);
         border-radius: 9999px;
         cursor: default;
         overflow: hidden;
@@ -191,9 +194,13 @@
     :global(.slider-range) {
         position: absolute;
         height: 100%;
-        background: #2b2b2b;
+        background: #555;
         border-radius: 9999px;
         pointer-events: none;
+    }
+
+    :global(.dark .slider-range) {
+        background: #999;
     }
 
     :global(.slider-range.single-year-draggable) {
@@ -203,8 +210,12 @@
     }
 
     :global(.slider-range.single-year-draggable:hover) {
-        background: var(--color-good-blue-hover);
+        background: #333;
         transform: scaleY(1.2);
+    }
+
+    :global(.dark .slider-range.single-year-draggable:hover) {
+        background: #bbb;
     }
 
     :global(.slider-range.single-year-draggable:active) {
@@ -232,7 +243,7 @@
         font-weight: var(--font-weight-bold);
         line-height: 1;
         user-select: none;
-        text-shadow: 0 0 2px rgba(255,255,255,0.8);
+        color: var(--color-text);
         cursor: col-resize;
         /* Only the bracket text is draggable */
         pointer-events: auto;

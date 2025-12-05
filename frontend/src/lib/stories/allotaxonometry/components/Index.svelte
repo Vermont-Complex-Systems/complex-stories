@@ -10,6 +10,7 @@
     import DataInfo from './sidebar/DataInfo.svelte';
     import { createQuery } from '@tanstack/svelte-query';
     import { onMount } from 'svelte';
+    import Nav from './Nav.svelte';
 
     // Local state for years - separate periods for each system
     let period1 = $state([1940, 1959]);
@@ -383,6 +384,9 @@
             </aside>
             
             <main class="main-content">
+                
+                <Nav/>
+                
                 {#if query.isLoading && !query.data}
                     <!-- Only show spinner on initial load when there's no data yet -->
                     <div class="main-loading">
@@ -479,7 +483,7 @@
         height: 100%;
         display: flex;
         flex-direction: column;
-        background-color: var(--color-sidebar-bg, #f8f9fa);
+        background-color: var(--color-input-bg);
     }
 
     .sidebar-header {
@@ -487,14 +491,14 @@
         justify-content: space-between;
         align-items: center;
         padding: 1rem;
-        border-bottom: 1px solid var(--color-border, #e0e0e0);
-        background-color: var(--color-sidebar-header-bg, #fff);
+        border-bottom: 1px solid var(--color-border);
+        background-color: var(--color-bg);
     }
 
     .sidebar-title {
         font-size: var(--16px, 1rem);
         font-weight: var(--font-weight-bold, 600);
-        color: var(--color-text-primary, #333);
+        color: var(--color-text-primary);
         margin: 0;
     }
 
@@ -543,14 +547,14 @@
         width: 100%;
         padding: 0.75rem 1rem;
         margin: 1rem 0;
-        background-color: var(--color-good-blue, #3b82f6);
-        color: white;
-        border: none;
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        border: 1px solid var(--color-border);
         border-radius: 6px;
         font-size: 0.95rem;
-        font-weight: 500;
+        font-weight: 600;
         cursor: pointer;
-        transition: background-color 0.2s ease;
+        transition: all 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -558,7 +562,9 @@
     }
 
     .load-button:hover:not(:disabled) {
-        background-color: var(--color-good-blue-hover, #2563eb);
+        background-color: var(--color-input-bg);
+        border-color: var(--color-text);
+        transform: translateY(-1px);
     }
 
     .load-button:disabled {
@@ -569,8 +575,8 @@
     .loading-spinner {
         width: 1rem;
         height: 1rem;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top: 2px solid white;
+        border: 2px solid var(--color-border);
+        border-top: 2px solid var(--color-text);
         border-radius: 50%;
         animation: spin 1s linear infinite;
     }
@@ -596,12 +602,12 @@
         justify-content: center;
         height: 100%;
         text-align: center;
-        color: var(--color-text-secondary, #666);
+        color: var(--color-text-secondary);
     }
 
     .welcome h2 {
         margin-bottom: 1rem;
-        color: var(--color-text, #333);
+        color: var(--color-text);
     }
 
     .arrow-controls {
@@ -623,12 +629,12 @@
         font-size: 0.85rem;
         transition: all 150ms ease;
         white-space: nowrap;
-        color: var(--color-text, #333);
+        color: var(--color-text);
     }
 
     .arrow-btn:hover:not(:disabled) {
         transform: scale(1.05);
-        background: rgba(0,0,0,0.05);
+        background: var(--color-input-bg);
         border-radius: 4px;
     }
 
@@ -654,17 +660,18 @@
     .jump-label {
         font-size: 0.85rem;
         font-weight: 500;
-        color: var(--color-text, #333);
+        color: var(--color-text);
     }
 
     .jump-input {
         width: 50px;
         padding: 0.25rem 0.5rem;
-        border: 1px solid rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--color-border);
         border-radius: 3px;
         font-size: 0.85rem;
         text-align: center;
-        background-color: white;
+        background-color: var(--color-bg);
+        color: var(--color-text);
     }
 
     .jump-input:focus {
@@ -675,7 +682,7 @@
 
     .jump-unit {
         font-size: 0.85rem;
-        color: var(--color-text-secondary, #666);
+        color: var(--color-text-secondary);
     }
 
     .error {
@@ -685,7 +692,7 @@
     }
 
     .separator {
-        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        border-top: 1px solid var(--color-border);
         margin: 1.5rem -1.5rem;
     }
 </style>
