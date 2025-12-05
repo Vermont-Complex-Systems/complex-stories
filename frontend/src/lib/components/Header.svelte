@@ -88,7 +88,11 @@
 
 		<div class="logo-container">
 			<a href="https://vermontcomplexsystems.org/" class="logo-link">
-				<img src="{base}/vcsi-bumper-sticker-horizontal-arial-transparent.png" alt="Home" class="logo" />
+				{#if isDark}
+					<img src="{base}/bumper-sticker2-white-transparent.png" alt="Home" class="logo" />
+				{:else}
+					<img src="{base}/vcsi-bumper-sticker-horizontal-arial-transparent.png" alt="Home" class="logo" />
+				{/if}
 			</a>
 		</div>
 

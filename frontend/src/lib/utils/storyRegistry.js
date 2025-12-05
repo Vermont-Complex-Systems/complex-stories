@@ -1,9 +1,8 @@
-const storyModules = import.meta.glob('../stories/*/components/Index.svelte');
+const storyModules = import.meta.glob('../stories/*/components/Index.svelte', { eager: true });
 
-export const getStoryComponent = async (slug) => {
+export const getStoryComponent = (slug) => {
   const path = `../stories/${slug}/components/Index.svelte`;
-  const module = await storyModules[path]?.();
-  return module?.default;
+  return storyModules[path]?.default;
 };
 
 // Optional: For development, get available stories (plain JS)
