@@ -7,7 +7,9 @@
     import AlphaSlider from './sidebar/AlphaSlider.svelte';
     import LocationSelector from './sidebar/LocationSelector.svelte';
     import MultiFileUpload from './sidebar/MultiFileUpload.svelte';
+    import DataInfo from './sidebar/DataInfo.svelte';
     import { createQuery } from '@tanstack/svelte-query';
+    import { onMount } from 'svelte';
 
     // Local state for years - separate periods for each system
     let period1 = $state([1940, 1959]);
@@ -64,8 +66,16 @@
             uploadStatus = `${system.toUpperCase()}: ${file.name} loaded successfully!`;
             setTimeout(() => uploadStatus = '', 3000);
 
-            // Automatically trigger data refresh when files are uploaded
-            loadData();
+            // Only trigger data refresh when BOTH files are uploaded
+            // Check in next tick to allow state to update
+            setTimeout(() => {
+                if (uploadedSys1 && uploadedSys2) {
+                    uploadStatus = 'Both files loaded! Generating visualization...';
+                    loadData();
+                } else {
+                    uploadStatus = `Waiting for ${uploadedSys1 ? 'System 2' : 'System 1'} file...`;
+                }
+            }, 0);
 
             return { success: true, fileName: file.name };
         } catch (error: unknown) {
@@ -85,41 +95,6 @@
     // Alpha change handler
     function onAlphaChange(newIndex: number) {
         alphaIndex = newIndex;
-        // No need to refetch data - alpha is a client-side visualization parameter
-    }
-
-    // Query function
-    async function fetchBabyNames() {
-        // If files are uploaded, use them instead of API data
-        if (hasUploadedFiles) {
-            const elem1 = uploadedSys1 || [];
-            const elem2 = uploadedSys2 || [];
-
-            return new Allotaxonograph(elem1, elem2, {
-                alpha: currentAlpha,
-                title: uploadedTitle
-            });
-        }
-
-        // Otherwise use API data
-        const period1Str = `${period1[0]},${period1[1]}`;
-        const period2Str = `${period2[0]},${period2[1]}`;
-
-        const ngrams = await getTopBabyNames({
-            dates: period1Str,
-            dates2: period2Str,
-            location: selectedLocation
-        });
-
-        // Get the first two keys from the response (they should be the period ranges)
-        const keys = Object.keys(ngrams);
-        const elem1 = ngrams[keys[0]];
-        const elem2 = ngrams[keys[1]];
-
-        return new Allotaxonograph(elem1, elem2, {
-            alpha: currentAlpha,
-            title: [`${period1[0]}-${period1[1]}`, `${period2[0]}-${period2[1]}`]
-        });
     }
 
     // Locations state - fetch once on mount
@@ -143,28 +118,86 @@
         })();
     });
 
-    // Create query for baby names data - don't include periods/location to avoid auto-refresh on slider drag
+    // Track the parameters we're currently displaying (separate from UI state)
+    let fetchedPeriod1 = $state([1940, 1959]);
+    let fetchedPeriod2 = $state([1990, 2009]);
+    let fetchedLocation = $state('united_states');
+
+    // Create query for baby names data - uses fetched params only
     const query = createQuery(() => ({
-        queryKey: ['babynames', currentAlpha, hasUploadedFiles, !!uploadedSys1, !!uploadedSys2, JSON.stringify(uploadedTitle)],
-        queryFn: fetchBabyNames,
-        enabled: true, // Run automatically on load
-        staleTime: 5 * 60 * 1000, // 5 minutes - don't refetch for 5 mins
+        queryKey: ['babynames', fetchedPeriod1[0], fetchedPeriod1[1], fetchedPeriod2[0], fetchedPeriod2[1], fetchedLocation, hasUploadedFiles, !!uploadedSys1, !!uploadedSys2, JSON.stringify(uploadedTitle)],
+        queryFn: async () => {
+            console.log('🔍 queryFn called - hasUploadedFiles:', hasUploadedFiles);
+            if (hasUploadedFiles) {
+                console.log('📁 Using uploaded files:', {sys1: !!uploadedSys1, sys2: !!uploadedSys2});
+                const elem1 = uploadedSys1 || [];
+                const elem2 = uploadedSys2 || [];
+                return {
+                    elem1,
+                    elem2,
+                    title: uploadedTitle
+                };
+            }
+
+            const period1Str = `${fetchedPeriod1[0]},${fetchedPeriod1[1]}`;
+            const period2Str = `${fetchedPeriod2[0]},${fetchedPeriod2[1]}`;
+
+            const ngrams = await getTopBabyNames({
+                dates: period1Str,
+                dates2: period2Str,
+                location: fetchedLocation
+            });
+
+            const keys = Object.keys(ngrams);
+            const elem1 = ngrams[keys[0]];
+            const elem2 = ngrams[keys[1]];
+
+            return {
+                elem1,
+                elem2,
+                title: [`${fetchedPeriod1[0]}-${fetchedPeriod1[1]}`, `${fetchedPeriod2[0]}-${fetchedPeriod2[1]}`]
+            };
+        },
+        enabled: true, // Enabled, but only queries when fetched params change (on Update click)
+        staleTime: 5 * 60 * 1000, // 5 minutes - cached data is fresh for 5 mins
         gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache for 10 mins
+        placeholderData: (previousData) => previousData, // Keep previous data while fetching new data
     }));
 
-    // Function to trigger data loading
+    // Function to trigger data loading (Update button and arrow keys)
     function loadData() {
-        query.refetch();
+        console.log('🔄 loadData called - updating fetchedPeriods');
+        // Update fetched params to match current UI state - this triggers the query
+        fetchedPeriod1 = [...period1];
+        fetchedPeriod2 = [...period2];
+        fetchedLocation = selectedLocation;
     }
 
-    // Extract data properties as derived values for better control
-    const instance = $derived(query.data);
+    // Initial data load on mount (runs exactly once)
+    onMount(() => {
+        loadData();
+    });
+
+    // Create Allotaxonograph instance reactively based on query data AND currentAlpha
+    const instance = $derived(
+        query.data
+            ? new Allotaxonograph(query.data.elem1, query.data.elem2, {
+                alpha: currentAlpha,
+                title: query.data.title
+            })
+            : null
+    );
+
+    // Extract data properties as derived values
     const dat = $derived(instance?.dat);
     const barData = $derived(instance?.barData);
     const balanceData = $derived(instance?.balanceData);
     const maxlog10 = $derived(instance?.maxlog10);
     const divnorm = $derived(instance?.divnorm);
-    const displayTitles = $derived(instance?.title || ['System 1', 'System 2']);
+    const displayTitles = $derived(query.data?.title || ['System 1', 'System 2']);
+    const me = $derived(instance?.me);
+    const rtd = $derived(instance?.rtd);
+    const isDataReady = $derived(!!query.data && !!instance);
 
     // Arrow navigation functions for both periods
     function shiftBothPeriodsLeft() {
@@ -192,8 +225,8 @@
 
         period2 = [newStart2, newEnd2];
 
-        // Auto-refetch data after jumping
-        loadData();
+        // Use setTimeout to ensure state updates before refetching
+        setTimeout(() => loadData(), 0);
     }
 
     function shiftBothPeriodsRight() {
@@ -221,8 +254,8 @@
 
         period2 = [newStart2, newEnd2];
 
-        // Auto-refetch data after jumping
-        loadData();
+        // Use setTimeout to ensure state updates before refetching
+        setTimeout(() => loadData(), 0);
     }
 
     function canShiftLeft() {
@@ -252,6 +285,7 @@
                             {uploadWarnings}
                         />
 
+
                         <div class="separator"></div>
 
                         {#if !hasUploadedFiles}
@@ -276,7 +310,6 @@
                             {onAlphaChange}
                         />
                     </div>
-
                     <div class="separator"></div>
 
                     {#if !hasUploadedFiles}
@@ -323,8 +356,7 @@
                     {/if}
                     
                     {#if !hasUploadedFiles}
-                        <div class="separator"></div>
-
+                        
                         <button class="load-button" onclick={loadData} disabled={query.isLoading}>
                             {#if query.isLoading}
                                 <div class="loading-spinner"></div>
@@ -335,22 +367,39 @@
                         </button>
                     {/if}
 
+                    {#if isDataReady}
+                        <div class="separator"></div>
+
+                        <DataInfo
+                            title={displayTitles}
+                            {me}
+                            {rtd}
+                            {isDataReady}
+                        />
+
+                        <div class="separator"></div>
+                    {/if}
+                    
+
                     </div>
                 </div>
             </aside>
             
             <main class="main-content">
-                {#if query.isLoading}
+                {#if query.isLoading && !query.data}
+                    <!-- Only show spinner on initial load when there's no data yet -->
                     <div class="main-loading">
                         <Spinner />
                         <p>Loading rust-wasm and baby names comparison...</p>
                     </div>
-                {:else if query.isError}
+                {:else if query.isError && !query.data}
+                    <!-- Only show error if we have no fallback data -->
                     <div class="error">
                         <p>Failed to load baby names data:</p>
                         <p>{query.error?.message || 'Unknown error'}</p>
                     </div>
-                {:else if query.isSuccess}
+                {:else if query.data}
+                    <!-- Show dashboard whenever we have data, even if loading new data -->
                     <Dashboard
                         {dat}
                         {barData}
@@ -461,13 +510,11 @@
     .location-control {
         margin-bottom: 1.5rem;
         margin-top: 1rem;
-        padding-bottom: 1rem;
     }
 
     .year-control {
-        margin-bottom: 1.5rem;
+        margin-bottom: 2rem;
         margin-top: 2.5rem;
-        padding-bottom: 1rem;
     }
 
     .year-control:last-of-type {
@@ -475,7 +522,7 @@
     }
 
     .alpha-control {
-        margin-bottom: 4.5rem;
+        margin-bottom: 3rem;
         margin-top: 2rem;
         padding: 1.5rem 0;
         display: flex;
