@@ -229,13 +229,35 @@
         justify-content: center;
         width: 2rem;
         height: 2rem;
-        background: transparent;
-        border: none;
+        background: transparent !important;
+        border: none !important;
         transition: all 150ms ease;
         position: relative;
         z-index: 10;
         /* Allow clicks to pass through most of the thumb area */
         pointer-events: none;
+        /* Completely hide any default thumb styling from bits-ui */
+        outline: none !important;
+        box-shadow: none !important;
+        /* Remove any default positioning offsets */
+        top: 0 !important;
+        transform: translateY(-0.1rem) !important; /* Align with slider track center */
+    }
+
+    /* Hide any nested thumb elements that bits-ui might create */
+    :global(.slider-thumb::before),
+    :global(.slider-thumb::after),
+    :global(.slider-thumb [data-slider-thumb]) {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+
+    /* Aggressively hide any default thumb background or borders */
+    :global(.slider-thumb > *:not(.bracket-handle):not(.year-label-left):not(.year-label-right):not(.reset-on-bracket):not(.reset-on-bracket-label)) {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
     }
 
     .bracket-handle {
