@@ -19,8 +19,6 @@
     .data-info {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
-        margin-top: 1rem;
     }
 
 
@@ -28,7 +26,7 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 0.5rem;
-        margin-top: 0.5rem;
+        margin-top: 1rem;
     }
 
     .stat {

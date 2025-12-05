@@ -368,7 +368,6 @@
                     {/if}
 
                     {#if isDataReady}
-                        <div class="separator"></div>
 
                         <DataInfo
                             title={displayTitles}
@@ -376,8 +375,6 @@
                             {rtd}
                             {isDataReady}
                         />
-
-                        <div class="separator"></div>
                     {/if}
                     
 
