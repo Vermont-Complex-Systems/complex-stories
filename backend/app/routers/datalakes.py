@@ -62,33 +62,49 @@ async def register_datalake(
     current_user: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db_session)
 ):
-    """Register a new datalake."""
+    """Register a new datalake or update existing one."""
 
     # Check if dataset_id already exists
-    existing = await db.execute(
+    existing_result = await db.execute(
         select(Datalake).where(Datalake.dataset_id == datalake.dataset_id)
     )
-    if existing.scalar_one_or_none():
-        raise HTTPException(
-            status_code=400,
-            detail=f"Datalake with dataset_id '{datalake.dataset_id}' already exists"
-        )
+    existing_datalake = existing_result.scalar_one_or_none()
 
-    # Create new datalake entry
-    db_datalake = Datalake(**datalake.model_dump())
-    db.add(db_datalake)
-    await db.commit()
-    await db.refresh(db_datalake)
+    if existing_datalake:
+        # Update existing datalake
+        existing_datalake.data_location = datalake.data_location
+        existing_datalake.data_format = datalake.data_format
+        existing_datalake.description = datalake.description
+        existing_datalake.tables_metadata = datalake.tables_metadata
 
-    return {
-        "message": f"Datalake '{datalake.dataset_id}' registered successfully",
-        "datalake": {
-            "dataset_id": db_datalake.dataset_id,
-            "data_location": db_datalake.data_location,
-            "data_format": db_datalake.data_format,
-            "description": db_datalake.description
+        await db.commit()
+        await db.refresh(existing_datalake)
+
+        return {
+            "message": f"Datalake '{datalake.dataset_id}' updated successfully",
+            "datalake": {
+                "dataset_id": existing_datalake.dataset_id,
+                "data_location": existing_datalake.data_location,
+                "data_format": existing_datalake.data_format,
+                "description": existing_datalake.description
+            }
         }
-    }
+    else:
+        # Create new datalake entry
+        db_datalake = Datalake(**datalake.model_dump())
+        db.add(db_datalake)
+        await db.commit()
+        await db.refresh(db_datalake)
+
+        return {
+            "message": f"Datalake '{datalake.dataset_id}' registered successfully",
+            "datalake": {
+                "dataset_id": db_datalake.dataset_id,
+                "data_location": db_datalake.data_location,
+                "data_format": db_datalake.data_format,
+                "description": db_datalake.description
+            }
+        }
 
 
 @router.get("/{dataset_id}")
@@ -116,8 +132,10 @@ async def get_datalake_info(
             duckdb_client = get_duckdb_client()
             conn = duckdb_client.connect()
 
-            adapter_metadata = datalake.tables_metadata["adapter"]
-            adapter_file_path = f"{datalake.data_location}/main/{adapter_metadata['path']}{adapter_metadata['file_path']}"
+            # tables_metadata["adapter"] is now just the file path (handle both string and array formats)
+            adapter_path_raw = datalake.tables_metadata["adapter"]
+            adapter_filename = adapter_path_raw[0] if isinstance(adapter_path_raw, list) else adapter_path_raw
+            adapter_file_path = f"{datalake.data_location}/metadata.ducklake.files/main/adapter/{adapter_filename}"
 
             adapter_result = conn.execute(f"SELECT * FROM read_parquet('{adapter_file_path}')").fetchall()
 
@@ -150,8 +168,9 @@ async def get_datalake_info(
 
 @router.get("/babynames/top-ngrams")
 async def get_babynames_top_ngrams(
-    dates: List[str] = Query(default=["1991,1993"]),  # ["1950,1952"] or ["1950,1952", "1991,1993"]
-    locations: List[str] = Query(default=["wikidata:Q30"]),  # ["wikidata:Q30"] or ["wikidata:Q30", "wikidata:Q16"]
+    dates: str = Query(default="1991,1993"),  # First date range
+    dates2: Optional[str] = Query(default=None),  # Optional second date range
+    locations: str = Query(default="wikidata:Q30"),  # Single location
     sex: Optional[str] = 'M',
     limit: int = 100,
     db: AsyncSession = Depends(get_db_session)
@@ -172,23 +191,24 @@ async def get_babynames_top_ngrams(
     Returns structured data for comparison visualization.
     """
 
-    # Parse dates parameter
+    # Parse dates parameters
     date_ranges = []
-    for date_range_str in dates:
-        years = [int(y) for y in date_range_str.split(',')]
-        if len(years) == 1:
-            years.append(years[0])  # Single year becomes range [year, year]
-        date_ranges.append(years)
 
-    # Parse locations parameter
-    location_list = locations
+    # Parse first date range
+    years1 = [int(y) for y in dates.split(',')]
+    if len(years1) == 1:
+        years1.append(years1[0])  # Single year becomes range [year, year]
+    date_ranges.append(years1)
 
-    # Validation: if multiple date ranges, must have single location
-    if len(date_ranges) > 1 and len(location_list) > 1:
-        raise HTTPException(
-            status_code=400,
-            detail="Cannot specify multiple date ranges AND multiple locations. Choose one for comparison."
-        )
+    # Parse optional second date range
+    if dates2:
+        years2 = [int(y) for y in dates2.split(',')]
+        if len(years2) == 1:
+            years2.append(years2[0])  # Single year becomes range [year, year]
+        date_ranges.append(years2)
+
+    # Single location (no longer a list)
+    location_list = [locations]
 
     # Look up babynames datalake
     query = select(Datalake).where(Datalake.dataset_id == "babynames")
@@ -204,11 +224,30 @@ async def get_babynames_top_ngrams(
         conn = duckdb_client.connect()
 
         # Use stored metadata to get exact file paths for current versions
-        babynames_metadata = datalake.tables_metadata.get("babynames", {})
-        adapter_metadata = datalake.tables_metadata.get("adapter", {})
+        if not datalake.tables_metadata:
+            raise HTTPException(
+                status_code=500,
+                detail="Datalake metadata is missing. Please re-register the datalake with proper tables_metadata."
+            )
 
-        babynames_path = f"{datalake.data_location}/main/{babynames_metadata['path']}{babynames_metadata['file_path']}"
-        adapter_path = f"{datalake.data_location}/main/{adapter_metadata['path']}{adapter_metadata['file_path']}"
+        # tables_metadata now contains direct file paths (handle both string and array formats)
+        babynames_path_raw = datalake.tables_metadata.get("babynames")
+        adapter_path_raw = datalake.tables_metadata.get("adapter")
+
+        if not babynames_path_raw or not adapter_path_raw:
+            raise HTTPException(
+                status_code=500,
+                detail="Missing babynames or adapter file paths. Required: tables_metadata.babynames and tables_metadata.adapter"
+            )
+
+        # Handle both string and array formats (some metadata might be stored as arrays)
+        babynames_filename = babynames_path_raw[0] if isinstance(babynames_path_raw, list) else babynames_path_raw
+        adapter_filename = adapter_path_raw[0] if isinstance(adapter_path_raw, list) else adapter_path_raw
+
+        # Construct full paths by combining data_location with the filenames
+        # For ducklake format, files are stored in metadata.ducklake.files/main/ subdirectories
+        babynames_path = f"{datalake.data_location}/metadata.ducklake.files/main/babynames/{babynames_filename}"
+        adapter_path = f"{datalake.data_location}/metadata.ducklake.files/main/adapter/{adapter_filename}"
 
         # Execute comparative queries
         results = {}
@@ -234,7 +273,7 @@ async def get_babynames_top_ngrams(
                         b.types,
                         SUM(b.counts) as counts
                     FROM read_parquet('{babynames_path}') b
-                    LEFT JOIN read_parquet('{adapter_path}') a ON b.countries = a.local_id
+                    LEFT JOIN read_parquet('{adapter_path}') a ON b.geo = a.local_id
                     WHERE b.year BETWEEN {date_range[0]} AND {date_range[1]}
                       AND a.entity_id = '{location}'
                 """
@@ -242,19 +281,36 @@ async def get_babynames_top_ngrams(
                 if sex:
                     sql_query += f" AND b.sex = '{sex}'"
 
-                sql_query += f" GROUP BY b.types ORDER BY counts DESC LIMIT {limit}"
+                sql_query += f"""
+                    GROUP BY b.types
+                    ORDER BY counts DESC
+                    LIMIT {limit}
+                """
 
                 cursor = conn.execute(sql_query)
                 query_results = cursor.fetchall()
 
+    
                 # Structure results for comparison or simple format
-                if key == "data":
-                    # Simple single query - return flat array for backwards compatibility
-                    return [{"types": row[0], "counts": row[1]} for row in query_results]
-                else:
-                    # Comparative query - return array directly under the key
-                    results[key] = [{"types": row[0], "counts": row[1]} for row in query_results]
+                try:
+                    if key == "data":
+                        # Simple single query - return flat array for backwards compatibility
+                        formatted_results = []
+                        for i, row in enumerate(query_results):
+                            formatted_results.append({"types": row[0], "counts": row[1]})
+                        return formatted_results
+                    else:
+                        # Comparative query - return array directly under the key
+                        formatted_results = []
+                        for i, row in enumerate(query_results):
+                            formatted_results.append({"types": row[0], "counts": row[1]})
+                        results[key] = formatted_results
+                except Exception as format_error:
+                    print(f"❌ Error formatting results: {format_error}")
+                    print(f"❌ Raw query_results: {query_results}")
+                    raise
 
+        print(f"🔍 Final results object: {results}")
         return results
 
     except Exception as e:

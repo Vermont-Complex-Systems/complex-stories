@@ -4,7 +4,16 @@
 	import { page } from '$app/state';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
-	
+	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query'
+
+	const queryClient = new QueryClient({
+		defaultOptions: {
+			queries: {
+				staleTime: 1000 * 60 * 5 // 5 minutes
+			}
+		}
+	});
+
 	let { children } = $props();
 	
 	let isStoryPage = $derived(page.route.id === '/[slug]');
@@ -21,7 +30,9 @@
 {/if}
 
 <main id="content">
+<QueryClientProvider client={queryClient}>
 	{@render children?.()}
+</QueryClientProvider>
 </main>
 
 <Footer />

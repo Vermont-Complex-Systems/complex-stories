@@ -1,6 +1,5 @@
-<!-- sidebar/DirectClickUpload.svelte -->
 <script>
-    import { Accordion, Button } from "bits-ui";
+    import { Button } from "bits-ui";
     
     let {
         sys1 = $bindable(null),
@@ -20,7 +19,7 @@
     // Handle file selection and auto-populate first two
     async function handleFiles(files) {
         const newFiles = [];
-        
+
         for (const file of files) {
             newFiles.push({
                 id: crypto.randomUUID(),
@@ -30,15 +29,15 @@
                 addedAt: new Date()
             });
         }
-        
+
         // Sort alphabetically for consistent ordering
         newFiles.sort((a, b) => a.name.localeCompare(b.name));
         availableFiles = newFiles;
-        
+
         // Reset selections and auto-upload first two
         selectedSys1Index = 0;
         selectedSys2Index = Math.min(1, availableFiles.length - 1);
-        
+
         if (availableFiles.length >= 1) {
             await uploadToSystem(availableFiles[0], 'sys1');
         }
@@ -140,19 +139,11 @@
     }
 </script>
 
-<Accordion.Item value="upload" class="accordion-item">
-    <Accordion.Header>
-        <Accordion.Trigger class="accordion-trigger">
-            <span>📁 Upload Data</span>
-            {#if availableFiles.length > 0}
-                <span class="file-count">{availableFiles.length}</span>
-            {/if}
-        </Accordion.Trigger>
-    </Accordion.Header>
-    <Accordion.Content class="accordion-content">
+<div class="upload-container">
+    <div class="upload-content">
         <div class="upload-section">
             <!-- Drop Zone with proper accessibility -->
-            <div 
+            <div
                 class="drop-zone {dragOver ? 'drag-over' : ''}"
                 ondragover={handleDragOver}
                 ondragleave={handleDragLeave}
@@ -175,9 +166,9 @@
                 <div class="drop-zone-content">
                     <div class="upload-icon">📁</div>
                     <p class="drop-text">
-                        Drag files or 
-                        <button 
-                            class="browse-link" 
+                        Drag files or
+                        <button
+                            class="browse-link"
                             onclick={() => fileInput.click()}
                         >
                             browse
@@ -185,6 +176,10 @@
                     </p>
                 </div>
             </div>
+
+            <p class="upload-hint">
+                Hint: when browsing files, hold Ctrl to select multiple files to compare.
+            </p>
             
             <!-- Multi-Select Widgets -->
             {#if availableFiles.length > 0}
@@ -275,15 +270,34 @@
                 </div>
             {/if}
         </div>
-    </Accordion.Content>
-</Accordion.Item>
+    </div>
+</div>
 
 <style>
+    .upload-container {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        font-weight: 500;
+        color: var(--color-text-primary);
+        font-size: 0.9rem;
+    }
+
+    .upload-content {
+        margin-top: 0.25rem;
+    }
+
     .upload-section {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
-        margin-top: 1rem;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
     }
 
     .file-count {
@@ -301,7 +315,7 @@
     .drop-zone {
         border: 1px dashed var(--color-border);
         border-radius: var(--border-radius);
-        padding: 1rem;
+        padding: 0.75rem;
         text-align: center;
         background-color: var(--color-input-bg);
         transition: all var(--transition-medium) ease;
@@ -353,17 +367,25 @@
         font-size: inherit;
     }
 
+    .upload-hint {
+        font-size: var(--11px, 0.69rem);
+        color: #999;
+        margin: 0.5rem 0 0 0;
+        text-align: center;
+        font-style: italic;
+    }
+
     /* Multi-Select Container */
     .multiselect-container {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.75rem;
     }
 
     .multiselect-widget {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.375rem;
     }
 
     .widget-label {
@@ -398,13 +420,13 @@
     /* Custom Select */
     .custom-select {
         width: 100%;
-        height: 220px;
+        height: 120px;
         border: 1px solid var(--color-border);
         border-radius: var(--border-radius);
         background-color: var(--color-input-bg);
         color: var(--color-text-primary);
         font-family: var(--font-body);
-        font-size: var(--13px);
+        font-size: var(--12px);
         overflow-y: auto;
         cursor: pointer;
         display: flex;
