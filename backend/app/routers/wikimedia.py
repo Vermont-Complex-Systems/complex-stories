@@ -25,6 +25,12 @@ async def get_top_ngrams(
 ) -> Dict[str, List[NgramResult]]:
     """
     Get top N-grams for given dates and countries.
+
+    Date handling:
+    - Single date: Returns data for that specific date
+    - Two dates: Treats as a date range (start, end) and returns all dates between them
+    - More than two dates: Queries each date individually (discrete dates, not a range)
+
     Can compare multiple dates OR multiple countries, but not both simultaneously.
     """
     try:
@@ -33,6 +39,9 @@ async def get_top_ngrams(
         coll = wikimedia_db.get_collection("en_1grams")
 
         start_time = time.time()
+            
+        # dates="2024-10-10,2024-10-20"
+        # countries="United States"
 
         # Parse comma-separated inputs into arrays
         try:
@@ -54,33 +63,76 @@ async def get_top_ngrams(
             )
 
         # Set up iteration: which dimension varies, which is fixed
-        varying_dimension = date_array if comparing_dates else country_array
         fixed_date = date_array[0]
         fixed_country = country_array[0]
 
         results = {}
 
         # Execute queries for each dimension value
-        def execute_mongo_query(item):
-            date = item if comparing_dates else fixed_date
-            country = item if comparing_countries else fixed_country
+        def execute_mongo_query_date_range(start_date, end_date, country):
+            """Query MongoDB for a date range"""
+            cursor = coll.find({
+                "date": {"$gte": start_date, "$lte": end_date},
+                "country": country
+            }).sort("pv_rank", 1).limit(topN)
 
-            # Execute the MongoDB query (synchronous)
+            docs = list(cursor)
+            # Group results by date
+            by_date = {}
+            for doc in docs:
+                doc_date = doc.get("date")
+                if doc_date:
+                    key = doc_date.isoformat() if hasattr(doc_date, 'isoformat') else str(doc_date)
+                    if key not in by_date:
+                        by_date[key] = []
+                    by_date[key].append(doc)
+            return by_date
+
+        def execute_mongo_query_single(date, country):
+            """Query MongoDB for a single date"""
             cursor = coll.find(
                 {"date": date, "country": country}
             ).sort("pv_rank", 1).limit(topN)
 
             docs = list(cursor)
             key = date.isoformat() if comparing_dates else country
-            return (key, docs)
+            return {key: docs}
 
         # Run MongoDB queries in thread pool for async compatibility
         loop = asyncio.get_event_loop()
-        tasks = [
-            loop.run_in_executor(None, execute_mongo_query, item)
-            for item in varying_dimension
-        ]
-        query_results = await asyncio.gather(*tasks)
+
+        if comparing_dates and len(date_array) == 2:
+            # Date range query: two dates represent start and end
+            query_results_dict = await loop.run_in_executor(
+                None,
+                execute_mongo_query_date_range,
+                date_array[0],
+                date_array[1],
+                fixed_country
+            )
+            query_results = [(key, docs) for key, docs in query_results_dict.items()]
+        elif comparing_countries:
+            # Multiple countries, single date
+            tasks = [
+                loop.run_in_executor(None, execute_mongo_query_single, fixed_date, country)
+                for country in country_array
+            ]
+            results_dicts = await asyncio.gather(*tasks)
+            query_results = [(key, docs) for result_dict in results_dicts for key, docs in result_dict.items()]
+        else:
+            # Single date, single country (or multiple discrete dates)
+            if len(date_array) > 2:
+                # Multiple discrete dates (not a range)
+                tasks = [
+                    loop.run_in_executor(None, execute_mongo_query_single, date, fixed_country)
+                    for date in date_array
+                ]
+                results_dicts = await asyncio.gather(*tasks)
+                query_results = [(key, docs) for result_dict in results_dicts for key, docs in result_dict.items()]
+            else:
+                # Single query
+                result_dict = await loop.run_in_executor(None, execute_mongo_query_single, fixed_date, fixed_country)
+                query_results = [(key, docs) for key, docs in result_dict.items()]
 
         # Process results
         for key, docs in query_results:
