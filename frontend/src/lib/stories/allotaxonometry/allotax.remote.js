@@ -38,13 +38,14 @@ export const getTopBabyNames = query(
         dates2: v.string(),
         location: v.optional(v.string())
     }),
-    async ({ dates, dates2, location = 'united_states' }) => {
+    async ({ dates, dates2, location = 'united_states', sex = 'M', limit = 10_000}) => {
 
         const params = new URLSearchParams({
             dates: dates,
             dates2: dates2,
-            limit: 10_000,
-            location: location
+            location: location,
+            sex: sex,
+            limit: limit,
         })
 
         const url = `${API_BASE_URL}/datalakes/babynames/top-ngrams?${params.toString()}`
