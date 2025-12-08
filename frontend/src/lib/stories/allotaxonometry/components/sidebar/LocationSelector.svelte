@@ -2,7 +2,7 @@
     let {
         value = $bindable('united_states'),
         label = "Location",
-        locations = [],
+        adapter = [],
         isLoading = false,
         isError = false
     } = $props();
@@ -13,10 +13,11 @@
 
     // Get current location display name - computed each render
     function getCurrentLocationName() {
-        if (!locations?.length) return value;
-        const location = locations.find(l => l.code === value);
+        if (!adapter?.length) return value;
+        const location = adapter.find(l => l.code === value);
         return location?.name || value;
     }
+
 </script>
 
 <div class="location-selector">
@@ -29,15 +30,15 @@
             <div class="loading-dropdown">Loading locations...</div>
         {:else if isError}
             <div class="error-dropdown">Failed to load locations</div>
-        {:else if locations.length > 0}
+        {:else if adapter.length > 0}
             <select
                 {value}
                 onchange={handleChange}
                 class="location-dropdown"
             >
-                {#each locations as location}
-                    <option value={location.code}>
-                        {location.name}
+                {#each adapter as row}
+                    <option value={row[0]}>
+                        {row[2]}
                     </option>
                 {/each}
             </select>

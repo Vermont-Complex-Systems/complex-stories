@@ -67,7 +67,6 @@ async def register_datalake(
     db: AsyncSession = Depends(get_db_session)
 ):
     """Register a new datalake or update existing one."""
-
     # Check if dataset_id already exists
     existing_result = await db.execute(
         select(Datalake).where(Datalake.dataset_id == datalake.dataset_id)
@@ -89,17 +88,12 @@ async def register_datalake(
         await db.refresh(existing_datalake)
 
         return {
-            "message": f"Datalake '{datalake.dataset_id}' updated successfully",
-            "datalake": {
-                "dataset_id": existing_datalake.dataset_id,
-                "data_location": existing_datalake.data_location,
-                "data_format": existing_datalake.data_format,
-                "description": existing_datalake.description
-            }
+            "message": f"Datalake '{datalake.dataset_id}' updated successfully"
         }
     else:
         # Create new datalake entry
         datalake_data = datalake.model_dump()
+
         # Convert Pydantic models to dicts for JSON storage
         if datalake_data.get('entity_mapping'):
             datalake_data['entity_mapping'] = datalake_data['entity_mapping']
@@ -117,7 +111,9 @@ async def register_datalake(
                 "dataset_id": db_datalake.dataset_id,
                 "data_location": db_datalake.data_location,
                 "data_format": db_datalake.data_format,
-                "description": db_datalake.description
+                "description": db_datalake.description,
+                "schema": db_datalake.schema,
+                "ducklake_data_path": db_datalake.ducklake_data_path
             }
         }
 
@@ -155,6 +151,73 @@ async def get_datalake_info(
         "updated_at": datalake.updated_at
     }
 
+@router.get("/{dataset_id}/adapter")
+async def get_adapter_info(
+    dataset_id: str,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Get metadata for a specific datalake."""
+
+    # Look up datalake in registry
+    query = select(Datalake).where(Datalake.dataset_id == dataset_id)
+    result = await db.execute(query)
+    datalake = result.scalar_one_or_none()
+
+    if not datalake:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Datalake '{dataset_id}' not found"
+        )
+
+    try:
+        # Get DuckDB connection
+        duckdb_client = get_duckdb_client()
+        conn = duckdb_client.connect()
+
+        print(datalake)
+        # Use stored metadata to get exact file paths for current versions
+        if not datalake.tables_metadata:
+            raise HTTPException(
+                status_code=500,
+                detail="Datalake metadata is missing. Please re-register the datalake with proper tables_metadata."
+            )
+        
+        adapter_fnames = datalake.tables_metadata.get("adapter")
+
+        if not adapter_fnames:
+            raise HTTPException(
+                status_code=500,
+                detail="Missing babynames or adapter file paths. Required: tables_metadata.babynames and tables_metadata.adapter"
+            )
+
+        adapter_path = [
+            f"{datalake.data_location}/{datalake.ducklake_data_path}/main/adapter/{fname}" for fname in adapter_fnames
+            ]
+
+        # Execute comparative queries
+        results = {}
+
+        # Query for each combination of date ranges and locations
+        
+        sql_query = f"""
+            SELECT
+                *
+            FROM read_parquet(?)
+        """
+
+        cursor = conn.execute(sql_query, [adapter_path])
+        query_results = cursor.fetchall()
+
+        print(f"🔍 Final results object: {query_results}")
+        return query_results
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
+    finally:
+        try:
+            duckdb_client.close()
+        except:
+            pass
 
 @router.get("/babynames/top-ngrams")
 async def get_babynames_top_ngrams(
@@ -213,31 +276,31 @@ async def get_babynames_top_ngrams(
         duckdb_client = get_duckdb_client()
         conn = duckdb_client.connect()
 
+        print(datalake)
         # Use stored metadata to get exact file paths for current versions
         if not datalake.tables_metadata:
             raise HTTPException(
                 status_code=500,
                 detail="Datalake metadata is missing. Please re-register the datalake with proper tables_metadata."
             )
+        
+        babynames_fnames = datalake.tables_metadata.get("babynames")
+        adapter_fnames = datalake.tables_metadata.get("adapter")
 
-        # tables_metadata now contains direct file paths (handle both string and array formats)
-        babynames_path_raw = datalake.tables_metadata.get("babynames")
-        adapter_path_raw = datalake.tables_metadata.get("adapter")
-
-        if not babynames_path_raw or not adapter_path_raw:
+        if not babynames_fnames or not adapter_fnames:
             raise HTTPException(
                 status_code=500,
                 detail="Missing babynames or adapter file paths. Required: tables_metadata.babynames and tables_metadata.adapter"
             )
 
-        # Handle both string and array formats (some metadata might be stored as arrays)
-        babynames_filename = babynames_path_raw[0] if isinstance(babynames_path_raw, list) else babynames_path_raw
-        adapter_filename = adapter_path_raw[0] if isinstance(adapter_path_raw, list) else adapter_path_raw
-
         # Construct full paths by combining data_location with the filenames
         # For ducklake format, files are stored in metadata.ducklake.files/main/ subdirectories
-        babynames_path = f"{datalake.data_location}/metadata.ducklake.files/main/babynames/{babynames_filename}"
-        adapter_path = f"{datalake.data_location}/metadata.ducklake.files/main/adapter/{adapter_filename}"
+        babynames_path = [
+            f"{datalake.data_location}/{datalake.ducklake_data_path}/main/babynames/{fname}" for fname in babynames_fnames
+            ]
+        adapter_path = [
+            f"{datalake.data_location}/{datalake.ducklake_data_path}/main/adapter/{fname}" for fname in adapter_fnames
+            ]
 
         # Execute comparative queries
         results = {}
@@ -262,22 +325,23 @@ async def get_babynames_top_ngrams(
                     SELECT
                         b.types,
                         SUM(b.counts) as counts
-                    FROM read_parquet('{babynames_path}') b
-                    LEFT JOIN read_parquet('{adapter_path}') a ON b.geo = a.local_id
-                    WHERE b.year BETWEEN {date_range[0]} AND {date_range[1]}
-                      AND a.entity_id = '{location}'
+                    FROM read_parquet(?) b
+                    LEFT JOIN read_parquet(?) a ON b.geo = a.local_id
+                    WHERE b.year BETWEEN ? AND ?
+                      AND a.entity_id = ?
                 """
 
                 if sex:
-                    sql_query += f" AND b.sex = '{sex}'"
+                    sql_query += f" AND b.sex = ?"
 
                 sql_query += f"""
                     GROUP BY b.types
                     ORDER BY counts DESC
-                    LIMIT {limit}
+                    LIMIT ?
                 """
 
-                cursor = conn.execute(sql_query)
+                print(babynames_path)
+                cursor = conn.execute(sql_query, [babynames_path, adapter_path, date_range[0], date_range[1], location, sex, limit])
                 query_results = cursor.fetchall()
 
     
