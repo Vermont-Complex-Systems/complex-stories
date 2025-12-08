@@ -11,6 +11,9 @@
     import { createQuery } from '@tanstack/svelte-query';
     import { onMount } from 'svelte';
     import Nav from './Nav.svelte';
+    
+    import boys1895 from '../data/boys-1895.json'
+    import boys1968 from '../data/boys-1968.json'
 
     // Local state for years - separate periods for each system
     let period1 = $state([1940, 1959]);
@@ -107,12 +110,12 @@
     $effect(() => {
         (async () => {
             try {
-                console.log('Fetching locations...');
+                // console.log('Fetching locations...');
                 locations = await getAvailableLocations();
-                console.log('Locations loaded:', locations);
+                // console.log('Locations loaded:', locations);
                 locationsLoading = false;
             } catch (error) {
-                console.error('Failed to fetch locations:', error);
+                // console.error('Failed to fetch locations:', error);
                 locationsError = true;
                 locationsLoading = false;
             }
@@ -128,7 +131,7 @@
     const query = createQuery(() => ({
         queryKey: ['babynames', fetchedPeriod1[0], fetchedPeriod1[1], fetchedPeriod2[0], fetchedPeriod2[1], fetchedLocation, hasUploadedFiles, !!uploadedSys1, !!uploadedSys2, JSON.stringify(uploadedTitle)],
         queryFn: async () => {
-            console.log('🔍 queryFn called - hasUploadedFiles:', hasUploadedFiles);
+            // console.log('🔍 queryFn called - hasUploadedFiles:', hasUploadedFiles);
             if (hasUploadedFiles) {
                 console.log('📁 Using uploaded files:', {sys1: !!uploadedSys1, sys2: !!uploadedSys2});
                 const elem1 = uploadedSys1 || [];
@@ -167,8 +170,6 @@
 
     // Function to trigger data loading (Update button and arrow keys)
     function loadData() {
-        console.log('🔄 loadData called - updating fetchedPeriods');
-        // Update fetched params to match current UI state - this triggers the query
         fetchedPeriod1 = [...period1];
         fetchedPeriod2 = [...period2];
         fetchedLocation = selectedLocation;
@@ -189,6 +190,9 @@
             : null
     );
 
+    $inspect('instance', instance)
+    $inspect('queryObj', query)
+
     // Extract data properties as derived values
     const dat = $derived(instance?.dat);
     const barData = $derived(instance?.barData);
@@ -200,6 +204,8 @@
     const rtd = $derived(instance?.rtd);
     const isDataReady = $derived(!!query.data && !!instance);
 
+
+    
     // Arrow navigation functions for both periods
     function shiftBothPeriodsLeft() {
         // Shift period 1
@@ -393,11 +399,12 @@
                         <Spinner />
                         <p>Loading rust-wasm and baby names comparison...</p>
                     </div>
-                {:else if query.isError && !query.data}
+                {:else if query.fetchStatus == 'idle'}
                     <!-- Only show error if we have no fallback data -->
+                     {@const allotax = new Allotaxonograph(boys1895, boys1968, alphas[alphaIndex], ['Boys 1895', 'Boys 1968'])}
+                     <Dashboard {...allotax} />
                     <div class="error">
-                        <p>Failed to load baby names data:</p>
-                        <p>{query.error?.message || 'Unknown error'}</p>
+                        <p>Failed to load baby names data: babynames API is down. Falling back on static data.</p>
                     </div>
                 {:else if query.data}
                     <!-- Show dashboard whenever we have data, even if loading new data -->
