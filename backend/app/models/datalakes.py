@@ -17,6 +17,10 @@ class Datalake(Base):
     data_format = Column(String, nullable=False, default="ducklake")
     description = Column(Text)
     tables_metadata = Column(JSON)  # Store ducklake table metadata for version control
+    ducklake_data_path = Column(String)  # Path to ducklake data directory
+    schema = Column(JSON)  # Table schema (column_name -> type) for query reference
+    entity_mapping = Column(JSON)  # Entity mapping configuration
+    sources = Column(JSON)  # Source URLs for validation
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
