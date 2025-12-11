@@ -2,7 +2,7 @@
     // import Sidebar from './Sidebar.svelte';
     import Spinner from '$lib/components/helpers/Spinner.svelte';
     import { Dashboard, Allotaxonograph } from 'allotaxonometer-ui';
-    import { getTopBabyNames, getAvailableLocations } from '../allotax.remote.js';
+    import { getTopBabyNames, getAdapter } from '../allotax.remote.js';
     import YearSlider from './sidebar/YearSlider.svelte';
     import AlphaSlider from './sidebar/AlphaSlider.svelte';
     import LocationSelector from './sidebar/LocationSelector.svelte';
@@ -11,6 +11,9 @@
     import { createQuery } from '@tanstack/svelte-query';
     import { onMount } from 'svelte';
     import Nav from './Nav.svelte';
+    
+    import boys1895 from '../data/boys-1895.json'
+    import boys1968 from '../data/boys-1968.json'
 
     // Local state for years - separate periods for each system
     let period1 = $state([1940, 1959]);
@@ -90,6 +93,8 @@
     // Alpha values: 0, 1/4, 2/4, 3/4, 1, 3/2, 2, 3, 5, ∞
     const alphas = [0, 1/4, 2/4, 3/4, 1, 3/2, 2, 3, 5, Infinity];
 
+    let topN = $state(10_000);
+
     // Alpha derived values
     const currentAlpha = $derived(alphas[alphaIndex]);
 
@@ -99,7 +104,7 @@
     }
 
     // Locations state - fetch once on mount
-    let locations = $state([]);
+    let adapter = $state([]);
     let locationsLoading = $state(true);
     let locationsError = $state(false);
 
@@ -107,17 +112,18 @@
     $effect(() => {
         (async () => {
             try {
-                console.log('Fetching locations...');
-                locations = await getAvailableLocations();
-                console.log('Locations loaded:', locations);
+                // console.log('Fetching locations...');
+                adapter = await getAdapter();
                 locationsLoading = false;
             } catch (error) {
-                console.error('Failed to fetch locations:', error);
+                // console.error('Failed to fetch locations:', error);
                 locationsError = true;
                 locationsLoading = false;
             }
         })();
     });
+    
+    $inspect('Locations loaded:', adapter);
 
     // Track the parameters we're currently displaying (separate from UI state)
     let fetchedPeriod1 = $state([1940, 1959]);
@@ -126,9 +132,9 @@
 
     // Create query for baby names data - uses fetched params only
     const query = createQuery(() => ({
-        queryKey: ['babynames', fetchedPeriod1[0], fetchedPeriod1[1], fetchedPeriod2[0], fetchedPeriod2[1], fetchedLocation, hasUploadedFiles, !!uploadedSys1, !!uploadedSys2, JSON.stringify(uploadedTitle)],
+        queryKey: ['babynames', fetchedPeriod1[0], fetchedPeriod1[1], fetchedPeriod2[0], fetchedPeriod2[1], fetchedLocation, topN, hasUploadedFiles, !!uploadedSys1, !!uploadedSys2, JSON.stringify(uploadedTitle)],
         queryFn: async () => {
-            console.log('🔍 queryFn called - hasUploadedFiles:', hasUploadedFiles);
+            // console.log('🔍 queryFn called - hasUploadedFiles:', hasUploadedFiles);
             if (hasUploadedFiles) {
                 console.log('📁 Using uploaded files:', {sys1: !!uploadedSys1, sys2: !!uploadedSys2});
                 const elem1 = uploadedSys1 || [];
@@ -146,7 +152,8 @@
             const ngrams = await getTopBabyNames({
                 dates: period1Str,
                 dates2: period2Str,
-                location: fetchedLocation
+                location: fetchedLocation,
+                limit: topN
             });
 
             const keys = Object.keys(ngrams);
@@ -167,8 +174,6 @@
 
     // Function to trigger data loading (Update button and arrow keys)
     function loadData() {
-        console.log('🔄 loadData called - updating fetchedPeriods');
-        // Update fetched params to match current UI state - this triggers the query
         fetchedPeriod1 = [...period1];
         fetchedPeriod2 = [...period2];
         fetchedLocation = selectedLocation;
@@ -200,6 +205,8 @@
     const rtd = $derived(instance?.rtd);
     const isDataReady = $derived(!!query.data && !!instance);
 
+
+    
     // Arrow navigation functions for both periods
     function shiftBothPeriodsLeft() {
         // Shift period 1
@@ -269,8 +276,9 @@
 </script>
 
 <div class="app-container">
-        <div class="layout">
-            <aside class="sidebar-container {sidebarCollapsed ? 'collapsed' : ''}">
+    <div class="layout">
+        <aside class="sidebar-container {sidebarCollapsed ? 'collapsed' : ''}">
+            
                 <div class="sidebar-content">
                     <div class="sidebar-header">
                         <h2 class="sidebar-title">Allotaxonograph</h2>
@@ -294,7 +302,7 @@
                                 <LocationSelector
                                     bind:value={selectedLocation}
                                     label="Location"
-                                    {locations}
+                                    {adapter}
                                     isLoading={locationsLoading}
                                     isError={locationsError}
                                 />
@@ -393,11 +401,12 @@
                         <Spinner />
                         <p>Loading rust-wasm and baby names comparison...</p>
                     </div>
-                {:else if query.isError && !query.data}
+                {:else if query.error}
                     <!-- Only show error if we have no fallback data -->
+                     {@const allotax = new Allotaxonograph(boys1895, boys1968, alphas[alphaIndex], ['Boys 1895', 'Boys 1968'])}
+                     <Dashboard {...allotax} />
                     <div class="error">
-                        <p>Failed to load baby names data:</p>
-                        <p>{query.error?.message || 'Unknown error'}</p>
+                        <p>Failed to load baby names data: babynames API is down. Falling back on static data.</p>
                     </div>
                 {:else if query.data}
                     <!-- Show dashboard whenever we have data, even if loading new data -->
