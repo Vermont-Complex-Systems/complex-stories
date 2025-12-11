@@ -8,6 +8,9 @@ from sqlalchemy import select
 from typing import Dict, Any, Optional, List, Union
 from pydantic import BaseModel, Field
 import httpx
+import re
+from datetime import datetime, timedelta
+from urllib.parse import unquote
 from ..core.database import get_db_session
 from ..core.duckdb_client import get_duckdb_client
 from ..models.datalakes import Datalake, EntityMapping
@@ -16,6 +19,166 @@ from ..models.auth import User
 
 router = APIRouter()
 admin_router = APIRouter()
+
+
+# Helper functions for top-ngrams endpoints
+def get_parquet_paths(datalake, data_table_name: str):
+    """Construct parquet file paths for data table and adapter table.
+
+    The paths stored in tables_metadata are relative paths from the ducklake data directory.
+    We prepend data_location to make them absolute.
+    """
+    if not datalake.tables_metadata:
+        raise HTTPException(
+            status_code=500,
+            detail="Datalake metadata is missing. Please re-register the datalake with proper tables_metadata."
+        )
+
+    data_fnames = datalake.tables_metadata.get(data_table_name)
+    adapter_fnames = datalake.tables_metadata.get("adapter")
+
+    if not data_fnames or not adapter_fnames:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Missing {data_table_name} or adapter file paths. Required: tables_metadata.{data_table_name} and tables_metadata.adapter"
+        )
+
+    # Paths in tables_metadata are relative paths like "geo=US/date=2024-11-01/file.parquet"
+    # We need to construct: {data_location}/main/{table_name}/{relative_path}
+    # NOTE: Don't URL-decode - the filesystem actually has %20 in directory names
+    data_path = [
+        f"{datalake.data_location}/main/{data_table_name}/{fname}"
+        for fname in data_fnames
+    ]
+    adapter_path = [
+        f"{datalake.data_location}/main/adapter/{fname}"
+        for fname in adapter_fnames
+    ]
+
+    return data_path, adapter_path
+
+def format_results(query_results, key: str):
+    """Format query results into structured response."""
+    formatted_results = []
+    for row in query_results:
+        formatted_results.append({"types": row[0], "counts": row[1]})
+
+    if key == "data":
+        # Simple single query - return flat array
+        return formatted_results, True  # True = early return
+    else:
+        # Comparative query - return under key
+        return {key: formatted_results}, False  # False = continue aggregating
+
+def parse_partition_values(file_paths: List[str], partition_key: str) -> List[str]:
+    """Extract unique partition values from Hive-style file paths.
+
+    Args:
+        file_paths: List of Hive-partitioned paths like ["geo=US/week=2025-03-03/data.parquet"]
+        partition_key: Partition key to extract (e.g., "week", "month", "date")
+
+    Returns:
+        Sorted list of unique partition values
+
+    Example:
+        >>> parse_partition_values(["geo=US/week=2025-03-03/data.parquet"], "week")
+        ["2025-03-03"]
+    """
+    pattern = re.compile(f"{partition_key}=([^/]+)")
+    values = set()
+    for path in file_paths:
+        match = pattern.search(path)
+        if match:
+            values.add(match.group(1))
+    return sorted(values)
+
+def filter_paths_by_partitions(
+    file_paths: List[str],
+    partition_values: List[str],
+    partition_key: str
+) -> List[str]:
+    """Filter file paths to only include those matching the given partition values.
+
+    Args:
+        file_paths: List of Hive-partitioned file paths
+        partition_values: List of partition values to keep (e.g., ["2024-11-01", "2024-11-02"])
+        partition_key: Partition key to match (e.g., "date", "week", "month")
+
+    Returns:
+        Filtered list of file paths
+
+    Example:
+        >>> filter_paths_by_partitions(
+        ...     ["geo=US/date=2024-11-01/data.parquet", "geo=US/date=2024-10-01/data.parquet"],
+        ...     ["2024-11-01"],
+        ...     "date"
+        ... )
+        ["geo=US/date=2024-11-01/data.parquet"]
+    """
+    filtered = []
+    pattern = re.compile(f"{partition_key}=([^/]+)")
+
+    for path in file_paths:
+        match = pattern.search(path)
+        if match and match.group(1) in partition_values:
+            filtered.append(path)
+
+    return filtered
+
+
+def find_overlapping_partitions(
+    user_start_date: str,
+    user_end_date: str,
+    partition_values: List[str],
+    granularity: str
+) -> List[str]:
+    """Find partition values that overlap with user's date range.
+
+    Args:
+        user_start_date: Start date in ISO format (YYYY-MM-DD)
+        user_end_date: End date in ISO format (YYYY-MM-DD)
+        partition_values: Available partition values from parse_partition_values()
+        granularity: One of "daily", "weekly", "monthly"
+
+    Returns:
+        List of partition values that overlap with the date range
+
+    Example:
+        >>> find_overlapping_partitions("2025-03-05", "2025-03-12",
+        ...                            ["2025-03-03", "2025-03-10"], "weekly")
+        ["2025-03-03", "2025-03-10"]
+    """
+    overlapping = []
+
+    for partition_value in partition_values:
+        if granularity == "daily":
+            # Partition value is a date like "2025-03-05"
+            if user_start_date <= partition_value <= user_end_date:
+                overlapping.append(partition_value)
+
+        elif granularity == "weekly":
+            # Partition value is week start (Monday) like "2025-03-03"
+            week_start = partition_value
+            week_end = (datetime.strptime(week_start, "%Y-%m-%d") + timedelta(days=6)).strftime("%Y-%m-%d")
+            # Include week if it overlaps: week_start <= user_end AND week_end >= user_start
+            if week_start <= user_end_date and week_end >= user_start_date:
+                overlapping.append(partition_value)
+
+        elif granularity == "monthly":
+            # Partition value is month start like "2025-03-01"
+            month_start = partition_value
+            # Calculate last day of month
+            month_dt = datetime.strptime(month_start, "%Y-%m-%d")
+            if month_dt.month == 12:
+                next_month = month_dt.replace(year=month_dt.year + 1, month=1, day=1)
+            else:
+                next_month = month_dt.replace(month=month_dt.month + 1, day=1)
+            month_end = (next_month - timedelta(days=1)).strftime("%Y-%m-%d")
+            # Include month if it overlaps
+            if month_start <= user_end_date and month_end >= user_start_date:
+                overlapping.append(partition_value)
+
+    return overlapping
 
 
 class EntityMappingConfig(BaseModel):
@@ -117,7 +280,6 @@ async def register_datalake(
             }
         }
 
-
 @router.get("/{dataset_id}")
 async def get_datalake_info(
     dataset_id: str,
@@ -142,7 +304,7 @@ async def get_datalake_info(
         "data_location": datalake.data_location,
         "data_format": datalake.data_format,
         "description": datalake.description,
-        "tables_metadata": datalake.tables_metadata,
+        # "tables_metadata": datalake.tables_metadata,
         "ducklake_data_path": datalake.ducklake_data_path,
         "schema": datalake.schema,
         "entity_mapping": datalake.entity_mapping,
@@ -375,6 +537,238 @@ async def get_babynames_top_ngrams(
         except:
             pass
 
+@router.get("/wikigrams/top-ngrams")
+async def get_wikigrams_top_ngrams(
+    dates: str = Query(default="2024-11-01,2024-11-07"),  # First date range
+    dates2: Optional[str] = Query(default=None),  # Optional second date range
+    locations: str = Query(default="wikidata:Q30"),  # Single location
+    granularity: str = Query(default="daily"),  # Partition granularity: daily, weekly, monthly
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Get top Wikipedia n-grams with flexible comparative analysis.
+
+    Supports:
+    - Single date range: dates="2024-01-01,2024-01-31"
+    - Dual date ranges: dates="2024-01-01,2024-01-31"&dates2="2024-02-01,2024-02-28" (requires single location)
+    - Single location: locations="wikidata:Q30"
+    - Granularity selection: granularity="daily|weekly|monthly" (default: daily)
+
+    Examples:
+    - Temporal comparison: dates="2024-01-01,2024-01-31"&dates2="2024-02-01,2024-02-28"&locations="wikidata:Q30"
+    - Simple query: dates="2024-01-01,2024-01-31"&locations="wikidata:Q30"
+    - Weekly aggregation: dates="2024-01-01,2024-01-31"&granularity=weekly
+
+    Returns structured data for comparison visualization with metadata about queried partitions.
+    """
+
+    # Validate granularity parameter
+    if granularity not in ["daily", "weekly", "monthly"]:
+        raise HTTPException(status_code=400, detail="granularity must be one of: daily, weekly, monthly")
+
+    # Parse dates parameters
+    date_ranges = []
+
+    # Parse first date range
+    dates_str1 = dates.split(',')
+    if len(dates_str1) == 1:
+        dates_str1.append(dates_str1[0])  # Single date becomes range [date, date]
+    date_ranges.append(dates_str1)
+
+    # Parse optional second date range
+    if dates2:
+        dates_str2 = dates2.split(',')
+        if len(dates_str2) == 1:
+            dates_str2.append(dates_str2[0])  # Single date becomes range [date, date]
+        date_ranges.append(dates_str2)
+
+    # Single location (no longer a list)
+    location_list = [locations]
+
+    # Look up wikigrams datalake
+    query = select(Datalake).where(Datalake.dataset_id == "wikigrams")
+    result = await db.execute(query)
+    datalake = result.scalar_one_or_none()
+
+    if not datalake:
+        raise HTTPException(status_code=404, detail="Wikigrams datalake not found")
+
+    # Map granularity to table name and time column
+    granularity_mapping = {
+        "daily": ("wikigrams", "date"),
+        "weekly": ("wikigrams_weekly", "week"),
+        "monthly": ("wikigrams_monthly", "month")
+    }
+    table_name, time_column = granularity_mapping[granularity]
+
+    try:
+        # Get DuckDB connection
+        duckdb_client = get_duckdb_client()
+        conn = duckdb_client.connect()
+
+        print(datalake)
+        # Use stored metadata to get exact file paths for current versions
+        if not datalake.tables_metadata:
+            raise HTTPException(
+                status_code=500,
+                detail="Datalake metadata is missing. Please re-register the datalake with proper tables_metadata."
+            )
+
+        # Check if requested granularity table exists
+        if table_name not in datalake.tables_metadata:
+            available = [k for k in datalake.tables_metadata.keys() if k.startswith("wikigrams")]
+            raise HTTPException(
+                status_code=400,
+                detail=f"Table '{table_name}' not found. Available: {available}. Please re-register or use a different granularity."
+            )
+
+        # Get file paths using helper function
+        wikigrams_path, adapter_path = get_parquet_paths(datalake, table_name)
+
+        # Parse available partition values from file paths
+        available_partitions = parse_partition_values(
+            datalake.tables_metadata[table_name],
+            time_column
+        )
+
+        print(f"🔍 DEBUG: Available partitions ({len(available_partitions)} total): {available_partitions[:10] if len(available_partitions) > 10 else available_partitions}...")
+
+        # Execute comparative queries
+        results = {}
+        queried_partitions_metadata = []
+
+        # Query for each combination of date ranges and locations
+        for i, date_range in enumerate(date_ranges):
+            for j, location in enumerate(location_list):
+                print(f"🔍 DEBUG: User requested date range: {date_range[0]} to {date_range[1]}")
+
+                # Find partitions that overlap with this date range
+                overlapping_partitions = find_overlapping_partitions(
+                    date_range[0],
+                    date_range[1],
+                    available_partitions,
+                    granularity
+                )
+
+                print(f"🔍 DEBUG: Overlapping partitions found: {overlapping_partitions}")
+
+                if not overlapping_partitions:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"No {granularity} data available for date range {date_range[0]} to {date_range[1]}"
+                    )
+
+                # Filter file paths to only include the overlapping partitions
+                filtered_wikigrams_path = filter_paths_by_partitions(
+                    wikigrams_path,
+                    overlapping_partitions,
+                    time_column
+                )
+
+                # Map entity_id to local geo name for file path filtering
+                # This is a hardcoded mapping - ideally we'd query the adapter table
+                entity_to_geo = {
+                    "wikidata:Q30": "United%20States",
+                    "wikidata:Q145": "United%20Kingdom",
+                    "wikidata:Q16": "Canada",
+                    "wikidata:Q408": "Australia"
+                }
+
+                local_geo = entity_to_geo.get(location)
+                if local_geo:
+                    # Further filter by geo partition
+                    filtered_wikigrams_path = [
+                        path for path in filtered_wikigrams_path
+                        if f"geo={local_geo}" in path
+                    ]
+                    print(f"🔍 DEBUG: Filtered to {len(filtered_wikigrams_path)} files for geo={local_geo}")
+
+                queried_partitions_metadata.append({
+                    "date_range": date_range,
+                    "partitions": overlapping_partitions
+                })
+
+                # Create key for result structure
+                if len(date_ranges) > 1:
+                    # Temporal comparison: use readable date format
+                    if date_range[0] == date_range[1]:
+                        key = date_range[0]  # Single date: "2024-01-15"
+                    else:
+                        key = f"{date_range[0]}_{date_range[1]}"  # Range: "2024-01-01_2024-01-31"
+                elif len(location_list) > 1:
+                    # Geographic comparison: use location ID
+                    key = location.replace(":", "_").replace("-", "_")
+                else:
+                    key = "data"  # Single query, return simple format
+
+                # Build IN clause for partition filtering
+                partition_placeholders = ",".join(["?" for _ in overlapping_partitions])
+
+                sql_query = f"""
+                    SELECT
+                        w.types,
+                        SUM(w.counts) as counts
+                    FROM read_parquet(?) w
+                    LEFT JOIN read_parquet(?) a ON w.geo = a.local_id
+                    WHERE w.{time_column} IN ({partition_placeholders})
+                      AND a.entity_id = ?
+                    GROUP BY w.types
+                    ORDER BY counts DESC
+                    LIMIT ?
+                """
+
+                # Build parameter list: [filtered_wikigrams_path, adapter_path, ...partition_values, location, limit]
+                params = [filtered_wikigrams_path, adapter_path] + overlapping_partitions + [location, limit]
+
+                cursor = conn.execute(sql_query, params)
+                query_results = cursor.fetchall()
+
+
+                # Structure results for comparison or simple format
+                try:
+                    if key == "data":
+                        # Simple single query - return with metadata
+                        formatted_results = []
+                        for i, row in enumerate(query_results):
+                            formatted_results.append({"types": row[0], "counts": row[1]})
+                        return {
+                            "data": formatted_results,
+                            "metadata": {
+                                "granularity": granularity,
+                                "table_used": table_name,
+                                "time_column": time_column,
+                                "queried_partitions": overlapping_partitions
+                            }
+                        }
+                    else:
+                        # Comparative query - return array directly under the key
+                        formatted_results = []
+                        for i, row in enumerate(query_results):
+                            formatted_results.append({"types": row[0], "counts": row[1]})
+                        results[key] = formatted_results
+                except Exception as format_error:
+                    print(f"❌ Error formatting results: {format_error}")
+                    print(f"❌ Raw query_results: {query_results}")
+                    raise
+
+        # Add metadata for comparative queries
+        return {
+            **results,
+            "metadata": {
+                "granularity": granularity,
+                "table_used": table_name,
+                "time_column": time_column,
+                "queries": queried_partitions_metadata
+            }
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
+    finally:
+        try:
+            duckdb_client.close()
+        except:
+            pass
 
 @router.get("/{dataset_id}/validate-sources")
 async def validate_datalake_sources(
