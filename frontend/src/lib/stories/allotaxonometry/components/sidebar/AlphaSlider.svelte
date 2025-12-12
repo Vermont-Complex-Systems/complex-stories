@@ -1,11 +1,6 @@
 <script>
     import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
-
-    let {
-        alphas,
-        alphaIndex = $bindable(),
-        currentAlpha
-    } = $props();
+    import { dashboardState, alphas } from '../../sidebar-state.svelte.ts';
 
     // Format alpha as LaTeX fraction for display
     function formatAlpha(alpha) {
@@ -53,7 +48,7 @@
 
     // Slider percentage for pointer based on actual alpha value position
     let sliderPosition = $derived.by(() => {
-        return getTickPosition(currentAlpha) + "%";
+        return getTickPosition(dashboardState.currentAlpha) + "%";
     });
 
     let container;
@@ -75,7 +70,7 @@
             }
         }
 
-        alphaIndex = closestIndex;
+        dashboardState.alphaIndex = closestIndex;
     }
 
     function startDrag(event) {
@@ -99,7 +94,7 @@
         onpointerdown={startDrag}
     >
         <div class="alpha-current-value">
-            α = {currentAlpha === Infinity ? '∞' : currentAlpha}
+            α = {dashboardState.currentAlpha === Infinity ? '∞' : dashboardState.currentAlpha}
         </div>
         <div class="alpha-pointer">▼</div>
     </div>
@@ -108,8 +103,8 @@
         type="range"
         min="0"
         max={alphas.length - 1}
-        value={alphaIndex}
-        oninput={(e) => alphaIndex = +e.target.value}
+        value={dashboardState.alphaIndex}
+        oninput={(e) => dashboardState.alphaIndex = +e.target.value}
         class="alpha-slider"
     />
 

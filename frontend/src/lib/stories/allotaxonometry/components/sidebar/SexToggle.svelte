@@ -1,13 +1,12 @@
 <script>
     import { Toggle } from "bits-ui";
-
-    let { sex = $bindable('M') } = $props();
+    import { dashboardState } from '../../sidebar-state.svelte.ts';
 
     // Convert between boolean and 'M'/'F' string
-    let isFemale = $derived(sex === 'F');
+    let isFemale = $derived(dashboardState.selectedSex === 'F');
 
     function handleToggle(pressed) {
-        sex = pressed ? 'F' : 'M';
+        dashboardState.selectedSex = pressed ? 'F' : 'M';
     }
 </script>
 

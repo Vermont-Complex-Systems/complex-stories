@@ -102,17 +102,12 @@
                 })
     );
 
-    // Extract data properties as derived values
-    const displayTitles = $derived(query.data?.title || ['System 1', 'System 2']);
-    const me = $derived(instance?.me);
-    const rtd = $derived(instance?.rtd);
-    const isDataReady = $derived(!!query.data && !!instance);
 </script>
 
 <div class="app-container">
     <div class="layout">
         <aside class="sidebar-container">
-            <Sidebar {query} {instance} {displayTitles} {me} {rtd} {isDataReady}/>
+            <Sidebar {query} {instance} />
         </aside>
 
         <main class="main-content">
