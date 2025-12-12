@@ -14,8 +14,8 @@
     // Get current location display name - computed each render
     function getCurrentLocationName() {
         if (!adapter?.length) return value;
-        const location = adapter.find(l => l.code === value);
-        return location?.name || value;
+        const location = adapter.find(l => l[1] === value);
+        return location?.[2] || value;
     }
 
 </script>
@@ -37,7 +37,7 @@
                 class="location-dropdown"
             >
                 {#each adapter as row}
-                    <option value={row[0]}>
+                    <option value={row[1]}>
                         {row[2]}
                     </option>
                 {/each}
@@ -65,12 +65,6 @@
         font-size: var(--12px, 0.75rem);
         font-weight: var(--font-weight-medium, 500);
         color: var(--color-text-primary);
-    }
-
-    .current-selection {
-        font-size: var(--11px, 0.69rem);
-        color: var(--color-text-secondary);
-        font-weight: var(--font-weight-normal, 400);
     }
 
     .selector-control {

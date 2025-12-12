@@ -6,8 +6,11 @@
     import YearSlider from './sidebar/YearSlider.svelte';
     import AlphaSlider from './sidebar/AlphaSlider.svelte';
     import LocationSelector from './sidebar/LocationSelector.svelte';
+    import SexToggle from './sidebar/SexToggle.svelte';
+    import TopNSelector from './sidebar/TopNSelector.svelte';
     import MultiFileUpload from './sidebar/MultiFileUpload.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
+    import DownloadSection from './sidebar/DownloadSection.svelte';
     import { createQuery } from '@tanstack/svelte-query';
     import { onMount } from 'svelte';
     import Nav from './Nav.svelte';
@@ -21,7 +24,9 @@
     let sidebarCollapsed = $state(false);
     let jumpYears = $state(5);
     let alphaIndex = $state(7);
-    let selectedLocation = $state('united_states');
+    let selectedLocation = $state('wikidata:Q30');
+    let selectedSex = $state('M'); // 'M' or 'F'
+    let selectedTopN = $state(10000);
 
     // File upload state
     let uploadedSys1 = $state(null);
@@ -93,8 +98,6 @@
     // Alpha values: 0, 1/4, 2/4, 3/4, 1, 3/2, 2, 3, 5, ∞
     const alphas = [0, 1/4, 2/4, 3/4, 1, 3/2, 2, 3, 5, Infinity];
 
-    let topN = $state(10_000);
-
     // Alpha derived values
     const currentAlpha = $derived(alphas[alphaIndex]);
 
@@ -125,18 +128,54 @@
     
     $inspect('Locations loaded:', adapter);
 
+    // Get date range for selected location from adapter
+    const locationDateRange = $derived(() => {
+        if (!adapter?.length) return { min: 1880, max: 2020 };
+        const location = adapter.find(l => l[1] === selectedLocation);
+        if (location && location[4] && location[5]) {
+            return { min: location[4], max: location[5] };
+        }
+        // Default to US range if not found
+        return { min: 1880, max: 2020 };
+    });
+
+    // Reactive min/max based on selected location
+    const dateMin = $derived(locationDateRange().min);
+    const dateMax = $derived(locationDateRange().max);
+
+    // Auto-adjust periods when location changes and dates are out of range
+    $effect(() => {
+        const range = locationDateRange();
+
+        // Adjust period1 if out of range
+        if (period1[0] < range.min || period1[1] > range.max) {
+            const periodLength = period1[1] - period1[0];
+            const newStart = Math.max(range.min, Math.min(range.max - periodLength, period1[0]));
+            const newEnd = Math.min(range.max, newStart + periodLength);
+            period1 = [newStart, newEnd];
+        }
+
+        // Adjust period2 if out of range
+        if (period2[0] < range.min || period2[1] > range.max) {
+            const periodLength = period2[1] - period2[0];
+            const newStart = Math.max(range.min, Math.min(range.max - periodLength, period2[0]));
+            const newEnd = Math.min(range.max, newStart + periodLength);
+            period2 = [newStart, newEnd];
+        }
+    });
+
     // Track the parameters we're currently displaying (separate from UI state)
     let fetchedPeriod1 = $state([1940, 1959]);
     let fetchedPeriod2 = $state([1990, 2009]);
-    let fetchedLocation = $state('united_states');
+    let fetchedLocation = $state('wikidata:Q30');
+    let fetchedSex = $state('M');
+    let fetchedTopN = $state(10000);
 
     // Create query for baby names data - uses fetched params only
     const query = createQuery(() => ({
-        queryKey: ['babynames', fetchedPeriod1[0], fetchedPeriod1[1], fetchedPeriod2[0], fetchedPeriod2[1], fetchedLocation, topN, hasUploadedFiles, !!uploadedSys1, !!uploadedSys2, JSON.stringify(uploadedTitle)],
+        queryKey: ['babynames', fetchedPeriod1[0], fetchedPeriod1[1], fetchedPeriod2[0], fetchedPeriod2[1], fetchedLocation, fetchedSex, fetchedTopN, hasUploadedFiles, !!uploadedSys1, !!uploadedSys2, JSON.stringify(uploadedTitle)],
         queryFn: async () => {
-            // console.log('🔍 queryFn called - hasUploadedFiles:', hasUploadedFiles);
             if (hasUploadedFiles) {
-                console.log('📁 Using uploaded files:', {sys1: !!uploadedSys1, sys2: !!uploadedSys2});
                 const elem1 = uploadedSys1 || [];
                 const elem2 = uploadedSys2 || [];
                 return {
@@ -153,7 +192,8 @@
                 dates: period1Str,
                 dates2: period2Str,
                 location: fetchedLocation,
-                limit: topN
+                sex: fetchedSex,
+                limit: fetchedTopN
             });
 
             const keys = Object.keys(ngrams);
@@ -177,6 +217,8 @@
         fetchedPeriod1 = [...period1];
         fetchedPeriod2 = [...period2];
         fetchedLocation = selectedLocation;
+        fetchedSex = selectedSex;
+        fetchedTopN = selectedTopN;
     }
 
     // Initial data load on mount (runs exactly once)
@@ -205,6 +247,33 @@
     const rtd = $derived(instance?.rtd);
     const isDataReady = $derived(!!query.data && !!instance);
 
+    // Check if we got fewer results than requested
+    const actualCounts = $derived(() => {
+        if (!query.data) return null;
+        const count1 = query.data.elem1?.length || 0;
+        const count2 = query.data.elem2?.length || 0;
+        return { period1: count1, period2: count2 };
+    });
+
+    const showTopNWarning = $derived(() => {
+        const counts = actualCounts();
+        if (!counts || !isDataReady) return false;
+        return counts.period1 < fetchedTopN || counts.period2 < fetchedTopN;
+    });
+
+    // Auto-dismiss warning after 5 seconds
+    let warningDismissed = $state(false);
+
+    $effect(() => {
+        if (showTopNWarning()) {
+            warningDismissed = false;
+            const timer = setTimeout(() => {
+                warningDismissed = true;
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    });
+
 
     
     // Arrow navigation functions for both periods
@@ -214,8 +283,8 @@
         let newStart1 = period1[0] - jumpYears;
         let newEnd1 = newStart1 + range1Size;
 
-        if (newStart1 < 1880) {
-            newStart1 = 1880;
+        if (newStart1 < dateMin) {
+            newStart1 = dateMin;
             newEnd1 = newStart1 + range1Size;
         }
 
@@ -226,8 +295,8 @@
         let newStart2 = period2[0] - jumpYears;
         let newEnd2 = newStart2 + range2Size;
 
-        if (newStart2 < 1880) {
-            newStart2 = 1880;
+        if (newStart2 < dateMin) {
+            newStart2 = dateMin;
             newEnd2 = newStart2 + range2Size;
         }
 
@@ -243,8 +312,8 @@
         let newStart1 = period1[0] + jumpYears;
         let newEnd1 = newStart1 + range1Size;
 
-        if (newEnd1 > 2020) {
-            newEnd1 = 2020;
+        if (newEnd1 > dateMax) {
+            newEnd1 = dateMax;
             newStart1 = newEnd1 - range1Size;
         }
 
@@ -255,8 +324,8 @@
         let newStart2 = period2[0] + jumpYears;
         let newEnd2 = newStart2 + range2Size;
 
-        if (newEnd2 > 2020) {
-            newEnd2 = 2020;
+        if (newEnd2 > dateMax) {
+            newEnd2 = dateMax;
             newStart2 = newEnd2 - range2Size;
         }
 
@@ -267,11 +336,11 @@
     }
 
     function canShiftLeft() {
-        return period1[0] > 1880 || period2[0] > 1880;
+        return period1[0] > dateMin || period2[0] > dateMin;
     }
 
     function canShiftRight() {
-        return period1[1] < 2020 || period2[1] < 2020;
+        return period1[1] < dateMax || period2[1] < dateMax;
     }
 </script>
 
@@ -308,6 +377,31 @@
                                 />
                             </div>
 
+                            <div class="sex-control">
+                                <SexToggle bind:sex={selectedSex} />
+                            </div>
+
+                            <div class="topn-control">
+                                <TopNSelector bind:value={selectedTopN} />
+                                {#if showTopNWarning() && !warningDismissed}
+                                    {@const counts = actualCounts()}
+                                    <div class="topn-warning" class:fade-out={warningDismissed}>
+                                        <svg class="warning-icon" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
+                                        <div class="warning-text">
+                                            {#if counts.period1 < fetchedTopN && counts.period2 < fetchedTopN}
+                                                <span>System 1: {counts.period1.toLocaleString()} names, System 2: {counts.period2.toLocaleString()} names (requested {fetchedTopN.toLocaleString()})</span>
+                                            {:else if counts.period1 < fetchedTopN}
+                                                <span>System 1: Only {counts.period1.toLocaleString()} names available (requested {fetchedTopN.toLocaleString()})</span>
+                                            {:else}
+                                                <span>System 2: Only {counts.period2.toLocaleString()} names available (requested {fetchedTopN.toLocaleString()})</span>
+                                            {/if}
+                                        </div>
+                                    </div>
+                                {/if}
+                            </div>
+
                             <div class="separator"></div>
                         {/if}
 
@@ -325,8 +419,8 @@
                         <div class="year-control">
                             <YearSlider
                                 bind:value={period1}
-                                min={1880}
-                                max={2020}
+                                min={dateMin}
+                                max={dateMax}
                                 label="Period 1"
                             />
                         </div>
@@ -334,8 +428,8 @@
                         <div class="year-control">
                             <YearSlider
                                 bind:value={period2}
-                                min={1880}
-                                max={2020}
+                                min={dateMin}
+                                max={dateMax}
                                 label="Period 2"
                             />
                         </div>
@@ -385,7 +479,12 @@
                             {isDataReady}
                         />
                     {/if}
-                    
+
+                    <div class="separator"></div>
+
+                    <div class="download-control">
+                        <DownloadSection {isDataReady} />
+                    </div>
 
                     </div>
                 </div>
@@ -520,6 +619,76 @@
     .location-control {
         margin-bottom: 1.5rem;
         margin-top: 1rem;
+    }
+
+    .sex-control {
+        margin-bottom: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .topn-control {
+        margin-bottom: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .download-control {
+        margin-bottom: 1rem;
+        margin-top: 1rem;
+    }
+
+    .topn-warning {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background-color: rgba(251, 191, 36, 0.1);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 6px;
+        font-size: 0.75rem;
+        color: #d97706;
+        line-height: 1.4;
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .warning-icon {
+        flex-shrink: 0;
+        width: 1rem;
+        height: 1rem;
+        color: #f59e0b;
+        margin-top: 0.1rem;
+    }
+
+    .warning-text {
+        flex: 1;
+    }
+
+    .warning-text span {
+        font-weight: 500;
+    }
+
+    /* Dark mode support for warning */
+    @media (prefers-color-scheme: dark) {
+        .topn-warning {
+            background-color: rgba(251, 191, 36, 0.15);
+            border-color: rgba(251, 191, 36, 0.4);
+            color: #fbbf24;
+        }
+
+        .warning-icon {
+            color: #fbbf24;
+        }
     }
 
     .year-control {
