@@ -1,240 +1,50 @@
 <script lang="ts">
-    // import Sidebar from './Sidebar.svelte';
     import Spinner from '$lib/components/helpers/Spinner.svelte';
     import { Dashboard, Allotaxonograph } from 'allotaxonometer-ui';
-    import { getTopBabyNames, getAdapter } from '../allotax.remote.js';
-    import YearSlider from './sidebar/YearSlider.svelte';
-    import AlphaSlider from './sidebar/AlphaSlider.svelte';
-    import LocationSelector from './sidebar/LocationSelector.svelte';
-    import SexToggle from './sidebar/SexToggle.svelte';
-    import TopNSelector from './sidebar/TopNSelector.svelte';
-    import MultiFileUpload from './sidebar/MultiFileUpload.svelte';
-    import DataInfo from './sidebar/DataInfo.svelte';
-    import DownloadSection from './sidebar/DownloadSection.svelte';
-    import { createQuery } from '@tanstack/svelte-query';
-    import { onMount } from 'svelte';
+    import Sidebar from './Sidebar.svelte';
     import Nav from './Nav.svelte';
-    
+    import { onMount } from 'svelte';
+    import * as stateModule from '../sidebar-state.svelte.ts';
+
     import boys1895 from '../data/boys-1895.json'
     import boys1968 from '../data/boys-1968.json'
 
-    // Local state for years - separate periods for each system
-    let period1 = $state([1940, 1959]);
-    let period2 = $state([1990, 2009]);
-    let sidebarCollapsed = $state(false);
-    let jumpYears = $state(5);
-    let alphaIndex = $state(7);
-    let selectedLocation = $state('wikidata:Q30');
-    let selectedSex = $state('M'); // 'M' or 'F'
-    let selectedTopN = $state(10000);
-
-    // File upload state
-    let uploadedSys1 = $state(null);
-    let uploadedSys2 = $state(null);
-    let uploadedTitle = $state(['System 1', 'System 2']);
-    let uploadStatus = $state('');
-    let uploadWarnings = $state([]);
-
-    // Check if any files are uploaded
-    let hasUploadedFiles = $derived(uploadedSys1 || uploadedSys2);
-
-    // Simple file upload handler
-    async function handleFileUpload(file: File, system: 'sys1' | 'sys2') {
-        uploadStatus = `Loading ${file.name}...`;
-        uploadWarnings = [];
-
-        try {
-            // Simple CSV/JSON parsing - you'd implement parseDataFile or similar
-            const text = await file.text();
-            let data: any;
-
-            if (file.name.endsWith('.json')) {
-                data = JSON.parse(text);
-            } else if (file.name.endsWith('.csv')) {
-                // Basic CSV parsing - could use d3.csvParse here
-                const lines = text.split('\n');
-                const headers = lines[0].split(',');
-                data = lines.slice(1).filter((line: string) => line.trim()).map((line: string) => {
-                    const values = line.split(',');
-                    const obj: any = {};
-                    headers.forEach((header: string, i: number) => {
-                        obj[header.trim()] = values[i]?.trim();
-                    });
-                    return obj;
-                });
-            }
-
-            if (system === 'sys1') {
-                uploadedSys1 = data;
-                uploadedTitle[0] = file.name.replace(/\.(json|csv)$/i, '');
-            } else {
-                uploadedSys2 = data;
-                uploadedTitle[1] = file.name.replace(/\.(json|csv)$/i, '');
-            }
-
-            uploadStatus = `${system.toUpperCase()}: ${file.name} loaded successfully!`;
-            setTimeout(() => uploadStatus = '', 3000);
-
-            // Only trigger data refresh when BOTH files are uploaded
-            // Check in next tick to allow state to update
-            setTimeout(() => {
-                if (uploadedSys1 && uploadedSys2) {
-                    uploadStatus = 'Both files loaded! Generating visualization...';
-                    loadData();
-                } else {
-                    uploadStatus = `Waiting for ${uploadedSys1 ? 'System 2' : 'System 1'} file...`;
-                }
-            }, 0);
-
-            return { success: true, fileName: file.name };
-        } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            uploadStatus = `Error loading ${file.name}: ${errorMessage}`;
-            setTimeout(() => uploadStatus = '', 5000);
-            return { success: false, error: errorMessage };
-        }
-    }
-
-    // Alpha values: 0, 1/4, 2/4, 3/4, 1, 3/2, 2, 3, 5, ∞
-    const alphas = [0, 1/4, 2/4, 3/4, 1, 3/2, 2, 3, 5, Infinity];
-
-    // Alpha derived values
-    const currentAlpha = $derived(alphas[alphaIndex]);
-
-    // Alpha change handler
-    function onAlphaChange(newIndex: number) {
-        alphaIndex = newIndex;
-    }
-
-    // Locations state - fetch once on mount
-    let adapter = $state([]);
-    let locationsLoading = $state(true);
-    let locationsError = $state(false);
-
-    // Fetch locations on mount
-    $effect(() => {
-        (async () => {
-            try {
-                // console.log('Fetching locations...');
-                adapter = await getAdapter();
-                locationsLoading = false;
-            } catch (error) {
-                // console.error('Failed to fetch locations:', error);
-                locationsError = true;
-                locationsLoading = false;
-            }
-        })();
-    });
-    
-    $inspect('Locations loaded:', adapter);
-
-    // Get date range for selected location from adapter
-    const locationDateRange = $derived(() => {
-        if (!adapter?.length) return { min: 1880, max: 2020 };
-        const location = adapter.find(l => l[1] === selectedLocation);
-        if (location && location[4] && location[5]) {
-            return { min: location[4], max: location[5] };
-        }
-        // Default to US range if not found
-        return { min: 1880, max: 2020 };
-    });
-
-    // Reactive min/max based on selected location
-    const dateMin = $derived(locationDateRange().min);
-    const dateMax = $derived(locationDateRange().max);
-
-    // Auto-adjust periods when location changes and dates are out of range
-    $effect(() => {
-        const range = locationDateRange();
-
-        // Adjust period1 if out of range
-        if (period1[0] < range.min || period1[1] > range.max) {
-            const periodLength = period1[1] - period1[0];
-            const newStart = Math.max(range.min, Math.min(range.max - periodLength, period1[0]));
-            const newEnd = Math.min(range.max, newStart + periodLength);
-            period1 = [newStart, newEnd];
-        }
-
-        // Adjust period2 if out of range
-        if (period2[0] < range.min || period2[1] > range.max) {
-            const periodLength = period2[1] - period2[0];
-            const newStart = Math.max(range.min, Math.min(range.max - periodLength, period2[0]));
-            const newEnd = Math.min(range.max, newStart + periodLength);
-            period2 = [newStart, newEnd];
-        }
-    });
-
-    // Track the parameters we're currently displaying (separate from UI state)
-    let fetchedPeriod1 = $state([1940, 1959]);
-    let fetchedPeriod2 = $state([1990, 2009]);
-    let fetchedLocation = $state('wikidata:Q30');
-    let fetchedSex = $state('M');
-    let fetchedTopN = $state(10000);
-
-    // Create query for baby names data - uses fetched params only
-    const query = createQuery(() => ({
-        queryKey: ['babynames', fetchedPeriod1[0], fetchedPeriod1[1], fetchedPeriod2[0], fetchedPeriod2[1], fetchedLocation, fetchedSex, fetchedTopN, hasUploadedFiles, !!uploadedSys1, !!uploadedSys2, JSON.stringify(uploadedTitle)],
-        queryFn: async () => {
-            if (hasUploadedFiles) {
-                const elem1 = uploadedSys1 || [];
-                const elem2 = uploadedSys2 || [];
-                return {
-                    elem1,
-                    elem2,
-                    title: uploadedTitle
-                };
-            }
-
-            const period1Str = `${fetchedPeriod1[0]},${fetchedPeriod1[1]}`;
-            const period2Str = `${fetchedPeriod2[0]},${fetchedPeriod2[1]}`;
-
-            const ngrams = await getTopBabyNames({
-                dates: period1Str,
-                dates2: period2Str,
-                location: fetchedLocation,
-                sex: fetchedSex,
-                limit: fetchedTopN
-            });
-
-            const keys = Object.keys(ngrams);
-            const elem1 = ngrams[keys[0]];
-            const elem2 = ngrams[keys[1]];
-
-            return {
-                elem1,
-                elem2,
-                title: [`${fetchedPeriod1[0]}-${fetchedPeriod1[1]}`, `${fetchedPeriod2[0]}-${fetchedPeriod2[1]}`]
-            };
-        },
-        enabled: true, // Enabled, but only queries when fetched params change (on Update click)
-        staleTime: 5 * 60 * 1000, // 5 minutes - cached data is fresh for 5 mins
-        gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache for 10 mins
-        placeholderData: (previousData) => previousData, // Keep previous data while fetching new data
-    }));
-
-    // Function to trigger data loading (Update button and arrow keys)
-    function loadData() {
-        fetchedPeriod1 = [...period1];
-        fetchedPeriod2 = [...period2];
-        fetchedLocation = selectedLocation;
-        fetchedSex = selectedSex;
-        fetchedTopN = selectedTopN;
-    }
+    // Create query using the state module
+    const query = stateModule.createBabyNamesQuery();
 
     // Initial data load on mount (runs exactly once)
     onMount(() => {
-        loadData();
+        stateModule.loadData();
+    });
+
+    // Fetch locations on mount
+    $effect(() => {
+        stateModule.initializeAdapter();
+    });
+
+    // Auto-adjust periods when location changes and dates are out of range
+    $effect(() => {
+        const range = stateModule.derived.locationDateRange;
+
+        // Adjust period1 if out of range
+        if (stateModule.state.period1[0] < range.min || stateModule.state.period1[1] > range.max) {
+            const periodLength = stateModule.state.period1[1] - stateModule.state.period1[0];
+            const newStart = Math.max(range.min, Math.min(range.max - periodLength, stateModule.state.period1[0]));
+            const newEnd = Math.min(range.max, newStart + periodLength);
+            stateModule.state.period1 = [newStart, newEnd];
+        }
+
+        // Adjust period2 if out of range
+        if (stateModule.state.period2[0] < range.min || stateModule.state.period2[1] > range.max) {
+            const periodLength = stateModule.state.period2[1] - stateModule.state.period2[0];
+            const newStart = Math.max(range.min, Math.min(range.max - periodLength, stateModule.state.period2[0]));
+            const newEnd = Math.min(range.max, newStart + periodLength);
+            stateModule.state.period2 = [newStart, newEnd];
+        }
     });
 
     // Create Allotaxonograph instance reactively based on query data AND currentAlpha
-    const instance = $derived(
-        query.data
-            ? new Allotaxonograph(query.data.elem1, query.data.elem2, {
-                alpha: currentAlpha,
-                title: query.data.title
-            })
-            : null
-    );
+    const instance = $derived(stateModule.getInstanceFromQuery(query.data));
 
     // Extract data properties as derived values
     const dat = $derived(instance?.dat);
@@ -248,285 +58,69 @@
     const isDataReady = $derived(!!query.data && !!instance);
 
     // Check if we got fewer results than requested
-    const actualCounts = $derived(() => {
-        if (!query.data) return null;
-        const count1 = query.data.elem1?.length || 0;
-        const count2 = query.data.elem2?.length || 0;
-        return { period1: count1, period2: count2 };
-    });
-
-    const showTopNWarning = $derived(() => {
-        const counts = actualCounts();
-        if (!counts || !isDataReady) return false;
-        return counts.period1 < fetchedTopN || counts.period2 < fetchedTopN;
-    });
+    const actualCounts = $derived(stateModule.getActualCounts(query.data));
+    const showTopNWarning = $derived(stateModule.shouldShowTopNWarning(query.data, isDataReady));
 
     // Auto-dismiss warning after 5 seconds
-    let warningDismissed = $state(false);
-
     $effect(() => {
-        if (showTopNWarning()) {
-            warningDismissed = false;
+        if (showTopNWarning) {
+            stateModule.state.warningDismissed = false;
             const timer = setTimeout(() => {
-                warningDismissed = true;
+                stateModule.state.warningDismissed = true;
             }, 5000);
             return () => clearTimeout(timer);
         }
     });
-
-
-    
-    // Arrow navigation functions for both periods
-    function shiftBothPeriodsLeft() {
-        // Shift period 1
-        const range1Size = period1[1] - period1[0];
-        let newStart1 = period1[0] - jumpYears;
-        let newEnd1 = newStart1 + range1Size;
-
-        if (newStart1 < dateMin) {
-            newStart1 = dateMin;
-            newEnd1 = newStart1 + range1Size;
-        }
-
-        period1 = [newStart1, newEnd1];
-
-        // Shift period 2
-        const range2Size = period2[1] - period2[0];
-        let newStart2 = period2[0] - jumpYears;
-        let newEnd2 = newStart2 + range2Size;
-
-        if (newStart2 < dateMin) {
-            newStart2 = dateMin;
-            newEnd2 = newStart2 + range2Size;
-        }
-
-        period2 = [newStart2, newEnd2];
-
-        // Use setTimeout to ensure state updates before refetching
-        setTimeout(() => loadData(), 0);
-    }
-
-    function shiftBothPeriodsRight() {
-        // Shift period 1
-        const range1Size = period1[1] - period1[0];
-        let newStart1 = period1[0] + jumpYears;
-        let newEnd1 = newStart1 + range1Size;
-
-        if (newEnd1 > dateMax) {
-            newEnd1 = dateMax;
-            newStart1 = newEnd1 - range1Size;
-        }
-
-        period1 = [newStart1, newEnd1];
-
-        // Shift period 2
-        const range2Size = period2[1] - period2[0];
-        let newStart2 = period2[0] + jumpYears;
-        let newEnd2 = newStart2 + range2Size;
-
-        if (newEnd2 > dateMax) {
-            newEnd2 = dateMax;
-            newStart2 = newEnd2 - range2Size;
-        }
-
-        period2 = [newStart2, newEnd2];
-
-        // Use setTimeout to ensure state updates before refetching
-        setTimeout(() => loadData(), 0);
-    }
-
-    function canShiftLeft() {
-        return period1[0] > dateMin || period2[0] > dateMin;
-    }
-
-    function canShiftRight() {
-        return period1[1] < dateMax || period2[1] < dateMax;
-    }
 </script>
 
 <div class="app-container">
     <div class="layout">
-        <aside class="sidebar-container {sidebarCollapsed ? 'collapsed' : ''}">
-            
-                <div class="sidebar-content">
-                    <div class="sidebar-header">
-                        <h2 class="sidebar-title">Allotaxonograph</h2>
-                    </div>
+        <aside class="sidebar-container">
+            <Sidebar {query} {instance} {displayTitles} {me} {rtd} {isDataReady} {actualCounts} {showTopNWarning}
+            />
+        </aside>
 
-                    <div class="sidebar-body">
-                        <MultiFileUpload
-                            bind:sys1={uploadedSys1}
-                            bind:sys2={uploadedSys2}
-                            bind:title={uploadedTitle}
-                            {handleFileUpload}
-                            {uploadStatus}
-                            {uploadWarnings}
-                        />
+        <main class="main-content">
+            <Nav/>
 
-
-                        <div class="separator"></div>
-
-                        {#if !hasUploadedFiles}
-                            <div class="location-control">
-                                <LocationSelector
-                                    bind:value={selectedLocation}
-                                    label="Location"
-                                    {adapter}
-                                    isLoading={locationsLoading}
-                                    isError={locationsError}
-                                />
-                            </div>
-
-                            <div class="sex-control">
-                                <SexToggle bind:sex={selectedSex} />
-                            </div>
-
-                            <div class="topn-control">
-                                <TopNSelector bind:value={selectedTopN} />
-                                {#if showTopNWarning() && !warningDismissed}
-                                    {@const counts = actualCounts()}
-                                    <div class="topn-warning" class:fade-out={warningDismissed}>
-                                        <svg class="warning-icon" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                        </svg>
-                                        <div class="warning-text">
-                                            {#if counts.period1 < fetchedTopN && counts.period2 < fetchedTopN}
-                                                <span>System 1: {counts.period1.toLocaleString()} names, System 2: {counts.period2.toLocaleString()} names (requested {fetchedTopN.toLocaleString()})</span>
-                                            {:else if counts.period1 < fetchedTopN}
-                                                <span>System 1: Only {counts.period1.toLocaleString()} names available (requested {fetchedTopN.toLocaleString()})</span>
-                                            {:else}
-                                                <span>System 2: Only {counts.period2.toLocaleString()} names available (requested {fetchedTopN.toLocaleString()})</span>
-                                            {/if}
-                                        </div>
-                                    </div>
-                                {/if}
-                            </div>
-
-                            <div class="separator"></div>
-                        {/if}
-
-                        <div class="alpha-control">
-                        <AlphaSlider
-                            {alphas}
-                            {alphaIndex}
-                            {currentAlpha}
-                            {onAlphaChange}
-                        />
-                    </div>
-                    <div class="separator"></div>
-
-                    {#if !hasUploadedFiles}
-                        <div class="year-control">
-                            <YearSlider
-                                bind:value={period1}
-                                min={dateMin}
-                                max={dateMax}
-                                label="Period 1"
-                            />
-                        </div>
-
-                        <div class="year-control">
-                            <YearSlider
-                                bind:value={period2}
-                                min={dateMin}
-                                max={dateMax}
-                                label="Period 2"
-                            />
-                        </div>
-
-                        <div class="arrow-controls">
-                            <button class="arrow-btn" onclick={shiftBothPeriodsLeft} disabled={!canShiftLeft()}>
-                                ← {jumpYears} yrs back
-                            </button>
-                            <span class="arrow-separator">•</span>
-                            <button class="arrow-btn" onclick={shiftBothPeriodsRight} disabled={!canShiftRight()}>
-                                {jumpYears} yrs forward →
-                            </button>
-                        </div>
-
-                        <div class="jump-control">
-                            <label for="jumpYears" class="jump-label">Jump by:</label>
-                            <input
-                                id="jumpYears"
-                                type="number"
-                                bind:value={jumpYears}
-                                min="1"
-                                max="50"
-                                class="jump-input"
-                            />
-                            <span class="jump-unit">years</span>
-                        </div>
-                    {/if}
-                    
-                    {#if !hasUploadedFiles}
-                        
-                        <button class="load-button" onclick={loadData} disabled={query.isLoading}>
-                            {#if query.isLoading}
-                                <div class="loading-spinner"></div>
-                                Loading...
-                            {:else}
-                                Update
-                            {/if}
-                        </button>
-                    {/if}
-
-                    {#if isDataReady}
-
-                        <DataInfo
-                            title={displayTitles}
-                            {me}
-                            {rtd}
-                            {isDataReady}
-                        />
-                    {/if}
-
-                    <div class="separator"></div>
-
-                    <div class="download-control">
-                        <DownloadSection {isDataReady} />
-                    </div>
-
-                    </div>
+            {#if query.isLoading && !query.data}
+                <div class="main-loading">
+                    <Spinner />
+                    <p>Loading rust-wasm and baby names comparison...</p>
                 </div>
-            </aside>
-            
-            <main class="main-content">
-                
-                <Nav/>
-                
-                {#if query.isLoading && !query.data}
-                    <!-- Only show spinner on initial load when there's no data yet -->
-                    <div class="main-loading">
-                        <Spinner />
-                        <p>Loading rust-wasm and baby names comparison...</p>
-                    </div>
-                {:else if query.error}
-                    <!-- Only show error if we have no fallback data -->
-                     {@const allotax = new Allotaxonograph(boys1895, boys1968, alphas[alphaIndex], ['Boys 1895', 'Boys 1968'])}
-                     <Dashboard {...allotax} />
-                    <div class="error">
-                        <p>Failed to load baby names data: babynames API is down. Falling back on static data.</p>
-                    </div>
-                {:else if query.data}
-                    <!-- Show dashboard whenever we have data, even if loading new data -->
-                    <Dashboard
-                        {dat}
-                        {barData}
-                        {balanceData}
-                        {maxlog10}
-                        {divnorm}
-                        title={displayTitles}
-                        alpha={currentAlpha}
-                        WordshiftWidth={400}
-                        />
-                {:else}
-                    <div class="welcome">
-                        <h2>Baby Names Comparison</h2>
-                        <p>Adjust settings in the sidebar to explore different time periods and locations.</p>
-                    </div>
-                {/if}
-            </main>
-        </div>
+            {:else if query.error}
+                <!-- Fallback to static data when API fails -->
+                {@const fallbackInstance = new Allotaxonograph(boys1895, boys1968, {
+                    alpha: stateModule.derived.currentAlpha,
+                    title: ['Boys 1895', 'Boys 1968']
+                })}
+                <Dashboard
+                    dat={fallbackInstance.dat}
+                    barData={fallbackInstance.barData}
+                    balanceData={fallbackInstance.balanceData}
+                    maxlog10={fallbackInstance.maxlog10}
+                    divnorm={fallbackInstance.divnorm}
+                    title={['Boys 1895', 'Boys 1968']}
+                    alpha={stateModule.derived.currentAlpha}
+                    WordshiftWidth={400}
+                />
+                <div class="error">
+                    <p>Failed to load baby names data: babynames API is down. Falling back on static data.</p>
+                </div>
+            {:else if query.data}
+                <Dashboard
+                    {dat}
+                    {barData}
+                    {balanceData}
+                    {maxlog10}
+                    {divnorm}
+                    title={displayTitles}
+                    alpha={stateModule.derived.currentAlpha}
+                    WordshiftWidth={400}
+                />
+            {/if}
+        </main>
+    </div>
 </div>
 
 <style>
@@ -548,6 +142,16 @@
         padding: 0;
     }
 
+    .main-content {
+        flex: 1;
+        overflow: auto;
+        background-color: var(--color-bg);
+        max-width: none;
+        margin: 0;
+        padding: 5.5rem 0 0 0;
+        transition: padding-left var(--transition-medium) ease;
+    }
+    
     .sidebar-container {
         flex-shrink: 0;
         width: 17rem;
@@ -557,212 +161,6 @@
         overflow: hidden;
     }
 
-    .sidebar-container.collapsed {
-        width: 5rem;
-    }
-
-    .main-content {
-        flex: 1;
-        overflow: auto;
-        background-color: var(--color-bg);
-        max-width: none;
-        margin: 0;
-        padding: 5.5rem 0 0 0; 
-        transition: padding-left var(--transition-medium) ease;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .layout {
-            flex-direction: column;
-        }
-        
-        .sidebar-container {
-            width: 100% !important;
-            height: auto;
-            border-right: none;
-            border-bottom: 1px solid var(--color-border);
-        }
-
-    }
-
-    
-    .sidebar-content {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        background-color: var(--color-input-bg);
-    }
-
-    .sidebar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
-        border-bottom: 1px solid var(--color-border);
-        background-color: var(--color-bg);
-    }
-
-    .sidebar-title {
-        font-size: var(--16px, 1rem);
-        font-weight: var(--font-weight-bold, 600);
-        color: var(--color-text-primary);
-        margin: 0;
-    }
-
-    .sidebar-body {
-        flex: 1;
-        overflow-y: auto;
-        padding: 1.5rem;
-    }
-
-    .location-control {
-        margin-bottom: 1.5rem;
-        margin-top: 1rem;
-    }
-
-    .sex-control {
-        margin-bottom: 1rem;
-        margin-top: 0.5rem;
-    }
-
-    .topn-control {
-        margin-bottom: 1rem;
-        margin-top: 0.5rem;
-    }
-
-    .download-control {
-        margin-bottom: 1rem;
-        margin-top: 1rem;
-    }
-
-    .topn-warning {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
-        margin-top: 0.5rem;
-        padding: 0.5rem 0.75rem;
-        background-color: rgba(251, 191, 36, 0.1);
-        border: 1px solid rgba(251, 191, 36, 0.3);
-        border-radius: 6px;
-        font-size: 0.75rem;
-        color: #d97706;
-        line-height: 1.4;
-        animation: fadeIn 0.3s ease-in;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .warning-icon {
-        flex-shrink: 0;
-        width: 1rem;
-        height: 1rem;
-        color: #f59e0b;
-        margin-top: 0.1rem;
-    }
-
-    .warning-text {
-        flex: 1;
-    }
-
-    .warning-text span {
-        font-weight: 500;
-    }
-
-    /* Dark mode support for warning */
-    @media (prefers-color-scheme: dark) {
-        .topn-warning {
-            background-color: rgba(251, 191, 36, 0.15);
-            border-color: rgba(251, 191, 36, 0.4);
-            color: #fbbf24;
-        }
-
-        .warning-icon {
-            color: #fbbf24;
-        }
-    }
-
-    .year-control {
-        margin-bottom: 2rem;
-        margin-top: 2.5rem;
-    }
-
-    .year-control:last-of-type {
-        border-bottom: none;
-    }
-
-    .alpha-control {
-        margin-bottom: 3rem;
-        margin-top: 2rem;
-        padding: 1.5rem 0;
-        display: flex;
-        align-items: center;
-        position: relative;
-        justify-content: center;
-    }
-
-    /* Mobile responsive styles for alpha control */
-    @media (max-width: 768px) {
-        .alpha-control {
-            width: 100%;
-            justify-content: center;
-            margin-top: 1rem;
-            margin-bottom: 1rem;
-        }
-    }
-
-
-    .load-button {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        margin: 1rem 0;
-        background-color: var(--color-bg);
-        color: var(--color-text);
-        border: 1px solid var(--color-border);
-        border-radius: 6px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-    }
-
-    .load-button:hover:not(:disabled) {
-        background-color: var(--color-input-bg);
-        border-color: var(--color-text);
-        transform: translateY(-1px);
-    }
-
-    .load-button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .loading-spinner {
-        width: 1rem;
-        height: 1rem;
-        border: 2px solid var(--color-border);
-        border-top: 2px solid var(--color-text);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
 
     .main-loading {
         display: flex;
@@ -771,97 +169,7 @@
         justify-content: center;
         height: 100%;
         gap: 1rem;
-    }
-
-    .welcome {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        text-align: center;
-        color: var(--color-text-secondary);
-    }
-
-    .welcome h2 {
-        margin-bottom: 1rem;
-        color: var(--color-text);
-    }
-
-    .arrow-controls {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0.75rem 0 0.25rem 0;
-        padding: 0.25rem 0;
-    }
-
-    .arrow-btn {
-        padding: 0.5rem;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.85rem;
-        transition: all 150ms ease;
-        white-space: nowrap;
-        color: var(--color-text);
-    }
-
-    .arrow-btn:hover:not(:disabled) {
-        transform: scale(1.05);
-        background: var(--color-input-bg);
-        border-radius: 4px;
-    }
-
-    .arrow-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .arrow-separator {
-        margin: 0 0.5rem;
-        font-size: 16px;
-
-    }
-
-    .jump-control {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        margin: 0.25rem 0 0.75rem 0;
-    }
-
-    .jump-label {
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: var(--color-text);
-    }
-
-    .jump-input {
-        width: 50px;
-        padding: 0.25rem 0.5rem;
-        border: 1px solid var(--color-border);
-        border-radius: 3px;
-        font-size: 0.85rem;
-        text-align: center;
-        background-color: var(--color-bg);
-        color: var(--color-text);
-    }
-
-    .jump-input:focus {
-        outline: none;
-        border-color: var(--color-good-blue, #3b82f6);
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-    }
-
-    .jump-unit {
-        font-size: 0.85rem;
-        color: var(--color-text-secondary);
-    }
+    } 
 
     .error {
         padding: 2rem;
@@ -869,8 +177,17 @@
         color: #ef4444;
     }
 
-    .separator {
-        border-top: 1px solid var(--color-border);
-        margin: 1.5rem -1.5rem;
+    /* Mobile */
+    @media (max-width: 768px) {
+        .layout {
+            flex-direction: column;
+        }
+
+        .sidebar-container {
+            width: 100% !important;
+            height: auto;
+            border-right: none;
+            border-bottom: 1px solid var(--color-border);
+        }
     }
 </style>

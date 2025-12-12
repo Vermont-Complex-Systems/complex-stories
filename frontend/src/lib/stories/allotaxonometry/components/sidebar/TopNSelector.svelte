@@ -1,7 +1,7 @@
 <script>
     let {
         value = $bindable(10000),
-        label = "Top N Names",
+        label = "Top N tokens",
         min = 100,
         max = 50000,
         step = 100
@@ -18,7 +18,7 @@
 <div class="topn-selector">
     <div class="selector-header">
         <span class="selector-label">{label}</span>
-        <span class="current-value">{value.toLocaleString()}</span>
+        <!-- <span class="current-value">{value.toLocaleString()}</span> -->
     </div>
 
     <div class="selector-control">

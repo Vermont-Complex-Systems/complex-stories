@@ -130,7 +130,6 @@
         width: 100%;
     }
 
-
     .reset-on-bracket-label,
     .reset-on-bracket {
         position: absolute;
@@ -151,12 +150,10 @@
         font-size: 10px;
     }
 
-
-
     .year-label-left {
         position: absolute;
-        top: 0.45rem;
-        right: 1.5rem;
+        top: 0.1rem;
+        right: 0.75rem;
         font-size: 11px;
         pointer-events: none;
         color: var(--color-text);
@@ -164,8 +161,8 @@
 
     .year-label-right {
         position: absolute;
-        top: 0.45rem;
-        left: 1.5rem;
+        top: 0.1rem;
+        left: 0.75rem;
         font-size: 11px;
         pointer-events: none;
         color: var(--color-text);
@@ -183,7 +180,7 @@
     .slider-track {
         position: relative;
         flex: 1;
-        height: 0.5rem;
+        height: 0.8rem;
         background: var(--color-border);
         border-radius: 9999px;
         cursor: default;
@@ -241,7 +238,7 @@
         box-shadow: none !important;
         /* Remove any default positioning offsets */
         top: 0 !important;
-        transform: translateY(-0.1rem) !important; /* Align with slider track center */
+        transform: translateY(0.1rem) !important; /* Align with slider track center */
     }
 
     /* Hide any nested thumb elements that bits-ui might create */
@@ -263,13 +260,13 @@
     .bracket-handle {
         font-size: 1.5rem;
         font-weight: var(--font-weight-bold);
-        line-height: 1;
+        line-height: 0.75;
         user-select: none;
         color: var(--color-text);
         cursor: col-resize;
         /* Only the bracket text is draggable */
         pointer-events: auto;
-        padding: 4px;
+        padding: 5px;
     }
 
     .bracket-handle:hover {

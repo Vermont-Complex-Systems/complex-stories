@@ -55,7 +55,7 @@ interface RecalculationResult {
 
 const DEFAULT_SETTINGS: Required<ParseSettings> = {
     enableTruncation: true,
-    maxRows: 10000,
+    maxRows: 50000,
     warnThreshold: 5000,
     maxFileSize: 50 * 1024 * 1024 // 50MB
 };
@@ -63,6 +63,41 @@ const DEFAULT_SETTINGS: Required<ParseSettings> = {
 // =============================================================================
 // UTILITY FUNCTIONS
 // =============================================================================
+
+/**
+ * Calculate a new date range after shifting by a specified amount,
+ * clamped to min/max bounds while preserving range size.
+ *
+ * @param currentRange - Current [start, end] range
+ * @param shiftAmount - Amount to shift (positive = forward, negative = backward)
+ * @param minBound - Minimum allowed value
+ * @param maxBound - Maximum allowed value
+ * @returns New [start, end] range clamped to bounds
+ */
+export function calculateShiftedRange(
+    currentRange: [number, number],
+    shiftAmount: number,
+    minBound: number,
+    maxBound: number
+): [number, number] {
+    const rangeSize = currentRange[1] - currentRange[0];
+    let newStart = currentRange[0] + shiftAmount;
+    let newEnd = newStart + rangeSize;
+
+    // Clamp to lower bound
+    if (newStart < minBound) {
+        newStart = minBound;
+        newEnd = newStart + rangeSize;
+    }
+
+    // Clamp to upper bound
+    if (newEnd > maxBound) {
+        newEnd = maxBound;
+        newStart = newEnd - rangeSize;
+    }
+
+    return [newStart, newEnd];
+}
 
 function formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
