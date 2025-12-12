@@ -7,9 +7,18 @@
     import { createQuery } from '@tanstack/svelte-query';
     import { fileState, dashboardState } from '../sidebar-state.svelte.ts';
     import { getTopBabyNames } from '../allotax.remote.js';
+    import { createUrlState } from '$lib/state/urlParams.svelte.js';
 
     import boys1895 from '../data/boys-1895.json'
     import boys1968 from '../data/boys-1968.json'
+
+    const params = createUrlState({
+        dates: `${dashboardState.fetchedPeriod1[0]}, ${dashboardState.fetchedPeriod1[1]}`, 
+        dates2: `${dashboardState.fetchedPeriod2[0]}, ${dashboardState.fetchedPeriod2[1]}`,
+        location: dashboardState.fetchedLocation,
+        sex: dashboardState.fetchedSex,
+        limit: dashboardState.fetchedTopN
+    });
 
     // Create query for baby names data
     const query = createQuery(() => ({
