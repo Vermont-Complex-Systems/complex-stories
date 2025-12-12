@@ -3,9 +3,8 @@
 
     let {
         alphas,
-        alphaIndex,
-        currentAlpha,
-        onAlphaChange
+        alphaIndex = $bindable(),
+        currentAlpha
     } = $props();
 
     // Format alpha as LaTeX fraction for display
@@ -76,7 +75,7 @@
             }
         }
 
-        onAlphaChange(closestIndex);
+        alphaIndex = closestIndex;
     }
 
     function startDrag(event) {
@@ -110,7 +109,7 @@
         min="0"
         max={alphas.length - 1}
         value={alphaIndex}
-        oninput={(e) => onAlphaChange(+e.target.value)}
+        oninput={(e) => alphaIndex = +e.target.value}
         class="alpha-slider"
     />
 

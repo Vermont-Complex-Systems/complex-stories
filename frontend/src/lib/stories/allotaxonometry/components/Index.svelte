@@ -4,120 +4,132 @@
     import Sidebar from './Sidebar.svelte';
     import Nav from './Nav.svelte';
     import { onMount } from 'svelte';
-    import * as stateModule from '../sidebar-state.svelte.ts';
+    import { createQuery } from '@tanstack/svelte-query';
+    import { fileState, dashboardState } from '../sidebar-state.svelte.ts';
+    import { getTopBabyNames } from '../allotax.remote.js';
 
     import boys1895 from '../data/boys-1895.json'
     import boys1968 from '../data/boys-1968.json'
 
-    // Create query using the state module
-    const query = stateModule.createBabyNamesQuery();
+    // Create query for baby names data
+    const query = createQuery(() => ({
+        queryKey: [
+            'babynames',
+            dashboardState.fetchedPeriod1[0], dashboardState.fetchedPeriod1[1],
+            dashboardState.fetchedPeriod2[0], dashboardState.fetchedPeriod2[1],
+            dashboardState.fetchedLocation,
+            dashboardState.fetchedSex,
+            dashboardState.fetchedTopN,
+            fileState.hasUploadedFiles,
+            !!fileState.uploadedSys1, !!fileState.uploadedSys2,
+            JSON.stringify(fileState.uploadedTitle)
+        ],
+        queryFn: async () => {
+            if (fileState.hasUploadedFiles) {
+                const elem1 = fileState.uploadedSys1 || [];
+                const elem2 = fileState.uploadedSys2 || [];
+                return {
+                    elem1,
+                    elem2,
+                    title: fileState.uploadedTitle
+                };
+            }
+
+            const period1Str = `${dashboardState.fetchedPeriod1[0]},${dashboardState.fetchedPeriod1[1]}`;
+            const period2Str = `${dashboardState.fetchedPeriod2[0]},${dashboardState.fetchedPeriod2[1]}`;
+
+            const ngrams = await getTopBabyNames({
+                dates: period1Str,
+                dates2: period2Str,
+                location: dashboardState.fetchedLocation,
+                sex: dashboardState.fetchedSex,
+                limit: dashboardState.fetchedTopN
+            });
+
+            const keys = Object.keys(ngrams);
+            const elem1 = ngrams[keys[0]];
+            const elem2 = ngrams[keys[1]];
+
+            return {
+                elem1,
+                elem2,
+                title: [`${dashboardState.fetchedPeriod1[0]}-${dashboardState.fetchedPeriod1[1]}`, `${dashboardState.fetchedPeriod2[0]}-${dashboardState.fetchedPeriod2[1]}`]
+            };
+        },
+        enabled: true,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        gcTime: 10 * 60 * 1000, // 10 minutes
+        placeholderData: (previousData) => previousData,
+    }));
 
     // Initial data load on mount (runs exactly once)
     onMount(() => {
-        stateModule.loadData();
-    });
-
-    // Fetch locations on mount
-    $effect(() => {
-        stateModule.initializeAdapter();
+        dashboardState.loadData();
+        dashboardState.initializeAdapter();
     });
 
     // Auto-adjust periods when location changes and dates are out of range
     $effect(() => {
-        const range = stateModule.derived.locationDateRange;
+        const range = dashboardState.dateRange;
 
         // Adjust period1 if out of range
-        if (stateModule.state.period1[0] < range.min || stateModule.state.period1[1] > range.max) {
-            const periodLength = stateModule.state.period1[1] - stateModule.state.period1[0];
-            const newStart = Math.max(range.min, Math.min(range.max - periodLength, stateModule.state.period1[0]));
+        if (dashboardState.period1[0] < range.min || dashboardState.period1[1] > range.max) {
+            const periodLength = dashboardState.period1[1] - dashboardState.period1[0];
+            const newStart = Math.max(range.min, Math.min(range.max - periodLength, dashboardState.period1[0]));
             const newEnd = Math.min(range.max, newStart + periodLength);
-            stateModule.state.period1 = [newStart, newEnd];
+            dashboardState.period1 = [newStart, newEnd];
         }
 
         // Adjust period2 if out of range
-        if (stateModule.state.period2[0] < range.min || stateModule.state.period2[1] > range.max) {
-            const periodLength = stateModule.state.period2[1] - stateModule.state.period2[0];
-            const newStart = Math.max(range.min, Math.min(range.max - periodLength, stateModule.state.period2[0]));
+        if (dashboardState.period2[0] < range.min || dashboardState.period2[1] > range.max) {
+            const periodLength = dashboardState.period2[1] - dashboardState.period2[0];
+            const newStart = Math.max(range.min, Math.min(range.max - periodLength, dashboardState.period2[0]));
             const newEnd = Math.min(range.max, newStart + periodLength);
-            stateModule.state.period2 = [newStart, newEnd];
+            dashboardState.period2 = [newStart, newEnd];
         }
     });
 
     // Create Allotaxonograph instance reactively based on query data AND currentAlpha
-    const instance = $derived(stateModule.getInstanceFromQuery(query.data));
+    const instance = $derived(
+        query.data
+            ? new Allotaxonograph(query.data.elem1, query.data.elem2, {
+                alpha: dashboardState.currentAlpha,
+                title: query.data.title
+            })
+            : new Allotaxonograph(boys1895, boys1968, {
+                    alpha: dashboardState.currentAlpha,
+                    title: ['Boys 1895', 'Boys 1968']
+                })
+    );
 
     // Extract data properties as derived values
-    const dat = $derived(instance?.dat);
-    const barData = $derived(instance?.barData);
-    const balanceData = $derived(instance?.balanceData);
-    const maxlog10 = $derived(instance?.maxlog10);
-    const divnorm = $derived(instance?.divnorm);
     const displayTitles = $derived(query.data?.title || ['System 1', 'System 2']);
     const me = $derived(instance?.me);
     const rtd = $derived(instance?.rtd);
     const isDataReady = $derived(!!query.data && !!instance);
-
-    // Check if we got fewer results than requested
-    const actualCounts = $derived(stateModule.getActualCounts(query.data));
-    const showTopNWarning = $derived(stateModule.shouldShowTopNWarning(query.data, isDataReady));
-
-    // Auto-dismiss warning after 5 seconds
-    $effect(() => {
-        if (showTopNWarning) {
-            stateModule.state.warningDismissed = false;
-            const timer = setTimeout(() => {
-                stateModule.state.warningDismissed = true;
-            }, 5000);
-            return () => clearTimeout(timer);
-        }
-    });
 </script>
 
 <div class="app-container">
     <div class="layout">
         <aside class="sidebar-container">
-            <Sidebar {query} {instance} {displayTitles} {me} {rtd} {isDataReady} {actualCounts} {showTopNWarning}
-            />
+            <Sidebar {query} {instance} {displayTitles} {me} {rtd} {isDataReady}/>
         </aside>
 
         <main class="main-content">
             <Nav/>
 
-            {#if query.isLoading && !query.data}
+            {#if query.isLoading && !instance}
                 <div class="main-loading">
                     <Spinner />
                     <p>Loading rust-wasm and baby names comparison...</p>
                 </div>
-            {:else if query.error}
-                <!-- Fallback to static data when API fails -->
-                {@const fallbackInstance = new Allotaxonograph(boys1895, boys1968, {
-                    alpha: stateModule.derived.currentAlpha,
-                    title: ['Boys 1895', 'Boys 1968']
-                })}
-                <Dashboard
-                    dat={fallbackInstance.dat}
-                    barData={fallbackInstance.barData}
-                    balanceData={fallbackInstance.balanceData}
-                    maxlog10={fallbackInstance.maxlog10}
-                    divnorm={fallbackInstance.divnorm}
-                    title={['Boys 1895', 'Boys 1968']}
-                    alpha={stateModule.derived.currentAlpha}
-                    WordshiftWidth={400}
-                />
-                <div class="error">
-                    <p>Failed to load baby names data: babynames API is down. Falling back on static data.</p>
-                </div>
-            {:else if query.data}
-                <Dashboard
-                    {dat}
-                    {barData}
-                    {balanceData}
-                    {maxlog10}
-                    {divnorm}
-                    title={displayTitles}
-                    alpha={stateModule.derived.currentAlpha}
-                    WordshiftWidth={400}
-                />
+            {:else if instance}
+                <Dashboard {...instance} />
+                {#if query.error}
+                    <div class="error">
+                        <p>Failed to load baby names data: babynames API is down. Falling back on static data.</p>
+                    </div>
+                {/if}
             {/if}
         </main>
     </div>

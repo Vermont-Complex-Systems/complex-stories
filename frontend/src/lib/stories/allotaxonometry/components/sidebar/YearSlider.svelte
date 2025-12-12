@@ -238,7 +238,7 @@
         box-shadow: none !important;
         /* Remove any default positioning offsets */
         top: 0 !important;
-        transform: translateY(0.1rem) !important; /* Align with slider track center */
+        transform: translateY(0.15rem) !important; /* Align with slider track center */
     }
 
     /* Hide any nested thumb elements that bits-ui might create */

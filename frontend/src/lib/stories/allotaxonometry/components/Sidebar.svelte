@@ -7,7 +7,7 @@
     import MultiFileUpload from './sidebar/MultiFileUpload.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
     import DownloadSection from './sidebar/DownloadSection.svelte';
-    import * as stateModule from '../sidebar-state.svelte.ts';
+    import { fileState, dashboardState, alphas } from '../sidebar-state.svelte.ts';
 
     // Props passed from parent
     let {
@@ -16,10 +16,27 @@
         displayTitles,
         me,
         rtd,
-        isDataReady,
-        actualCounts,
-        showTopNWarning
+        isDataReady
     } = $props();
+
+    // Check if we got fewer results than requested
+    const showTopNWarning = $derived(
+        isDataReady &&
+        query.data &&
+        ((query.data.elem1?.length || 0) < dashboardState.fetchedTopN ||
+         (query.data.elem2?.length || 0) < dashboardState.fetchedTopN)
+    );
+
+    // Auto-dismiss warning after 5 seconds
+    $effect(() => {
+        if (showTopNWarning) {
+            dashboardState.warningDismissed = false;
+            const timer = setTimeout(() => {
+                dashboardState.warningDismissed = true;
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    });
 </script>
 
 <div class="sidebar-content">
@@ -29,51 +46,52 @@
 
     <div class="sidebar-body">
         <MultiFileUpload
-            bind:sys1={stateModule.state.uploadedSys1}
-            bind:sys2={stateModule.state.uploadedSys2}
-            bind:title={stateModule.state.uploadedTitle}
-            handleFileUpload={stateModule.handleFileUpload}
-            uploadStatus={stateModule.state.uploadStatus}
-            uploadWarnings={stateModule.state.uploadWarnings}
+            bind:sys1={fileState.uploadedSys1}
+            bind:sys2={fileState.uploadedSys2}
+            bind:title={fileState.uploadedTitle}
+            handleFileUpload={(file, system) => fileState.handleFileUpload(file, system)}
+            uploadStatus={fileState.uploadStatus}
+            uploadWarnings={fileState.uploadWarnings}
         />
 
         <div class="separator"></div>
 
-        {#if !stateModule.derived.hasUploadedFiles}
+        {#if !fileState.hasUploadedFiles}
             <div class="location-control">
                 <LocationSelector
-                    bind:value={stateModule.state.selectedLocation}
+                    bind:value={dashboardState.selectedLocation}
                     label="Location"
-                    adapter={stateModule.state.adapter}
-                    isLoading={stateModule.state.locationsLoading}
-                    isError={stateModule.state.locationsError}
+                    adapter={dashboardState.adapter}
+                    isLoading={dashboardState.locationsLoading}
+                    isError={dashboardState.locationsError}
                 />
             </div>
 
             <div class="topn-control">
-                <TopNSelector bind:value={stateModule.state.selectedTopN} />
-                
-                {#if showTopNWarning && !stateModule.state.warningDismissed && actualCounts}
-                    {@const counts = actualCounts}
-                    <div class="topn-warning" class:fade-out={stateModule.state.warningDismissed}>
+                <TopNSelector bind:value={dashboardState.selectedTopN} />
+
+                {#if showTopNWarning && !dashboardState.warningDismissed && query.data}
+                    {@const count1 = query.data.elem1?.length || 0}
+                    {@const count2 = query.data.elem2?.length || 0}
+                    <div class="topn-warning" class:fade-out={dashboardState.warningDismissed}>
                         <svg class="warning-icon" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                         </svg>
                         <div class="warning-text">
-                            {#if counts.period1 < stateModule.state.fetchedTopN && counts.period2 < stateModule.state.fetchedTopN}
-                                <span>System 1: {counts.period1.toLocaleString()} names, System 2: {counts.period2.toLocaleString()} names (requested {stateModule.state.fetchedTopN.toLocaleString()})</span>
-                            {:else if counts.period1 < stateModule.state.fetchedTopN}
-                                <span>System 1: Only {counts.period1.toLocaleString()} names available (requested {stateModule.state.fetchedTopN.toLocaleString()})</span>
+                            {#if count1 < dashboardState.fetchedTopN && count2 < dashboardState.fetchedTopN}
+                                <span>System 1: {count1.toLocaleString()} names, System 2: {count2.toLocaleString()} names (requested {dashboardState.fetchedTopN.toLocaleString()})</span>
+                            {:else if count1 < dashboardState.fetchedTopN}
+                                <span>System 1: Only {count1.toLocaleString()} names available (requested {dashboardState.fetchedTopN.toLocaleString()})</span>
                             {:else}
-                                <span>System 2: Only {counts.period2.toLocaleString()} names available (requested {stateModule.state.fetchedTopN.toLocaleString()})</span>
+                                <span>System 2: Only {count2.toLocaleString()} names available (requested {dashboardState.fetchedTopN.toLocaleString()})</span>
                             {/if}
                         </div>
                     </div>
                 {/if}
             </div>
-            
+
             <div class="sex-control">
-                <SexToggle bind:sex={stateModule.state.selectedSex} />
+                <SexToggle bind:sex={dashboardState.selectedSex} />
             </div>
 
 
@@ -82,41 +100,40 @@
 
         <div class="alpha-control">
             <AlphaSlider
-                alphas={stateModule.alphas}
-                alphaIndex={stateModule.state.alphaIndex}
-                currentAlpha={stateModule.derived.currentAlpha}
-                onAlphaChange={stateModule.onAlphaChange}
+                {alphas}
+                bind:alphaIndex={dashboardState.alphaIndex}
+                currentAlpha={dashboardState.currentAlpha}
             />
         </div>
-        
+
         <div class="separator"></div>
 
-        {#if !stateModule.derived.hasUploadedFiles}
+        {#if !fileState.hasUploadedFiles}
             <div class="year-control">
                 <YearSlider
-                    bind:value={stateModule.state.period1}
-                    min={stateModule.derived.dateMin}
-                    max={stateModule.derived.dateMax}
+                    bind:value={dashboardState.period1}
+                    min={dashboardState.dateMin}
+                    max={dashboardState.dateMax}
                     label="Period 1"
                 />
             </div>
 
             <div class="year-control">
                 <YearSlider
-                    bind:value={stateModule.state.period2}
-                    min={stateModule.derived.dateMin}
-                    max={stateModule.derived.dateMax}
+                    bind:value={dashboardState.period2}
+                    min={dashboardState.dateMin}
+                    max={dashboardState.dateMax}
                     label="Period 2"
                 />
             </div>
 
             <div class="arrow-controls">
-                <button class="arrow-btn" onclick={stateModule.shiftBothPeriodsLeft} disabled={!stateModule.canShiftLeft()}>
-                    ← {stateModule.state.jumpYears} yrs back
+                <button class="arrow-btn" onclick={() => dashboardState.shiftBothPeriodsLeft()} disabled={!dashboardState.canShiftLeft()}>
+                    ← {dashboardState.jumpYears} yrs back
                 </button>
                 <span class="arrow-separator">•</span>
-                <button class="arrow-btn" onclick={stateModule.shiftBothPeriodsRight} disabled={!stateModule.canShiftRight()}>
-                    {stateModule.state.jumpYears} yrs forward →
+                <button class="arrow-btn" onclick={() => dashboardState.shiftBothPeriodsRight()} disabled={!dashboardState.canShiftRight()}>
+                    {dashboardState.jumpYears} yrs forward →
                 </button>
             </div>
 
@@ -125,7 +142,7 @@
                 <input
                     id="jumpYears"
                     type="number"
-                    bind:value={stateModule.state.jumpYears}
+                    bind:value={dashboardState.jumpYears}
                     min="1"
                     max="50"
                     class="jump-input"
@@ -134,8 +151,8 @@
             </div>
         {/if}
 
-        {#if !stateModule.derived.hasUploadedFiles}
-            <button class="load-button" onclick={stateModule.loadData} disabled={query.isLoading}>
+        {#if !fileState.hasUploadedFiles}
+            <button class="load-button" onclick={() => dashboardState.loadData()} disabled={query.isLoading}>
                 {#if query.isLoading}
                     <div class="loading-spinner"></div>
                     Loading...

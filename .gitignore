@@ -172,3 +172,4 @@ backend/scripts/academic-research-groups/hand/academic-research-groups.parquet
 backend/projects/data-luminosity/scripts/results/
 *.hpp
 backend/scripts/overthinking-fos/input/google-scholar.parquet
+.vscode/mcp.json
