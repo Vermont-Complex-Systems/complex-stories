@@ -7,18 +7,9 @@
     import { createQuery } from '@tanstack/svelte-query';
     import { fileState, dashboardState } from '../sidebar-state.svelte.ts';
     import { getTopBabyNames } from '../allotax.remote.js';
-    import { createUrlState } from '$lib/state/urlParams.svelte.js';
 
     import boys1895 from '../data/boys-1895.json'
     import boys1968 from '../data/boys-1968.json'
-
-    const params = createUrlState({
-        dates: `${dashboardState.fetchedPeriod1[0]}, ${dashboardState.fetchedPeriod1[1]}`, 
-        dates2: `${dashboardState.fetchedPeriod2[0]}, ${dashboardState.fetchedPeriod2[1]}`,
-        location: dashboardState.fetchedLocation,
-        sex: dashboardState.fetchedSex,
-        limit: dashboardState.fetchedTopN
-    });
 
     // Create query for baby names data
     const query = createQuery(() => ({
@@ -77,27 +68,6 @@
         dashboardState.initializeAdapter();
     });
 
-    // Auto-adjust periods when location changes and dates are out of range
-    $effect(() => {
-        const range = dashboardState.dateRange;
-
-        // Adjust period1 if out of range
-        if (dashboardState.period1[0] < range.min || dashboardState.period1[1] > range.max) {
-            const periodLength = dashboardState.period1[1] - dashboardState.period1[0];
-            const newStart = Math.max(range.min, Math.min(range.max - periodLength, dashboardState.period1[0]));
-            const newEnd = Math.min(range.max, newStart + periodLength);
-            dashboardState.period1 = [newStart, newEnd];
-        }
-
-        // Adjust period2 if out of range
-        if (dashboardState.period2[0] < range.min || dashboardState.period2[1] > range.max) {
-            const periodLength = dashboardState.period2[1] - dashboardState.period2[0];
-            const newStart = Math.max(range.min, Math.min(range.max - periodLength, dashboardState.period2[0]));
-            const newEnd = Math.min(range.max, newStart + periodLength);
-            dashboardState.period2 = [newStart, newEnd];
-        }
-    });
-
     // Create Allotaxonograph instance reactively based on query data AND currentAlpha
     const instance = $derived(
         query.data
@@ -128,7 +98,7 @@
                     <p>Loading rust-wasm and baby names comparison...</p>
                 </div>
             {:else if instance}
-                <Dashboard {...instance} />
+                <Dashboard {...instance} WordshiftWidth=400/>
                 {#if query.error}
                     <div class="error">
                         <p>Failed to load baby names data: babynames API is down. Falling back on static data.</p>
@@ -170,7 +140,7 @@
     
     .sidebar-container {
         flex-shrink: 0;
-        width: 17rem;
+        width: 16rem;
         background-color: var(--color-input-bg);
         border-right: 1px solid var(--color-border);
         transition: width var(--transition-medium) ease;
