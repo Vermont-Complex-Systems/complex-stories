@@ -4,7 +4,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 from .core.config import settings
 from .core.database import connect_to_database, close_database_connection
-from .routers import open_academic_analytics, datasets, auth, wikimedia, annotations, dark_data_survey
+from .routers import open_academic_analytics, datasets, auth, wikimedia, annotations, dark_data_survey, interdisciplinarity
 from .internal import admin
 
 app = FastAPI(
@@ -74,6 +74,7 @@ app.include_router(datasets.router, prefix="/datasets", tags=["datasets"])
 app.include_router(wikimedia.router, prefix="/wikimedia", tags=["wikimedia"])
 app.include_router(annotations.router, prefix="/annotations", tags=["annotations"])
 app.include_router(dark_data_survey.router, prefix="", tags=["dark-data-survey"])
+app.include_router(interdisciplinarity.router, prefix="", tags=["interdisciplinarity"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"], include_in_schema=False)
 
 # Admin endpoints (secured with admin authentication)

@@ -51,6 +51,12 @@ class ChangePassword(BaseModel):
     new_password: str
 
 
+class UserRegister(BaseModel):
+    username: str
+    email: str
+    password: str
+
+
 # Dependency to get current user from token
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
@@ -95,7 +101,79 @@ async def get_admin_user(current_user: User = Depends(get_current_active_user)) 
     return current_user
 
 
-# Public registration removed for security - users created by admins only
+@router.post("/register", response_model=Token)
+async def register_user(
+    user_data: UserRegister,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Register a new user (public endpoint)."""
+
+    # Validate username (alphanumeric + underscores only, 3-50 chars)
+    if not user_data.username.replace('_', '').isalnum():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username must contain only letters, numbers, and underscores"
+        )
+
+    if len(user_data.username) < 3 or len(user_data.username) > 50:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username must be between 3 and 50 characters"
+        )
+
+    # Validate email format (basic check)
+    if '@' not in user_data.email or '.' not in user_data.email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid email format"
+        )
+
+    # Validate password strength
+    if len(user_data.password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters long"
+        )
+
+    # Check if username already exists
+    username_query = select(User).where(User.username == user_data.username.lower())
+    username_result = await db.execute(username_query)
+    if username_result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already taken"
+        )
+
+    # Check if email already exists
+    email_query = select(User).where(User.email == user_data.email.lower())
+    email_result = await db.execute(email_query)
+    if email_result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+
+    # Create new user
+    new_user = User(
+        username=user_data.username.lower(),
+        email=user_data.email.lower(),
+        password_hash=get_password_hash(user_data.password),
+        role="annotator",  # Default role for public signup
+        is_active=True
+    )
+
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+
+    # Automatically log in the new user
+    access_token = create_access_token(data={"sub": new_user.username})
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": new_user
+    }
 
 
 @router.post("/login", response_model=Token)
