@@ -247,6 +247,151 @@ async def get_paper_by_id(
     return paper_data
 
 
+@router.get("/interdisciplinarity/works")
+async def get_works(
+    filter: str,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Get works from OpenAlex. Thin wrapper with same pattern as OpenAlex API.
+
+    Example: /works?filter=author.id:A5055446394
+
+    Supported filters:
+        - author.id:<id> (accepts OpenAlex ID like A5055446394 or ORCID like 0000-0002-1825-0097)
+    """
+    import httpx
+
+    if not filter.startswith('author.id:'):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only author.id filter is currently supported"
+        )
+
+    author_id = filter.replace('author.id:', '')
+
+    # Auto-detect ORCID vs OpenAlex ID
+    if '-' in author_id and len(author_id) == 19:
+        # ORCID format
+        orcid_url = f"https://orcid.org/{author_id}"
+        openalex_filter = f"authorships.author.orcid:{orcid_url}"
+    else:
+        # OpenAlex ID format
+        openalex_url = f"https://openalex.org/{author_id}"
+        openalex_filter = f"authorships.author.id:{openalex_url}"
+
+    # Fetch all pages of results (OpenAlex limits to 200 per page, max 10,000 results)
+    all_results = []
+    page = 1
+    per_page = 200  # Max allowed by OpenAlex
+
+    async with httpx.AsyncClient() as client:
+        while True:
+            response = await client.get(
+                "https://api.openalex.org/works",
+                params={
+                    "filter": openalex_filter,
+                    "select": "id,title,publication_year,authorships,topics,doi,cited_by_count",
+                    "per-page": per_page,
+                    "page": page,
+                    "sort": "publication_year:desc"
+                },
+                headers={"User-Agent": "mailto:complex-stories@uvm.edu"},
+                timeout=15.0
+            )
+
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=f"OpenAlex API error: {response.status_code}"
+                )
+
+            data = response.json()
+            results = data.get("results", [])
+
+            if not results:
+                break
+
+            all_results.extend(results)
+
+            # Check if there are more pages
+            meta = data.get("meta", {})
+            if meta.get("count", 0) <= page * per_page:
+                break
+
+            page += 1
+
+    # Format results, deduplicate by title, and cache individual papers
+    papers_by_title = {}
+    for work in all_results:
+        paper_id = work.get("id", "").split("/")[-1]
+        title = work.get("title", "Untitled")
+        cited_by_count = work.get("cited_by_count", 0)
+
+        authors = []
+        for authorship in work.get("authorships", [])[:5]:
+            if authorship.get("author"):
+                authors.append(authorship["author"].get("display_name", "Unknown"))
+
+        topics = []
+        for topic in work.get("topics", [])[:3]:
+            topics.append({
+                "id": topic.get("id", ""),
+                "display_name": topic.get("display_name", ""),
+                "score": topic.get("score", 0)
+            })
+
+        paper = {
+            "id": paper_id,
+            "title": title,
+            "year": work.get("publication_year"),
+            "authors": authors,
+            "topics": topics,
+            "doi": work.get("doi"),
+            "cited_by_count": cited_by_count
+        }
+
+        # Cache this paper for future lookups (without abstract since we don't fetch it here)
+        # Check if already cached to avoid unnecessary writes
+        cache_query = select(CachedPaper).where(CachedPaper.id == paper_id)
+        cache_result = await db.execute(cache_query)
+        if not cache_result.scalar_one_or_none():
+            cached = CachedPaper(
+                id=paper_id,
+                title=title,
+                year=work.get("publication_year"),
+                abstract=None,  # Not included in works list response
+                authors=authors,
+                topics=topics,
+                doi=work.get("doi"),
+                is_open_access=False  # Not included in our select
+            )
+            db.add(cached)
+
+        # Deduplicate: keep the most cited version of each title
+        if title not in papers_by_title or cited_by_count > papers_by_title[title]["cited_by_count"]:
+            papers_by_title[title] = paper
+
+    # Commit all cached papers
+    await db.commit()
+
+    # Convert back to list, sorted by year (desc) then citations (desc)
+    papers = sorted(
+        papers_by_title.values(),
+        key=lambda p: (p["year"] or 0, p["cited_by_count"]),
+        reverse=True
+    )
+
+    return {
+        "results": papers,
+        "meta": {
+            "count": len(papers),
+            "count_before_dedup": len(all_results),
+            "pages_fetched": page
+        }
+    }
+
+
 @router.get("/interdisciplinarity/my-annotations", response_model=UserAnnotationsResponse)
 async def get_user_annotations(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),

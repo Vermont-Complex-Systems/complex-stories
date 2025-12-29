@@ -204,3 +204,19 @@ export const getAnnotationStats = query(async () => {
 
 	return await response.json()
 })
+
+// Get works by author (ORCID or OpenAlex ID)
+export const getWorksByAuthor = query(
+	v.string(),
+	async (author_id) => {
+		const params = new URLSearchParams({ filter: `author.id:${author_id}` })
+		const response = await fetch(`${API_BASE_URL}/interdisciplinarity/works?${params}`)
+
+		if (!response.ok) {
+			const error = await response.json()
+			throw new Error(error.detail || 'Failed to fetch papers')
+		}
+
+		return await response.json()
+	}
+)

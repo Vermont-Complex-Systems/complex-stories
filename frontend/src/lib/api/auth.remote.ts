@@ -8,10 +8,12 @@ import {
 	loginUserSchema,
 	updateUserRoleSchema,
 	changePasswordSchema,
+	updateProfileSchema,
 	type RegisterUser,
 	type LoginUser,
 	type UpdateUserRole,
-	type ChangePassword
+	type ChangePassword,
+	type UpdateProfile
 } from '$lib/schema/auth'
 import { API_BASE } from '$env/static/private'
 
@@ -49,6 +51,45 @@ async function apiCall(endpoint: string, options: RequestInit = {}) {
 	return response.json()
 }
 
+
+// REGISTER user
+export const registerUser = form(
+	registerUserSchema,
+	async (userData: RegisterUser) => {
+		const { cookies } = getRequestEvent()
+
+		const data = await apiCall('/register', {
+			method: 'POST',
+			body: JSON.stringify(userData),
+		})
+
+		// Validate response data
+		const tokenData = v.parse(tokenSchema, data)
+
+		// Set server-side cookies (the SvelteKit way!)
+		cookies.set('auth_token', tokenData.access_token, {
+			path: '/',
+			maxAge: 30 * 24 * 60 * 60, // 30 days
+			sameSite: 'lax',
+			httpOnly: false // Allow client-side access for compatibility
+		})
+
+		cookies.set('auth_user', JSON.stringify(tokenData.user), {
+			path: '/',
+			maxAge: 30 * 24 * 60 * 60, // 30 days
+			sameSite: 'lax',
+			httpOnly: false // Allow client-side access for compatibility
+		})
+
+		// Also store client-side for immediate reactivity
+		setAuthData(tokenData.access_token, tokenData.user)
+
+		// Refresh user info
+		getCurrentUser().refresh()
+
+		return tokenData
+	}
+)
 
 // LOGIN user
 export const loginUser = form(
@@ -163,6 +204,41 @@ export const updateUserRole = form(
 		getAllUsers().refresh()
 
 		return { success: true, user_id, role }
+	}
+)
+
+// UPDATE profile (ORCID and OpenAlex IDs)
+export const updateProfile = form(
+	updateProfileSchema,
+	async (profileData: UpdateProfile) => {
+		const { cookies } = getRequestEvent()
+
+		const data = await apiCall('/profile', {
+			method: 'PUT',
+			body: JSON.stringify(profileData),
+		})
+
+		// Validate response data
+		const user = v.parse(userSchema, data)
+
+		// Update server-side cookie with new user data
+		cookies.set('auth_user', JSON.stringify(user), {
+			path: '/',
+			maxAge: 30 * 24 * 60 * 60, // 30 days
+			sameSite: 'lax',
+			httpOnly: false // Allow client-side access for compatibility
+		})
+
+		// Update stored user data
+		const token = getAuthToken()
+		if (token) {
+			setAuthData(token, user)
+		}
+
+		// Refresh user info
+		getCurrentUser().refresh()
+
+		return user
 	}
 )
 
