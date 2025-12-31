@@ -21,6 +21,9 @@ class CachedPaper(Base):
     doi = Column(String, nullable=True)
     is_open_access = Column(Boolean, default=False)
 
+    # Community queue flag - set to True when author annotates their own paper
+    in_general_queue = Column(Boolean, default=False)
+
     # Cache metadata
     cached_at = Column(DateTime(timezone=True), server_default=func.now())
 

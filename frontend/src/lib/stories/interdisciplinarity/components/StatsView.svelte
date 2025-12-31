@@ -12,7 +12,8 @@
 	} = $props()
 
 	let agreementData = $state(null)
-	let searchQuery = $state('W1947595544')
+	let searchQuery = $state('')
+	let showCount = $state(10) // Number of matrices to show
 
 	const ratingLabels = {
 		1: 'Very much interdisciplinary',
@@ -108,14 +109,15 @@
 		}
 	})
 
-	// Filter papers based on search query - always show only one paper
+	// Filter papers based on search query, or show top N by disagreement
 	const filteredPapers = $derived.by(() => {
 		if (!agreementData?.papers) return []
 
 		const query = searchQuery.trim().toLowerCase()
 		if (!query) {
-			// Default to first paper if no search query
-			return agreementData.papers.slice(0, 1)
+			// Default to top N most contentious papers (lowest agreement = most disagreement)
+			// Papers are already sorted by agreement (ascending) from the API
+			return agreementData.papers.slice(0, showCount)
 		}
 
 		const filtered = agreementData.papers.filter(paper =>
@@ -123,8 +125,8 @@
 			paper.paper_id?.toLowerCase().includes(query)
 		)
 
-		// Return only the first match
-		return filtered.slice(0, 1)
+		// Return top N matches
+		return filtered.slice(0, showCount)
 	})
 </script>
 
@@ -225,6 +227,9 @@
 		<p class="section-subtitle">
 			{agreementData.total_papers_analyzed} papers with multiple annotations ·
 			{agreementData.papers_with_high_disagreement} with high disagreement (&lt;60% agreement)
+			{#if !searchQuery}
+				· Showing top {Math.min(showCount, agreementData.papers.length)} most contentious
+			{/if}
 		</p>
 
 		<div class="search-controls">
@@ -237,6 +242,11 @@
 			{#if searchQuery}
 				<button onclick={() => searchQuery = ''} class="clear-btn">
 					Clear
+				</button>
+			{/if}
+			{#if !searchQuery && agreementData.papers.length > showCount}
+				<button onclick={() => showCount += 10} class="load-more-btn">
+					Show 10 more
 				</button>
 			{/if}
 		</div>
@@ -366,8 +376,19 @@
 
 	.agreement-matrices {
 		display: flex;
-		flex-direction: column;
+		flex-wrap: wrap;
 		gap: 1rem;
+	}
+
+	.agreement-matrices > :global(*) {
+		flex: 1 1 calc(50% - 0.5rem);
+		min-width: 400px;
+	}
+
+	@media (max-width: 900px) {
+		.agreement-matrices > :global(*) {
+			flex: 1 1 100%;
+		}
 	}
 
 	.search-controls {
@@ -405,6 +426,21 @@
 
 	.clear-btn:hover {
 		background: #e5e7eb;
+	}
+
+	.load-more-btn {
+		padding: 0.75rem 1.5rem;
+		background: #4b5563;
+		border: 1px solid #374151;
+		border-radius: 6px;
+		cursor: pointer;
+		font-size: 0.875rem;
+		color: white;
+		transition: all 0.2s;
+	}
+
+	.load-more-btn:hover {
+		background: #374151;
 	}
 
 	.no-results {

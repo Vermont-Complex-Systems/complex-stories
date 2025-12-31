@@ -232,3 +232,15 @@ export const getWorksByAuthor = query(
 		return await response.json()
 	}
 )
+
+// Get community-contributed papers for general queue
+export const getCommunityQueuePapers = query(async () => {
+	const response = await fetch(`${API_BASE_URL}/interdisciplinarity/queue`)
+
+	if (!response.ok) {
+		const error = await response.json()
+		throw new Error(error.detail || 'Failed to fetch community queue')
+	}
+
+	return await response.json()
+})

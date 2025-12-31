@@ -60,6 +60,18 @@
 		}
 		return annotator
 	}
+
+	// Convert rating number to descriptive text
+	function ratingToText(rating) {
+		const labels = {
+			1: 'Very interdisciplinary',
+			2: 'Somewhat interdisciplinary',
+			3: 'Undecided',
+			4: 'Not really interdisciplinary',
+			5: 'Not at all interdisciplinary'
+		}
+		return labels[rating] || rating
+	}
 </script>
 
 <div class="matrix-container">
@@ -124,7 +136,7 @@
 									class="matrix-cell"
 									class:diagonal={i === j}
 									style="background-color: {i === j ? '#e5e7eb' : getCellColor(cell, sortedRatings[i], sortedRatings[j])};"
-									title="{sortedAnnotators[i]} (rated {sortedRatings[i]}) vs {sortedAnnotators[j]} (rated {sortedRatings[j]}): diff={cell.diff}"
+									title={`${sortedAnnotators[i]}: ${ratingToText(sortedRatings[i])}\n${sortedAnnotators[j]}: ${ratingToText(sortedRatings[j])}\nDifference: ${cell.diff}`}
 								>
 									{#if i === j}
 										<span class="rating-label">{cell.rating}</span>

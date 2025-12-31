@@ -114,7 +114,7 @@ async def annotate_paper(
 
         await db.commit()
         await db.refresh(existing_annotation)
-        return existing_annotation
+        annotation_to_return = existing_annotation
 
     else:
         # INSERT new annotation
@@ -129,7 +129,53 @@ async def annotate_paper(
         db.add(new_annotation)
         await db.commit()
         await db.refresh(new_annotation)
-        return new_annotation
+        annotation_to_return = new_annotation
+
+    # If logged-in user annotated their own paper, add it to general queue
+    if user and (user.orcid_id or user.openalex_id):
+        # Check if this paper is in the cached_papers table
+        cached_paper_query = select(CachedPaper).where(CachedPaper.id == request.paper_id)
+        cached_result = await db.execute(cached_paper_query)
+        cached_paper = cached_result.scalar_one_or_none()
+
+        if cached_paper and not cached_paper.in_general_queue:
+            # Verify user is actually the author by checking if paper is in their works
+            import httpx
+            author_id = user.orcid_id or user.openalex_id
+
+            # Check OpenAlex to see if this author wrote this paper
+            async with httpx.AsyncClient() as client:
+                try:
+                    # Get the paper details to check authorship
+                    paper_url = f"https://api.openalex.org/works/{request.paper_id}"
+                    paper_resp = await client.get(paper_url, timeout=10.0)
+
+                    if paper_resp.status_code == 200:
+                        paper_data = paper_resp.json()
+                        authorships = paper_data.get("authorships", [])
+
+                        # Check if user's author ID is in the paper's authors
+                        is_author = False
+                        for authorship in authorships:
+                            author = authorship.get("author", {})
+                            author_orcid = author.get("orcid")
+                            author_openalex = author.get("id")
+
+                            # Match on either ORCID or OpenAlex ID
+                            if (user.orcid_id and author_orcid and author_orcid.endswith(user.orcid_id)) or \
+                               (user.openalex_id and author_openalex and author_openalex == f"https://openalex.org/{user.openalex_id}"):
+                                is_author = True
+                                break
+
+                        # Only add to general queue if user is confirmed author
+                        if is_author:
+                            cached_paper.in_general_queue = True
+                            await db.commit()
+                except Exception as e:
+                    # If API call fails, don't add to queue (fail safe)
+                    print(f"Failed to verify authorship: {e}")
+
+    return annotation_to_return
 
 
 @router.get("/interdisciplinarity/papers/{paper_id}")
@@ -496,9 +542,32 @@ async def get_annotation_stats(db: AsyncSession = Depends(get_db_session)):
     }
 
 
+@router.get("/interdisciplinarity/queue")
+async def get_general_queue_papers(
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Get paper IDs for the general annotation queue.
+
+    Returns community-contributed papers (cached papers with in_general_queue=True).
+    Frontend should combine this with the static CSV papers.
+
+    Returns:
+        List of paper IDs that have been added to the general queue by authors
+    """
+    query = select(CachedPaper.id).where(CachedPaper.in_general_queue == True)
+    result = await db.execute(query)
+    community_paper_ids = [row[0] for row in result.fetchall()]
+
+    return {
+        "community_papers": community_paper_ids,
+        "count": len(community_paper_ids)
+    }
+
+
 @router.get("/interdisciplinarity/agreement")
 async def get_inter_annotator_agreement(
-    min_annotations: int = 2,
+    min_annotations: int = 3,
     db: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -507,7 +576,7 @@ async def get_inter_annotator_agreement(
     Returns papers sorted by disagreement (lowest agreement first) to highlight contentious papers.
 
     Args:
-        min_annotations: Minimum number of annotations required to calculate agreement (default: 2)
+        min_annotations: Minimum number of annotations required to calculate agreement (default: 3)
 
     Returns:
         List of papers with agreement scores, sorted by agreement (ascending)

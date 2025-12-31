@@ -1,6 +1,6 @@
 <script>
 	import { getUniquePaperIds } from '../data/loader.js'
-	import { getPaperById, annotatePaper, getCurrentUser, getMyAnnotations, getWorksByAuthor, getAnnotationStats } from '../data/data.remote'
+	import { getPaperById, annotatePaper, getCurrentUser, getMyAnnotations, getWorksByAuthor, getAnnotationStats, getCommunityQueuePapers } from '../data/data.remote'
 	import FingerprintJS from '@fingerprintjs/fingerprintjs'
 	import { onMount } from 'svelte'
 	import TopBar from './TopBar.svelte'
@@ -8,9 +8,6 @@
 	import QueueHeader from './QueueHeader.svelte'
 	import PaperAnnotationCard from './PaperAnnotationCard.svelte'
 	import StatsView from './StatsView.svelte'
-
-	// Get list of paper IDs to annotate
-	const paperIds = getUniquePaperIds()
 
 	// State
 	let currentIndex = $state(0)
@@ -23,6 +20,7 @@
 	let myPapers = $state([]) // User's own papers from ORCID/OpenAlex
 	let annotationCounts = $state({}) // Per-paper annotation counts
 	let stats = $state({}) // Full stats object
+	let paperIds = $state([]) // Combined general queue (CSV + community papers)
 
 	// Filter to only show uncompleted papers in queue modes
 	const generalQueuePaperIds = $derived(
@@ -50,6 +48,9 @@
 		const fp = await FingerprintJS.load()
 		const result = await fp.get()
 		fingerprint = result.visitorId
+
+		// Load general queue papers (CSV + community)
+		await loadPaperQueue()
 
 		// Load annotations for queue filtering
 		await loadAnnotations()
@@ -83,6 +84,26 @@
 			return null
 		}
 	})
+
+	// Load paper queue (CSV + community papers)
+	async function loadPaperQueue() {
+		try {
+			// Get CSV papers
+			const csvPapers = getUniquePaperIds()
+
+			// Get community-contributed papers
+			const communityData = await getCommunityQueuePapers()
+			const communityPapers = communityData.community_papers || []
+
+			// Merge and deduplicate
+			const allPapers = [...csvPapers, ...communityPapers]
+			paperIds = Array.from(new Set(allPapers))
+		} catch (err) {
+			console.error('Failed to load community queue:', err)
+			// Fall back to just CSV papers
+			paperIds = getUniquePaperIds()
+		}
+	}
 
 	// Load annotations
 	async function loadAnnotations() {
