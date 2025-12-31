@@ -443,6 +443,7 @@ async def get_annotation_stats(db: AsyncSession = Depends(get_db_session)):
         - Annotations by logged-in users vs. anonymous
         - Average interdisciplinarity rating
         - Distribution of ratings
+        - Per-paper annotation counts
     """
     # Total annotations
     total_query = select(func.count(PaperAnnotation.id))
@@ -475,10 +476,144 @@ async def get_annotation_stats(db: AsyncSession = Depends(get_db_session)):
         rating: count for rating, count in distribution_result.fetchall()
     }
 
+    # Per-paper annotation counts
+    per_paper_query = select(
+        PaperAnnotation.paper_id,
+        func.count(PaperAnnotation.id)
+    ).group_by(PaperAnnotation.paper_id)
+    per_paper_result = await db.execute(per_paper_query)
+    per_paper_counts = {
+        paper_id: count for paper_id, count in per_paper_result.fetchall()
+    }
+
     return {
         "total_annotations": total_annotations,
         "logged_in_annotations": logged_in_count,
         "anonymous_annotations": anonymous_count,
         "average_rating": float(avg_rating) if avg_rating else 0,
-        "rating_distribution": rating_distribution
+        "rating_distribution": rating_distribution,
+        "per_paper_counts": per_paper_counts
+    }
+
+
+@router.get("/interdisciplinarity/agreement")
+async def get_inter_annotator_agreement(
+    min_annotations: int = 2,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Calculate inter-annotator agreement for papers with multiple annotations.
+
+    Returns papers sorted by disagreement (lowest agreement first) to highlight contentious papers.
+
+    Args:
+        min_annotations: Minimum number of annotations required to calculate agreement (default: 2)
+
+    Returns:
+        List of papers with agreement scores, sorted by agreement (ascending)
+    """
+    # Get all annotations with user info
+    query = select(PaperAnnotation).order_by(PaperAnnotation.paper_id)
+    result = await db.execute(query)
+    annotations = result.scalars().all()
+
+    # Get paper titles from cached_papers table
+    paper_ids_list = list(set([ann.paper_id for ann in annotations]))
+
+    # Fetch papers from cache
+    cache_query = select(CachedPaper.id, CachedPaper.title).where(CachedPaper.id.in_(paper_ids_list))
+    cache_result = await db.execute(cache_query)
+    cached_rows = cache_result.all()
+
+    # Create mapping of paper_id to title
+    paper_titles = {}
+    for row in cached_rows:
+        paper_titles[row.id] = row.title if row.title else row.id
+
+    # Group by paper, keeping full annotation objects
+    from collections import defaultdict
+    paper_groups = defaultdict(list)
+    for ann in annotations:
+        paper_groups[ann.paper_id].append(ann)
+
+    # Calculate agreement for each paper
+    agreement_scores = []
+    for paper_id, anns in paper_groups.items():
+        if len(anns) < min_annotations:
+            continue
+
+        ratings = [a.interdisciplinarity_rating for a in anns]
+
+        # Build annotator list and pairwise matrix
+        annotators = []
+        for a in anns:
+            if a.user_id:
+                annotators.append(f"user_{a.user_id}")
+            elif a.fingerprint:
+                annotators.append(f"anon_{a.fingerprint[:8]}")
+            else:
+                annotators.append("unknown")
+
+        # Create pairwise agreement matrix
+        # Agreement logic:
+        # - Ratings 1-2 agree (interdisciplinary side)
+        # - Rating 3 only agrees with itself (undecided)
+        # - Ratings 4-5 agree (not interdisciplinary side)
+        def ratings_agree(r1, r2):
+            if r1 == r2:
+                return True
+            # Interdisciplinary side (1-2)
+            if r1 in [1, 2] and r2 in [1, 2]:
+                return True
+            # Not interdisciplinary side (4-5)
+            if r1 in [4, 5] and r2 in [4, 5]:
+                return True
+            # Undecided (3) only agrees with itself
+            return False
+
+        pairwise_matrix = []
+        for i in range(len(anns)):
+            row = []
+            for j in range(len(anns)):
+                diff = abs(ratings[i] - ratings[j])
+                agrees = ratings_agree(ratings[i], ratings[j])
+                row.append({"rating": ratings[j], "agrees": agrees, "diff": diff})
+            pairwise_matrix.append(row)
+
+        # Calculate pairwise agreement (% of pairs that agree based on same side of scale)
+        total_pairs = 0
+        agreeing_pairs = 0
+
+        for i in range(len(ratings)):
+            for j in range(i + 1, len(ratings)):
+                total_pairs += 1
+                if ratings_agree(ratings[i], ratings[j]):
+                    agreeing_pairs += 1
+
+        agreement = agreeing_pairs / total_pairs if total_pairs > 0 else 0
+
+        # Calculate standard deviation as measure of spread
+        import statistics
+        std_dev = statistics.stdev(ratings) if len(ratings) > 1 else 0
+        mean_rating = statistics.mean(ratings)
+
+        agreement_scores.append({
+            "paper_id": paper_id,
+            "title": paper_titles.get(paper_id, paper_id),
+            "num_annotations": len(ratings),
+            "ratings": ratings,
+            "annotators": annotators,
+            "pairwise_matrix": pairwise_matrix,
+            "agreement_score": round(agreement, 3),
+            "std_dev": round(std_dev, 3),
+            "mean_rating": round(mean_rating, 2)
+        })
+
+    # Sort by agreement (lowest first = most disagreement)
+    agreement_scores.sort(key=lambda x: x['agreement_score'])
+
+    return {
+        "papers": agreement_scores,
+        "total_papers_analyzed": len(agreement_scores),
+        "papers_with_high_disagreement": len([p for p in agreement_scores if p['agreement_score'] < 0.6])
     }

@@ -1,12 +1,13 @@
 <script>
 	import { getUniquePaperIds } from '../data/loader.js'
-	import { getPaperById, annotatePaper, getCurrentUser, getMyAnnotations, getWorksByAuthor } from '../data/data.remote'
+	import { getPaperById, annotatePaper, getCurrentUser, getMyAnnotations, getWorksByAuthor, getAnnotationStats } from '../data/data.remote'
 	import FingerprintJS from '@fingerprintjs/fingerprintjs'
 	import { onMount } from 'svelte'
 	import TopBar from './TopBar.svelte'
 	import OverviewTable from './OverviewTable.svelte'
 	import QueueHeader from './QueueHeader.svelte'
 	import PaperAnnotationCard from './PaperAnnotationCard.svelte'
+	import StatsView from './StatsView.svelte'
 
 	// Get list of paper IDs to annotate
 	const paperIds = getUniquePaperIds()
@@ -17,9 +18,11 @@
 	let selectedRating = $state(null)
 	let isSubmitting = $state(false)
 	let error = $state(null)
-	let mode = $state('overview') // 'queue', 'my-papers-queue', 'overview'
+	let mode = $state('overview') // 'queue', 'my-papers-queue', 'overview', 'stats'
 	let myAnnotations = $state([])
 	let myPapers = $state([]) // User's own papers from ORCID/OpenAlex
+	let annotationCounts = $state({}) // Per-paper annotation counts
+	let stats = $state({}) // Full stats object
 
 	// Filter to only show uncompleted papers in queue modes
 	const generalQueuePaperIds = $derived(
@@ -50,6 +53,9 @@
 
 		// Load annotations for queue filtering
 		await loadAnnotations()
+
+		// Load annotation stats (includes per-paper counts)
+		await loadStats()
 
 		// Load user's papers if they have ORCID/OpenAlex ID
 		try {
@@ -97,14 +103,26 @@
 		}
 	}
 
+	// Load stats including per-paper counts
+	async function loadStats() {
+		try {
+			const statsData = await getAnnotationStats()
+			stats = statsData
+			annotationCounts = statsData.per_paper_counts || {}
+		} catch (err) {
+			console.error('Failed to load stats:', err)
+		}
+	}
+
 	// Switch modes
 	async function setMode(newMode) {
 		mode = newMode
 		currentIndex = 0
 		selectedRating = null
-		// Reload annotations when switching to overview
-		if (mode === 'overview') {
+		// Reload annotations and stats when switching to overview or stats
+		if (mode === 'overview' || mode === 'stats') {
 			await loadAnnotations()
+			await loadStats()
 		}
 	}
 
@@ -182,7 +200,7 @@
 </script>
 
 <TopBar
-	bind:mode
+	{mode}
 	generalQueueCount={generalQueuePaperIds.length}
 	myPapersCount={myPapers.length}
 	myPapersQueueCount={myPapersQueueIds.length}
@@ -191,12 +209,15 @@
 
 <div class="dataset-preview-container">
 	<div class="container">
-		{#if mode === 'overview'}
+		{#if mode === 'stats'}
+			<StatsView {stats} {myAnnotations} {myPapers} {paperIds} />
+		{:else if mode === 'overview'}
 			<OverviewTable
 				{paperIds}
 				{myPapers}
 				{myAnnotations}
 				{myPapersQueueIds}
+				{annotationCounts}
 				generalQueuePaperIds={generalQueuePaperIds}
 				onJumpToPaper={handleJumpToPaper}
 			/>
@@ -204,7 +225,7 @@
 			<QueueHeader
 				{mode}
 				totalAnnotated={myAnnotations.length}
-				totalPapers={paperIds.length}
+				totalPapers={paperIds.length + myPapers.length}
 				remainingInQueue={activePaperIds.length}
 				{error}
 			/>

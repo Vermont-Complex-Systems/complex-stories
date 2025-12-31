@@ -4,7 +4,7 @@
 	import { getCurrentUser } from '../data/data.remote'
 
 	let {
-		mode = $bindable(),
+		mode,
 		generalQueueCount = 0,
 		myPapersCount = 0,
 		myPapersQueueCount = 0,
@@ -53,6 +53,13 @@
 					📄 My Papers ({myPapersQueueCount})
 				</button>
 			{/if}
+			<button
+				class="mode-btn"
+				class:active={mode === 'stats'}
+				onclick={() => onModeChange('stats')}
+			>
+				📈 Stats
+			</button>
 		</div>
 		{#await getCurrentUser()}
 			<!-- Loading auth state -->

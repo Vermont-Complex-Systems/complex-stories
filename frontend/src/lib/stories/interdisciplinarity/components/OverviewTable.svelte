@@ -7,6 +7,7 @@
 		myAnnotations = [],
 		myPapersQueueIds = [],
 		generalQueuePaperIds = [],
+		annotationCounts = {},
 		onJumpToPaper = (mode, index) => {}
 	} = $props()
 
@@ -36,6 +37,7 @@
 				<th>Title</th>
 				<th>Authors</th>
 				<th>Year</th>
+				<th>Annotations</th>
 				<th>Status</th>
 				<th>Rating</th>
 				<th>Action</th>
@@ -57,6 +59,7 @@
 							{/if}
 						</td>
 						<td class="year-col">{item.paper.year || '—'}</td>
+						<td class="count-col">{annotationCounts[item.id] || 0}</td>
 						<td class="status-col">
 							{#if annotation}
 								<span class="status-badge completed">✓</span>
@@ -101,6 +104,7 @@
 								{/if}
 							</td>
 							<td class="year-col">{paperData?.year || '—'}</td>
+							<td class="count-col">{annotationCounts[item.id] || 0}</td>
 							<td class="status-col">
 								{#if annotation}
 									<span class="status-badge completed">✓</span>
@@ -224,6 +228,13 @@
 	.year-col {
 		width: 4rem;
 		color: #666;
+	}
+
+	.count-col {
+		width: 6rem;
+		text-align: center;
+		color: #2563eb;
+		font-weight: 500;
 	}
 
 	.status-col {

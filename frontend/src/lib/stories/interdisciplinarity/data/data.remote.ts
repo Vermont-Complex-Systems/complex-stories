@@ -205,6 +205,18 @@ export const getAnnotationStats = query(async () => {
 	return await response.json()
 })
 
+// Get inter-annotator agreement data
+export const getAgreementData = query(async () => {
+	const response = await fetch(`${API_BASE_URL}/interdisciplinarity/agreement`)
+
+	if (!response.ok) {
+		const error = await response.json()
+		throw new Error(error.detail || 'Failed to fetch agreement data')
+	}
+
+	return await response.json()
+})
+
 // Get works by author (ORCID or OpenAlex ID)
 export const getWorksByAuthor = query(
 	v.string(),
