@@ -2,19 +2,25 @@
 	import { getPaperById } from '../data/data.remote'
 	import SearchInput from './SearchInput.svelte'
 	import FilterButtons from './FilterButtons.svelte'
+	import { untrack } from 'svelte'
 
 	let {
 		paperIds = [],
+		generalPapers = [],
 		myPapers = [],
 		myAnnotations = [],
 		myPapersQueueIds = [],
-		generalQueuePaperIds = [],
+		csvQueuePaperIds = [],
+		communityQueuePaperIds = [],
 		annotationCounts = {},
-		onJumpToPaper = (mode, index) => {}
+		agreementData = null, // Agreement scores from API
+		onJumpToPaper = (mode, index) => {},
+		onSortedIdsChange = (csvIds, communityPapersList, myPapersList) => {}
 	} = $props()
 
 	let searchQuery = $state('')
 	let statusFilter = $state('all')
+	let sortBy = $state('default')
 
 	const statusOptions = [
 		{ value: 'all', label: 'All' },
@@ -22,11 +28,76 @@
 		{ value: 'pending', label: 'Pending' }
 	]
 
-	const totalPapers = $derived(paperIds.length + myPapers.length)
-	const allPapersList = $derived([
-		...paperIds.map(id => ({ id, source: 'general' })),
-		...myPapers.map(p => ({ id: p.id, source: 'my-papers', paper: p }))
-	])
+	const sortOptions = [
+		{ value: 'default', label: 'Default' },
+		{ value: 'time', label: 'Year' },
+		{ value: 'random', label: 'Random' },
+		{ value: 'disagreement', label: 'Disagreement' }
+	]
+
+	const totalPapers = $derived(paperIds.length + generalPapers.length + myPapers.length)
+
+	const allPapersList = $derived.by(() => {
+		let papers = [
+			...paperIds.map(id => ({ id, source: 'csv' })),
+			...generalPapers.map(p => ({ id: p.id, source: 'community', paper: p })),
+			...myPapers.map(p => ({ id: p.id, source: 'my-papers', paper: p }))
+		]
+
+		// Apply sorting
+		if (sortBy === 'time') {
+			// Sort by publication year (newest first)
+			// Papers with year go first, then papers without
+			papers = papers.sort((a, b) => {
+				const yearA = a.paper?.year || 0
+				const yearB = b.paper?.year || 0
+				return yearB - yearA
+			})
+		} else if (sortBy === 'random') {
+			// Fisher-Yates shuffle
+			papers = [...papers]
+			for (let i = papers.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[papers[i], papers[j]] = [papers[j], papers[i]]
+			}
+		} else if (sortBy === 'disagreement' && agreementData?.papers) {
+			// Create lookup for agreement scores
+			const agreementMap = new Map(
+				agreementData.papers.map(p => [p.paper_id, p.agreement_score])
+			)
+
+			// Sort by agreement score (lowest = most disagreement)
+			// Papers with scores first, then papers without
+			papers = papers.sort((a, b) => {
+				const scoreA = agreementMap.get(a.id)
+				const scoreB = agreementMap.get(b.id)
+
+				// Papers without scores go to the end
+				if (scoreA === undefined && scoreB === undefined) return 0
+				if (scoreA === undefined) return 1
+				if (scoreB === undefined) return -1
+
+				// Lower agreement = more disagreement = should come first
+				return scoreA - scoreB
+			})
+		}
+
+		return papers
+	})
+
+	// Notify parent when sorting changes
+	$effect(() => {
+		const currentSort = sortBy
+
+		untrack(() => {
+			if (currentSort !== 'default') {
+				const csvIds = allPapersList.filter(p => p.source === 'csv').map(p => p.id)
+				const communityPapersList = allPapersList.filter(p => p.source === 'community').map(p => p.paper)
+				const myPapersList = allPapersList.filter(p => p.source === 'my-papers').map(p => p.paper)
+				onSortedIdsChange(csvIds, communityPapersList, myPapersList)
+			}
+		})
+	})
 
 	// Helper to check if paper matches search/filter
 	function matchesFilters(item, paperData, annotation) {
@@ -55,13 +126,21 @@
 	<h1>Your Annotation Progress</h1>
 	<p class="subtitle">
 		{myAnnotations.length} of {totalPapers} papers annotated
-		({paperIds.length} general + {myPapers.length} your papers)
+		({paperIds.length} CSV + {generalPapers.length} community + {myPapers.length} your papers)
 	</p>
 </header>
 
 <div class="filters">
 	<SearchInput bind:value={searchQuery} placeholder="Filter by title or author..." />
 	<FilterButtons bind:value={statusFilter} options={statusOptions} />
+	<div class="sort-group">
+		<label for="sort-select">Sort by:</label>
+		<select id="sort-select" bind:value={sortBy} class="sort-select">
+			{#each sortOptions as option}
+				<option value={option.value}>{option.label}</option>
+			{/each}
+		</select>
+	</div>
 </div>
 
 <div class="overview-table">
@@ -82,11 +161,17 @@
 		<tbody>
 			{#each allPapersList as item, index}
 				{@const annotation = myAnnotations.find(a => a.paper_id === item.id)}
-				{#if item.source === 'my-papers' && matchesFilters(item, item.paper, annotation)}
-					<!-- User's own paper - already have data -->
-					<tr class:annotated={annotation} class="my-paper">
+				{#if (item.source === 'my-papers' || item.source === 'community') && matchesFilters(item, item.paper, annotation)}
+					<!-- Papers with full metadata (user's papers or community papers) -->
+					<tr class:annotated={annotation} class:my-paper={item.source === 'my-papers'}>
 						<td class="number-col">{index + 1}</td>
-						<td class="source-col"><span class="source-badge my">Mine</span></td>
+						<td class="source-col">
+							{#if item.source === 'my-papers'}
+								<span class="source-badge my">Mine</span>
+							{:else}
+								<span class="source-badge community">Community</span>
+							{/if}
+						</td>
 						<td class="title-col">{item.paper.title}</td>
 						<td class="authors-col">
 							{item.paper.authors?.slice(0, 3).join(', ') || '—'}
@@ -114,19 +199,24 @@
 						</td>
 						<td class="action-col">
 							<button class="jump-btn" onclick={() => {
-								const myPaperIndex = myPapersQueueIds.indexOf(item.id)
-								if (myPaperIndex >= 0) {
-									onJumpToPaper('my-papers-queue', myPaperIndex)
-								} else if (annotation) {
-									onJumpToPaper('my-papers-queue', 0)
-									alert('This paper is already annotated. You can re-annotate it from the My Papers queue.')
+								if (item.source === 'my-papers') {
+									const myPaperIndex = myPapersQueueIds.indexOf(item.id)
+									if (myPaperIndex >= 0) {
+										onJumpToPaper('my-papers-queue', myPaperIndex)
+									} else if (annotation) {
+										onJumpToPaper('my-papers-queue', 0)
+										alert('This paper is already annotated. You can re-annotate it from the My Papers queue.')
+									}
+								} else {
+									const communityIndex = communityQueuePaperIds.indexOf(item.id)
+									onJumpToPaper('community-queue', communityIndex >= 0 ? communityIndex : 0)
 								}
 							}}>
 								{annotation ? 'Re-annotate' : 'Annotate'}
 							</button>
 						</td>
 					</tr>
-				{:else if item.source === 'general'}
+				{:else if item.source === 'csv'}
 					<!-- General dataset paper - need to fetch -->
 					{#await getPaperById(item.id) then paperData}
 						{#if matchesFilters(item, paperData, annotation)}
@@ -160,8 +250,8 @@
 							</td>
 							<td class="action-col">
 								<button class="jump-btn" onclick={() => {
-									const generalIndex = generalQueuePaperIds.indexOf(item.id)
-									onJumpToPaper('queue', generalIndex >= 0 ? generalIndex : 0)
+									const csvIndex = csvQueuePaperIds.indexOf(item.id)
+									onJumpToPaper('csv-queue', csvIndex >= 0 ? csvIndex : 0)
 								}}>
 									{annotation ? 'Re-annotate' : 'Annotate'}
 								</button>
@@ -196,6 +286,41 @@
 		gap: 0.75rem;
 		margin-bottom: 1rem;
 		align-items: center;
+	}
+
+	.sort-group {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.sort-group label {
+		font-size: 0.875rem;
+		color: #666;
+		font-weight: 500;
+		white-space: nowrap;
+	}
+
+	.sort-select {
+		padding: 0.5rem 0.75rem;
+		border: 1px solid #e0e0e0;
+		border-radius: 4px;
+		font-size: 0.875rem;
+		background: white;
+		cursor: pointer;
+		font-weight: 500;
+		color: #666;
+		min-width: 0;
+		width: auto;
+	}
+
+	.sort-select:hover {
+		border-color: #2563eb;
+	}
+
+	.sort-select:focus {
+		outline: none;
+		border-color: #2563eb;
 	}
 
 	.overview-table {
@@ -334,6 +459,11 @@
 	.source-badge.general {
 		background: #dbeafe;
 		color: #1e40af;
+	}
+
+	.source-badge.community {
+		background: #fef3c7;
+		color: #92400e;
 	}
 
 	.source-badge.my {

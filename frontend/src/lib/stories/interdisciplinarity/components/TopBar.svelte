@@ -2,10 +2,12 @@
 	import { Avatar } from 'bits-ui'
 	import { base } from '$app/paths'
 	import { getCurrentUser } from '../data/data.remote'
+	import HelpPopover from './HelpPopover.svelte'
 
 	let {
 		mode,
 		generalQueueCount = 0,
+		communityQueueCount = 0,
 		myPapersCount = 0,
 		myPapersQueueCount = 0,
 		onModeChange = () => {}
@@ -37,12 +39,22 @@
 			</button>
 			<button
 				class="mode-btn"
-				class:active={mode === 'queue'}
-				onclick={() => onModeChange('queue')}
+				class:active={mode === 'csv-queue'}
+				onclick={() => onModeChange('csv-queue')}
 				disabled={generalQueueCount === 0}
 			>
 				📝 General Queue ({generalQueueCount})
 			</button>
+			{#if communityQueueCount > 0}
+				<button
+					class="mode-btn"
+					class:active={mode === 'community-queue'}
+					onclick={() => onModeChange('community-queue')}
+					disabled={communityQueueCount === 0}
+				>
+					🌐 Community ({communityQueueCount})
+				</button>
+			{/if}
 			{#if myPapersCount > 0}
 				<button
 					class="mode-btn"
@@ -61,6 +73,7 @@
 				📈 Stats
 			</button>
 		</div>
+		<HelpPopover side="bottom" align="end" sideOffset={2} iconSize={30} />
 		{#await getCurrentUser()}
 			<!-- Loading auth state -->
 		{:then user}
@@ -118,7 +131,6 @@
 	.auth-section {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
 		font-size: 0.875rem;
 	}
 

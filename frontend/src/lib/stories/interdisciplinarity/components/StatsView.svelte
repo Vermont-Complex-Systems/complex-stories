@@ -9,7 +9,8 @@
 		stats = {},
 		myAnnotations = [],
 		myPapers = [],
-		paperIds = []
+		paperIds = [],
+		generalPapers = []
 	} = $props()
 
 	let agreementData = $state(null)
@@ -93,12 +94,13 @@
 	const myOwnPapersAnnotations = $derived(
 		myAnnotations.filter(a => myPaperIds.includes(a.paper_id))
 	)
+	const generalPaperIds = $derived([...paperIds, ...generalPapers.map(p => p.id)])
 	const generalPapersAnnotations = $derived(
-		myAnnotations.filter(a => paperIds.includes(a.paper_id))
+		myAnnotations.filter(a => generalPaperIds.includes(a.paper_id))
 	)
 	// Papers not in either queue (e.g., from migrated data)
 	const otherPapersAnnotations = $derived(
-		myAnnotations.filter(a => !myPaperIds.includes(a.paper_id) && !paperIds.includes(a.paper_id))
+		myAnnotations.filter(a => !myPaperIds.includes(a.paper_id) && !generalPaperIds.includes(a.paper_id))
 	)
 
 	// Load agreement data
@@ -167,9 +169,9 @@
 			<div class="stat-value">{generalPapersAnnotations.length}</div>
 			<div class="stat-label">General Queue Progress</div>
 			<div class="stat-progress">
-				<div class="stat-progress-bar" style="width: {paperIds.length > 0 ? (generalPapersAnnotations.length / paperIds.length) * 100 : 0}%"></div>
+				<div class="stat-progress-bar" style="width: {generalPaperIds.length > 0 ? (generalPapersAnnotations.length / generalPaperIds.length) * 100 : 0}%"></div>
 			</div>
-			<div class="stat-sublabel">{generalPapersAnnotations.length} of {paperIds.length} papers</div>
+			<div class="stat-sublabel">{generalPapersAnnotations.length} of {generalPaperIds.length} papers</div>
 		</div>
 		{#if myPapers.length > 0}
 			<div class="stat-card">

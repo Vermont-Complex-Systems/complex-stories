@@ -547,21 +547,21 @@ async def get_general_queue_papers(
     db: AsyncSession = Depends(get_db_session)
 ):
     """
-    Get paper IDs for the general annotation queue.
+    Get full paper objects for the general annotation queue.
 
     Returns community-contributed papers (cached papers with in_general_queue=True).
-    Frontend should combine this with the static CSV papers.
+    Frontend will combine this with the static CSV paper IDs.
 
     Returns:
-        List of paper IDs that have been added to the general queue by authors
+        List of full paper objects that have been added to the general queue by authors
     """
-    query = select(CachedPaper.id).where(CachedPaper.in_general_queue == True)
+    query = select(CachedPaper).where(CachedPaper.in_general_queue == True)
     result = await db.execute(query)
-    community_paper_ids = [row[0] for row in result.fetchall()]
+    community_papers = result.scalars().all()
 
     return {
-        "community_papers": community_paper_ids,
-        "count": len(community_paper_ids)
+        "community_papers": [paper.to_dict() for paper in community_papers],
+        "count": len(community_papers)
     }
 
 

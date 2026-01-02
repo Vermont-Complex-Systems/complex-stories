@@ -1,6 +1,6 @@
 <script>
 	import { getUniquePaperIds } from '../data/loader.js'
-	import { getPaperById, annotatePaper, getCurrentUser, getMyAnnotations, getWorksByAuthor, getAnnotationStats, getCommunityQueuePapers } from '../data/data.remote'
+	import { getPaperById, annotatePaper, getCurrentUser, getMyAnnotations, getWorksByAuthor, getAnnotationStats, getAgreementData, getCommunityQueuePapers } from '../data/data.remote'
 	import FingerprintJS from '@fingerprintjs/fingerprintjs'
 	import { onMount } from 'svelte'
 	import TopBar from './TopBar.svelte'
@@ -15,18 +15,26 @@
 	let selectedRating = $state(null)
 	let isSubmitting = $state(false)
 	let error = $state(null)
-	let mode = $state('overview') // 'queue', 'my-papers-queue', 'overview', 'stats'
+	let mode = $state('overview') // 'csv-queue', 'community-queue', 'my-papers-queue', 'overview', 'stats'
 	let myAnnotations = $state([])
 	let myPapers = $state([]) // User's own papers from ORCID/OpenAlex
 	let annotationCounts = $state({}) // Per-paper annotation counts
 	let stats = $state({}) // Full stats object
-	let paperIds = $state([]) // Combined general queue (CSV + community papers)
+	let agreementData = $state(null) // Agreement data for sorting by disagreement
+	let paperIds = $state([]) // CSV paper IDs only
+	let generalPapers = $state([]) // Community papers with full objects
 
 	// Filter to only show uncompleted papers in queue modes
-	const generalQueuePaperIds = $derived(
+	const csvQueuePaperIds = $derived(
 		paperIds.filter(paperId =>
 			!myAnnotations.find(a => a.paper_id === paperId)
 		)
+	)
+
+	const communityQueuePaperIds = $derived(
+		generalPapers
+			.filter(paper => !myAnnotations.find(a => a.paper_id === paper.id))
+			.map(paper => paper.id)
 	)
 
 	const myPapersQueueIds = $derived(
@@ -36,11 +44,13 @@
 	)
 
 	// Get current paper ID based on mode
-	const activePaperIds = $derived(
-		mode === 'queue' ? generalQueuePaperIds :
-		mode === 'my-papers-queue' ? myPapersQueueIds :
-		paperIds
-	)
+	const activePaperIds = $derived.by(() => {
+		if (mode === 'csv-queue') return csvQueuePaperIds
+		if (mode === 'community-queue') return communityQueuePaperIds
+		if (mode === 'my-papers-queue') return myPapersQueueIds
+		// Overview mode - combine all
+		return [...paperIds, ...generalPapers.map(p => p.id)]
+	})
 
 	// Initialize fingerprint and load annotations on mount
 	onMount(async () => {
@@ -85,23 +95,24 @@
 		}
 	})
 
-	// Load paper queue (CSV + community papers)
+	// Load paper queue (CSV IDs + community paper objects)
 	async function loadPaperQueue() {
 		try {
-			// Get CSV papers
-			const csvPapers = getUniquePaperIds()
+			// Get CSV papers (just IDs)
+			paperIds = getUniquePaperIds()
 
-			// Get community-contributed papers
+			// Get community-contributed papers (full objects)
 			const communityData = await getCommunityQueuePapers()
-			const communityPapers = communityData.community_papers || []
+			generalPapers = communityData.community_papers || []
 
-			// Merge and deduplicate
-			const allPapers = [...csvPapers, ...communityPapers]
-			paperIds = Array.from(new Set(allPapers))
+			// Remove duplicates: if a paper is in both CSV and community, keep community version
+			const communityIds = new Set(generalPapers.map(p => p.id))
+			paperIds = paperIds.filter(id => !communityIds.has(id))
 		} catch (err) {
 			console.error('Failed to load community queue:', err)
 			// Fall back to just CSV papers
 			paperIds = getUniquePaperIds()
+			generalPapers = []
 		}
 	}
 
@@ -135,6 +146,15 @@
 		}
 	}
 
+	// Load agreement data for sorting
+	async function loadAgreementData() {
+		try {
+			agreementData = await getAgreementData()
+		} catch (err) {
+			console.error('Failed to load agreement data:', err)
+		}
+	}
+
 	// Switch modes
 	async function setMode(newMode) {
 		mode = newMode
@@ -144,6 +164,7 @@
 		if (mode === 'overview' || mode === 'stats') {
 			await loadAnnotations()
 			await loadStats()
+			await loadAgreementData()
 		}
 	}
 
@@ -222,7 +243,8 @@
 
 <TopBar
 	{mode}
-	generalQueueCount={generalQueuePaperIds.length}
+	generalQueueCount={csvQueuePaperIds.length}
+	communityQueueCount={communityQueuePaperIds.length}
 	myPapersCount={myPapers.length}
 	myPapersQueueCount={myPapersQueueIds.length}
 	onModeChange={setMode}
@@ -231,22 +253,30 @@
 <div class="dataset-preview-container">
 	<div class="container">
 		{#if mode === 'stats'}
-			<StatsView {stats} {myAnnotations} {myPapers} {paperIds} />
+			<StatsView {stats} {myAnnotations} {myPapers} {paperIds} {generalPapers} />
 		{:else if mode === 'overview'}
 			<OverviewTable
 				{paperIds}
+				{generalPapers}
 				{myPapers}
 				{myAnnotations}
 				{myPapersQueueIds}
 				{annotationCounts}
-				generalQueuePaperIds={generalQueuePaperIds}
+				{agreementData}
+				csvQueuePaperIds={csvQueuePaperIds}
+				communityQueuePaperIds={communityQueuePaperIds}
 				onJumpToPaper={handleJumpToPaper}
+				onSortedIdsChange={(csvIds, communityPapersList, myPapersList) => {
+					paperIds = csvIds
+					generalPapers = communityPapersList
+					myPapers = myPapersList
+				}}
 			/>
-		{:else if mode === 'my-papers-queue' || mode === 'queue'}
+		{:else if mode === 'csv-queue' || mode === 'community-queue' || mode === 'my-papers-queue'}
 			<QueueHeader
 				{mode}
 				totalAnnotated={myAnnotations.length}
-				totalPapers={paperIds.length + myPapers.length}
+				totalPapers={paperIds.length + generalPapers.length + myPapers.length}
 				remainingInQueue={activePaperIds.length}
 				{error}
 			/>
