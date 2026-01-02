@@ -27,9 +27,10 @@ const clean = data
     keyword: strToArray(d.keyword),
     filters: addFaves(strToArray(d.filters), d.faves),
     external: d.external === 'true',
-    href: d.external === 'true' 
+    hide_home: d.hide_home === 'true',
+    href: d.external === 'true'
       ? (d.url_alt || d.url)  // Use url_alt if provided, otherwise url
-      : `/${d.url}`,      
+      : `/${d.url}`,
     isExternal: d.external === 'true'
   }))
   .filter((d) => !d.hide_all)
