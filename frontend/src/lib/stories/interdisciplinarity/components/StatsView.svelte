@@ -1,6 +1,7 @@
 <script>
 	import RatingBarChart from './RatingBarChart.svelte'
 	import AgreementMatrix from './AgreementMatrix.svelte'
+	import SearchInput from './SearchInput.svelte'
 	import { getAgreementData } from '../data/data.remote'
 	import { onMount } from 'svelte'
 
@@ -233,12 +234,7 @@
 		</p>
 
 		<div class="search-controls">
-			<input
-				type="text"
-				bind:value={searchQuery}
-				placeholder="Search by paper title or ID..."
-				class="search-input"
-			/>
+			<SearchInput bind:value={searchQuery} placeholder="Search by paper title or ID..." />
 			{#if searchQuery}
 				<button onclick={() => searchQuery = ''} class="clear-btn">
 					Clear
@@ -395,22 +391,6 @@
 		display: flex;
 		gap: 0.5rem;
 		margin-bottom: 1.5rem;
-	}
-
-	.search-input {
-		flex: 1;
-		padding: 0.75rem 1rem;
-		border: 1px solid #d1d5db;
-		border-radius: 6px;
-		font-size: 0.875rem;
-		background: white;
-		color: #1a1a1a;
-	}
-
-	.search-input:focus {
-		outline: none;
-		border-color: #6b7280;
-		box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1);
 	}
 
 	.clear-btn {

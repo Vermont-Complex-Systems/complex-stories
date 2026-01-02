@@ -1,5 +1,7 @@
 <script>
 	import { getPaperById } from '../data/data.remote'
+	import SearchInput from './SearchInput.svelte'
+	import FilterButtons from './FilterButtons.svelte'
 
 	let {
 		paperIds = [],
@@ -11,11 +13,40 @@
 		onJumpToPaper = (mode, index) => {}
 	} = $props()
 
+	let searchQuery = $state('')
+	let statusFilter = $state('all')
+
+	const statusOptions = [
+		{ value: 'all', label: 'All' },
+		{ value: 'completed', label: 'Completed' },
+		{ value: 'pending', label: 'Pending' }
+	]
+
 	const totalPapers = $derived(paperIds.length + myPapers.length)
 	const allPapersList = $derived([
 		...paperIds.map(id => ({ id, source: 'general' })),
 		...myPapers.map(p => ({ id: p.id, source: 'my-papers', paper: p }))
 	])
+
+	// Helper to check if paper matches search/filter
+	function matchesFilters(item, paperData, annotation) {
+		// Status filter
+		if (statusFilter === 'completed' && !annotation) return false
+		if (statusFilter === 'pending' && annotation) return false
+
+		// Text search
+		if (searchQuery.trim()) {
+			const query = searchQuery.toLowerCase()
+			const title = (paperData?.title || item.paper?.title || '').toLowerCase()
+			const authors = (paperData?.authors || item.paper?.authors || []).join(' ').toLowerCase()
+
+			if (!title.includes(query) && !authors.includes(query)) {
+				return false
+			}
+		}
+
+		return true
+	}
 
 	const ratingLabels = ['Not at all', 'Not really', 'Undecided', 'Somewhat', 'Very much']
 </script>
@@ -27,6 +58,11 @@
 		({paperIds.length} general + {myPapers.length} your papers)
 	</p>
 </header>
+
+<div class="filters">
+	<SearchInput bind:value={searchQuery} placeholder="Filter by title or author..." />
+	<FilterButtons bind:value={statusFilter} options={statusOptions} />
+</div>
 
 <div class="overview-table">
 	<table>
@@ -46,7 +82,7 @@
 		<tbody>
 			{#each allPapersList as item, index}
 				{@const annotation = myAnnotations.find(a => a.paper_id === item.id)}
-				{#if item.source === 'my-papers'}
+				{#if item.source === 'my-papers' && matchesFilters(item, item.paper, annotation)}
 					<!-- User's own paper - already have data -->
 					<tr class:annotated={annotation} class="my-paper">
 						<td class="number-col">{index + 1}</td>
@@ -90,10 +126,11 @@
 							</button>
 						</td>
 					</tr>
-				{:else}
+				{:else if item.source === 'general'}
 					<!-- General dataset paper - need to fetch -->
 					{#await getPaperById(item.id) then paperData}
-						<tr class:annotated={annotation}>
+						{#if matchesFilters(item, paperData, annotation)}
+							<tr class:annotated={annotation}>
 							<td class="number-col">{index + 1}</td>
 							<td class="source-col"><span class="source-badge general">General</span></td>
 							<td class="title-col">{paperData?.title || 'Loading...'}</td>
@@ -130,6 +167,7 @@
 								</button>
 							</td>
 						</tr>
+						{/if}
 					{/await}
 				{/if}
 			{/each}
@@ -153,6 +191,13 @@
 		margin: 0 0 1.5rem 0;
 	}
 
+	.filters {
+		display: flex;
+		gap: 0.75rem;
+		margin-bottom: 1rem;
+		align-items: center;
+	}
+
 	.overview-table {
 		background: white;
 		border: 1px solid #e0e0e0;
@@ -168,18 +213,20 @@
 
 	th {
 		background: #f5f5f5;
-		padding: 0.75rem;
+		padding: 0.5rem 0.75rem;
 		text-align: left;
 		font-weight: 600;
 		font-size: 0.875rem;
 		color: #666;
 		border-bottom: 2px solid #e0e0e0;
+		line-height: 1.2;
 	}
 
 	td {
-		padding: 0.75rem;
+		padding: 0.5rem 0.75rem;
 		border-bottom: 1px solid #f0f0f0;
 		font-size: 0.875rem;
+		line-height: 1.3;
 	}
 
 	tr:last-child td {
