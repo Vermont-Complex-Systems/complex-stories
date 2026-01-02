@@ -175,9 +175,11 @@ $effect(() => {
     </section>
 </article>
 
-<!-- <div class="corner-image" class:hidden={conclusionVisible || dashboardVisible}>
-    <img src="{base}/common/thumbnails/screenshots/dark-data.png" alt="Dark data visualization" />
-</div> -->
+<div class="corner-image" class:hidden={conclusionVisible || dashboardVisible}>
+    <a href="{base}/">
+        <img src="{base}/common/thumbnails/screenshots/underwaterBits2-angler-fish.png" alt="Dark data visualization" />
+    </a>
+</div>
 
 <style>
 /* -----------------------------
@@ -288,7 +290,7 @@ $effect(() => {
     position: fixed;
     bottom: 2rem;
     left: 2rem;
-    max-width: 10rem;
+    max-width: 14rem;
     z-index: 10;
     opacity: 1;
     transition: opacity 0.6s ease;
