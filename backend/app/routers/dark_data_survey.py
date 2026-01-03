@@ -7,9 +7,6 @@ from ..models.dark_data_survey import DarkDataSurvey, SurveyAnswerRequest, Surve
 # Public router for survey responses
 router = APIRouter()
 
-# Admin router for administrative functions
-admin_router = APIRouter()
-
 # Value to ordinal mapping (same as frontend)
 VALUE_TO_ORDINAL = {
     'consent': {'accepted': 1, 'declined': 0},
@@ -116,16 +113,3 @@ async def get_survey_response(
         raise HTTPException(status_code=404, detail="Survey response not found")
 
     return SurveyResponse.model_validate(survey_response)
-
-
-@admin_router.put("/dark-data-survey/{fingerprint_id}")
-async def update_dark_data_survey_by_fingerprint(
-    fingerprint_id: int,
-    db: AsyncSession = Depends(get_db_session)
-):
-    """Update an academic research group entry by database ID."""
-
-    query = select(DarkDataSurvey).where(DarkDataSurvey.fingerprint == fingerprint_id)
-    result = await db.execute(query)
-
-    pass

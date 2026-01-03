@@ -85,7 +85,6 @@ app.include_router(scisciDB.admin_router, prefix="/admin/scisciDB", tags=["admin
 app.include_router(datalakes.admin_router, prefix="/admin/datalakes", tags=["admin"], include_in_schema=False)
 app.include_router(open_academic_analytics.admin_router, prefix="/admin/open-academic-analytics", tags=["admin"], include_in_schema=False)
 app.include_router(annotations.admin_router, prefix="/admin/annotations", tags=["admin"], include_in_schema=False)
-app.include_router(dark_data_survey.admin_router, prefix="/admin", tags=["admin"], include_in_schema=False)
 
 
 @app.get("/")

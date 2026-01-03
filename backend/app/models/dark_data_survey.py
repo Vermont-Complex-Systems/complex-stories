@@ -41,9 +41,9 @@ class SurveyUpsertRequest(BaseModel):
 class SurveyResponse(BaseModel):
     id: int
     fingerprint: str
-    consent: Optional[str] = None
+    consent: Optional[int] = None
     socialMediaPrivacy: Optional[int] = None
-    platformMatters: Optional[int] = None
+    platformMatters: Optional[str] = None
     institutionPreferences: Optional[int] = None
     demographicsMatter: Optional[int] = None
     relativePreferences: Optional[int] = None

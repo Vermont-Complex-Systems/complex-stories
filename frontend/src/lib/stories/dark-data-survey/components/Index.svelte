@@ -1,13 +1,8 @@
 <script>
 import { base } from "$app/paths";
-import { scaleSequential } from 'd3-scale';
-import { interpolateRdYlGn } from 'd3-scale-chromatic';
 import { innerWidth, outerHeight } from 'svelte/reactivity/window';
 
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
-
-import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
-import Scrolly from '$lib/components/helpers/Scrolly.svelte';
 
 import TrustEvo from './TrustEvo.svelte';
 import Survey from './Survey.svelte';
@@ -67,10 +62,6 @@ function saveAnswer(field, value) {
         return Promise.reject(new Error(`Unknown field: ${field}`));
     }
 }
-
-// Generate people data using imported function
-
-let selectedDemographic = $state('white_men');
 
 // Scrolly state management - separate states for survey and story
 let surveyScrollyState = $state({
