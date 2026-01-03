@@ -11,11 +11,7 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
-		"lint": "prettier --check .",
-		"db:push": "drizzle-kit push",
-		"db:generate": "drizzle-kit generate",
-		"db:migrate": "drizzle-kit migrate",
-		"db:studio": "drizzle-kit studio"
+		"lint": "prettier --check ."
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^6.0.0",
@@ -24,10 +20,7 @@
 		"@sveltejs/enhanced-img": "^0.6.1",
 		"@sveltejs/kit": "^2.42.2",
 		"@sveltejs/vite-plugin-svelte": "^6.2.0",
-		"@types/better-sqlite3": "^7.6.12",
 		"@types/node": "^20",
-		"drizzle-kit": "^0.30.2",
-		"drizzle-orm": "^0.40.0",
 		"prettier": "^3.4.2",
 		"prettier-plugin-svelte": "^3.3.3",
 		"svelte": "^5.0.0",
