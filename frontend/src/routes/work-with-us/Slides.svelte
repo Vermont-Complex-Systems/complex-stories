@@ -5,13 +5,26 @@
     import { reveal } from 'svelte-reveal';
 </script>
 
+
+<!-- - displaying **private** data in a secure way
+- team annotation
+- **managing data pipelines** - interoperability of data sharing through API
+- stories - **interactive press release**
+- website for larger project, or even research program
+- participatory and interactive surveys -->
+
 <!-- Slide 1: Title -->
-<section class="slide slide-title column-wide">
+<section class="slide slide-hero column-wide">
+	<div class="content-section">
 	<h1>How to work with us!</h1>
-	<h3>Let's work together to write sustainable and reproducible software.</h3>
+	<h3>Complex Stories is about broadening the audience of scientific research with whimsical and interactive data stories, while showcasing best software practices to ensure sustainability of research software. We are deeply inspired and grateful to the folks at <a href="https://pudding.cool/">The Pudding</a> for their work in the open.</h3>
+	</div>
 	<div class="author-info">
-		<p>Jonathan St-Onge</p>
-		<p>07.08.2025</p>
+		<p>- Jonathan St-Onge</p>
+		<p>2.12.2025</p>
+	</div>
+	<div class="hero-image">
+		<img src="{base}/back-to-the-future.png" alt="back-to-the-future" />
 	</div>
 </section>
 
@@ -22,19 +35,19 @@
 	<div class="content-section">
 	<Label>Who am I?</Label>
         <ul>
-            <li>Ph.D. in Complex Systems and Data Science at the University of Vermont — with roots in the humanities, which gives me a unique perspective on interdisciplinary collaboration.</li>
-            <li>As a research software engineer, I help research groups accelerate and strengthen their work by adopting <strong>best software practices</strong> in academia, including:</li>
+         	<li><a href="{base}/author/jonathan-st-onge">Jonathan St-Onge</a> holds a Ph.D. in Complex Systems and Data Science from the University of Vermont, where he was a <a href="https://verso.w3.uvm.edu/">VERSO</a> PhD Fellow. His thesis on theoretical models of groups in network science was completed under Professor Laurent Hébert-Dufresne's supervision as a member of the <a href="https://joint-lab.github.io/people/jonathan-st-onge/">Joint-lab</a>. With roots in the humanities, he brings an interdisciplinary perspective to complex systems research.</li>
+            <li>As a research software engineer, he helps research groups accelerate and strengthen their computational capabilities by promoting <em>best software practices</em> in academia, including:</li>
             <ul>
-                <li>Writing <strong>sustainable code</strong> that can outlive its original author — reducing technical debt and enabling long-term research continuity.</li>
-                <li>Packaging software that is <strong>adequately tested</strong>, increasing its epistemic reliability and reproducibility.</li>
-                <li><strong>Promoting community practices</strong> that bridge industry standards with academic workflows — improving team collaboration, onboarding, and project management.</li>
+                <li>Writing <em>sustainable code</em> that can outlive its original author — reducing technical debt and enabling long-term research continuity.</li>
+                <li>Packaging software that is <em>adequately tested</em>, increasing its epistemic reliability and reproducibility.</li>
+                <li><em>Promoting community practices</em> that bridge industry standards with academic workflows — improving team collaboration, onboarding, and project management.</li>
             </ul>	
-            <li>Thanks to my humanities background, I’m well-equipped to write grants, collaborate across disciplines, and support diverse teams — especially those new to coding or computational tools.</li>
+            <li>With his experience in academia, he can help writing grants, collaborate across disciplines, and support diverse teams — especially those new to coding or computational tools.</li>
         </ul>	
     </div>
 
 	
-	<div class="image-section">
+	<div class="image-section" style="transform:translateY(50%)">
 		<a href="{base}/author/jonathan-st-onge">
 			<img src="{base}/common/assets/authors/jso.jpg" alt="Jonathan St-Onge" />
 		</a>
@@ -44,15 +57,15 @@
 <Divider />
 
 <!-- Slide 3a: Short Projects -->
-<section class="slide slide-three-column column-wide"  use:reveal={{ delay: 100  }}>
+<section class="slide slide-three-column column-wide"  use:reveal={{ delay: 50  }}>
 	<div class="content-section">
         <Label variant="secondary">"1-2" months projects</Label>
         <p>We can write code to help you accomplish specific research tasks — fast. These are short, high-impact collaborations that can be funded through fee-for-service mechanisms or grants.</p>
         <ul>
-		    <li>Projects with <strong>clear, established goals</strong>, where the path to delivery is well defined.</li>
-            <li>We have <strong>prior experience</strong> with similar open-source tools, so we can deliver quickly and reliably, <em>ceteris paribus</em>.</li>
-            <li>Often, <strong>the data is familiar</strong> territory — data you already collected and understand, making the collaboration efficient and low-risk.</li>
-            <li>Typical outcomes include interactive dashboards, lightweight web tools, or storytelling components that help share key findings with the broader public or stakeholders.</li>
+		    <li>Projects with <em>clear, established goals</em>, where the path to delivery is well defined.</li>
+            <li>We have <em>prior experience</em> with similar open-source tools, so we can deliver quickly and reliably, <em>ceteris paribus</em>.</li>
+            <li><em>The data is familiar</em> territory — data you already collected and understand, making the collaboration efficient and low-risk.</li>
+            <li>Typical outcomes include <a href="{base}/allotaxonometry">interactive dashboards</a>, what we call <a href={base}/friends-funnier-than-you-are>interactive press releases</a> and other storytelling components of <a href="https://vermontcomplexsystems.org/events/cnww/">all kinds</a> that help share key findings with the broader public or stakeholders.</li>
         </ul>
     </div>
 	
@@ -62,11 +75,14 @@
 	
 	<div class="image-section">
 		<div class="image-grid">
-			<a href="{base}/networks-fast-and-slow" class="image-item primary">
-				<img src="{base}/common/thumbnails/screenshots/networks-fast-and-slow.jpg" alt="Networks Fast and Slow Project" />
+			<a href="{base}/friends-funnier-than-you-are" class="image-item primary">
+				<img src="{base}/common/thumbnails/screenshots/friends-funnier-than-you-are.jpg" alt="Friends Funnier Than You Are Project" />
 			</a>
 			<a href="{base}/allotax-scrolly" class="image-item secondary">
 				<img src="{base}/common/thumbnails/screenshots/allotax-scrolly.jpg" alt="Allotax Scrolly Project" />
+			</a>
+			<a href="https://vermontcomplexsystems.org/events/cnww/" class="image-item tertiary">
+				<img src="{base}/common/thumbnails/screenshots/cnww.png" alt="CNWW" />
 			</a>
 		</div>
 	</div>
@@ -78,11 +94,11 @@
 <section class="slide slide-three-column column-wide" use:reveal={{ delay: 100  }}>
 	<div class="content-section">
         <Label variant="secondary">"6" months projects</Label>
-        <p>We collaborate to build reusable software components and infrastructure tailored to your research workflows — helping your group move faster while ensuring sustainability.</p>
+        <p>We collaborate to build reusable software components and infrastructure tailored to your research workflows — helping your group to better work together while ensuring sustainability.</p>
         <ul>
-            <li>You might have a project inspired by others’ work that needs <strong>new data collection</strong> or <strong>deployment of online platforms</strong> with interactive features.</li>
-            <li>Together, we <strong>adopt sustainable software practices from the outset</strong>, improving reproducibility and reducing technical debt later on.</li>
-            <li>We leverage existing infrastructure we've built at VERSO — like virtual machines and APIs — to avoid reinventing the wheel and accelerate development.</li>
+            <li>You might have a project inspired by others’ work that needs <em>new data collection</em> or <em>deployment of online platforms</em> with interactive features.</li>
+			<li>We work on developing novel methods to conduct <em>participatory surveys</em>, combining expertise from interactive story telling with qualitative data collection. We have experience sharing and communicating <em>sensitive data</em> while respecting the privacy of individual data.</li> 
+            <li>We leverage existing digital infrastructure we've built at VERSO — like research virtual machine and APIs — to avoid reinventing the wheel and accelerate development.</li>
         </ul>
     </div>
 
@@ -93,8 +109,8 @@
 	
 	<div class="image-section">
 		<div class="image-grid">
-            <a href="https://verso-uvm.github.io/Vermont-Livability-Map/" target="_blank" class="image-item primary">
-                <img src="{base}/common/thumbnails/screenshots/vermont-livability-map.jpg" alt="Vermont Livability Map" />
+            <a href="https://wikimedia.uvm.edu/" target="_blank" class="image-item primary">
+                <img src="{base}/common/thumbnails/screenshots/wikiwrangler.png" alt="Wiki Wrangler" />
             </a>
 			<a href="{base}/open-academic-analytics" target="_blank" class="image-item secondary">
 				<img src="{base}/common/thumbnails/screenshots/open-academic-analytics.jpg" alt="Open Academic Analytics Project" />
@@ -109,11 +125,11 @@
 <section class="slide slide-three-column column-wide" use:reveal={{ delay: 100  }}>
 	<div class="content-section">
 	<Label variant="secondary">Longer-term partnerships</Label>
-        <p>These are deep collaborations where we anticipate complexity and co-create innovative research tools. While the future is hard to predict, our experienced team helps you stay on course and avoid costly pitfalls.</p>
+        <p>These are deep collaborations where we anticipate complexity and co-create innovative research tools. While the future is hard to predict, we help you stay on course and avoid costly pitfalls.</p>
         <ul>
-            <li><strong>Tailored projects</strong> that explore new approaches — such as integrating a front-end data interface with a back-end API and database for custom data collection.</li>
-            <li>We build <strong>robust and secure infrastructure</strong> that supports your research not just today, but for years to come — designed with long-term maintenance in mind.</li>
-            <li>We offer <strong>mentorship</strong> in modern software practices, helping your team learn approaches from industry that are rarely taught in academia — improving onboarding, team coordination, and future grant competitiveness.</li>
+            <li><em>Tailored projects</em> that explore new approaches — such as integrating a front-end data interface with a back-end API and database for custom data collection.</li>
+            <li>We build <em>robust and secure infrastructure</em> that supports your research not just today, but for years to come — designed with long-term maintenance in mind.</li>
+            <li>We offer <em>mentorship</em> in modern software practices, helping your team learn approaches from industry that are rarely taught in academia — improving onboarding, team coordination, and future grant competitiveness.</li>
         </ul>
     </div>
 
@@ -123,9 +139,14 @@
 	</div>
 	
 	<div class="image-section">
-		<a href="https://catalogresearch.uvm.edu/" target="_blank" rel="noopener" class="single-image">
-			<img src="{base}/common/thumbnails/screenshots/explore-the-cat-project.jpg" alt="Explore the Cat Project" />
-		</a>
+		<div class="image-grid">
+			<a href="https://verso-uvm.github.io/Vermont-Livability-Map/" class="image-item primary">
+				<img src="{base}/common/thumbnails/screenshots/vermont-livability-map.jpg" alt="Vermont Zoning Atlas" />
+			</a>
+			<a href="https://catalogresearch.uvm.edu/" target="_blank" rel="noopener" class="image-item secondary">
+				<img src="{base}/common/thumbnails/screenshots/explore-the-cat-project.jpg" alt="Explore the Cat Project" />
+			</a>
+		</div>
 	</div>
 </section>
 
@@ -180,21 +201,22 @@
 	<div class="content-section">
 		<Label variant="primary">Why work with us?</Label>
 		<ul>
-			<li><strong>We help you focus on your research.</strong> We take care of the software side — clean, reliable, and well-structured — so you can spend more time thinking, writing, and analyzing.</li>
-			<li><strong>We build tools that last.</strong> Our code is tested, documented, and designed to be reused by others in your group or future projects.</li>
-			<li><strong>We understand how research works.</strong> With experience in both the humanities and data science, we can adapt to your methods and support your goals — including writing grants and onboarding collaborators.</li>
-			<li><strong>We support <s>messiness</s> learning along the way.</strong> Whether you're comfortable with code or just starting out, we share practices that can make your work easier and more reproducible.</li>
-			<li><strong>We’re part of a wider community.</strong> We stay connected to open science and research software communities, bringing in ideas and tools that align with academic values.</li>
+			<li><em>We help you focus on your research.</em> We take care of the software side — clean, reliable, and well-structured — so you can spend more time thinking, writing, and analyzing.</li>
+			<li><em>We build tools that last.</em> Our code is tested, documented, and designed to be reused by others in your group or future projects.</li>
+			<li><em>We understand how research works.</em> With experience in both the humanities and data science, we can adapt to your methods and support your goals — including writing grants and onboarding collaborators.</li>
+			<li><em>We support <s>messiness</s> learning along the way.</em> Whether you're comfortable with code or just starting out, we share practices that can make your work easier and more reproducible.</li>
+			<li><em>We’re part of a wider community.</em> We stay connected to open science and research software communities, bringing in ideas and tools that align with academic values.</li>
 		</ul>
 	</div>
 </section>
 
 
-
 <style>
 	/* ===== GLOBAL STYLES ===== */
 	:global(main:has(.column-wide)) {
-		max-width: none;
+		max-width: none;    
+		padding: 0 !important; /* Remove default padding to let column-screen handle spacing */
+
 	}
 
 	:global(p) {
@@ -203,24 +225,26 @@
 
 	/* ===== SLIDE LAYOUTS ===== */
 	.slide {
-		padding: 2rem 4.5rem 2rem 4.5rem !important;
+		padding: 2rem var(--margin-left) 2rem var(--margin-left) !important;
 		margin-bottom: 2rem;
 		max-width: none !important;
 	}
 
-	/* Title slide layout */
-	.slide-title {
+	/* Hero slide layout */
+	.slide-hero {
 		text-align: left;
 		max-width: 800px;
+		margin-top: 4rem;
 	}
 
-	.slide-title h1 {
+	.slide-hero h1 {
 		font-size: 4rem;
 	}
 
-	.slide-title h3 {
-		font-size: 1.5rem;
+	.slide-hero h3 {
+		font-size: 1.9rem;
 		margin-bottom: 0.1rem;
+		font-weight: 500;
 		color: #666;
 	}
 
@@ -258,7 +282,7 @@
 	}
 
 	.content-section p {
-		font-size: 1rem;
+		font-size: 1.2rem;
 		line-height: 1.5;
 		margin-bottom: 1.5rem;
 		color: #666;
@@ -275,6 +299,7 @@
 		color: #555;
 		position: relative;
 		padding-left: 1.5rem;
+		font-size: 1.2rem;
 		line-height: 1.4;
 	}
 
@@ -292,6 +317,15 @@
 		justify-content: center;
 		align-items: flex-start;
 		padding-top: 1rem;
+	}
+
+	.hero-image {
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+		padding-top: 5rem;
+		max-width: 500px;
+  		margin-inline: auto;
 	}
 
 	/* ===== SIMPLE IMAGE STACKING ===== */
@@ -318,16 +352,22 @@
 		pointer-events: none; /* Let clicks go to the link */
 	}
 
-	/* Simple stacking positions */
+	/* Simple stacking positions - further apart */
 	.image-item.primary {
 		z-index: 2;
-		transform: translateX(-40px) translateY(20px);
+		transform: translateX(-30px) translateY(40px);
 	}
 
 	.image-item.secondary {
 		z-index: 1;
-		transform: translateX(150px) translateY(-20px);
+		transform: translateX(150px) translateY(-30px);
 		opacity: 0.85;
+	}
+
+	.image-item.tertiary {
+		z-index: 1;
+		transform: translateX(60px) translateY(30px);
+		opacity: 0.9;
 	}
 
 	/* Simple hover: just bring to front and scale slightly */
@@ -336,6 +376,10 @@
 	}
 	
     .image-item.secondary:hover {
+		scale: 1.05; /* This won't interfere with transform */
+	}
+
+    .image-item.tertiary:hover {
 		scale: 1.05; /* This won't interfere with transform */
 	}
 
@@ -395,6 +439,18 @@
 		display: inline-block;
 	}
 
+	/* Special styling for inline content links */
+	.content-section a {
+		color: #333;
+		font-weight: 600;
+		text-decoration: underline;
+		transition: color 0.2s ease;
+	}
+
+	.content-section a:hover {
+		color: #666;
+	}
+
 	a:active {
 		transform: translateY(0);
 	}
@@ -413,7 +469,7 @@
     }
 
     .content-section ul ul li {
-        font-size: 0.9rem;
+        font-size: 1.0rem;
         margin-bottom: 0.8rem;
         padding-left: 1.8rem; /* Space for the glyph */
     }
@@ -444,8 +500,16 @@
 			padding-top: 0;
 		}
 
+		.hero-image {
+			padding-top: 0rem;
+		}
+
 		.content-section {
 			padding-right: 0;
+		}
+
+		.content-section li {
+			font-size: 1.05rem;
 		}
 
 		/* Simplify stacking on tablets */
@@ -456,6 +520,10 @@
 		.image-item.secondary {
 			transform: translateX(-15px) translateY(20px);
 		}
+
+		.image-item.tertiary {
+			transform: translateX(0px) translateY(25px);
+		}
 	}
 
 	@media (max-width: 768px) {
@@ -463,17 +531,46 @@
 			padding: 1rem 2rem 2rem 2rem !important;
 		}
 
-		.slide-title h1 {
+		/* Hide author image on mobile */
+		.slide-two-column .image-section {
+			display: none;
+		}
+
+		/* Stack project images below content on mobile */
+		.slide-three-column {
+			grid-template-columns: 1fr;
+			gap: 1.5rem;
+		}
+
+		.slide-three-column .image-section {
+			order: 2;
+			padding-top: 0;
+		}
+
+		.slide-three-column .image-grid {
+			max-width: 250px;
+			margin: 0 auto;
+		}
+
+		.slide-three-column .single-image img {
+			max-width: 250px;
+		}
+
+		/* Mobile hero styling */
+		.slide-hero {
+			margin-top: 1.5rem;
+		}
+
+		.slide-hero h1 {
 			font-size: 2rem;
 		}
 
-		.slide-title h3 {
-			font-size: 1.25rem;
+		.slide-hero h3 {
+			font-size: 1.4rem !important;
 		}
 
-		.author-info {
-			flex-direction: column;
-			gap: 0.5rem;
+		.author-info p {
+			font-size: 1.1rem !important;
 		}
 
 		/* Keep simple stacking on mobile */
@@ -482,11 +579,15 @@
 		}
 
 		.image-item.primary {
-			transform: translateX(10px) translateY(0px);
+			transform: translateX(-30px) translateY(30px);
 		}
 
 		.image-item.secondary {
-			transform: translateX(-10px) translateY(15px);
+			transform: translateX(30px) translateY(-15px);
+		}
+
+		.image-item.tertiary {
+			transform: translateX(0px) translateY(35px);
 		}
 
 		.copyright {

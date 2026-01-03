@@ -3,9 +3,6 @@ import * as d3 from "d3";
 import { Allotaxonograph } from 'allotaxonometer-ui';
 import { parseDataFile } from './utils.ts';
 
-import boys1895 from './data/boys-1895.json';
-import boys1968 from './data/boys-1968.json';
-
 // =============================================================================
 // UI STATE
 // =============================================================================
@@ -19,6 +16,11 @@ export const uiState = $state({
         enabled: true,
         maxRows: 10000,
         warnThreshold: 5000
+    },
+    yearRange: {
+        years: [1991, 1993],
+        min: 1880,
+        max: 2020
     }
 });
 
@@ -28,16 +30,6 @@ export const uiState = $state({
 
 export const alphas = d3.range(0,18).map(v => +(v/12).toFixed(2)).concat([1, 2, 5, Infinity]);
 
-// =============================================================================
-// MAIN ALLOTAXONOGRAPH CLASS
-// =============================================================================
-
-export const allotax = new Allotaxonograph(
-    boys1895, 
-    boys1968, 
-    0.58, 
-    ['Boys 1895', 'Boys 1968']
-);
 
 // =============================================================================
 // UI ACTIONS
@@ -78,6 +70,9 @@ export async function handleFileUpload(file: File, system: 'sys1' | 'sys2') {
             const fileInfo = result.meta ? 
                 ` (${result.meta.processedRows.toLocaleString()} rows, ${result.fileType?.toUpperCase()})` :
                 ` (${result.fileType?.toUpperCase()})`;
+
+            console.log(allotax.sys1)
+            console.log(allotax.sys1)
                 
             uiState.uploadStatus = `${system.toUpperCase()}: ${result.fileName} loaded successfully!${fileInfo}`;
             

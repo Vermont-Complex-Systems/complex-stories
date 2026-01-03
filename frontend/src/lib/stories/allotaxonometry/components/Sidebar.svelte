@@ -5,6 +5,7 @@
     import AlphaControl from './sidebar/AlphaControl.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
     import StatusCard from './sidebar/StatusCard.svelte';
+    import YearSlider from './sidebar/YearSlider.svelte';
     
     import { 
         allotax,
@@ -35,10 +36,10 @@
     
     {#if !uiState.sidebarCollapsed}
         <div class="sidebar-body">
-            <Accordion.Root type="multiple" value={["upload", "alpha", "info"]} class="accordion">
-                
+            <Accordion.Root type="multiple" value={["upload", "years", "alpha", "info"]} class="accordion">
+
                 <!-- Direct Click Upload -->
-                <MultiFileUpload 
+                <MultiFileUpload
                     bind:sys1={allotax.sys1}
                     bind:sys2={allotax.sys2}
                     bind:title={allotax.title}
@@ -46,16 +47,34 @@
                     uploadStatus={uiState.uploadStatus}
                     uploadWarnings={uiState.uploadWarnings}
                 />
-                
+
                 <Separator.Root/>
-                
+
+                <!-- Year Range Slider -->
+                <Accordion.Item value="years" class="accordion-item">
+                    <Accordion.Trigger class="accordion-trigger">
+                        <span>Time Period</span>
+                        <span class="year-display">{uiState.yearRange.years[0]} - {uiState.yearRange.years[1]}</span>
+                    </Accordion.Trigger>
+                    <Accordion.Content class="accordion-content">
+                        <YearSlider
+                            bind:value={uiState.yearRange.years}
+                            min={uiState.yearRange.min}
+                            max={uiState.yearRange.max}
+                            label="Baby Names Period"
+                        />
+                    </Accordion.Content>
+                </Accordion.Item>
+
+                <Separator.Root/>
+
                 <!-- Alpha Control -->
-                <AlphaControl 
+                <AlphaControl
                     {allotax}
                     bind:alphaIndex={alphaIndex}
-                    {alphas} 
+                    {alphas}
                 />
-                
+
                 <Separator.Root/>
                 
                 <!-- Data Info -->
@@ -211,6 +230,12 @@
     @keyframes pulse {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
+    }
+
+    .year-display {
+        font-size: var(--12px);
+        color: var(--color-text-secondary);
+        font-weight: var(--font-weight-normal);
     }
 
     /* Accordion styles */
