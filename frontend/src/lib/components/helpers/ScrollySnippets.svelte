@@ -1,11 +1,26 @@
 <script module>
     import Scrolly from '$lib/components/helpers/Scrolly.svelte';
+    import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
 
-    export { scrollyContent, surveyScrollyContent };
+    export { scrollyContent, renderTextContent };
 </script>
 
-<!-- Generic scrolly wrapper for story content -->
-{#snippet scrollyContent(steps, state, contentRenderer)}
+<!-- Shared snippet for rendering common text content types (html, markdown, math) -->
+{#snippet renderTextContent(item)}
+    {#if item.type === "html"}
+        {@html item.value}
+    {:else if item.type === "markdown"}
+        <Md text={item.value}/>
+    {:else if item.type === "math"}
+        <div class="plot-container">
+            <Md text={item.value}/>
+        </div>
+    {/if}
+{/snippet}
+
+<!-- Generic scrolly wrapper for story content
+     Uses renderTextContent by default, but allows custom contentRenderer for stories with components -->
+{#snippet scrollyContent(steps, state, contentRenderer = renderTextContent)}
     <div class="scrolly-content">
         <div class="spacer"></div>
         <Scrolly bind:value={state.scrollyIndex}>
@@ -14,23 +29,6 @@
                 <div class="step" class:active class:mobile={state.isMobile} class:tablet={state.isTablet}>
                     <div class="step-content">
                         {@render contentRenderer(step, active)}
-                    </div>
-                </div>
-            {/each}
-        </Scrolly>
-        <div class="spacer"></div>
-    </div>
-{/snippet}
-
-<!-- Survey-specific scrolly wrapper -->
-{#snippet surveyScrollyContent(surveyItems, state, contentRenderer)}
-    <div class="scrolly-content survey-scrolly">
-        <Scrolly bind:value={state.scrollyIndex}>
-            {#each surveyItems as item, i}
-                {@const active = state.scrollyIndex === i}
-                <div class="step" class:active class:mobile={state.isMobile} class:tablet={state.isTablet}>
-                    <div class="step-content">
-                        {@render contentRenderer(item, active)}
                     </div>
                 </div>
             {/each}
@@ -122,5 +120,14 @@
         :global(.survey-scrolly .step-content) {
             max-width: 300px;
         }
+    }
+
+    /* Content rendering styles */
+    .plot-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 0;
+        padding: 0;
     }
 </style>

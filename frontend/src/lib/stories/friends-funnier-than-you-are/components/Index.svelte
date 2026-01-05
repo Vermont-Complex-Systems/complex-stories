@@ -6,7 +6,7 @@ import BranchingNetwork from "./BranchingNetwork.svelte";
 import SelfReinforcingNetwork from "./SelfReinforcingNetwork.svelte";
 import LogLogPlot from "./LogLogPlot.svelte";
 
-import { renderTextContent } from '$lib/components/helpers/ContentSnippets.svelte';
+import { renderTextContent } from '$lib/components/helpers/ScrollySnippets.svelte';
 
 let { story, data } = $props();
 

@@ -1,15 +1,17 @@
 <script>
+import { onMount } from 'svelte';
 import { base } from "$app/paths";
 import { innerWidth, outerHeight } from 'svelte/reactivity/window';
 
 import { generateFingerprint } from '$lib/utils/browserFingerprint.js';
 
 import TrustEvo from './TrustEvo.svelte';
-import Survey from './Survey.svelte';
 import ConsentPopup from './ConsentPopup.svelte';
 import Dashboard from './Dashboard.svelte';
+import DemographicsBox from './Survey.DemographicsBox.svelte';
 
-import { renderContent, scrollyContent } from './Snippets.svelte';
+import { scrollyContent, renderTextContent } from '$lib/components/helpers/ScrollySnippets.svelte';
+import { surveyScrollyContent } from '$lib/components/survey/SurveyScrolly.svelte';
 import { postAnswer, upsertAnswer } from '../data/data.remote.js';
 
 let { story, data } = $props();
@@ -17,48 +19,62 @@ let { story, data } = $props();
 // Consent state
 let hasConsented = $state(false);
 
-// Generate browser fingerprint using our utility
+// Generate browser fingerprint and create saveAnswer handler
 let userFingerprint = $state('');
+let saveAnswer = $derived(createSaveAnswerHandler(userFingerprint));
 
-$effect(() => {
-    if (typeof window !== 'undefined') {
-        generateFingerprint().then(fingerprint => {
-            userFingerprint = fingerprint;
-            console.log('Fingerprint loaded:', userFingerprint);
-        }).catch(err => {
-            console.error('Failed to load fingerprint:', err);
-        });
+onMount(async () => {
+    try {
+        userFingerprint = await generateFingerprint();
+        console.log('Fingerprint loaded:', userFingerprint);
+    } catch (err) {
+        console.error('Failed to load fingerprint:', err);
     }
 });
 
-// Helper to safely post answers - returns a promise for await usage
-function saveAnswer(field, value) {
-    if (!userFingerprint) {
-        console.warn('Fingerprint not ready yet, skipping save');
-        return Promise.resolve();
-    }
+// Survey answers - keys match question 'name' fields in copy.json
+let surveyAnswers = $state({
+    socialMediaPrivacy: '',
+    platformMatters: [],
+    relativePreferences: '',
+    govPreferences: '',
+    polPreferences: '',
+});
 
-    // Fields that need string-to-ordinal conversion
-    const stringToOrdinalFields = ['consent', 'socialMediaPrivacy', 'institutionPreferences', 'demographicsMatter'];
+/**
+ * Story-specific saveAnswer adapter
+ * Maps form field names to appropriate API calls based on field type
+ * Kept here to ensure field mapping stays in sync with surveyAnswers definition above
+ */
+function createSaveAnswerHandler(userFingerprint) {
+	return function saveAnswer(field, value) {
+		if (!userFingerprint) {
+			console.warn('Fingerprint not ready yet, skipping save');
+			return Promise.resolve();
+		}
 
-    // Fields that already have numeric values
-    const numericFields = ['relativePreferences', 'govPreferences', 'polPreferences', 'age', 'gender_ord', 'orientation_ord', 'race_ord'];
+		// Fields that need string-to-ordinal conversion
+		const stringToOrdinalFields = ['consent', 'socialMediaPrivacy', 'institutionPreferences', 'demographicsMatter'];
 
-    // Handle special cases
-    if (field === 'platformMatters') {
-        // Convert array to comma-separated string for storage
-        const stringValue = Array.isArray(value) ? value.join(',') : value;
-        return upsertAnswer({ fingerprint: userFingerprint, field, value: stringValue });
-    } else if (stringToOrdinalFields.includes(field)) {
-        return postAnswer({ fingerprint: userFingerprint, field, value });
-    } else if (numericFields.includes(field)) {
-        // Convert string numbers to integers
-        const numericValue = parseInt(value, 10);
-        return upsertAnswer({ fingerprint: userFingerprint, field, value: numericValue });
-    } else {
-        console.error(`Unknown field: ${field}`);
-        return Promise.reject(new Error(`Unknown field: ${field}`));
-    }
+		// Fields that already have numeric values
+		const numericFields = ['relativePreferences', 'govPreferences', 'polPreferences', 'age', 'gender_ord', 'orientation_ord', 'race_ord'];
+
+		// Handle special cases
+		if (field === 'platformMatters') {
+			// Convert array to comma-separated string for storage
+			const stringValue = Array.isArray(value) ? value.join(',') : value;
+			return upsertAnswer({ fingerprint: userFingerprint, field, value: stringValue });
+		} else if (stringToOrdinalFields.includes(field)) {
+			return postAnswer({ fingerprint: userFingerprint, field, value });
+		} else if (numericFields.includes(field)) {
+			// Convert string numbers to integers
+			const numericValue = parseInt(value, 10);
+			return upsertAnswer({ fingerprint: userFingerprint, field, value: numericValue });
+		} else {
+			console.error(`Unknown field: ${field}`);
+			return Promise.reject(new Error(`Unknown field: ${field}`));
+		}
+	};
 }
 
 // Scrolly state management - separate states for survey and story
@@ -68,7 +84,7 @@ let surveyScrollyState = $state({
     isTablet: false
 });
 
-let storyScrollyState = $state({ 
+let storyScrollyState = $state({
     scrollyIndex: undefined,
     isMobile: false,
     isTablet: false
@@ -114,12 +130,19 @@ $effect(() => {
 
 </script>
 
+
 <!-- Consent Popup -->
 <ConsentPopup onAccept={() => hasConsented = true} {userFingerprint} {saveAnswer} />
 
 <article id="dark-data-survey">
 
-    <Survey bind:scrollyState={surveyScrollyState} {userFingerprint} {saveAnswer} />
+    <!-- Survey Section -->
+    <section id="survey">
+        {@render surveyScrollyContent(data.survey, surveyScrollyState, userFingerprint, saveAnswer, surveyAnswers)}
+
+        <!-- Demographics questions after scrolly -->
+        <DemographicsBox {userFingerprint} {saveAnswer} />
+    </section>
 
     <div class="title">
         <h1>{data.title}</h1>
@@ -136,7 +159,9 @@ $effect(() => {
     </div>
 
     <section id="intro">
-        {@render renderContent(data.intro)}
+        {#each data.intro as item}
+            {@render renderTextContent(item)}
+        {/each}
     </section>
 
     <section id="story">
@@ -150,17 +175,15 @@ $effect(() => {
                     {conclusionVisible} />
             </div>
 
-            {#snippet storyContentRenderer(step, active)}
-                {@render renderContent([step])}
-            {/snippet}
-
-            {@render scrollyContent(data.steps, storyScrollyState, storyContentRenderer)}
+            {@render scrollyContent(data.steps, storyScrollyState)}
         </div>
     </section>
     
     <h2>Conclusion</h2>
     <section id="conclusion" bind:this={conclusionSection}>
-        {@render renderContent(data.conclusion)}
+        {#each data.conclusion as item}
+            {@render renderTextContent(item)}
+        {/each}
     </section>
 
     <section id="dashboard" bind:this={dashboardSection}>
@@ -183,6 +206,11 @@ $effect(() => {
     background-color: #2b2b2b;
     color: #ffffff;
     font-family: var(--sans);
+}
+
+/* Survey styling override */
+:global(#dark-data-survey #survey .survey-scrolly .step-content) {
+    font-family: 'Georgia', 'Times New Roman', Times, serif;
 }
 
 /* Headings */

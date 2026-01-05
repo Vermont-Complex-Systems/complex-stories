@@ -1,11 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, insert
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from ..core.database import get_db_session
-from ..models.dark_data_survey import DarkDataSurvey, SurveyAnswerRequest, SurveyUpsertRequest, SurveyResponse
+from ..models.dark_data_survey import DarkDataSurvey, SurveyAnswerRequest, SurveyUpsertRequest, SurveyResponse, SurveyAnswerResponse
 
 # Public router for survey responses
 router = APIRouter()
+
+# Initialize limiter for this router
+limiter = Limiter(key_func=get_remote_address)
 
 # Value to ordinal mapping (same as frontend)
 # Valid database fields mapping to prevent injection via column names
@@ -32,53 +37,99 @@ VALUE_TO_ORDINAL = {
     'demographicsMatter': {'no': 1, 'somewhat': 2, 'yes': 3}
 }
 
-@router.post("/dark-data-survey/answer")
+# Numeric field validation ranges (inclusive)
+NUMERIC_FIELD_RANGES = {
+    'relativePreferences': (1, 7),  # 7-point Likert scale
+    'govPreferences': (1, 7),       # 7-point Likert scale
+    'polPreferences': (1, 7),       # 7-point Likert scale
+    'gender_ord': (0, 1),           # 0=Women, 1=Men
+    'orientation_ord': (0, 3),      # 0=Straight, 1=Bisexual, 2=Gay, 3=Other
+    'race_ord': (0, 2)              # 0=White, 1=Mixed, 2=POC
+}
+
+@router.post("/dark-data-survey/answer", response_model=SurveyAnswerResponse)
+@limiter.limit("30/minute")  # Allow 30 submissions per minute per IP
 async def post_answer(
-    request: SurveyAnswerRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db_session)
 ):
-    """Post a survey answer with value-to-ordinal conversion."""
+    """Post a survey answer with value-to-ordinal conversion.
+
+    Rate limit: 30 requests per minute per IP address.
+    """
+
+    # Parse and validate request body
+    body = await request.json()
+    survey_request = SurveyAnswerRequest(**body)
 
     # Validate fingerprint
-    if not request.fingerprint or request.fingerprint.strip() == '':
+    if not survey_request.fingerprint or survey_request.fingerprint.strip() == '':
         raise HTTPException(status_code=400, detail="Fingerprint is required")
 
     # Validate field and get ordinal value
-    if request.field not in VALUE_TO_ORDINAL:
-        raise HTTPException(status_code=400, detail=f"Invalid field: {request.field}")
+    if survey_request.field not in VALUE_TO_ORDINAL:
+        raise HTTPException(status_code=400, detail=f"Invalid field: {survey_request.field}")
 
-    field_mapping = VALUE_TO_ORDINAL[request.field]
-    if request.value not in field_mapping:
-        raise HTTPException(status_code=400, detail=f"Invalid value '{request.value}' for field '{request.field}'")
+    field_mapping = VALUE_TO_ORDINAL[survey_request.field]
+    if survey_request.value not in field_mapping:
+        raise HTTPException(status_code=400, detail=f"Invalid value '{survey_request.value}' for field '{survey_request.field}'")
 
-    ordinal_value = field_mapping[request.value]
+    ordinal_value = field_mapping[survey_request.value]
 
     try:
         # Use upsert functionality
-        await upsert_answer(db, request.fingerprint, request.field, ordinal_value)
-        return {"message": f"Saved {request.field}: {request.value} (ordinal: {ordinal_value})"}
+        await upsert_answer(db, survey_request.fingerprint, survey_request.field, ordinal_value)
+        return SurveyAnswerResponse(
+            message=f"Saved {survey_request.field}: {survey_request.value} (ordinal: {ordinal_value})"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving answer: {str(e)}")
 
 
-@router.post("/dark-data-survey/upsert")
+@router.post("/dark-data-survey/upsert", response_model=SurveyAnswerResponse)
+@limiter.limit("30/minute")  # Allow 30 submissions per minute per IP
 async def upsert_survey_answer(
-    request: SurveyUpsertRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db_session)
 ):
-    """Upsert a single survey answer by field."""
+    """Upsert a single survey answer by field.
+
+    Rate limit: 30 requests per minute per IP address.
+    """
+
+    # Parse and validate request body
+    body = await request.json()
+    survey_request = SurveyUpsertRequest(**body)
 
     # Validate fingerprint
-    if not request.fingerprint or request.fingerprint.strip() == '':
+    if not survey_request.fingerprint or survey_request.fingerprint.strip() == '':
         raise HTTPException(status_code=400, detail="Fingerprint is required")
 
     # Validate field exists in the model
-    if request.field not in FIELD_MAPPING:
-        raise HTTPException(status_code=400, detail=f"Invalid field: {request.field}")
+    if survey_request.field not in FIELD_MAPPING:
+        raise HTTPException(status_code=400, detail=f"Invalid field: {survey_request.field}")
+
+    # Validate numeric field ranges
+    if survey_request.field in NUMERIC_FIELD_RANGES:
+        min_val, max_val = NUMERIC_FIELD_RANGES[survey_request.field]
+        try:
+            numeric_value = int(survey_request.value)
+            if not (min_val <= numeric_value <= max_val):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Value for {survey_request.field} must be between {min_val} and {max_val}, got {numeric_value}"
+                )
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Value for {survey_request.field} must be a valid integer"
+            )
 
     try:
-        await upsert_answer(db, request.fingerprint, request.field, request.value)
-        return {"message": f"Upserted {request.field}: {request.value}"}
+        await upsert_answer(db, survey_request.fingerprint, survey_request.field, survey_request.value)
+        return SurveyAnswerResponse(
+            message=f"Upserted {survey_request.field}: {survey_request.value}"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error upserting answer: {str(e)}")
 

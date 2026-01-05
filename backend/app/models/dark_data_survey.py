@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
+from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.sql import func
 from pydantic import BaseModel
 from typing import Optional, Union
@@ -56,3 +56,8 @@ class SurveyResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class SurveyAnswerResponse(BaseModel):
+    """Response model for survey answer submission endpoints."""
+    message: str
