@@ -65,7 +65,6 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-<<<<<<< HEAD
 src/lib/stories/open-academic-analyticsOld/
 src/lib/stories/open-academic-analytics/backend/.tmp_dagster_*
 
@@ -82,3 +81,4 @@ src/lib/stories/dark-data-survey/data/trust_circles2.csv
 src/lib/stories/dark-data-survey/data/trust_circles_individual_all_timepoints.csv
 src/lib/stories/dark-data-survey/data/trust_circles_individual.csv
 drizzle/
+frontend/.env

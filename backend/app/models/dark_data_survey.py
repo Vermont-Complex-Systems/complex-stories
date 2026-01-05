@@ -9,7 +9,7 @@ class DarkDataSurvey(Base):
     __tablename__ = "dark_data_survey"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    fingerprint = Column(String(255), nullable=False)
+    fingerprint = Column(String(255), nullable=False, unique=True, index=True)
     consent = Column(Integer)
     socialMediaPrivacy = Column(Integer)
     platformMatters = Column(String)

@@ -2,7 +2,7 @@
 import { base } from "$app/paths";
 import { innerWidth, outerHeight } from 'svelte/reactivity/window';
 
-import FingerprintJS from '@fingerprintjs/fingerprintjs';
+import { generateFingerprint } from '$lib/utils/browserFingerprint.js';
 
 import TrustEvo from './TrustEvo.svelte';
 import Survey from './Survey.svelte';
@@ -17,15 +17,13 @@ let { story, data } = $props();
 // Consent state
 let hasConsented = $state(false);
 
-// Generate browser fingerprint using FingerprintJS
+// Generate browser fingerprint using our utility
 let userFingerprint = $state('');
 
 $effect(() => {
     if (typeof window !== 'undefined') {
-        FingerprintJS.load().then(fp => {
-            return fp.get();
-        }).then(result => {
-            userFingerprint = result.visitorId;
+        generateFingerprint().then(fingerprint => {
+            userFingerprint = fingerprint;
             console.log('Fingerprint loaded:', userFingerprint);
         }).catch(err => {
             console.error('Failed to load fingerprint:', err);

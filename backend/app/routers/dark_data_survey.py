@@ -8,6 +8,22 @@ from ..models.dark_data_survey import DarkDataSurvey, SurveyAnswerRequest, Surve
 router = APIRouter()
 
 # Value to ordinal mapping (same as frontend)
+# Valid database fields mapping to prevent injection via column names
+FIELD_MAPPING = {
+    'consent': DarkDataSurvey.consent,
+    'socialMediaPrivacy': DarkDataSurvey.socialMediaPrivacy,
+    'platformMatters': DarkDataSurvey.platformMatters,
+    'institutionPreferences': DarkDataSurvey.institutionPreferences,
+    'demographicsMatter': DarkDataSurvey.demographicsMatter,
+    'relativePreferences': DarkDataSurvey.relativePreferences,
+    'govPreferences': DarkDataSurvey.govPreferences,
+    'polPreferences': DarkDataSurvey.polPreferences,
+    'age': DarkDataSurvey.age,
+    'gender_ord': DarkDataSurvey.gender_ord,
+    'orientation_ord': DarkDataSurvey.orientation_ord,
+    'race_ord': DarkDataSurvey.race_ord
+}
+
 VALUE_TO_ORDINAL = {
     'consent': {'accepted': 1, 'declined': 0},
     'socialMediaPrivacy': {'private': 1, 'mixed': 2, 'public': 3},
@@ -57,13 +73,7 @@ async def upsert_survey_answer(
         raise HTTPException(status_code=400, detail="Fingerprint is required")
 
     # Validate field exists in the model
-    valid_fields = [
-        'consent', 'socialMediaPrivacy', 'platformMatters', 'institutionPreferences',
-        'demographicsMatter', 'relativePreferences', 'govPreferences',
-        'polPreferences', 'age', 'gender_ord', 'orientation_ord', 'race_ord'
-    ]
-
-    if request.field not in valid_fields:
+    if request.field not in FIELD_MAPPING:
         raise HTTPException(status_code=400, detail=f"Invalid field: {request.field}")
 
     try:
@@ -76,13 +86,17 @@ async def upsert_survey_answer(
 async def upsert_answer(db: AsyncSession, fingerprint: str, field: str, value):
     """Helper function to upsert a single answer."""
 
+    # Validate field against FIELD_MAPPING (defense in depth)
+    if field not in FIELD_MAPPING:
+        raise ValueError(f"Invalid field: {field}")
+
     # Check if record exists
     query = select(DarkDataSurvey).where(DarkDataSurvey.fingerprint == fingerprint)
     result = await db.execute(query)
     existing = result.scalar_one_or_none()
 
     if existing:
-        # Update existing record
+        # Update existing record - use string field name for values dict
         update_stmt = (
             update(DarkDataSurvey)
             .where(DarkDataSurvey.fingerprint == fingerprint)
@@ -90,9 +104,8 @@ async def upsert_answer(db: AsyncSession, fingerprint: str, field: str, value):
         )
         await db.execute(update_stmt)
     else:
-        # Insert new record
-        insert_data = {'fingerprint': fingerprint, field: value}
-        insert_stmt = insert(DarkDataSurvey).values(**insert_data)
+        # Insert new record - use string field name for values dict
+        insert_stmt = insert(DarkDataSurvey).values(fingerprint=fingerprint, **{field: value})
         await db.execute(insert_stmt)
 
     await db.commit()
