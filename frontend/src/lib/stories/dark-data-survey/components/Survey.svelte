@@ -1,6 +1,5 @@
 <script>
-import { renderSurveyContent } from './Snippets.svelte';
-import { surveyScrollyContent } from '$lib/components/helpers/ScrollySnippets.svelte';
+import { surveyScrollyContent } from './Snippets.svelte';
 import DemographicsBox from './Survey.DemographicsBox.svelte';
 import copy from '../data/copy.json';
 
@@ -16,12 +15,10 @@ let answers = $state({
 });
 </script>
 
-{#snippet surveyRenderer(item, active)}
-    {@render renderSurveyContent(item, userFingerprint, saveAnswer, answers)}
-{/snippet}
-
 <section id="survey">
-    {@render surveyScrollyContent(copy.survey, scrollyState, surveyRenderer)}
+    <div class="scrolly-container survey-scrolly">
+        {@render surveyScrollyContent(copy.survey, scrollyState, userFingerprint, saveAnswer, answers)}
+    </div>
 
     <!-- Demographics questions after scrolly -->
     <DemographicsBox {userFingerprint} {saveAnswer} />

@@ -1,8 +1,7 @@
 <script>
 import { base } from "$app/paths";
 import { innerWidth, outerHeight } from 'svelte/reactivity/window';
-import { renderTextContent } from '$lib/components/helpers/ContentSnippets.svelte';
-import Question from './Survey.Question.svelte';
+
 import { generateFingerprint } from '$lib/utils/browserFingerprint.js';
 
 import TrustEvo from './TrustEvo.svelte';
@@ -10,7 +9,7 @@ import Survey from './Survey.svelte';
 import ConsentPopup from './ConsentPopup.svelte';
 import Dashboard from './Dashboard.svelte';
 
-import { scrollyContent } from '$lib/components/helpers/ScrollySnippets.svelte';
+import { renderContent, scrollyContent } from './Snippets.svelte';
 import { postAnswer, upsertAnswer } from '../data/data.remote.js';
 
 let { story, data } = $props();
@@ -135,32 +134,6 @@ $effect(() => {
             </p>
         </div>
     </div>
-
-    <!-- Story-specific content renderer for non-survey sections -->
-    <!-- Delegates text rendering to shared helper -->
-    {#snippet renderContent(contentArray)}
-        {#each contentArray as item}
-            {@render renderTextContent(item)}
-        {/each}
-    {/snippet}
-
-    <!-- Story-specific renderer for survey questions -->
-    <!-- Handles question component (story-specific) and delegates text to shared helper -->
-    {#snippet renderSurveyContent(item, userFingerprint, saveAnswer, answers)}
-        {#if item.type === 'question'}
-            <Question
-                question={item.value.question}
-                name={item.value.name}
-                bind:value={answers[item.value.name]}
-                options={item.value.options}
-                multiple={item.value.multiple || false}
-                {userFingerprint}
-                {saveAnswer}
-            />
-        {:else}
-            {@render renderTextContent(item)}
-        {/if}
-    {/snippet}
 
     <section id="intro">
         {@render renderContent(data.intro)}
