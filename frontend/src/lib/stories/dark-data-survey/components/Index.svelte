@@ -1,7 +1,8 @@
 <script>
 import { base } from "$app/paths";
 import { innerWidth, outerHeight } from 'svelte/reactivity/window';
-
+import { renderTextContent } from '$lib/components/helpers/ContentSnippets.svelte';
+import Question from './Survey.Question.svelte';
 import { generateFingerprint } from '$lib/utils/browserFingerprint.js';
 
 import TrustEvo from './TrustEvo.svelte';
@@ -9,7 +10,7 @@ import Survey from './Survey.svelte';
 import ConsentPopup from './ConsentPopup.svelte';
 import Dashboard from './Dashboard.svelte';
 
-import { renderContent, scrollyContent } from './Snippets.svelte';
+import { scrollyContent } from '$lib/components/helpers/ScrollySnippets.svelte';
 import { postAnswer, upsertAnswer } from '../data/data.remote.js';
 
 let { story, data } = $props();
@@ -135,6 +136,32 @@ $effect(() => {
         </div>
     </div>
 
+    <!-- Story-specific content renderer for non-survey sections -->
+    <!-- Delegates text rendering to shared helper -->
+    {#snippet renderContent(contentArray)}
+        {#each contentArray as item}
+            {@render renderTextContent(item)}
+        {/each}
+    {/snippet}
+
+    <!-- Story-specific renderer for survey questions -->
+    <!-- Handles question component (story-specific) and delegates text to shared helper -->
+    {#snippet renderSurveyContent(item, userFingerprint, saveAnswer, answers)}
+        {#if item.type === 'question'}
+            <Question
+                question={item.value.question}
+                name={item.value.name}
+                bind:value={answers[item.value.name]}
+                options={item.value.options}
+                multiple={item.value.multiple || false}
+                {userFingerprint}
+                {saveAnswer}
+            />
+        {:else}
+            {@render renderTextContent(item)}
+        {/if}
+    {/snippet}
+
     <section id="intro">
         {@render renderContent(data.intro)}
     </section>
@@ -150,7 +177,11 @@ $effect(() => {
                     {conclusionVisible} />
             </div>
 
-            {@render scrollyContent(data.steps, storyScrollyState)}
+            {#snippet storyContentRenderer(step, active)}
+                {@render renderContent([step])}
+            {/snippet}
+
+            {@render scrollyContent(data.steps, storyScrollyState, storyContentRenderer)}
         </div>
     </section>
     
@@ -202,18 +233,21 @@ $effect(() => {
 
 /* -----------------------------
    Text & Paragraphs
+   NOTE: This story uses a dark theme. All text is whitesmoke by default,
+   with specific sections overriding to black for readability.
+   This is scoped to #dark-data-survey so it won't affect other stories.
 ----------------------------- */
 :global(#dark-data-survey p) {
     color: whitesmoke;
 }
 
-/* Make sure intro & conclusion text remain white */
-:global(#intro p),
-:global(#conclusion p) {
+/* Make sure intro & conclusion text remain white - MUST scope to this story! */
+:global(#dark-data-survey #intro p),
+:global(#dark-data-survey #conclusion p) {
     color: whitesmoke;
 }
 
-/* Scrolly text specifically black for readability */
+/* Scrolly text specifically black for readability against light backgrounds */
 :global(.scrolly-container .markdown-content),
 :global(.scrolly-container .markdown-content p) {
     color: black !important;
@@ -270,6 +304,24 @@ $effect(() => {
     height: fit-content;
     z-index: 1;
     pointer-events: none;
+}
+
+/* Override shared ScrollySnippets styling for this story's dark theme */
+:global(#dark-data-survey .scrolly-content .step > *) {
+    padding: 1rem;
+    background: #f5f5f5;
+    color: #ccc;
+    border-radius: 5px;
+    box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+    transition: all 500ms ease;
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+:global(#dark-data-survey .scrolly-content .step.active > *) {
+    background: white;
+    color: black;
 }
 
 /* -----------------------------

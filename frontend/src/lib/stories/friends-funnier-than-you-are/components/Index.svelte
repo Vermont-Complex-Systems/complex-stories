@@ -6,7 +6,7 @@ import BranchingNetwork from "./BranchingNetwork.svelte";
 import SelfReinforcingNetwork from "./SelfReinforcingNetwork.svelte";
 import LogLogPlot from "./LogLogPlot.svelte";
 
-import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
+import { renderTextContent } from '$lib/components/helpers/ContentSnippets.svelte';
 
 let { story, data } = $props();
 
@@ -36,35 +36,31 @@ let { story, data } = $props();
         </div>
     </div>
 
-    <!-- a bit clunky to do it like like -->
+    <!-- Story-specific content renderer (inline snippet pattern)
+         Components must be hardcoded here since they can't be passed as data.
+         Text rendering (html, markdown, math) is delegated to shared renderTextContent. -->
     {#snippet renderContent(contentArray)}
-        {#each contentArray as { type, value, component }, i}
-            {#if type === "Component"}
-                {#if component === "BranchingNetwork"}
+        {#each contentArray as item}
+            {#if item.type === "component"}
+                {#if item.component === "BranchingNetwork"}
                     <div class="branching-container">
                         <BranchingNetwork />
                     </div>
-                {:else if component === "InteractiveFig1"}
+                {:else if item.component === "InteractiveFig1"}
                     <div class="plot-container">
                         <InteractiveFig1 />
                     </div>
-                {:else if component === "SelfReinforcingNetwork"}
+                {:else if item.component === "SelfReinforcingNetwork"}
                     <div class="plot-container">
                         <SelfReinforcingNetwork />
                     </div>
-                {:else if component === "LogLogPlot"}
+                {:else if item.component === "LogLogPlot"}
                     <div class="plot-container">
                         <LogLogPlot />
                     </div>
                 {/if}
-            {:else if type === "html" }
-                <p>{@html value}</p>
-            {:else if type === "math" }
-                <div class="plot-container">
-                    <Md text={value}/>
-                </div>
             {:else}
-                <p><Md text={value}/></p>
+                <p>{@render renderTextContent(item)}</p>
             {/if}
         {/each}
     {/snippet}
@@ -95,7 +91,7 @@ let { story, data } = $props();
         background-color: #f8f5e6;
         overflow-x: hidden; /* Prevent horizontal scroll from full-width components */
     }
-    
+
     /* Dark mode support */
     :global(.dark body:has(#cascade-story)) {
         background-color: var(--color-bg);
@@ -103,23 +99,25 @@ let { story, data } = $props();
     }
     
     
-    :global(body:has(#cascade-story)) h1, h2 {
+    /* Fixed: properly scope h1 and h2 separately */
+    :global(body:has(#cascade-story)) h1 {
         font-family: var(--serif);
         max-width: 450px;
         font-size: var(--font-size-giant);
         margin: 6rem auto 1rem auto;
         text-align: center;
-    }    
-    
+    }
+
     /* Dark mode support */
     :global(body:has(#cascade-story)) .title {
         margin: 0 auto 5rem auto;
     }
 
-    section h2 {
+    /* Scope section h2 to this story only */
+    :global(#cascade-story) section h2 {
         margin-top: 3rem !important;
     }
-    
+
     :global(body:has(#cascade-story)) h2 {
         font-size: var(--font-size-medium);
         font-weight: 400;
