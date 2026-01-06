@@ -160,25 +160,6 @@
 		text-decoration-color: var(--color-link-hover);
 	}
 
-	/* =============================================================================
-	   VISUAL ELEMENTS
-	   ============================================================================= */
-
-	.placeholder-content {
-		background: rgba(255, 255, 255, 0.1);
-		border: 2px solid var(--color-border);
-		border-radius: var(--border-radius);
-		padding: 2rem;
-		text-align: center;
-		backdrop-filter: blur(5px);
-		box-shadow: 0 4px 20px rgba(59, 47, 30, 0.1);
-		min-height: 200px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-family: var(--font-body);
-		color: var(--color-secondary-gray);
-	}
 
 	/* =============================================================================
 	   RESPONSIVE DESIGN
@@ -254,9 +235,5 @@
 			font-size: var(--font-size-smallish);
 		}
 
-		.placeholder-content {
-			padding: 1.5rem;
-			min-height: 150px;
-		}
 	}
 </style>

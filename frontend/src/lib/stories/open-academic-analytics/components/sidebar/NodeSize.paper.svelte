@@ -54,14 +54,4 @@
     border-color: var(--color-good-blue);
   }
 
-  .color-info {
-    margin-top: 0.25rem;
-  }
-
-  .info-text {
-    font-size: var(--font-size-xsmall);
-    color: var(--color-secondary-gray);
-    margin: 0;
-    font-style: italic;
-  }
 </style>

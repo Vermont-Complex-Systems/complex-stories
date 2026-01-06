@@ -1,21 +1,17 @@
 <script>
-    let {
-        value = $bindable('united_states'),
-        label = "Location",
-        adapter = [],
-        isLoading = false,
-        isError = false
-    } = $props();
+    import { dashboardState } from '../../sidebar-state.svelte.ts';
+
+    let { label = "Location" } = $props();
 
     function handleChange(event) {
-        value = event.target.value;
+        dashboardState.selectedLocation = event.target.value;
     }
 
     // Get current location display name - computed each render
     function getCurrentLocationName() {
-        if (!adapter?.length) return value;
-        const location = adapter.find(l => l.code === value);
-        return location?.name || value;
+        if (!dashboardState.adapter?.length) return dashboardState.selectedLocation;
+        const location = dashboardState.adapter.find(l => l[1] === dashboardState.selectedLocation);
+        return location?.[2] || dashboardState.selectedLocation;
     }
 
 </script>
@@ -26,18 +22,18 @@
     </div>
 
     <div class="selector-control">
-        {#if isLoading}
+        {#if dashboardState.locationsLoading}
             <div class="loading-dropdown">Loading locations...</div>
-        {:else if isError}
+        {:else if dashboardState.locationsError}
             <div class="error-dropdown">Failed to load locations</div>
-        {:else if adapter.length > 0}
+        {:else if dashboardState.adapter.length > 0}
             <select
-                {value}
+                value={dashboardState.selectedLocation}
                 onchange={handleChange}
                 class="location-dropdown"
             >
-                {#each adapter as row}
-                    <option value={row[0]}>
+                {#each dashboardState.adapter as row}
+                    <option value={row[1]}>
                         {row[2]}
                     </option>
                 {/each}
@@ -67,11 +63,6 @@
         color: var(--color-text-primary);
     }
 
-    .current-selection {
-        font-size: var(--11px, 0.69rem);
-        color: var(--color-text-secondary);
-        font-weight: var(--font-weight-normal, 400);
-    }
 
     .selector-control {
         position: relative;

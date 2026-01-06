@@ -58,10 +58,7 @@
         line-height: 1.5;
         flex: 1;
     }
-    .insight-box strong {
-        font-weight: 600;
-    }
-
+    
     .insight-icon {
         flex-shrink: 0;
         margin-top: 2px; /* Align with text baseline */

@@ -57,15 +57,6 @@
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     }
 
-    h2 {
-        margin: 0;
-        padding: 1.5rem;
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: whitesmoke;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
     .popup-body {
         padding: 1.5rem;
         color: rgba(255, 255, 255, 0.9);
@@ -74,19 +65,6 @@
 
     .popup-body p {
         margin: 0 0 1rem 0;
-    }
-
-    .popup-body ul {
-        margin: 0.5rem 0 1rem 1.5rem;
-        padding: 0;
-    }
-
-    .popup-body li {
-        margin: 0.25rem 0;
-    }
-
-    .popup-body strong {
-        color: whitesmoke;
     }
 
     .popup-actions {
@@ -131,10 +109,6 @@
             max-height: 95vh;
         }
 
-        h2 {
-            font-size: 1.25rem;
-            padding: 1rem;
-        }
 
         .popup-body {
             padding: 1rem;

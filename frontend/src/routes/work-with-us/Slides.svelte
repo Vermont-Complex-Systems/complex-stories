@@ -383,23 +383,6 @@
 		scale: 1.05; /* This won't interfere with transform */
 	}
 
-	/* Single image (for long-term projects) */
-	.single-image {
-		display: block;
-		transition: transform 0.2s ease;
-	}
-
-	.single-image img {
-		width: 100%;
-		max-width: 300px;
-		height: auto;
-		border-radius: 8px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-	}
-
-	.single-image:hover {
-		transform: scale(1.05);
-	}
 
 	/* ===== COMMUNITY IMAGE WITH COPYRIGHT ===== */
 	.image-wrapper {
@@ -550,10 +533,6 @@
 		.slide-three-column .image-grid {
 			max-width: 250px;
 			margin: 0 auto;
-		}
-
-		.slide-three-column .single-image img {
-			max-width: 250px;
 		}
 
 		/* Mobile hero styling */

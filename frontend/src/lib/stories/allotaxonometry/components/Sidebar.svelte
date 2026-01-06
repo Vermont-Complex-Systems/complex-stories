@@ -1,113 +1,142 @@
-<!-- Sidebar.svelte -->
-<script>
-    import { Accordion, Button, Separator } from "bits-ui";
-    import MultiFileUpload from './sidebar/MultiFileUpload.svelte';
-    import AlphaControl from './sidebar/AlphaControl.svelte';
-    import DataInfo from './sidebar/DataInfo.svelte';
-    import StatusCard from './sidebar/StatusCard.svelte';
+<script lang="ts">
     import YearSlider from './sidebar/YearSlider.svelte';
-    
-    import { 
-        allotax,
-        uiState,
-        alphas,
-        toggleSidebar,
-        handleFileUpload
-    } from '../state.svelte.ts';
+    import AlphaSlider from './sidebar/AlphaSlider.svelte';
+    import LocationSelector from './sidebar/LocationSelector.svelte';
+    import SexToggle from './sidebar/SexToggle.svelte';
+    import TopNSelector from './sidebar/TopNSelector.svelte';
+    import MultiFileUpload from './sidebar/MultiFileUpload.svelte';
+    import PeriodJumpControls from './sidebar/PeriodJumpControls.svelte';
+    import DataInfo from './sidebar/DataInfo.svelte';
+    import DownloadSection from './sidebar/DownloadSection.svelte';
+    import { fileState, dashboardState, alphas } from '../sidebar-state.svelte.ts';
 
-    let alphaIndex = $state(7);
+    // Props passed from parent (Index.svelte owns query and instance)
+    let { query, instance } = $props();
+
+    // Derived values from props
+    const displayTitles = $derived(query.data?.title || ['System 1', 'System 2']);
+    const me = $derived(instance?.me);
+    const rtd = $derived(instance?.rtd);
+    const isDataReady = $derived(!!query.data && !!instance);
+
+    // Check if we got fewer results than requested
+    const showTopNWarning = $derived(
+        isDataReady &&
+        query.data &&
+        ((query.data.elem1?.length || 0) < dashboardState.fetchedTopN ||
+         (query.data.elem2?.length || 0) < dashboardState.fetchedTopN)
+    );
+
+    // Auto-dismiss warning after 5 seconds
+    $effect(() => {
+        if (showTopNWarning) {
+            dashboardState.warningDismissed = false;
+            const timer = setTimeout(() => {
+                dashboardState.warningDismissed = true;
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    });
 </script>
 
 <div class="sidebar-content">
     <div class="sidebar-header">
-        {#if !uiState.sidebarCollapsed}
-            <h2 class="sidebar-title">Allotaxonograph</h2>
-        {/if}
-        <Button.Root onclick={toggleSidebar} variant="ghost" size="sm">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                {#if uiState.sidebarCollapsed}
-                    <path d="M9 18l6-6-6-6"/>
-                {:else}
-                    <path d="M15 18l-6-6 6-6"/>
-                {/if}
-            </svg>
-        </Button.Root>
+        <h2 class="sidebar-title">Allotaxonograph</h2>
     </div>
-    
-    {#if !uiState.sidebarCollapsed}
-        <div class="sidebar-body">
-            <Accordion.Root type="multiple" value={["upload", "years", "alpha", "info"]} class="accordion">
 
-                <!-- Direct Click Upload -->
-                <MultiFileUpload
-                    bind:sys1={allotax.sys1}
-                    bind:sys2={allotax.sys2}
-                    bind:title={allotax.title}
-                    {handleFileUpload}
-                    uploadStatus={uiState.uploadStatus}
-                    uploadWarnings={uiState.uploadWarnings}
+    <div class="sidebar-body">
+        <MultiFileUpload
+            bind:sys1={fileState.uploadedSys1}
+            bind:sys2={fileState.uploadedSys2}
+            bind:title={fileState.uploadedTitle}
+            handleFileUpload={(file, system) => fileState.handleFileUpload(file, system)}
+            uploadStatus={fileState.uploadStatus}
+            uploadWarnings={fileState.uploadWarnings}
+        />
+
+        <div class="separator"></div>
+
+        {#if !fileState.hasUploadedFiles}
+            <div class="location-control">
+                <LocationSelector label="Location" />
+            </div>
+
+            <div class="topn-control">
+                <TopNSelector />
+
+                {#if showTopNWarning && !dashboardState.warningDismissed && query.data}
+                    {@const count1 = query.data.elem1?.length || 0}
+                    {@const count2 = query.data.elem2?.length || 0}
+                    <div class="topn-warning" class:fade-out={dashboardState.warningDismissed}>
+                        <svg class="warning-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                        <div class="warning-text">
+                            {#if count1 < dashboardState.fetchedTopN && count2 < dashboardState.fetchedTopN}
+                                <span>System 1: {count1.toLocaleString()} names, System 2: {count2.toLocaleString()} names (requested {dashboardState.fetchedTopN.toLocaleString()})</span>
+                            {:else if count1 < dashboardState.fetchedTopN}
+                                <span>System 1: Only {count1.toLocaleString()} names available (requested {dashboardState.fetchedTopN.toLocaleString()})</span>
+                            {:else}
+                                <span>System 2: Only {count2.toLocaleString()} names available (requested {dashboardState.fetchedTopN.toLocaleString()})</span>
+                            {/if}
+                        </div>
+                    </div>
+                {/if}
+            </div>
+
+            <div class="sex-control">
+                <SexToggle />
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="alpha-control">
+                <AlphaSlider />
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="year-control">
+                <YearSlider
+                    bind:value={dashboardState.period1}
+                    min={dashboardState.dateMin}
+                    max={dashboardState.dateMax}
+                    label="Period 1"
                 />
+            </div>
 
-                <Separator.Root/>
-
-                <!-- Year Range Slider -->
-                <Accordion.Item value="years" class="accordion-item">
-                    <Accordion.Trigger class="accordion-trigger">
-                        <span>Time Period</span>
-                        <span class="year-display">{uiState.yearRange.years[0]} - {uiState.yearRange.years[1]}</span>
-                    </Accordion.Trigger>
-                    <Accordion.Content class="accordion-content">
-                        <YearSlider
-                            bind:value={uiState.yearRange.years}
-                            min={uiState.yearRange.min}
-                            max={uiState.yearRange.max}
-                            label="Baby Names Period"
-                        />
-                    </Accordion.Content>
-                </Accordion.Item>
-
-                <Separator.Root/>
-
-                <!-- Alpha Control -->
-                <AlphaControl
-                    {allotax}
-                    bind:alphaIndex={alphaIndex}
-                    {alphas}
+            <div class="year-control">
+                <YearSlider
+                    bind:value={dashboardState.period2}
+                    min={dashboardState.dateMin}
+                    max={dashboardState.dateMax}
+                    label="Period 2"
                 />
+            </div>
 
-                <Separator.Root/>
-                
-                <!-- Data Info -->
-                <DataInfo 
-                    title={allotax.title} 
-                    me={allotax.me} 
-                    rtd={allotax.rtd} 
-                    isDataReady={allotax.isDataReady} 
-                />
-            </Accordion.Root>
+            <PeriodJumpControls />
+   
+            <button class="load-button" onclick={() => dashboardState.loadData()} disabled={query.isLoading}>
+                {#if query.isLoading}
+                    <div class="loading-spinner"></div>
+                    Loading...
+                {:else}
+                    Update
+                {/if}
+            </button>
+        {/if}
 
-            <StatusCard isDataReady={allotax.isDataReady} />
+        {#if isDataReady}
+            <DataInfo title={displayTitles} {me} {rtd} {isDataReady}
+            />
+        {/if}
+
+        <div class="separator"></div>
+
+        <div class="download-control">
+            <DownloadSection {isDataReady} />
         </div>
-    {:else}
-        <div class="sidebar-collapsed">
-            <div class="collapsed-item" title="Current: {allotax.title[0]} vs {allotax.title[1]}">
-                <div class="comparison-mini">
-                    <span class="sys-indicator sys1">1</span>
-                    <span class="vs-mini">vs</span>
-                    <span class="sys-indicator sys2">2</span>
-                </div>
-            </div>
-            
-            <div class="collapsed-item" title="Alpha: {allotax.alpha}">
-                <div class="alpha-icon">α</div>
-                <div class="alpha-mini">{allotax.alpha.toString().slice(0, 4)}</div>
-            </div>
-            
-            <div class="collapsed-item" title={allotax.isDataReady ? 'Ready' : 'Processing...'}>
-                <div class="status-dot {allotax.isDataReady ? 'ready' : 'processing'}"></div>
-            </div>
-        </div>
-    {/if}
+    </div>
 </div>
 
 <style>
@@ -115,8 +144,7 @@
         height: 100%;
         display: flex;
         flex-direction: column;
-        background-color: var(--color-sidebar-bg);
-        border-right: 1px solid var(--color-border);
+        background-color: var(--color-input-bg);
     }
 
     .sidebar-header {
@@ -125,12 +153,12 @@
         align-items: center;
         padding: 1rem;
         border-bottom: 1px solid var(--color-border);
-        background-color: var(--color-sidebar-header-bg);
+        background-color: var(--color-bg);
     }
 
     .sidebar-title {
-        font-size: var(--16px);
-        font-weight: var(--font-weight-bold);
+        font-size: var(--16px, 1rem);
+        font-weight: var(--font-weight-bold, 600);
         color: var(--color-text-primary);
         margin: 0;
     }
@@ -138,131 +166,158 @@
     .sidebar-body {
         flex: 1;
         overflow-y: auto;
-        padding: 0;
+        padding: 1.5rem;
     }
 
-    /* Collapsed sidebar styles */
-    .sidebar-collapsed {
+    .location-control {
+        margin-bottom: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .sex-control {
+        margin-bottom: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .topn-control {
+        margin-bottom: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .download-control {
+        margin-bottom: 1rem;
+        margin-top: 1rem;
+    }
+
+    .topn-warning {
         display: flex;
-        flex-direction: column;
+        align-items: flex-start;
         gap: 0.5rem;
-        padding: 1rem 0.5rem;
-        align-items: center;
+        margin-top: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background-color: rgba(251, 191, 36, 0.1);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 6px;
+        font-size: 0.75rem;
+        color: #d97706;
+        line-height: 1.4;
+        animation: fadeIn 0.3s ease-in;
     }
 
-    .collapsed-item {
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .warning-icon {
+        flex-shrink: 0;
+        width: 1rem;
+        height: 1rem;
+        color: #f59e0b;
+        margin-top: 0.1rem;
+    }
+
+    .warning-text {
+        flex: 1;
+    }
+
+    .warning-text span {
+        font-weight: 500;
+    }
+
+    /* Dark mode support for warning */
+    @media (prefers-color-scheme: dark) {
+        .topn-warning {
+            background-color: rgba(251, 191, 36, 0.15);
+            border-color: rgba(251, 191, 36, 0.4);
+            color: #fbbf24;
+        }
+
+        .warning-icon {
+            color: #fbbf24;
+        }
+    }
+
+    .year-control {
+        margin-bottom: 2rem;
+        margin-top: 2.5rem;
+    }
+
+    .year-control:last-of-type {
+        border-bottom: none;
+    }
+
+    .alpha-control {
+        margin-bottom: 3rem;
+        margin-top: 2rem;
+        padding: 1.5rem 0;
+        display: flex;
+        align-items: center;
+        position: relative;
+        justify-content: center;
+    }
+
+    /* Mobile responsive styles for alpha control */
+    @media (max-width: 768px) {
+        .alpha-control {
+            width: 100%;
+            justify-content: center;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+    }
+
+    .load-button {
         width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 0.5rem;
-        border-radius: var(--border-radius);
+        padding: 0.75rem 1rem;
+        margin: 1rem 0;
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: 600;
         cursor: pointer;
-        transition: background-color var(--transition-fast) ease;
-    }
-
-    .collapsed-item:hover {
-        background-color: var(--color-input-bg);
-    }
-
-    .comparison-mini {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .sys-indicator {
-        width: 1.25rem;
-        height: 1.25rem;
-        border-radius: 50%;
+        transition: all 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: var(--10px);
-        font-weight: var(--font-weight-bold);
-        color: white;
+        gap: 0.5rem;
     }
 
-    .sys-indicator.sys1 {
-        background-color: var(--color-good-blue);
-    }
-
-    .sys-indicator.sys2 {
-        background-color: var(--color-electric-green);
-    }
-
-    .vs-mini {
-        font-size: var(--10px);
-        font-weight: var(--font-weight-bold);
-        color: var(--color-text-secondary);
-    }
-
-    .alpha-icon {
-        font-size: 1.25rem;
-        font-weight: var(--font-weight-bold);
-        color: var(--color-text-primary);
-    }
-
-    .alpha-mini {
-        font-size: var(--10px);
-        color: var(--color-text-secondary);
-        font-weight: var(--font-weight-medium);
-    }
-
-    .status-dot {
-        width: 0.75rem;
-        height: 0.75rem;
-        border-radius: 50%;
-        transition: background-color var(--transition-medium) ease;
-    }
-
-    .status-dot.ready {
-        background-color: var(--color-electric-green);
-        box-shadow: 0 0 0 2px rgba(58, 230, 96, 0.3);
-    }
-
-    .status-dot.processing {
-        background-color: var(--color-warning);
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-
-    .year-display {
-        font-size: var(--12px);
-        color: var(--color-text-secondary);
-        font-weight: var(--font-weight-normal);
-    }
-
-    /* Accordion styles */
-    :global(.accordion) {
-        width: 100%;
-    }
-
-    :global(.accordion-trigger) {
-        width: 100%;
-        padding: 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-weight: var(--font-weight-medium);
-        font-size: var(--14px);
-        background-color: transparent;
-        border: none;
-        cursor: pointer;
-        transition: background-color var(--transition-fast) ease;
-        color: var(--color-text-primary);
-    }
-
-    :global(.accordion-trigger:hover) {
+    .load-button:hover:not(:disabled) {
         background-color: var(--color-input-bg);
+        border-color: var(--color-text);
+        transform: translateY(-1px);
     }
 
-    :global(.accordion-content) {
-        padding: 0 1rem 1rem 1rem;
+    .load-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .loading-spinner {
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid var(--color-border);
+        border-top: 2px solid var(--color-text);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .separator {
+        border-top: 1px solid var(--color-border);
+        margin: 1.5rem -1.5rem;
     }
 </style>
