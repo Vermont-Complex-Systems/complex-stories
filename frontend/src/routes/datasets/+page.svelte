@@ -283,88 +283,6 @@
 		transform: translateY(-1px);
 	}
 
-	.preview-section {
-		margin: 3rem 1rem 0;
-		padding: 2rem;
-		background: rgba(255, 255, 255, 0.8);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		border-radius: 12px;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-	}
-
-	.preview-section h2 {
-		font-family: var(--sans);
-		font-size: var(--font-size-large);
-		font-weight: var(--font-weight-bold);
-		color: var(--color-fg);
-		margin: 0 0 1rem 0;
-		text-transform: capitalize;
-	}
-
-	.preview-section > button {
-		background: var(--color-bg);
-		color: var(--color-fg);
-		border: 1px solid var(--color-border);
-		padding: 0.5rem 1rem;
-		border-radius: var(--border-radius);
-		font-size: var(--font-size-small);
-		cursor: pointer;
-		margin-bottom: 1.5rem;
-		transition: all var(--transition-medium);
-	}
-
-	.preview-section > button:hover {
-		background: var(--color-button-hover);
-		color: var(--color-button-fg);
-	}
-
-	.preview-table {
-		overflow: auto;
-		border: 1px solid var(--color-border);
-		border-radius: var(--border-radius);
-		margin-top: 1rem;
-	}
-
-	.preview-table p {
-		font-size: var(--font-size-small);
-		color: var(--color-secondary-gray);
-		margin: 0 0 1rem 0;
-		font-weight: var(--font-weight-medium);
-	}
-
-	.preview-table table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: var(--font-size-small);
-	}
-
-	.preview-table th,
-	.preview-table td {
-		padding: 0.75rem;
-		text-align: left;
-		border-bottom: 1px solid var(--color-border);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		max-width: 200px;
-	}
-
-	.preview-table th {
-		background: var(--color-bg-alt);
-		font-weight: var(--font-weight-semibold);
-		color: var(--color-fg);
-		position: sticky;
-		top: 0;
-	}
-
-	.preview-table td {
-		color: var(--color-secondary-gray);
-	}
-
-	.preview-table tbody tr:hover {
-		background: var(--color-bg-alt);
-	}
-
 	/* Dark mode */
 	:global(.dark) .dataset-card {
 		background: rgba(30, 30, 30, 0.8);
@@ -377,11 +295,6 @@
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 	}
 
-	:global(.dark) .preview-section {
-		background: rgba(30, 30, 30, 0.8);
-		border-color: rgba(255, 255, 255, 0.1);
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-	}
 
 	/* Mobile responsive */
 	@media (max-width: 768px) {
@@ -390,9 +303,5 @@
 			padding: 0 0.5rem;
 		}
 
-		.preview-section {
-			margin: 2rem 0.5rem 0;
-			padding: 1rem;
-		}
 	}
 </style>

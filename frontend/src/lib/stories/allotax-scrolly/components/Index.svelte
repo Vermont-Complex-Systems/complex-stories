@@ -316,9 +316,12 @@
     /* =============================================================================
 	                    STORY THEME SCOPE
 	   ============================================================================= */
-       
+
+       /* INTENTIONAL: Override main#content width for this story only
+          This is scoped with :has() so it only applies when this story is present.
+          This approach is used when a story needs a wider layout than the default. */
        :global(main#content:has(#allotaxonometer-story)) {
-        /* overide regular column width */
+        /* override regular column width */
         max-width: var(--width-column-wide);
     }
     
@@ -390,7 +393,8 @@
 	                STORY SECTIONS
 	   ============================================================================= */
 
-    section h1 {
+    /* Scope to this story only - prevent leaking to other stories */
+    :global(#allotaxonometer-story) section h1 {
         font-size: var(--font-size-xlarge);
         margin: 2rem 0 3rem 0;
         max-width: 60%;
@@ -398,7 +402,7 @@
         font-family: var(--serif);
     }
 
-    section h1 a {
+    :global(#allotaxonometer-story) section h1 a {
             font-family: var(--mono);
         }
 
@@ -579,11 +583,11 @@
     }
 
 	@media (max-width: 1200px) {
-        section {
+        :global(#allotaxonometer-story) section {
             padding: 0 1rem; /* Less side padding */
         }
 
-        section p {
+        :global(#allotaxonometer-story) section p {
             max-width: none;
         }
 
@@ -612,20 +616,20 @@
     @media (max-width: 768px) {
 
 
-        section h1 {
-            font-size: var(--font-size-xlarge); 
+        :global(#allotaxonometer-story) section h1 {
+            font-size: var(--font-size-xlarge);
             max-width: none;
         }
-        
-        section h1 a {
+
+        :global(#allotaxonometer-story) section h1 a {
                font-size: var(--font-size-xlarge);
                font-family: var(--mono);
         }
-        
+
         .initial-chart {
             margin: 1.5rem 0; /* Tighter spacing */
         }
-        
+
         .chart-container-scrolly {
             position: sticky;
             top: calc(50vh - 200px);
@@ -636,8 +640,8 @@
             min-height: 60vh;
         }
 
-        section p {
-            line-height: 1.4; /* Better readability */            
+        :global(#allotaxonometer-story) section p {
+            line-height: 1.4; /* Better readability */
         }
 
 

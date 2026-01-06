@@ -4,9 +4,10 @@
   import Stories from "$lib/components/Stories.svelte";
   import FilterBar from "$lib/components/FilterBar.svelte";
   import { ChevronDown } from "@lucide/svelte";
-  
-  const initMax = 6;
+
   const { stories } = getContext("Home");
+
+  const initMax = 6;
 
   let maxStories = $state(initMax);
   let activeFilter = $state(undefined);

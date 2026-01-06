@@ -101,11 +101,4 @@
     color: white;
   }
 
-  .filter-info {
-    font-size: var(--font-size-xsmall);
-    color: var(--color-secondary-gray);
-    margin: 0;
-    font-style: italic;
-    line-height: 1.3;
-  }
 </style>
