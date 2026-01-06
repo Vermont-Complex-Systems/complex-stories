@@ -1,6 +1,0 @@
-{
-  "enabledMcpjsonServers": [
-    "svelte-llm"
-  ],
-  "enableAllProjectMcpServers": true
-}
