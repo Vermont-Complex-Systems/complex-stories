@@ -114,14 +114,6 @@
         margin-bottom: 0;
     }
     
-    .section h4 {
-        margin: 0 0 0.75rem 0;
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: #333;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
 
     .subtotal {
         padding-top: 0.5rem;

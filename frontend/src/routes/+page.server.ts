@@ -2,7 +2,7 @@ import storiesData from "$data/stories.js";
 
 export async function load() {
   const stories = storiesData
-    .filter(story => !story.hide_home) // Exclude stories with hide_home set to true
+    // Filter removed: hide_home column causes memory issue with Svelte reactivity
     .map(story => ({
       id: story.id,
       slug: story.slug,

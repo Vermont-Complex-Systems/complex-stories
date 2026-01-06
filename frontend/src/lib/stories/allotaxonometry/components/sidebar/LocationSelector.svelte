@@ -67,11 +67,6 @@
         color: var(--color-text-primary);
     }
 
-    .current-selection {
-        font-size: var(--11px, 0.69rem);
-        color: var(--color-text-secondary);
-        font-weight: var(--font-weight-normal, 400);
-    }
 
     .selector-control {
         position: relative;
