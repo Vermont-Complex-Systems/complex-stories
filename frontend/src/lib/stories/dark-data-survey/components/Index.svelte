@@ -19,18 +19,29 @@ let { story, data } = $props();
 // Consent state
 let hasConsented = $state(false);
 
-// Generate browser fingerprint and create saveAnswer handler
+// Generate browser fingerprint AFTER consent (GDPR/CCPA compliance)
 let userFingerprint = $state('');
 let saveAnswer = $derived(createSaveAnswerHandler(userFingerprint));
 
-onMount(async () => {
+/**
+ * Handle consent acceptance - generates fingerprint only after user consent
+ * This ensures GDPR/CCPA compliance by not tracking users before explicit consent
+ */
+async function handleConsentAccept() {
+    hasConsented = true;
+
     try {
         userFingerprint = await generateFingerprint();
         console.log('Fingerprint loaded:', userFingerprint);
+
+        // Save consent after fingerprint is ready
+        if (userFingerprint) {
+            await saveAnswer('consent', 'accepted');
+        }
     } catch (err) {
         console.error('Failed to load fingerprint:', err);
     }
-});
+}
 
 // Survey answers - keys match question 'name' fields in copy.json
 let surveyAnswers = $state({
@@ -132,7 +143,7 @@ $effect(() => {
 
 
 <!-- Consent Popup -->
-<ConsentPopup onAccept={() => hasConsented = true} {userFingerprint} {saveAnswer} />
+<ConsentPopup onAccept={handleConsentAccept} {userFingerprint} {saveAnswer} />
 
 <article id="dark-data-survey">
 

@@ -38,7 +38,7 @@
 {/snippet}
 
 <style>
-    /* Standard scrolly content styling - using :global to apply across all stories */
+    /* Standard scrolly content styling - scoped to prevent leakage between stories */
     :global(.scrolly-content) {
         position: relative;
         z-index: 10;
@@ -47,11 +47,11 @@
         margin: 0 auto;
     }
 
-    :global(.spacer) {
+    :global(.scrolly-content .spacer) {
         height: 75vh;
     }
 
-    :global(.step) {
+    :global(.scrolly-content .step) {
         height: 120vh;
         display: flex;
         align-items: center;
@@ -60,8 +60,8 @@
         margin: 0 auto;
     }
 
-    /* Aesthetics of sticky text */
-    :global(.step > *) {
+    /* Aesthetics of sticky text - scoped to scrolly-content */
+    :global(.scrolly-content .step > *) {
         padding: 1rem;
         background: #f5f5f5;
         color: #ccc;
@@ -73,14 +73,14 @@
         margin: 0 auto;
     }
 
-    /* Aesthetics of sticky text when active */
-    :global(.step.active > *) {
+    /* Aesthetics of sticky text when active - scoped to scrolly-content */
+    :global(.scrolly-content .step.active > *) {
         background: white;
         color: black;
     }
 
-    /* Interactive controls within scrolly steps */
-    :global(.step-content) {
+    /* Interactive controls within scrolly steps - scoped to scrolly-content */
+    :global(.scrolly-content .step-content) {
         width: 100%;
         max-width: 600px;
         margin: 0 auto;

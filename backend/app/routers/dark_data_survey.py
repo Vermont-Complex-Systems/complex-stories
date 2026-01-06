@@ -1,16 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, insert
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from ..core.database import get_db_session
 from ..models.dark_data_survey import DarkDataSurvey, SurveyAnswerRequest, SurveyUpsertRequest, SurveyResponse, SurveyAnswerResponse
+from ..main import limiter  # Import shared limiter instance
 
 # Public router for survey responses
 router = APIRouter()
-
-# Initialize limiter for this router
-limiter = Limiter(key_func=get_remote_address)
 
 # Value to ordinal mapping (same as frontend)
 # Valid database fields mapping to prevent injection via column names
@@ -32,7 +28,7 @@ FIELD_MAPPING = {
 VALUE_TO_ORDINAL = {
     'consent': {'accepted': 1, 'declined': 0},
     'socialMediaPrivacy': {'private': 1, 'mixed': 2, 'public': 3},
-    'platformMatters': {'no': 1, 'sometimes': 2, 'yes': 3},
+    # Note: 'platformMatters' is NOT in this mapping - it stores comma-separated platform names as a String
     'institutionPreferences': {'mostly-same': 1, 'depends-context': 2, 'vary-greatly': 3},
     'demographicsMatter': {'no': 1, 'somewhat': 2, 'yes': 3}
 }
@@ -47,8 +43,11 @@ NUMERIC_FIELD_RANGES = {
     'race_ord': (0, 2)              # 0=White, 1=Mixed, 2=POC
 }
 
+# Valid platform names for platformMatters field (comma-separated string)
+VALID_PLATFORMS = {'Twitter', 'Instagram', 'Facebook', 'TikTok', 'Other'}
+
 @router.post("/dark-data-survey/answer", response_model=SurveyAnswerResponse)
-@limiter.limit("30/minute")  # Allow 30 submissions per minute per IP
+@limiter.limit("30/minute")
 async def post_answer(
     request: Request,
     db: AsyncSession = Depends(get_db_session)
@@ -57,7 +56,6 @@ async def post_answer(
 
     Rate limit: 30 requests per minute per IP address.
     """
-
     # Parse and validate request body
     body = await request.json()
     survey_request = SurveyAnswerRequest(**body)
@@ -109,6 +107,21 @@ async def upsert_survey_answer(
     if survey_request.field not in FIELD_MAPPING:
         raise HTTPException(status_code=400, detail=f"Invalid field: {survey_request.field}")
 
+    # Validate platformMatters as comma-separated string of valid platforms
+    if survey_request.field == 'platformMatters':
+        if not isinstance(survey_request.value, str):
+            raise HTTPException(
+                status_code=400,
+                detail="platformMatters must be a comma-separated string"
+            )
+        platforms = [p.strip() for p in survey_request.value.split(',') if p.strip()]
+        invalid_platforms = [p for p in platforms if p not in VALID_PLATFORMS]
+        if invalid_platforms:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid platform(s): {', '.join(invalid_platforms)}. Valid platforms: {', '.join(VALID_PLATFORMS)}"
+            )
+
     # Validate numeric field ranges
     if survey_request.field in NUMERIC_FIELD_RANGES:
         min_val, max_val = NUMERIC_FIELD_RANGES[survey_request.field]
@@ -135,11 +148,16 @@ async def upsert_survey_answer(
 
 
 async def upsert_answer(db: AsyncSession, fingerprint: str, field: str, value):
-    """Helper function to upsert a single answer."""
+    """Helper function to upsert a single answer.
 
-    # Validate field against FIELD_MAPPING (defense in depth)
+    Uses SQLAlchemy Column objects instead of string field names for SQL injection protection.
+    """
+
+    # Validate field against FIELD_MAPPING and get Column object (defense in depth)
     if field not in FIELD_MAPPING:
         raise ValueError(f"Invalid field: {field}")
+
+    column = FIELD_MAPPING[field]
 
     # Check if record exists
     query = select(DarkDataSurvey).where(DarkDataSurvey.fingerprint == fingerprint)
@@ -147,16 +165,16 @@ async def upsert_answer(db: AsyncSession, fingerprint: str, field: str, value):
     existing = result.scalar_one_or_none()
 
     if existing:
-        # Update existing record - use string field name for values dict
+        # Update existing record - use Column object for safety
         update_stmt = (
             update(DarkDataSurvey)
             .where(DarkDataSurvey.fingerprint == fingerprint)
-            .values(**{field: value})
+            .values({column: value})
         )
         await db.execute(update_stmt)
     else:
-        # Insert new record - use string field name for values dict
-        insert_stmt = insert(DarkDataSurvey).values(fingerprint=fingerprint, **{field: value})
+        # Insert new record - use Column object for safety
+        insert_stmt = insert(DarkDataSurvey).values(fingerprint=fingerprint, **{column: value})
         await db.execute(insert_stmt)
 
     await db.commit()

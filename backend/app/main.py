@@ -7,11 +7,13 @@ from slowapi.errors import RateLimitExceeded
 
 from .core.config import settings
 from .core.database import connect_to_database, close_database_connection
-from .routers import open_academic_analytics, datasets, auth, wikimedia, annotations, dark_data_survey, scisciDB, datalakes
 from .internal import admin
 
-# Initialize rate limiter
+# Initialize rate limiter (shared across all routers)
 limiter = Limiter(key_func=get_remote_address)
+
+# Import routers after limiter is defined so they can use it
+from .routers import open_academic_analytics, datasets, auth, wikimedia, annotations, dark_data_survey, scisciDB, datalakes
 
 app = FastAPI(
     title=settings.app_name,
