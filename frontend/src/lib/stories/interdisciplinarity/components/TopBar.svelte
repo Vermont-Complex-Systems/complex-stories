@@ -32,6 +32,13 @@
 		<div class="mode-switcher">
 			<button
 				class="mode-btn"
+				class:active={mode === 'story'}
+				onclick={() => onModeChange('story')}
+			>
+				Why
+			</button>
+			<button
+				class="mode-btn"
 				class:active={mode === 'overview'}
 				onclick={() => onModeChange('overview')}
 			>

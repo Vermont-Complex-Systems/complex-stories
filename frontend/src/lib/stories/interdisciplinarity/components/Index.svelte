@@ -8,6 +8,7 @@
 	import QueueHeader from './QueueHeader.svelte'
 	import PaperAnnotationCard from './PaperAnnotationCard.svelte'
 	import StatsView from './StatsView.svelte'
+	import Story from './Story.svelte'
 
 	// State
 	let currentIndex = $state(0)
@@ -15,7 +16,7 @@
 	let selectedRating = $state(null)
 	let isSubmitting = $state(false)
 	let error = $state(null)
-	let mode = $state('overview') // 'csv-queue', 'community-queue', 'my-papers-queue', 'overview', 'stats'
+	let mode = $state('story') // 'csv-queue', 'community-queue', 'my-papers-queue', 'overview', 'stats'
 	let myAnnotations = $state([])
 	let myPapers = $state([]) // User's own papers from ORCID/OpenAlex
 	let annotationCounts = $state({}) // Per-paper annotation counts
@@ -254,6 +255,8 @@
 	<div class="container">
 		{#if mode === 'stats'}
 			<StatsView {stats} {myAnnotations} {myPapers} {paperIds} {generalPapers} />
+		{:else if mode === 'story'}
+			<Story />
 		{:else if mode === 'overview'}
 			<OverviewTable
 				{paperIds}
