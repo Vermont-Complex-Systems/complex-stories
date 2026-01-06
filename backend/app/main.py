@@ -13,7 +13,7 @@ from .internal import admin
 limiter = Limiter(key_func=get_remote_address)
 
 # Import routers after limiter is defined so they can use it
-from .routers import open_academic_analytics, datasets, auth, wikimedia, annotations, dark_data_survey, scisciDB, datalakes
+from .routers import open_academic_analytics, datasets, auth, wikimedia, annotations, dark_data_survey, scisciDB, datalakes, interdisciplinarity
 
 app = FastAPI(
     title=settings.app_name,
@@ -88,6 +88,7 @@ app.include_router(wikimedia.router, prefix="/wikimedia", tags=["wikimedia"])
 app.include_router(annotations.router, prefix="/annotations", tags=["annotations"])
 app.include_router(scisciDB.router, prefix="/scisciDB", tags=["scisciDB"])
 app.include_router(dark_data_survey.router, prefix="", tags=["dark-data-survey"])
+app.include_router(interdisciplinarity.router, prefix="", tags=["interdisciplinarity"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"], include_in_schema=False)
 
 # Admin endpoints (secured with admin authentication)
