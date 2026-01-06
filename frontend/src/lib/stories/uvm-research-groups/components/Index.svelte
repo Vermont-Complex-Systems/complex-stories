@@ -264,7 +264,8 @@
   } */
 
   
-  /* Allow story section (with scrolly) to use full wide width - desktop only */
+  /* Allow story section (with scrolly) to use full wide width - desktop only
+     NOTE: !important used to override default Scrolly component and app.css styles */
   @media (min-width: 1200px) {
     section#story .scrolly-container {
       width: var(--width-column-wide) !important;
@@ -280,7 +281,8 @@
       transform: translateX(-50%) !important;
     }
   }
-  
+
+  /* NOTE: !important required to override app.css global 'section p' styles */
   section#embeddings > p {
       font-size: 22px;
       max-width: 800px !important;
@@ -289,23 +291,24 @@
       margin-bottom: 2rem; /* Add more space after paragraphs */
   }
 
-  section h2 {
+  /* Scope to story sections only - prevent leaking to other stories */
+  :global(#uvm-groups-story) section h2 {
     font-size: 1.8rem;
     margin: 2rem 0 1rem 0;
     font-family: var(--serif);
     color: var(--color-fg);
   }
-  
-  section p {
+
+  :global(#uvm-groups-story) section p {
     color: var(--color-fg);
   }
 
-  section p a {
+  :global(#uvm-groups-story) section p a {
     color: var(--color-primary);
     text-decoration: none;
   }
 
-  section p a:hover {
+  :global(#uvm-groups-story) section p a:hover {
     text-decoration: underline;
   }
 

@@ -1,20 +1,16 @@
 <script>
 import { base } from "$app/paths";
-import { scaleSequential } from 'd3-scale';
-import { interpolateRdYlGn } from 'd3-scale-chromatic';
 import { innerWidth, outerHeight } from 'svelte/reactivity/window';
 
-import FingerprintJS from '@fingerprintjs/fingerprintjs';
-
-import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
-import Scrolly from '$lib/components/helpers/Scrolly.svelte';
+import { generateFingerprint } from '$lib/utils/browserFingerprint.js';
 
 import TrustEvo from './TrustEvo.svelte';
-import Survey from './Survey.svelte';
 import ConsentPopup from './ConsentPopup.svelte';
 import Dashboard from './Dashboard.svelte';
+import DemographicsBox from './Survey.DemographicsBox.svelte';
 
-import { renderContent, scrollyContent } from './Snippets.svelte';
+import { scrollyContent, renderTextContent } from '$lib/components/helpers/ScrollySnippets.svelte';
+import { surveyScrollyContent } from '$lib/components/survey/SurveyScrolly.svelte';
 import { postAnswer, upsertAnswer } from '../data/data.remote.js';
 
 let { story, data } = $props();
@@ -22,55 +18,74 @@ let { story, data } = $props();
 // Consent state
 let hasConsented = $state(false);
 
-// Generate browser fingerprint using FingerprintJS
+// Generate browser fingerprint AFTER consent (GDPR/CCPA compliance)
 let userFingerprint = $state('');
+let saveAnswer = $derived(createSaveAnswerHandler(userFingerprint));
 
-$effect(() => {
-    if (typeof window !== 'undefined') {
-        FingerprintJS.load().then(fp => {
-            return fp.get();
-        }).then(result => {
-            userFingerprint = result.visitorId;
-            console.log('Fingerprint loaded:', userFingerprint);
-        }).catch(err => {
-            console.error('Failed to load fingerprint:', err);
-        });
-    }
-});
+/**
+ * Handle consent acceptance - generates fingerprint only after user consent
+ * This ensures GDPR/CCPA compliance by not tracking users before explicit consent
+ */
+async function handleConsentAccept() {
+    hasConsented = true;
 
-// Helper to safely post answers - returns a promise for await usage
-function saveAnswer(field, value) {
-    if (!userFingerprint) {
-        console.warn('Fingerprint not ready yet, skipping save');
-        return Promise.resolve();
-    }
+    try {
+        userFingerprint = await generateFingerprint();
+        console.log('Fingerprint loaded:', userFingerprint);
 
-    // Fields that need string-to-ordinal conversion
-    const stringToOrdinalFields = ['consent', 'socialMediaPrivacy', 'institutionPreferences', 'demographicsMatter'];
-
-    // Fields that already have numeric values
-    const numericFields = ['relativePreferences', 'govPreferences', 'polPreferences', 'age', 'gender_ord', 'orientation_ord', 'race_ord'];
-
-    // Handle special cases
-    if (field === 'platformMatters') {
-        // Convert array to comma-separated string for storage
-        const stringValue = Array.isArray(value) ? value.join(',') : value;
-        return upsertAnswer({ fingerprint: userFingerprint, field, value: stringValue });
-    } else if (stringToOrdinalFields.includes(field)) {
-        return postAnswer({ fingerprint: userFingerprint, field, value });
-    } else if (numericFields.includes(field)) {
-        // Convert string numbers to integers
-        const numericValue = parseInt(value, 10);
-        return upsertAnswer({ fingerprint: userFingerprint, field, value: numericValue });
-    } else {
-        console.error(`Unknown field: ${field}`);
-        return Promise.reject(new Error(`Unknown field: ${field}`));
+        // Save consent after fingerprint is ready
+        if (userFingerprint) {
+            await saveAnswer('consent', 'accepted');
+        }
+    } catch (err) {
+        console.error('Failed to load fingerprint:', err);
     }
 }
 
-// Generate people data using imported function
+// Survey answers - keys match question 'name' fields in copy.json
+let surveyAnswers = $state({
+    socialMediaPrivacy: '',
+    platformMatters: [],
+    relativePreferences: '',
+    govPreferences: '',
+    polPreferences: '',
+});
 
-let selectedDemographic = $state('white_men');
+/**
+ * Story-specific saveAnswer adapter
+ * Maps form field names to appropriate API calls based on field type
+ * Kept here to ensure field mapping stays in sync with surveyAnswers definition above
+ */
+function createSaveAnswerHandler(userFingerprint) {
+	return function saveAnswer(field, value) {
+		if (!userFingerprint) {
+			console.warn('Fingerprint not ready yet, skipping save');
+			return Promise.resolve();
+		}
+
+		// Fields that need string-to-ordinal conversion
+		const stringToOrdinalFields = ['consent', 'socialMediaPrivacy', 'institutionPreferences', 'demographicsMatter'];
+
+		// Fields that already have numeric values
+		const numericFields = ['relativePreferences', 'govPreferences', 'polPreferences', 'age', 'gender_ord', 'orientation_ord', 'race_ord'];
+
+		// Handle special cases
+		if (field === 'platformMatters') {
+			// Convert array to comma-separated string for storage
+			const stringValue = Array.isArray(value) ? value.join(',') : value;
+			return upsertAnswer({ fingerprint: userFingerprint, field, value: stringValue });
+		} else if (stringToOrdinalFields.includes(field)) {
+			return postAnswer({ fingerprint: userFingerprint, field, value });
+		} else if (numericFields.includes(field)) {
+			// Convert string numbers to integers
+			const numericValue = parseInt(value, 10);
+			return upsertAnswer({ fingerprint: userFingerprint, field, value: numericValue });
+		} else {
+			console.error(`Unknown field: ${field}`);
+			return Promise.reject(new Error(`Unknown field: ${field}`));
+		}
+	};
+}
 
 // Scrolly state management - separate states for survey and story
 let surveyScrollyState = $state({
@@ -79,7 +94,7 @@ let surveyScrollyState = $state({
     isTablet: false
 });
 
-let storyScrollyState = $state({ 
+let storyScrollyState = $state({
     scrollyIndex: undefined,
     isMobile: false,
     isTablet: false
@@ -125,12 +140,19 @@ $effect(() => {
 
 </script>
 
+
 <!-- Consent Popup -->
-<ConsentPopup onAccept={() => hasConsented = true} {userFingerprint} {saveAnswer} />
+<ConsentPopup onAccept={handleConsentAccept} {userFingerprint} {saveAnswer} />
 
 <article id="dark-data-survey">
 
-    <Survey bind:scrollyState={surveyScrollyState} {userFingerprint} {saveAnswer} />
+    <!-- Survey Section -->
+    <section id="survey">
+        {@render surveyScrollyContent(data.survey, surveyScrollyState, userFingerprint, saveAnswer, surveyAnswers)}
+
+        <!-- Demographics questions after scrolly -->
+        <DemographicsBox {userFingerprint} {saveAnswer} />
+    </section>
 
     <div class="title">
         <h1>{data.title}</h1>
@@ -147,7 +169,9 @@ $effect(() => {
     </div>
 
     <section id="intro">
-        {@render renderContent(data.intro)}
+        {#each data.intro as item}
+            {@render renderTextContent(item)}
+        {/each}
     </section>
 
     <section id="story">
@@ -167,7 +191,9 @@ $effect(() => {
     
     <h2>Conclusion</h2>
     <section id="conclusion" bind:this={conclusionSection}>
-        {@render renderContent(data.conclusion)}
+        {#each data.conclusion as item}
+            {@render renderTextContent(item)}
+        {/each}
     </section>
 
     <section id="dashboard" bind:this={dashboardSection}>
@@ -175,9 +201,11 @@ $effect(() => {
     </section>
 </article>
 
-<!-- <div class="corner-image" class:hidden={conclusionVisible || dashboardVisible}>
-    <img src="{base}/common/thumbnails/screenshots/dark-data.png" alt="Dark data visualization" />
-</div> -->
+<div class="corner-image" class:hidden={conclusionVisible || dashboardVisible}>
+    <a href="{base}/">
+        <img src="{base}/common/thumbnails/screenshots/dark-data-survey.png" alt="Dark data visualization" />
+    </a>
+</div>
 
 <style>
 /* -----------------------------
@@ -188,6 +216,11 @@ $effect(() => {
     background-color: #2b2b2b;
     color: #ffffff;
     font-family: var(--sans);
+}
+
+/* Survey styling override */
+:global(#dark-data-survey #survey .survey-scrolly .step-content) {
+    font-family: 'Georgia', 'Times New Roman', Times, serif;
 }
 
 /* Headings */
@@ -211,18 +244,21 @@ $effect(() => {
 
 /* -----------------------------
    Text & Paragraphs
+   NOTE: This story uses a dark theme. All text is whitesmoke by default,
+   with specific sections overriding to black for readability.
+   This is scoped to #dark-data-survey so it won't affect other stories.
 ----------------------------- */
 :global(#dark-data-survey p) {
     color: whitesmoke;
 }
 
-/* Make sure intro & conclusion text remain white */
-:global(#intro p),
-:global(#conclusion p) {
+/* Make sure intro & conclusion text remain white - MUST scope to this story! */
+:global(#dark-data-survey #intro p),
+:global(#dark-data-survey #conclusion p) {
     color: whitesmoke;
 }
 
-/* Scrolly text specifically black for readability */
+/* Scrolly text specifically black for readability against light backgrounds */
 :global(.scrolly-container .markdown-content),
 :global(.scrolly-container .markdown-content p) {
     color: black !important;
@@ -281,6 +317,24 @@ $effect(() => {
     pointer-events: none;
 }
 
+/* Override shared ScrollySnippets styling for this story's dark theme */
+:global(#dark-data-survey .scrolly-content .step > *) {
+    padding: 1rem;
+    background: #f5f5f5;
+    color: #ccc;
+    border-radius: 5px;
+    box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+    transition: all 500ms ease;
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+:global(#dark-data-survey .scrolly-content .step.active > *) {
+    background: white;
+    color: black;
+}
+
 /* -----------------------------
    Corner Image
 ----------------------------- */
@@ -288,7 +342,7 @@ $effect(() => {
     position: fixed;
     bottom: 2rem;
     left: 2rem;
-    max-width: 10rem;
+    max-width: 14rem;
     z-index: 10;
     opacity: 1;
     transition: opacity 0.6s ease;

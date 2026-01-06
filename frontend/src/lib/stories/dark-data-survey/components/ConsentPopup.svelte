@@ -4,18 +4,14 @@
     let showPopup = $state(true);
 
     async function handleAccept() {
-        if (userFingerprint && saveAnswer) {
-            await saveAnswer('consent', 'accepted');
-        }
         showPopup = false;
-        onAccept();
+        // Parent component (Index.svelte) will handle fingerprint generation and consent saving
+        await onAccept();
     }
 
-    async function handleDecline() {
-        if (userFingerprint && saveAnswer) {
-            await saveAnswer('consent', 'declined');
-        }
+    function handleDecline() {
         showPopup = false;
+        // No tracking if user declines - fingerprint is never generated
     }
 </script>
 

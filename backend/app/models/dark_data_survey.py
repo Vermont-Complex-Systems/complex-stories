@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
+from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.sql import func
 from pydantic import BaseModel
 from typing import Optional, Union
@@ -9,7 +9,7 @@ class DarkDataSurvey(Base):
     __tablename__ = "dark_data_survey"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    fingerprint = Column(String(255), nullable=False)
+    fingerprint = Column(String(255), nullable=False, unique=True, index=True)
     consent = Column(Integer)
     socialMediaPrivacy = Column(Integer)
     platformMatters = Column(String)
@@ -41,9 +41,9 @@ class SurveyUpsertRequest(BaseModel):
 class SurveyResponse(BaseModel):
     id: int
     fingerprint: str
-    consent: Optional[str] = None
+    consent: Optional[int] = None
     socialMediaPrivacy: Optional[int] = None
-    platformMatters: Optional[int] = None
+    platformMatters: Optional[str] = None
     institutionPreferences: Optional[int] = None
     demographicsMatter: Optional[int] = None
     relativePreferences: Optional[int] = None
@@ -56,3 +56,8 @@ class SurveyResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class SurveyAnswerResponse(BaseModel):
+    """Response model for survey answer submission endpoints."""
+    message: str

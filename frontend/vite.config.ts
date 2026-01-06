@@ -26,9 +26,6 @@ export default defineConfig({
 			$stories: path.resolve("./src/lib/stories"),
 		}
 	},
-	optimizeDeps: {
-		exclude: ['@duckdb/duckdb-wasm'],
-	},
 	ssr: {
 		noExternal: ['d3-regression']
 	},
