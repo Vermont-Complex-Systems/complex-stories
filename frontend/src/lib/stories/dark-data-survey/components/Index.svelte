@@ -1,5 +1,4 @@
 <script>
-import { onMount } from 'svelte';
 import { base } from "$app/paths";
 import { innerWidth, outerHeight } from 'svelte/reactivity/window';
 
@@ -204,7 +203,7 @@ $effect(() => {
 
 <div class="corner-image" class:hidden={conclusionVisible || dashboardVisible}>
     <a href="{base}/">
-        <img src="{base}/common/thumbnails/screenshots/underwaterBits2-angler-fish.png" alt="Dark data visualization" />
+        <img src="{base}/common/thumbnails/screenshots/dark-data-survey.png" alt="Dark data visualization" />
     </a>
 </div>
 

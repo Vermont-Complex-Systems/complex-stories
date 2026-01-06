@@ -47,6 +47,7 @@
                 <option value="">Select...</option>
                 <option value="0">Women</option>
                 <option value="1">Men</option>
+                <option value="2">Other</option>
             </select>
         </div>
 

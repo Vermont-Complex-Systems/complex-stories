@@ -8,6 +8,8 @@ frontend/.wrangler
 frontend/.svelte-kit
 frontend/build
 
+.mcp.json
+
 # OS
 .DS_Store
 Thumbs.db

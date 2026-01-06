@@ -38,7 +38,7 @@ NUMERIC_FIELD_RANGES = {
     'relativePreferences': (1, 7),  # 7-point Likert scale
     'govPreferences': (1, 7),       # 7-point Likert scale
     'polPreferences': (1, 7),       # 7-point Likert scale
-    'gender_ord': (0, 1),           # 0=Women, 1=Men
+    'gender_ord': (0, 2),           # 0=Women, 1=Men, 2=Other
     'orientation_ord': (0, 3),      # 0=Straight, 1=Bisexual, 2=Gay, 3=Other
     'race_ord': (0, 2)              # 0=White, 1=Mixed, 2=POC
 }
