@@ -77,6 +77,7 @@
 
   .content {
     position: relative;
+    padding-bottom: 8rem; 
   }
 
   .stories {

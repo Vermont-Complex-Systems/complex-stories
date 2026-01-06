@@ -63,6 +63,10 @@
     <a href="{base}/research-at-uvm" class="text-button">
 			Groups@UVM
 		</a>
+    
+    <a href="{base}/work-with-us" class="text-button">
+			Work with us
+		</a>
 
 		{#await getCurrentUser()}
 			<!-- Loading auth state -->

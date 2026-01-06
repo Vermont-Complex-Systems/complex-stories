@@ -13,7 +13,7 @@ const lookupColor = (slug) => {
 };
 
 const addFaves = (arr, name) => {
-  if (name) return [...arr, "our_faves"];
+  if (name) return [...arr, "trending"];
   return arr;
 };
 

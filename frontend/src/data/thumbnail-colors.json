@@ -1,62 +1,67 @@
 [
     {
         "slug": "networks-fast-and-slow",
-        "bg": "hsl(343, 56%, 61%)",
-        "text": "#000"
+        "bg": "#283618",
+        "text": "#fefae0"
     },
     {
         "slug": "friends-funnier-than-you-are",
-        "bg": "hsl(343, 56%, 61%)",
-        "text": "#000"
+        "bg": "#283618",
+        "text": "#fefae0"
     },
     {
         "slug": "dark-data-survey",
-        "bg": "hsl(343, 56%, 61%)",
-        "text": "#000"
+        "bg": "#fefae0",
+        "text": "#283618"
     },
     {
         "slug": "vermont-livability-map",
-        "bg": "hsl(170, 100%, 35%)",
-        "text": "#000"
+        "bg": "#5e548e",
+        "text": "#fefae0"
     },
     {
         "slug": "hello-sciscidb",
-        "bg": "hsl(200, 83%, 38%)",
-        "text": "#000"
+        "bg": "#669bbc",
+        "text": "#fefae0"
     },
     {
         "slug": "allotax-scrolly",
-        "bg": "hsl(170, 100%, 35%)",
-        "text": "#000"
+        "bg": "#283618",
+        "text": "#fefae0"
     },
     {
         "slug": "tokenization",
-        "bg": "hsl(343, 56%, 61%)",
-        "text": "#000"
+        "bg": "#283618",
+        "text": "#fefae0"
     },
     {
         "slug": "explore-the-cat-project",
-        "bg": "hsl(52, 100%, 45%)",
-        "text": "#000"
+        "bg": "#bc6c25",
+        "text": "#283618"
     },
     {
         "slug": "uvm-research-groups",
-        "bg": "hsl(343, 56%, 61%)",
-        "text": "#000"
+        "bg": "#5e548e",
+        "text": "#283618"
     },
     {
         "slug": "allotaxonometry",
-        "bg": "hsl(52, 100%, 45%)",
-        "text": "#000"
+        "bg": "#bc6c25",
+        "text": "#fefae0"
     },
     {
         "slug": "open-academic-analytics",
-        "bg": "hsl(52, 100%, 45%)",
-        "text": "#000"
+        "bg": "#bc6c25",
+        "text": "#fefae0"
     },
     {
         "slug": "explore-timeline",
-        "bg": "hsl(52, 100%, 45%)",
-        "text": "#000"
+        "bg": "#dda15e",
+        "text": "#283618"
+    },
+    {
+        "slug": "interdisciplinarity",
+        "bg": "#606c38",
+        "text": "#fefae0"
     }
 ]
