@@ -113,7 +113,9 @@
 </div>
 
 <style>
-	/* Main story container - matches Hero layout */
+	/* INTENTIONAL: Override main#content width for this story only
+	   This is scoped with :has() so it only applies when this story is present.
+	   This approach is used when a story needs a wider layout than the default. */
 	:global(body:has(#networks-fast-and-slow) main#content) {
 		max-width: var(--width-column-wide);
 		margin: 0 auto;

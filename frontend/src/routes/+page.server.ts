@@ -1,17 +1,19 @@
 import storiesData from "$data/stories.js";
 
 export async function load() {
-  const stories = storiesData.map(story => ({
-    id: story.id,
-    slug: story.slug,
-    short: story.short,
-    tease: story.tease,
-    month: story.month,
-    bgColor: story.bgColor,
-    href: story.external ? story.href : `/${story.slug}`,
-    isExternal: story.external,
-    filters: Array.isArray(story.filters) ? story.filters : [story.filters].filter(Boolean) // Ensure it's an array and remove empty values
-  }));
+  const stories = storiesData
+    .filter(story => !story.hide_home) // Exclude stories with hide_home set to true
+    .map(story => ({
+      id: story.id,
+      slug: story.slug,
+      short: story.short,
+      tease: story.tease,
+      month: story.month,
+      bgColor: story.bgColor,
+      href: story.external ? story.href : `/${story.slug}`,
+      isExternal: story.external,
+      filters: Array.isArray(story.filters) ? story.filters : [story.filters].filter(Boolean) // Ensure it's an array and remove empty values
+    }));
 
   return {
     stories

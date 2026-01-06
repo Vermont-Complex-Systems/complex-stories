@@ -1,11 +1,19 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from .core.config import settings
 from .core.database import connect_to_database, close_database_connection
-from .routers import open_academic_analytics, datasets, auth, wikimedia, annotations, scisciDB, datalakes
 from .internal import admin
+
+# Initialize rate limiter (shared across all routers)
+limiter = Limiter(key_func=get_remote_address)
+
+# Import routers after limiter is defined so they can use it
+from .routers import open_academic_analytics, datasets, auth, wikimedia, annotations, dark_data_survey, scisciDB, datalakes
 
 app = FastAPI(
     title=settings.app_name,
@@ -13,6 +21,10 @@ app = FastAPI(
     version=settings.version,
     debug=settings.debug,
 )
+
+# Add rate limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Database events
 @app.on_event("startup")
@@ -75,6 +87,7 @@ app.include_router(datalakes.router, prefix="/datalakes", tags=["datalakes"])
 app.include_router(wikimedia.router, prefix="/wikimedia", tags=["wikimedia"])
 app.include_router(annotations.router, prefix="/annotations", tags=["annotations"])
 app.include_router(scisciDB.router, prefix="/scisciDB", tags=["scisciDB"])
+app.include_router(dark_data_survey.router, prefix="", tags=["dark-data-survey"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"], include_in_schema=False)
 
 # Admin endpoints (secured with admin authentication)
