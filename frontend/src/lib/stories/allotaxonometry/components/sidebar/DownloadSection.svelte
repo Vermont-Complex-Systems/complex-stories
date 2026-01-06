@@ -105,20 +105,6 @@
 </Accordion.Item>
 
 <style>
-  .section-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 0.75rem 0;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: var(--font-size-small);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-fg);
-    font-family: var(--font-body);
-  }
 
   .section-header {
     display: flex;
@@ -128,10 +114,6 @@
 
   .icon {
     font-size: 1.2em;
-  }
-
-  .section-content {
-    padding-bottom: 1rem;
   }
 
   .download-section {

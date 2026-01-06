@@ -1,22 +1,22 @@
 <script>
   import { base } from "$app/paths";
   
-  let { 
-    id, 
-    href, 
-    slug, 
-    short, 
-    tease, 
-    month, 
-    bgColor, 
+  let {
+    id,
+    href,
+    slug,
+    short,
+    tease,
+    month,
+    bgColor,
     isExternal = false,
-    resource = false, 
+    resource = false,
     footer = false
   } = $props();
 
-  const style = bgColor ? `--story-bg: ${bgColor};` : "";
-  const finalHref = isExternal ? href : `${base}${href}`;
-  
+  const style = $derived(bgColor ? `--story-bg: ${bgColor};` : "");
+  const finalHref = $derived(isExternal ? href : `${base}${href}`);
+
   const imagePath = `${base}/common/thumbnails/screenshots`;
 </script>
 

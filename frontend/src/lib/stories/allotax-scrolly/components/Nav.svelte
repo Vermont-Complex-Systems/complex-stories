@@ -149,10 +149,6 @@
         .logo-container {
             max-width: 5rem;
         }
-
-        .author-name {
-            font-size: var(--font-size-xsmall);
-        }
     }
     
 </style>
