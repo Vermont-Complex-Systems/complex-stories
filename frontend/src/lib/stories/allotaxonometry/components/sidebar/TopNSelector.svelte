@@ -1,7 +1,6 @@
 <script>
-    import { dashboardState } from '../../sidebar-state.svelte.ts';
-
     let {
+        limit = $bindable(10000),
         label = "Top N tokens",
         min = 100,
         max = 50000,
@@ -11,7 +10,7 @@
     function handleChange(event) {
         const newValue = parseInt(event.target.value);
         if (!isNaN(newValue)) {
-            dashboardState.selectedTopN = Math.max(min, Math.min(max, newValue));
+            limit = Math.max(min, Math.min(max, newValue));
         }
     }
 </script>
@@ -19,13 +18,12 @@
 <div class="topn-selector">
     <div class="selector-header">
         <span class="selector-label">{label}</span>
-        <!-- <span class="current-value">{value.toLocaleString()}</span> -->
     </div>
 
     <div class="selector-control">
         <input
             type="number"
-            value={dashboardState.selectedTopN}
+            value={limit}
             onchange={handleChange}
             {min}
             {max}
