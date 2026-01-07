@@ -13,6 +13,9 @@
     import DownloadSection from './sidebar/DownloadSection.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
     import { getTopBabyNames, getAdapter } from '../allotax.remote';
+    
+    import boys1968 from '../data/boys-1968.json';
+    import boys1895 from '../data/boys-1895.json';
 
     // File upload state
     let uploadedSys1 = $state(null);
@@ -21,7 +24,7 @@
     const hasUploadedFiles = $derived(!!uploadedSys1 && !!uploadedSys2);
 
     // Year range state - two separate sliders for comparison
-    let period1 = $state([1895, 1915]); // Single year by default
+    let period1 = $state([1905, 1925]); // Single year by default
     let period2 = $state([1968, 1998]); // Single year by default
 
     // Other parameters (UI state - not sent to API until update)
@@ -30,15 +33,15 @@
     let limit = $state(10000);
 
     // Committed parameters (actually used for API calls)
-    let committedPeriod1 = $state([1895, 1915]);
-    let committedPeriod2 = $state([1968, 1998]);
+    let committedPeriod1 = $state([1905, 1925]);
+    let committedPeriod2 = $state([1972, 2002]);
     let committedLocation = $state('wikidata:Q30');
     let committedSex = $state('M');
     let committedLimit = $state(10000);
 
     // Derive date strings from committed year ranges
-    let dates = $derived(committedPeriod1[0].toString());
-    let dates2 = $derived(committedPeriod2[0].toString());
+    let dates = $derived(`${committedPeriod1[0]},${committedPeriod1[1]}`);
+    let dates2 = $derived(`${committedPeriod2[0]},${committedPeriod2[1]}`);
 
     // Alpha slider state (updates immediately - no update button needed)
     const alphas = [0, 1/4, 2/4, 3/4, 1, 3/2, 2, 3, 5, Infinity];
@@ -46,7 +49,8 @@
     let alpha = $derived(alphas[alphaIndex]);
 
     // Fetch location adapter data
-    const adapterData = $derived(await getAdapter());
+    const adapterQuery = getAdapter();
+    const adapterData = $derived(adapterQuery.error ? [] : (adapterQuery.current || []));
 
     // Derive date range based on selected location
     const dateRange = $derived.by(() => {
@@ -134,7 +138,7 @@
     }
 
     // Fetch data from API (only when committed parameters change and no uploaded files)
-    const apiData = $derived(!hasUploadedFiles ? await getTopBabyNames({
+    const apiQuery = $derived(!hasUploadedFiles ? getTopBabyNames({
         dates,
         dates2,
         location: committedLocation,
@@ -142,53 +146,41 @@
         limit: committedLimit
     }) : null);
 
+    // Extract data from query, returning null on error (triggers static fallback)
+    const apiData = $derived(apiQuery?.error ? null : apiQuery?.current);
+
     // Extract systems from either uploaded files or API response
+    // Falls back to static data if API is unavailable
     const sys1 = $derived.by(() => {
         if (hasUploadedFiles) return uploadedSys1;
-        return apiData ? (apiData[dates] || apiData[Object.keys(apiData)[0]]) : null;
+        if (apiData) return apiData[dates] || apiData[Object.keys(apiData)[0]];
+        // Fallback to static data if API failed
+        return boys1895;
     });
 
     const sys2 = $derived.by(() => {
         if (hasUploadedFiles) return uploadedSys2;
-        return apiData ? (apiData[dates2] || apiData[Object.keys(apiData)[1]]) : null;
+        if (apiData) return apiData[dates2] || apiData[Object.keys(apiData)[1]];
+        // Fallback to static data if API failed
+        return boys1968;
     });
 
-    const title = $derived(hasUploadedFiles
-        ? uploadedTitle
-        : [`${sex === 'M' ? 'Boys' : 'Girls'} ${dates}`, `${sex === 'M' ? 'Boys' : 'Girls'} ${dates2}`]
-    );
+    const title = $derived.by(() => {
+        if (hasUploadedFiles) return uploadedTitle;
+        // If using fallback static data, show static data titles (single years only)
+        if (!apiData) return ['Boys 1895', 'Boys 1968'];
+        // Otherwise show the actual requested dates with dash separator
+        const range1 = `${committedPeriod1[0]}-${committedPeriod1[1]}`;
+        const range2 = `${committedPeriod2[0]}-${committedPeriod2[1]}`;
+        return [`${sex === 'M' ? 'Boys' : 'Girls'} ${range1}`, `${sex === 'M' ? 'Boys' : 'Girls'} ${range2}`];
+    });
 
     // Compute visualization data using utility functions
-    const me = $derived.by(() => {
-        if (!sys1 || !sys2) return null;
-        console.log('Computing combElems');
-        return combElems(sys1, sys2);
-    });
-
-    const rtd = $derived.by(() => {
-        if (!me) return null;
-        console.log('Computing rank_turbulence_divergence with alpha:', alpha);
-        return rank_turbulence_divergence(me, alpha);
-    });
-
-    const dat = $derived.by(() => {
-        if (!me || !rtd) return null;
-        console.log('Computing diamond_count');
-        return diamond_count(me, rtd);
-    });
-
-    const barData = $derived.by(() => {
-        if (!me || !dat) return [];
-        console.log('Computing wordShift_dat');
-        return wordShift_dat(me, dat).slice(0, 30);
-    });
-
-    const balanceData = $derived.by(() => {
-        if (!sys1 || !sys2) return [];
-        console.log('Computing balanceDat');
-        return balanceDat(sys1, sys2);
-    });
-
+    const me = $derived(sys1 && sys2 ? combElems(sys1, sys2) : null);
+    const rtd = $derived(me ? rank_turbulence_divergence(me, alpha) : null);
+    const dat = $derived(me && rtd ? diamond_count(me, rtd) : null);
+    const barData = $derived(me && dat ? wordShift_dat(me, dat).slice(0, 30) : []);
+    const balanceData = $derived(sys1 && sys2 ? balanceDat(sys1, sys2) : []);
     const maxlog10 = $derived(me ? Math.ceil(d3.max([Math.log10(d3.max(me[0].ranks)), Math.log10(d3.max(me[1].ranks))])) : 0);
     const divnorm = $derived(rtd ? rtd.normalization : 1);
 
