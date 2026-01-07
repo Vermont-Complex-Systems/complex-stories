@@ -1,12 +1,12 @@
 [
     {
         "slug": "networks-fast-and-slow",
-        "bg": "#283618",
+        "bg": "#ee6c4d",
         "text": "#fefae0"
     },
     {
         "slug": "friends-funnier-than-you-are",
-        "bg": "#283618",
+        "bg": "#dda15e",
         "text": "#fefae0"
     },
     {
@@ -16,7 +16,7 @@
     },
     {
         "slug": "vermont-livability-map",
-        "bg": "#5e548e",
+        "bg": "#9d4edd",
         "text": "#fefae0"
     },
     {
@@ -26,7 +26,7 @@
     },
     {
         "slug": "allotax-scrolly",
-        "bg": "#283618",
+        "bg": "#fff3b0",
         "text": "#fefae0"
     },
     {
@@ -36,22 +36,22 @@
     },
     {
         "slug": "explore-the-cat-project",
-        "bg": "#bc6c25",
+        "bg": "#9d4edd",
         "text": "#283618"
     },
     {
         "slug": "uvm-research-groups",
-        "bg": "#5e548e",
+        "bg": "#43aa8b",
         "text": "#283618"
     },
     {
         "slug": "allotaxonometry",
-        "bg": "#bc6c25",
+        "bg": "#fff3b0",
         "text": "#fefae0"
     },
     {
         "slug": "open-academic-analytics",
-        "bg": "#bc6c25",
+        "bg": "#43aa8b",
         "text": "#fefae0"
     },
     {

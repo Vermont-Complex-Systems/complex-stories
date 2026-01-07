@@ -98,12 +98,14 @@
                     <p>Loading rust-wasm and baby names comparison...</p>
                 </div>
             {:else if instance}
-                <Dashboard {...instance} WordshiftWidth=400/>
-                {#if query.error}
-                    <div class="error">
-                        <p>Failed to load baby names data: babynames API is down. Falling back on static data.</p>
-                    </div>
-                {/if}
+                <div class="dashboard-container">
+                    <Dashboard {...instance} WordshiftWidth=400/>
+                    {#if query.error}
+                        <div class="error">
+                            <p>Failed to load baby names data: babynames API is down. Falling back on static data.</p>
+                        </div>
+                    {/if}
+                </div>
             {/if}
         </main>
     </div>
@@ -155,7 +157,16 @@
         justify-content: center;
         height: 100%;
         gap: 1rem;
-    } 
+    }
+
+    .dashboard-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: calc(100% + 5.5rem);
+        margin-top: -5.5rem;
+    }
 
     .error {
         padding: 2rem;

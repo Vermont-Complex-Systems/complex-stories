@@ -1,6 +1,7 @@
 <script>
   import { base } from "$app/paths";
-  
+  import { ExternalLink } from "@lucide/svelte";
+
   let {
     id,
     href,
@@ -18,7 +19,20 @@
   const finalHref = $derived(isExternal ? href : `${base}${href}`);
 
   const imagePath = `${base}/common/thumbnails/screenshots`;
+
+  // Generate unique ID for this card's filter
+  const filterId = `sketchy-${slug}`;
 </script>
+
+<!-- SVG filter for hand-drawn effect -->
+<svg style="position: absolute; width: 0; height: 0;">
+  <defs>
+    <filter id={filterId}>
+      <feTurbulence baseFrequency="0.02" numOctaves="3" result="noise" seed="2" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" />
+    </filter>
+  </defs>
+</svg>
 
 <div class="story" {style} class:external={isExternal} class:resource class:footer>
   {#if !resource && !footer}
@@ -28,16 +42,21 @@
     </div>
   {/if}
   
-  <a 
+  <a
     href={finalHref}
     rel={isExternal ? "external noopener" : undefined}
     target={isExternal ? "_blank" : undefined}
     class="inner"
   >
     <div class="screenshot">
+      {#if isExternal}
+        <div class="external-badge">
+          <ExternalLink class="external-icon" size={18} />
+        </div>
+      {/if}
       <img src="{imagePath}/{slug}.jpg" loading="lazy" alt="Thumbnail for {short}" />
     </div>
-    
+
     <div class="text">
       <h3 class="short">
         <strong>{@html short}</strong>
@@ -182,6 +201,46 @@
     line-height: 1;
     margin: 0 0 0.5rem 0; /* Convert 8px to rem */
     letter-spacing: -0.05em; /* Convert -0.8px to em for better scaling */
+  }
+
+  .external-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all calc(var(--1s) * 0.2);
+  }
+
+  .external-badge :global(.external-icon) {
+    color: var(--color-gray-700);
+  }
+
+  .story:hover .external-badge {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  :global(.dark) .external-badge {
+    background: rgba(40, 40, 40, 0.9);
+  }
+
+  :global(.dark) .external-badge :global(.external-icon) {
+    color: var(--color-gray-300);
+  }
+
+  :global(.dark) .story:hover .external-badge {
+    background: rgba(40, 40, 40, 1);
   }
 
   p.tease {
