@@ -1,24 +1,38 @@
 <script>
   import { base } from "$app/paths";
-  
-  let { 
-    id, 
-    href, 
-    slug, 
-    short, 
-    tease, 
-    month, 
-    bgColor, 
+  import { ExternalLink } from "@lucide/svelte";
+
+  let {
+    id,
+    href,
+    slug,
+    short,
+    tease,
+    month,
+    bgColor,
     isExternal = false,
-    resource = false, 
+    resource = false,
     footer = false
   } = $props();
 
-  const style = bgColor ? `--story-bg: ${bgColor};` : "";
-  const finalHref = isExternal ? href : `${base}${href}`;
-  
+  const style = $derived(bgColor ? `--story-bg: ${bgColor};` : "");
+  const finalHref = $derived(isExternal ? href : `${base}${href}`);
+
   const imagePath = `${base}/common/thumbnails/screenshots`;
+
+  // Generate unique ID for this card's filter
+  const filterId = `sketchy-${slug}`;
 </script>
+
+<!-- SVG filter for hand-drawn effect -->
+<svg style="position: absolute; width: 0; height: 0;">
+  <defs>
+    <filter id={filterId}>
+      <feTurbulence baseFrequency="0.02" numOctaves="3" result="noise" seed="2" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" />
+    </filter>
+  </defs>
+</svg>
 
 <div class="story" {style} class:external={isExternal} class:resource class:footer>
   {#if !resource && !footer}
@@ -28,16 +42,21 @@
     </div>
   {/if}
   
-  <a 
+  <a
     href={finalHref}
     rel={isExternal ? "external noopener" : undefined}
     target={isExternal ? "_blank" : undefined}
     class="inner"
   >
     <div class="screenshot">
+      {#if isExternal}
+        <div class="external-badge">
+          <ExternalLink class="external-icon" size={18} />
+        </div>
+      {/if}
       <img src="{imagePath}/{slug}.jpg" loading="lazy" alt="Thumbnail for {short}" />
     </div>
-    
+
     <div class="text">
       <h3 class="short">
         <strong>{@html short}</strong>
@@ -95,17 +114,52 @@
   }
 
   .screenshot {
-    background: var(--story-bg, var(--color-default-story-bg));
+    background: var(--story-bg, rgba(255, 255, 255, 0.15));
     aspect-ratio: 1;
     position: relative;
     overflow: hidden;
-    border-radius: calc(var(--border-radius) * 2);
-    backdrop-filter: blur(3px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 
-      0 4px 16px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 0 24px 12px rgba(255, 255, 255, 0.2);
     transition: all calc(var(--1s) * 0.25) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .screenshot::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.8),
+      transparent
+    );
+    z-index: 1;
+  }
+
+  .screenshot::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.8),
+      transparent,
+      rgba(255, 255, 255, 0.3)
+    );
+    z-index: 1;
   }
 
   img {
@@ -121,11 +175,14 @@
   }
 
   .story:hover .screenshot {
-    backdrop-filter: blur(6px);
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 
-      0 8px 32px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+      0 12px 48px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.15),
+      inset 0 0 32px 16px rgba(255, 255, 255, 0.25);
     transform: translateY(-2px);
   }
 
@@ -146,6 +203,46 @@
     letter-spacing: -0.05em; /* Convert -0.8px to em for better scaling */
   }
 
+  .external-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all calc(var(--1s) * 0.2);
+  }
+
+  .external-badge :global(.external-icon) {
+    color: var(--color-gray-700);
+  }
+
+  .story:hover .external-badge {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  :global(.dark) .external-badge {
+    background: rgba(40, 40, 40, 0.9);
+  }
+
+  :global(.dark) .external-badge :global(.external-icon) {
+    color: var(--color-gray-300);
+  }
+
+  :global(.dark) .story:hover .external-badge {
+    background: rgba(40, 40, 40, 1);
+  }
+
   p.tease {
     color: var(--color-secondary-gray);
     font-size: var(--font-size-small);
@@ -155,18 +252,22 @@
 
   /* Dark mode glass effects */
   :global(.dark) .screenshot {
-    background: var(--story-bg, rgba(40, 40, 40, 0.6));
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 
-      0 4px 16px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    background: var(--story-bg, rgba(255, 255, 255, 0.08));
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+      inset 0 0 24px 12px rgba(255, 255, 255, 0.1);
   }
 
   :global(.dark) .story:hover .screenshot {
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 
-      0 8px 32px rgba(0, 0, 0, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow:
+      0 12px 48px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 0 32px 16px rgba(255, 255, 255, 0.15);
   }
 
   @media (min-width: 960px) {

@@ -4,7 +4,9 @@
   import Home from "$lib/components/Home.svelte";
 
   let { data } = $props();
-  const { stories } = data;
+
+  // Create reactive state and set as context
+  setContext("Home", data);
 
   // Only preload fonts actually used above-the-fold on homepage
   const preloadFont = [
@@ -12,12 +14,9 @@
     "/assets/fonts/atlas/AtlasGrotesk-Bold-Web.woff2",
     "/assets/fonts/atlas/AtlasTypewriter-Medium-Web.woff2"
   ];
-
-  // Make stories available to Home component via context
-  setContext("Home", { stories });
 </script>
 
-<Meta 
+<Meta
   title="Complex Stories"
   description="Scientific data essays that uncover the challenges of computational science."
   {preloadFont}

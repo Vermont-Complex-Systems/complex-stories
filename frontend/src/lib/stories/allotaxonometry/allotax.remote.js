@@ -31,7 +31,7 @@ export const getTopBabyNames = query(
         limit: v.integer()
     }),
     async ({ dates, dates2, location = 'wikidata:Q30', sex = 'M', limit = 10_000}) => {
-
+        
         const params = new URLSearchParams({
             dates: dates,
             dates2: dates2,

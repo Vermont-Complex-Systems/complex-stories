@@ -6,13 +6,6 @@
 </script>
 
 
-<!-- - displaying **private** data in a secure way
-- team annotation
-- **managing data pipelines** - interoperability of data sharing through API
-- stories - **interactive press release**
-- website for larger project, or even research program
-- participatory and interactive surveys -->
-
 <!-- Slide 1: Title -->
 <section class="slide slide-hero column-wide">
 	<div class="content-section">
@@ -245,7 +238,7 @@
 		font-size: 1.9rem;
 		margin-bottom: 0.1rem;
 		font-weight: 500;
-		color: #666;
+		color: var(--color-secondary-gray);
 	}
 
 	.author-info {
@@ -285,7 +278,7 @@
 		font-size: 1.2rem;
 		line-height: 1.5;
 		margin-bottom: 1.5rem;
-		color: #666;
+		color: var(--color-secondary-gray);
 	}
 
 	.content-section ul {
@@ -296,7 +289,7 @@
 
 	.content-section li {
 		margin-bottom: 1rem;
-		color: #555;
+		color: var(--color-fg);
 		position: relative;
 		padding-left: 1.5rem;
 		font-size: 1.2rem;
@@ -326,6 +319,10 @@
 		padding-top: 5rem;
 		max-width: 500px;
   		margin-inline: auto;
+	}
+
+	.hero-image img {
+		transition: filter 0.2s ease;
 	}
 
 	/* ===== SIMPLE IMAGE STACKING ===== */
@@ -383,23 +380,6 @@
 		scale: 1.05; /* This won't interfere with transform */
 	}
 
-	/* Single image (for long-term projects) */
-	.single-image {
-		display: block;
-		transition: transform 0.2s ease;
-	}
-
-	.single-image img {
-		width: 100%;
-		max-width: 300px;
-		height: auto;
-		border-radius: 8px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-	}
-
-	.single-image:hover {
-		transform: scale(1.05);
-	}
 
 	/* ===== COMMUNITY IMAGE WITH COPYRIGHT ===== */
 	.image-wrapper {
@@ -424,31 +404,15 @@
 	.copyright p {
 		font-size: 0.75rem;
 		line-height: 1.3;
-		color: #666;
+		color: var(--color-secondary-gray);
 		margin: 0;
 		font-style: normal;
 	}
 
 	/* ===== LINK STYLES ===== */
-	a {
-		color: #667eea;
-		text-decoration: none;
-		font-weight: 500;
-		border-bottom: 2px solid transparent;
-		transition: all 0.2s ease;
-		display: inline-block;
-	}
-
-	/* Special styling for inline content links */
+	/* Links inherit from app.css, only override specific cases */
 	.content-section a {
-		color: #333;
 		font-weight: 600;
-		text-decoration: underline;
-		transition: color 0.2s ease;
-	}
-
-	.content-section a:hover {
-		color: #666;
 	}
 
 	a:active {
@@ -481,6 +445,15 @@
         left: 0;
         font-size: 1rem;
     }
+
+	/* ===== DARK MODE ===== */
+	:global(.dark) .hero-image img {
+		filter: invert(1);
+	}
+
+	:global(.dark) .image-item img {
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+	}
 
 	/* ===== RESPONSIVE DESIGN ===== */
 	@media (max-width: 1024px) {
@@ -550,10 +523,6 @@
 		.slide-three-column .image-grid {
 			max-width: 250px;
 			margin: 0 auto;
-		}
-
-		.slide-three-column .single-image img {
-			max-width: 250px;
 		}
 
 		/* Mobile hero styling */

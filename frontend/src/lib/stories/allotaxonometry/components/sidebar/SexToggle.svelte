@@ -58,7 +58,7 @@
 
     :global(.sex-toggle[data-state="off"]) {
         background: rgba(59, 130, 246, 0.15) !important; /* Light blue background for boys */
-        color: #1e40af !important; /* Darker blue text */
+        color: #6789f8 !important; /* Darker blue text */
     }
 
     /* Hover effects */
@@ -67,7 +67,7 @@
     }
 
     :global(.sex-toggle[data-state="off"]:hover) {
-        background: rgba(59, 130, 246, 0.25) !important;
+        background: rgba(112, 163, 246, 0.833)tant;
     }
 
     /* Toggle switch styles */

@@ -1,0 +1,195 @@
+{
+	"survey": [
+		{
+			"type": "question",
+			"value": {
+				"question": "Are your social media profiles typically public or private?",
+				"name": "socialMediaPrivacy",
+				"options": [
+					{ "value": "private", "label": "Private" },
+					{ "value": "mixed", "label": "Mixed" },
+					{ "value": "public", "label": "Public" }
+				]
+			}
+		},
+		{
+			"type": "question",
+			"value": {
+				"question": "Which social media platforms do you use?",
+				"name": "platformMatters",
+				"multiple": true,
+				"options": [
+					{ "value": "Twitter", "label": "Twitter" },
+					{ "value": "Instagram", "label": "Instagram" },
+					{ "value": "Facebook", "label": "Facebook" },
+					{ "value": "TikTok", "label": "TikTok" },
+					{ "value": "Other", "label": "Other" }
+				]
+			}
+		},
+		{
+			"type": "question",
+			"value": {
+				"question": "How comfortable are you with sharing your personally identifiable data with a relative?",
+				"name": "relativePreferences",
+				"options": [
+					{ "value": "1", "label": "Very Comfortable" },
+					{ "value": "2", "label": "Comfortable" },
+					{ "value": "3", "label": "Slightly comfortable" },
+					{ "value": "4", "label": "Neutral" },
+					{ "value": "5", "label": "Slightly Uncomfortable" },
+					{ "value": "6", "label": "Uncomfortable" },
+					{ "value": "7", "label": "Very Uncomfortable" }
+				]
+			}
+		},
+		{
+			"type": "question",
+			"value": {
+				"question": "How comfortable are you with sharing your personally identifiable with the government?",
+				"name": "govPreferences",
+				"options": [
+					{ "value": "1", "label": "Very Comfortable" },
+					{ "value": "2", "label": "Comfortable" },
+					{ "value": "3", "label": "Slightly comfortable" },
+					{ "value": "4", "label": "Neutral" },
+					{ "value": "5", "label": "Slightly Uncomfortable" },
+					{ "value": "6", "label": "Uncomfortable" },
+					{ "value": "7", "label": "Very Uncomfortable" }
+				]
+			}
+		},
+		{
+			"type": "question",
+			"value": {
+				"question": "How comfortable are you with sharing your personally identifiable with the police?",
+				"name": "polPreferences",
+				"options": [
+					{ "value": "1", "label": "Very Comfortable" },
+					{ "value": "2", "label": "Comfortable" },
+					{ "value": "3", "label": "Slightly comfortable" },
+					{ "value": "4", "label": "Neutral" },
+					{ "value": "5", "label": "Slightly Uncomfortable" },
+					{ "value": "6", "label": "Uncomfortable" },
+					{ "value": "7", "label": "Very Uncomfortable" }
+				]
+			}
+		}
+	],
+	"title": "A Taste for Privacy",
+	"subtitle": "When do people give up their privacy?",
+	"author1": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/jonathan-st-onge>Jonathan St-Onge</a>",
+	"author2": "<a target=_blank rel=noreferrer href=https://vermont-complex-systems.github.io/complex-stories/author/juniper-lisa-lovato>Juniper Lovato</a>",
+	"date": "Aug 15, 2025",
+	"intro": [
+		{
+			"type": "markdown",
+			"value": "Spoiler: Privacy depends on who you are and the context."
+		},
+		{
+			"type": "markdown",
+			"value": "Privacy depends on who you are and the context. Your willingness to share data varies dramatically across different institutions and relationships."
+		},
+		{
+			"type": "markdown",
+			"value": "In this survey, we asked undergraduate students at the University of Vermont about their relative trust in different institutions. In this story, we look at a snapshot of a much longer survey that is ongoing, examining 416 responses from January 2023."
+		},
+		{
+			"type": "markdown",
+			"value": "Let's start with a simple question: how do young people these days set up their privacy settings on social media?"
+		},
+		{
+			"type": "component",
+			"component": "chart-rank"
+		},
+		{
+			"type": "markdown",
+			"value": "We can see that most college students today set their accounts to private, followed by mixed, then public. Overall, **we find that more social media use leads to less private settings**."
+		},
+		{
+			"type": "markdown",
+			"value": "This gives us a first glimpse, but: is social media a good proxy for their broader “taste for privacy”?"
+		}
+	],
+	"ScrolylSectionTitle": "Zooming Out",
+	"steps": [
+		{
+			"type": "markdown",
+			"value": "To investigate that question, we asked a series of questions about how comfortable each respondent is with sharing personally identifiable information (PII) data with a number of institutions, broadly understood. What if the comfort of sharing data with a particular institution depends on the perceived distance from oneself, which we call _privacy construal_?"
+		},
+		{
+			"type": "markdown",
+			"value": "For instance, here's the circle of trust for all our respondents regarding how they feel about sharing PII with social media platforms. The orange grouping represents broader categories, such as institutions handling sensitive data."
+		},
+		{
+			"type": "markdown",
+			"value": "One interesting pattern we found is the relationship between the number of platforms users engage with and their comfort level in sharing PII with social media platforms. In general, we found that single-platform users are a bit less trusting of institutions than average."
+		},
+		{
+			"type": "markdown",
+			"value": "Conversely, the more platforms people use, the more comfortable they are sharing PII with those companies. When using four social media platforms, young people tend to trust those companies with their PII more than the police or even their neighbors!"
+		},
+		{
+			"type": "markdown",
+			"value": "Alright, let's go back to the average view."
+		},
+		{
+			"type": "markdown",
+			"value": "In our survey, we also asked about sexual orientation. For instance, we were interested in the relationship between institutions such as the police and sexual orientation. Here it is for people identifying as straight."
+		},
+		{
+			"type": "markdown",
+			"value": "Here are the circles of trust for bisexual people, which are almost one rating scale lower than for straight people."
+		},
+		{
+			"type": "markdown",
+			"value": "But that’s not all."
+		},
+		{
+			"type": "markdown",
+			"value": "Notice also how relatives are less trusted with data."
+		},
+		{
+			"type": "markdown",
+			"value": "We have one last part of the story to tell."
+		},
+		{
+			"type": "markdown",
+			"value": "No adverse childhood experiences. This represents most people."
+		},
+		{
+			"type": "markdown",
+			"value": "Adverse Childhood Experiences (ACE) composite score: here we look at an ACE score of 8."
+		},
+		{
+			"type": "markdown",
+			"value": "At an ACE score of 9, the circle of trust around sharing data with others is now completely inverted. Relatives score lower than employers or researchers."
+		},
+		{
+			"type": "markdown",
+			"value": "This is not just about relatives now ranking lower—acquaintances are even less trusted."
+		},
+		{
+			"type": "markdown",
+			"value": "Interestingly, non-profits seem to be vital for people who have experienced many adverse childhood experiences."
+		},
+		{
+			"type": "markdown",
+			"value": "Ultimately, the visualization makes clear that there is a large gap in trust between oneself and others—something that must be seen and understood by individuals and institutions collecting information about others. Any discussion of youth privacy must account for context and identity."
+		}
+	],
+	"conclusion": [
+		{
+			"type": "markdown",
+			"value": "Social media settings give us one angle, but comfort across contexts shows us a richer picture: privacy is relational and institutional."
+		},
+		{
+			"type": "markdown",
+			"value": "Demographic differences reveal that the “taste for privacy” is not evenly distributed."
+		},
+		{
+			"type": "markdown",
+			"value": "Privacy depends on who you are and the context."
+		}
+	]
+}

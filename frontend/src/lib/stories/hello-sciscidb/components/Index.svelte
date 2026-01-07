@@ -222,6 +222,9 @@
     min-height: calc(100vh + 2rem);
   }
 
+  /* NOTE: !important required to override app.css global 'section p' styles
+     which use !important (line 204 in app.css).
+     This is a dashboard with different typography needs than narrative content. */
   .dashboard p {
     line-height: 1.4rem !important;
     font-size: 1.1rem !important;

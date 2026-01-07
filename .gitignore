@@ -8,6 +8,8 @@ frontend/.wrangler
 frontend/.svelte-kit
 frontend/build
 
+.mcp.json
+
 # OS
 .DS_Store
 Thumbs.db
@@ -173,3 +175,88 @@ backend/projects/data-luminosity/scripts/results/
 *.hpp
 backend/scripts/overthinking-fos/input/google-scholar.parquet
 .vscode/mcp.json
+
+frontend/node_modules/
+
+# Output
+frontend/.output
+frontend/.vercel
+frontend/.netlify
+frontend/.wrangler
+frontend/.svelte-kit
+frontend/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+backend/.env
+backend/.env.*
+backend/!.env.example
+backend/!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+frontend/static/ecosystem_image.png
+frontend/static/assets/fonts/
+frontend/src/lib/stories/open-academic-analytics/venv/
+frontend/src/lib/stories/open-academic-analytics/.tmp_*
+
+frontend/src/lib/stories/open-academic-analytics/data/processed/
+frontend/src/lib/stories/open-academic-analytics/data/raw/
+frontend/src/lib/stories/open-academic-analytics/:memory*
+frontend/src/lib/stories/open-academic-analytics/assets/fit/stan/*
+frontend/!src/lib/stories/open-academic-analytics/assets/fit/stan/*.stan
+frontend/src/lib/stories/open-academic-analytics/open_academic_analytics.egg-info/
+
+frontend/src/lib/stories/open-academic-analyticsOld/
+frontend/src/lib/stories/open-academic-analytics/backend/.tmp_*
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[codz]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+backend/lib/
+backend/lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+src/lib/stories/open-academic-analyticsOld/
+src/lib/stories/open-academic-analytics/backend/.tmp_dagster_*
+
+CLAUDE.md
+src/lib/stories/open-academic-analytics/backend/.tmp_*
+
+# SQLite
+*.db
+
+# Specific data
+src/lib/stories/dark-data-survey/data/dfall.csv
+src/lib/stories/dark-data-survey/data/trust_circles.csv
+src/lib/stories/dark-data-survey/data/trust_circles2.csv
+src/lib/stories/dark-data-survey/data/trust_circles_individual_all_timepoints.csv
+src/lib/stories/dark-data-survey/data/trust_circles_individual.csv
+drizzle/
+frontend/.env

@@ -102,21 +102,13 @@
 </div>
 
 <style>
-  .download-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    width: 100%;
-  }
 
   .section-header {
     margin-bottom: 0.5rem;
   }
 
-  .section-label {
-    font-size: var(--12px, 0.75rem);
-    font-weight: var(--font-weight-medium, 500);
-    color: var(--color-text-primary);
+  .icon {
+    font-size: 1.2em;
   }
 
   .download-buttons {

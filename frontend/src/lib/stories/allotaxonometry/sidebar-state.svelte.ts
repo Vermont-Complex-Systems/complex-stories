@@ -10,6 +10,7 @@
  */
 import { getAdapter } from './allotax.remote.js';
 import { parseDataFile, calculateShiftedRange } from './utils.ts';
+import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 // Alpha values: 0, 1/4, 2/4, 3/4, 1, 3/2, 2, 3, 5, ∞
 export const alphas = [0, 1/4, 2/4, 3/4, 1, 3/2, 2, 3, 5, Infinity];
@@ -91,19 +92,33 @@ export const fileState = new FileState();
 // =============================================================================
 // DASHBOARD CONTROLS STATE & LOGIC
 // =============================================================================
+
+// URL params - created at module level to avoid effect_orphan error
+const urlParams = typeof window !== 'undefined'
+    ? new SvelteURLSearchParams(window.location.search)
+    : new SvelteURLSearchParams();
+
 class DashboardState {
-    // Time periods
-    period1 = $state([1940, 1959]);
-    period2 = $state([1990, 2009]);
+    // Time periods - initialize from URL if present
+    period1 = $state(
+        urlParams.has('period1')
+            ? urlParams.get('period1').split(',').map(Number)
+            : [1940, 1959]
+    );
+    period2 = $state(
+        urlParams.has('period2')
+            ? urlParams.get('period2').split(',').map(Number)
+            : [1990, 2009]
+    );
     jumpYears = $state(5);
 
     // Alpha parameter
     alphaIndex = $state(7);
 
-    // Data filtering
-    selectedLocation = $state('wikidata:Q30');
-    selectedSex = $state('M');
-    selectedTopN = $state(10000);
+    // Data filtering - initialize from URL if present
+    selectedLocation = $state(urlParams.get('location') || 'wikidata:Q30');
+    selectedSex = $state(urlParams.get('sex') || 'M');
+    selectedTopN = $state(Number(urlParams.get('topN')) || 10000);
 
     // Location adapter data
     adapter = $state([]);
@@ -115,11 +130,19 @@ class DashboardState {
     warningDismissed = $state(false);
 
     // What's currently fetched/displayed
-    fetchedPeriod1 = $state([1940, 1959]);
-    fetchedPeriod2 = $state([1990, 2009]);
-    fetchedLocation = $state('wikidata:Q30');
-    fetchedSex = $state('M');
-    fetchedTopN = $state(10000);
+    fetchedPeriod1 = $state(
+        urlParams.has('period1')
+            ? urlParams.get('period1').split(',').map(Number)
+            : [1940, 1959]
+    );
+    fetchedPeriod2 = $state(
+        urlParams.has('period2')
+            ? urlParams.get('period2').split(',').map(Number)
+            : [1990, 2009]
+    );
+    fetchedLocation = $state(urlParams.get('location') || 'wikidata:Q30');
+    fetchedSex = $state(urlParams.get('sex') || 'M');
+    fetchedTopN = $state(Number(urlParams.get('topN')) || 10000);
 
     // Derived current alpha value
     currentAlpha = $derived(alphas[this.alphaIndex]);
@@ -137,6 +160,36 @@ class DashboardState {
     dateMin = $derived(this.dateRange.min);
     dateMax = $derived(this.dateRange.max);
 
+    // Sync current state to URL params
+    syncToUrl() {
+        urlParams.set('period1', `${this.period1[0]},${this.period1[1]}`);
+        urlParams.set('period2', `${this.period2[0]},${this.period2[1]}`);
+        urlParams.set('location', this.selectedLocation);
+        urlParams.set('sex', this.selectedSex);
+        urlParams.set('topN', String(this.selectedTopN));
+    }
+
+    // Adjust periods to fit within the valid date range for current location
+    adjustPeriodsToRange() {
+        const range = this.dateRange;
+
+        // Adjust period1 if out of range
+        if (this.period1[0] < range.min || this.period1[1] > range.max) {
+            const periodLength = this.period1[1] - this.period1[0];
+            const newStart = Math.max(range.min, Math.min(range.max - periodLength, this.period1[0]));
+            const newEnd = Math.min(range.max, newStart + periodLength);
+            this.period1 = [newStart, newEnd];
+        }
+
+        // Adjust period2 if out of range
+        if (this.period2[0] < range.min || this.period2[1] > range.max) {
+            const periodLength = this.period2[1] - this.period2[0];
+            const newStart = Math.max(range.min, Math.min(range.max - periodLength, this.period2[0]));
+            const newEnd = Math.min(range.max, newStart + periodLength);
+            this.period2 = [newStart, newEnd];
+        }
+    }
+
     async initializeAdapter() {
         try {
             this.adapter = await getAdapter();
@@ -149,11 +202,15 @@ class DashboardState {
     }
 
     loadData() {
+        // Adjust periods if location changed and they're out of range
+        this.adjustPeriodsToRange();
+
         this.fetchedPeriod1 = [...this.period1];
         this.fetchedPeriod2 = [...this.period2];
         this.fetchedLocation = this.selectedLocation;
         this.fetchedSex = this.selectedSex;
         this.fetchedTopN = this.selectedTopN;
+        this.syncToUrl();
     }
 
     shiftBothPeriodsLeft() {
