@@ -1,19 +1,13 @@
 <script>
-    import { dashboardState } from '../../sidebar-state.svelte.ts';
-
-    let { label = "Location" } = $props();
+    let {
+        location = $bindable('wikidata:Q30'),
+        adapter = [],
+        label = "Location"
+    } = $props();
 
     function handleChange(event) {
-        dashboardState.selectedLocation = event.target.value;
+        location = event.target.value;
     }
-
-    // Get current location display name - computed each render
-    function getCurrentLocationName() {
-        if (!dashboardState.adapter?.length) return dashboardState.selectedLocation;
-        const location = dashboardState.adapter.find(l => l[1] === dashboardState.selectedLocation);
-        return location?.[2] || dashboardState.selectedLocation;
-    }
-
 </script>
 
 <div class="location-selector">
@@ -22,22 +16,20 @@
     </div>
 
     <div class="selector-control">
-        {#if dashboardState.locationsLoading}
-            <div class="loading-dropdown">Loading locations...</div>
-        {:else if dashboardState.locationsError}
-            <div class="error-dropdown">Failed to load locations</div>
-        {:else if dashboardState.adapter.length > 0}
+        {#if adapter.length > 0}
             <select
-                value={dashboardState.selectedLocation}
+                value={location}
                 onchange={handleChange}
                 class="location-dropdown"
             >
-                {#each dashboardState.adapter as row}
+                {#each adapter as row}
                     <option value={row[1]}>
                         {row[2]}
                     </option>
                 {/each}
             </select>
+        {:else}
+            <div class="loading-dropdown">Loading locations...</div>
         {/if}
     </div>
 </div>
