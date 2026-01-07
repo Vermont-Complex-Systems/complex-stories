@@ -46,6 +46,7 @@
 				<li><a href="https://vermontcomplexsystems.org/community/talkboctopus">Talkboctopus</a></li>
 				<li><a href="https://vermontcomplexsystems.org/community/credits">Credits</a></li>
 				<li><a href="{base}/blog">Blog</a></li>
+				<li><a href="{base}/work-with-us">How to work with us</a></li>
 			</ul>
 		</div>
 

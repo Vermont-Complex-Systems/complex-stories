@@ -338,7 +338,7 @@
     }
 
     .browse-link {
-        color: var(--color-good-blue);
+        color: #6789f8;
         text-decoration: underline;
         background: none;
         border: none;
