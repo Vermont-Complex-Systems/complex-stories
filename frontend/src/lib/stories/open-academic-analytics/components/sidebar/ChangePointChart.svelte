@@ -162,15 +162,6 @@
         height: auto;
     }
 
-
-    .summary {
-        margin-top: 8px;
-        font-size: 10px;
-        line-height: 1.3;
-        color: var(--color-fg, #333);
-    }
-
-
     .loading, .error, .no-data {
         display: flex;
         align-items: center;

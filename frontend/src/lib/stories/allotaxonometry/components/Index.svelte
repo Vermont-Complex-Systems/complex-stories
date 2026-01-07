@@ -360,7 +360,7 @@
 
     .sidebar-container {
         flex-shrink: 0;
-        width: 17rem;
+        width: 16rem;
         background-color: var(--color-input-bg);
         border-right: 1px solid var(--color-border);
         transition: width var(--transition-medium) ease;

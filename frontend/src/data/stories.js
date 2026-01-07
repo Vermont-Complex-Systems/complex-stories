@@ -13,7 +13,7 @@ const lookupColor = (slug) => {
 };
 
 const addFaves = (arr, name) => {
-  if (name) return [...arr, "our_faves"];
+  if (name) return [...arr, "trending"];
   return arr;
 };
 
@@ -22,14 +22,14 @@ const clean = data
     ...d,
     date: parseDate(d.date),
     month: formatMonth(parseDate(d.date)),
-    slug: d.url, // Use url directly as slug
+    slug: d.url,
     author: strToArray(d.author),
     keyword: strToArray(d.keyword),
     filters: addFaves(strToArray(d.filters), d.faves),
     external: d.external === 'true',
-    href: d.external === 'true' 
-      ? (d.url_alt || d.url)  // Use url_alt if provided, otherwise url
-      : `/${d.url}`,      
+    href: d.external === 'true'
+      ? (d.url_alt || d.url)
+      : `/${d.url}`,
     isExternal: d.external === 'true'
   }))
   .filter((d) => !d.hide_all)

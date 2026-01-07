@@ -5,6 +5,8 @@ export const registerUserSchema = v.object({
 	username: v.pipe(v.string(), v.minLength(3)),
 	email: v.pipe(v.string(), v.email()),
 	password: v.pipe(v.string(), v.minLength(8)),
+	orcid_id: v.optional(v.string()),
+	openalex_id: v.optional(v.string()),
 	role: v.optional(v.string(), 'annotator')
 })
 
@@ -21,6 +23,8 @@ export const userSchema = v.object({
 	email: v.string(),
 	role: v.string(),
 	payroll_name: v.optional(v.nullable(v.string())),
+	orcid_id: v.optional(v.nullable(v.string())),
+	openalex_id: v.optional(v.nullable(v.string())),
 	is_active: v.boolean(),
 	created_at: v.string(),
 	last_login: v.optional(v.nullable(v.string()))
@@ -45,6 +49,12 @@ export const changePasswordSchema = v.object({
 	new_password: v.pipe(v.string(), v.minLength(8))
 })
 
+// Update profile schema
+export const updateProfileSchema = v.object({
+	orcid_id: v.optional(v.string()),
+	openalex_id: v.optional(v.string())
+})
+
 // Type exports
 export type User = v.InferOutput<typeof userSchema>
 export type Token = v.InferOutput<typeof tokenSchema>
@@ -52,3 +62,4 @@ export type RegisterUser = v.InferInput<typeof registerUserSchema>
 export type LoginUser = v.InferInput<typeof loginUserSchema>
 export type UpdateUserRole = v.InferInput<typeof updateUserRoleSchema>
 export type ChangePassword = v.InferInput<typeof changePasswordSchema>
+export type UpdateProfile = v.InferInput<typeof updateProfileSchema>

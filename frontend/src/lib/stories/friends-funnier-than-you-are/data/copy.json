@@ -19,7 +19,7 @@
         "value": "From a theoretical perspective, [branching process](https://en.wikipedia.org/wiki/Branching_process) mathematics has a surprisingly long history, beginning over 180 years ago with practical demographic concerns. In 1845, French mathematician [Irénée-Jules Bienaymé](https://fr.wikipedia.org/wiki/Ir%C3%A9n%C3%A9e-Jules_Bienaym%C3%A9) studied aristocratic family extinction during Victorian times, developing the mathematical framework to answer whether noble bloodlines would survive. His work, largely forgotten, was later rediscovered through the famous collaboration between [Francis Galton and Henry Watson](https://en.wikipedia.org/wiki/Galton%E2%80%93Watson_process) in the 1870s, who posed the question: what proportion of family surnames would become extinct after many generations?"
       },
       {
-        "type": "Component",
+        "type": "component",
         "component": "BranchingNetwork"
       },
       {
@@ -51,7 +51,7 @@
         "value": "The scaling exponent τ dramatically affects how cascades spread through networks:"
       },
       {
-        "type": "Component",
+        "type": "component",
         "component": "SelfReinforcingNetwork"
       },
       {
@@ -66,7 +66,7 @@
       "value": "In social media epidemics, one key difference is that the content of the cascade itself evolves as it spreads, leading to fundamentally new dynamics that break the assumptions of classical branching processes."
     },
     {
-      "type": "Component",
+      "type": "component",
       "component": "InteractiveFig1"
     },
     {  
@@ -94,7 +94,7 @@
       "value": "The log-log plot below demonstates that cascade size distributions follow power laws with different scaling exponents depending on the parameter values, with steeper power-law decays as you move further from criticality:"
     },
     {
-      "type": "Component",
+      "type": "component",
       "component": "LogLogPlot"
     },
     {

@@ -3,18 +3,18 @@
   import { page } from "$app/state"; // Updated for Svelte 5
   import { base } from "$app/paths";
   
-  let { 
-    title, 
-    description, 
+  let {
+    title,
+    description,
     keywords = "",
     image = "/default-og-image.jpg",
     preloadFont = [],
     author = "Vermont Complex Systems Institute"
   } = $props();
-  
+
   const baseUrl = "https://vermont-complex-systems.github.io"; // Your actual domain
-  const url = `${baseUrl}${base}${page.url.pathname}`;
-  const fullImageUrl = image.startsWith('http') ? image : `${baseUrl}${base}${image}`;
+  const url = $derived(`${baseUrl}${base}${page.url.pathname}`);
+  const fullImageUrl = $derived(image.startsWith('http') ? image : `${baseUrl}${base}${image}`);
 </script>
 
 <svelte:head>
