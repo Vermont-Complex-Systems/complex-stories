@@ -34,15 +34,22 @@
     let limit = $state(10000);
 
     // Committed parameters (actually used for API calls)
-    let committedPeriod1 = $state([1905, 1925]);
-    let committedPeriod2 = $state([1972, 2002]);
+    // Using individual values instead of arrays for better reactivity
+    let committedPeriod1Start = $state(1905);
+    let committedPeriod1End = $state(1925);
+    let committedPeriod2Start = $state(1972);
+    let committedPeriod2End = $state(2002);
     let committedLocation = $state('wikidata:Q30');
     let committedSex = $state('M');
     let committedLimit = $state(10000);
 
+    // Derive arrays from individual values for backwards compatibility
+    let committedPeriod1 = $derived([committedPeriod1Start, committedPeriod1End]);
+    let committedPeriod2 = $derived([committedPeriod2Start, committedPeriod2End]);
+
     // Derive date strings from committed year ranges
-    let dates = $derived(`${committedPeriod1[0]},${committedPeriod1[1]}`);
-    let dates2 = $derived(`${committedPeriod2[0]},${committedPeriod2[1]}`);
+    let dates = $derived(`${committedPeriod1Start},${committedPeriod1End}`);
+    let dates2 = $derived(`${committedPeriod2Start},${committedPeriod2End}`);
 
     // Alpha slider state (updates immediately - no update button needed)
     const alphas = [0, 1/4, 2/4, 3/4, 1, 3/2, 2, 3, 5, Infinity];
@@ -122,8 +129,10 @@
 
     // Update function - commits changes and triggers API call
     function updateData() {
-        committedPeriod1 = [...period1];
-        committedPeriod2 = [...period2];
+        committedPeriod1Start = period1[0];
+        committedPeriod1End = period1[1];
+        committedPeriod2Start = period2[0];
+        committedPeriod2End = period2[1];
         committedLocation = location;
         committedSex = sex;
         committedLimit = limit;
@@ -132,7 +141,6 @@
 
     // Callback when files are uploaded
     function handleFilesUploaded(sys1Data, sys2Data, titles) {
-        console.log('Files uploaded, setting data');
         uploadedSys1 = sys1Data;
         uploadedSys2 = sys2Data;
         uploadedTitle = titles;
@@ -142,8 +150,13 @@
     const babyNamesQuery = createQuery(() => ({
         queryKey: [
             'babynames',
-            committedPeriod1[0], committedPeriod1[1],
-            committedPeriod2[0], committedPeriod2[1],
+            committedPeriod1Start,
+            committedPeriod1End,
+            committedPeriod2Start,
+            committedPeriod2End,
+            committedLocation,
+            committedSex,
+            committedLimit,
         ],
         queryFn: async () => {
             if (hasUploadedFiles) {
@@ -167,8 +180,8 @@
             const sys1Data = ngrams[dates] || ngrams[keys[0]];
             const sys2Data = ngrams[dates2] || ngrams[keys[1]];
 
-            const range1 = `${committedPeriod1[0]}-${committedPeriod1[1]}`;
-            const range2 = `${committedPeriod2[0]}-${committedPeriod2[1]}`;
+            const range1 = `${committedPeriod1Start}-${committedPeriod1End}`;
+            const range2 = `${committedPeriod2Start}-${committedPeriod2End}`;
 
             return {
                 sys1: sys1Data,
