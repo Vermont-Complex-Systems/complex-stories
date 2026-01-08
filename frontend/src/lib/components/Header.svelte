@@ -241,10 +241,11 @@
     text-decoration: none;
     font-family: var(--sans);
     font-weight: var(--font-weight-medium);
-    font-size: var(--font-size-small);
+    font-size: 0.885rem;
     letter-spacing: 0.05em;
     transition: all var(--transition-medium);
     cursor: pointer;
+    white-space: nowrap;
   }
 
   .text-button:hover {
@@ -264,10 +265,11 @@
     text-decoration: none;
     font-family: var(--sans);
     font-weight: var(--font-weight-medium);
-    font-size: var(--font-size-small);
+    font-size: 0.885rem;
     letter-spacing: 0.05em;
     transition: all var(--transition-medium);
     cursor: pointer;
+    white-space: nowrap;
   }
 
   .avatar-button:hover {
