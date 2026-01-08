@@ -89,7 +89,7 @@
 
 <style>
 	.footer {
-	margin-top: auto;
+	margin-top: 5rem;
 	background-color: var(--color-uvm-green);
 	border-top: 1px solid var(--color-border);
 	padding: 3rem 1rem 2rem;

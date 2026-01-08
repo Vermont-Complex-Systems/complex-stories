@@ -48,6 +48,7 @@
 				<li><a href="{base}/">Home</a></li>
 				<li><a href="{base}/about">About</a></li>
 				<li><a href="{base}/blog">Blog</a></li>
+				<li><a href="{base}/work-with-us">How to work with us</a></li>
 				<li><a href="https://vermont-complex-systems.github.io/datasets/" target="_blank" rel="noreferrer">Datasets</a></li>
 				<li><a href="{base}/research-at-uvm">Groups@UVM</a></li>
 				<li>
