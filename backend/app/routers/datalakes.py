@@ -245,6 +245,7 @@ async def get_babynames_top_ngrams(
     """
 
     # Parse dates parameters
+    # dates="1991,1993"
     date_ranges = []
 
     # Parse first date range
@@ -261,6 +262,7 @@ async def get_babynames_top_ngrams(
         date_ranges.append(years2)
 
     # Single location (no longer a list)
+    # locations="wikidata:Q176"
     location_list = [locations]
 
     # Look up babynames datalake
@@ -284,7 +286,9 @@ async def get_babynames_top_ngrams(
                 detail="Datalake metadata is missing. Please re-register the datalake with proper tables_metadata."
             )
         
+        # babynames_fnames=["ducklake-019af69d-b42c-7877-9073-3f440e2ee162.parquet", "ducklake-019af69d-d7d5-7c8d-b38e-6ef9eca5d606.parquet"]
         babynames_fnames = datalake.tables_metadata.get("babynames")
+
         adapter_fnames = datalake.tables_metadata.get("adapter")
 
         if not babynames_fnames or not adapter_fnames:
@@ -295,9 +299,11 @@ async def get_babynames_top_ngrams(
 
         # Construct full paths by combining data_location with the filenames
         # For ducklake format, files are stored in metadata.ducklake.files/main/ subdirectories
+        # babynames_path="/users/j/s/jstonge1/babynames/metadata.ducklake.files/main/babynames/*parquet"
         babynames_path = [
             f"{datalake.data_location}/{datalake.ducklake_data_path}/main/babynames/{fname}" for fname in babynames_fnames
             ]
+        # adapter_path= "/users/j/s/jstonge1/babynames/metadata.ducklake.files/main/adapter/*parquet"
         adapter_path = [
             f"{datalake.data_location}/{datalake.ducklake_data_path}/main/adapter/{fname}" for fname in adapter_fnames
             ]
@@ -320,7 +326,7 @@ async def get_babynames_top_ngrams(
                     key = location.replace(":", "_").replace("-", "_")
                 else:
                     key = "data"  # Single query, return simple format
-
+                
                 sql_query = f"""
                     SELECT
                         b.types,
@@ -332,7 +338,7 @@ async def get_babynames_top_ngrams(
                 """
 
                 if sex:
-                    sql_query += f" AND b.sex = ?"
+                    sql_query += " AND b.sex = ?"
 
                 sql_query += f"""
                     GROUP BY b.types
