@@ -50,10 +50,10 @@
 
     // Fetch location adapter data
     const adapterQuery = getAdapter();
-    const adapterData = $derived(adapterQuery.error ? [] : (adapterQuery.current || []));
 
     // Derive date range based on selected location
     const dateRange = $derived.by(() => {
+        const adapterData = adapterQuery.current;
         if (!adapterData?.length) return { min: 1880, max: 2023 };
         const locationData = adapterData.find(l => l[1] === location);
         if (locationData && locationData[4] && locationData[5]) {
@@ -141,28 +141,38 @@
     const apiQuery = $derived(!hasUploadedFiles ? getTopBabyNames({
         dates,
         dates2,
-        location: committedLocation,
+        locations: committedLocation,  // Must be 'locations' to match API
         sex: committedSex,
         limit: committedLimit
     }) : null);
 
-    // Extract data from query, returning null on error (triggers static fallback)
-    const apiData = $derived(apiQuery?.error ? null : apiQuery?.current);
+    // Extract data from query
+    const apiData = $derived(apiQuery?.current);
 
     // Extract systems from either uploaded files or API response
-    // Falls back to static data if API is unavailable
+    // Only fallback to static data if API has error (not while loading)
     const sys1 = $derived.by(() => {
         if (hasUploadedFiles) return uploadedSys1;
-        if (apiData) return apiData[dates] || apiData[Object.keys(apiData)[0]];
-        // Fallback to static data if API failed
-        return boys1895;
+        if (apiData) {
+            // Try to find matching data by key
+            const startYear = dates.split(',')[0];
+            return apiData[dates] || apiData[startYear] || apiData[Object.keys(apiData)[0]];
+        }
+        // Only fallback to static if API has error, not while loading
+        if (apiQuery?.error) return boys1895;
+        return null;  // Return null while loading
     });
 
     const sys2 = $derived.by(() => {
         if (hasUploadedFiles) return uploadedSys2;
-        if (apiData) return apiData[dates2] || apiData[Object.keys(apiData)[1]];
-        // Fallback to static data if API failed
-        return boys1968;
+        if (apiData) {
+            // Try to find matching data by key
+            const startYear = dates2.split(',')[0];
+            return apiData[dates2] || apiData[startYear] || apiData[Object.keys(apiData)[1]];
+        }
+        // Only fallback to static if API has error, not while loading
+        if (apiQuery?.error) return boys1968;
+        return null;  // Return null while loading
     });
 
     const title = $derived.by(() => {
@@ -203,11 +213,17 @@
 
                         {#if !hasUploadedFiles}
                             <div class="location-control">
-                                <LocationSelector
-                                    bind:location
-                                    adapter={adapterData || []}
-                                    label="Location"
-                                />
+                                {#if adapterQuery.loading}
+                                    <div class="loading-dropdown">Loading locations...</div>
+                                {:else if adapterQuery.error}
+                                    <div class="error-dropdown">Failed to load locations</div>
+                                {:else}
+                                    <LocationSelector
+                                        bind:location
+                                        adapter={adapterQuery.current || []}
+                                        label="Location"
+                                    />
+                                {/if}
                             </div>
 
                             <div class="topn-control">
@@ -278,7 +294,7 @@
                                 onclick={updateData}
                                 disabled={!hasChanges}
                             >
-                                {hasChanges ? 'Update' : 'Up to date'}
+                                Update
                             </button>
                         {/if}
 
