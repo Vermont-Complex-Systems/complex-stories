@@ -1,9 +1,11 @@
 <script>
 import { base } from "$app/paths";
 import { innerWidth, outerHeight } from 'svelte/reactivity/window';
+import { ArrowDown } from "@lucide/svelte";
 
 import { generateFingerprint } from '$lib/utils/browserFingerprint.js';
 
+import Nav from './Nav.svelte';
 import TrustEvo from './TrustEvo.svelte';
 import ConsentPopup from './ConsentPopup.svelte';
 import Dashboard from './Dashboard.svelte';
@@ -22,10 +24,7 @@ let hasConsented = $state(false);
 let userFingerprint = $state('');
 let saveAnswer = $derived(createSaveAnswerHandler(userFingerprint));
 
-/**
- * Handle consent acceptance - generates fingerprint only after user consent
- * This ensures GDPR/CCPA compliance by not tracking users before explicit consent
- */
+
 async function handleConsentAccept() {
     hasConsented = true;
 
@@ -89,9 +88,14 @@ function createSaveAnswerHandler(userFingerprint) {
 
 // Scrolly state management - separate states for survey and story
 let surveyScrollyState = $state({
-    scrollyIndex: 0,
+    scrollyIndex: undefined,
     isMobile: false,
     isTablet: false
+});
+
+// Keep surveyScrollyState.isMobile in sync with isMobile
+$effect(() => {
+    surveyScrollyState.isMobile = isMobile;
 });
 
 let storyScrollyState = $state({
@@ -105,12 +109,18 @@ let storyScrollyState = $state({
 let width = $state(innerWidth.current);
 let height = $state(outerHeight.current);
 
+// Responsive breakpoints
+let isMobile = $derived(innerWidth.current <= 768);
+
 // Reference to story section for visibility detection
 let storySection = $state();
 let conclusionSection = $state();
 let conclusionVisible = $state(false);
 let dashboardSection = $state();
 let dashboardVisible = $state(false);
+
+// Scroll indicator visibility
+let showScrollIndicator = $state(true);
 
 // Detect when conclusion section is visible
 $effect(() => {
@@ -138,11 +148,34 @@ $effect(() => {
     }
 });
 
+// Hide scroll indicator when user scrolls
+$effect(() => {
+    if (typeof window !== 'undefined') {
+        const handleScroll = () => {
+            showScrollIndicator = window.scrollY < 100;
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }
+});
+
 </script>
 
 
+{#if isMobile}
+<Nav />
+{/if}
+
 <!-- Consent Popup -->
 <ConsentPopup onAccept={handleConsentAccept} {userFingerprint} {saveAnswer} />
+
+<!-- Scroll indicator -->
+{#if showScrollIndicator}
+    <div class="scroll-indicator">
+        <ArrowDown size={32} strokeWidth={2} />
+    </div>
+{/if}
 
 <article id="dark-data-survey">
 
@@ -196,16 +229,24 @@ $effect(() => {
         {/each}
     </section>
 
+    {#if !isMobile}
     <section id="dashboard" bind:this={dashboardSection}>
-        <Dashboard {width} {height} />
+        <div class="scrolly-container">
+            <div class="scrolly-chart">
+                <Dashboard {width} {height} />
+            </div>
+        </div>
     </section>
+    {/if}
 </article>
 
+{#if !isMobile}
 <div class="corner-image" class:hidden={conclusionVisible || dashboardVisible}>
     <a href="{base}/">
         <img src="{base}/common/thumbnails/screenshots/dark-data-survey.png" alt="Dark data visualization" />
     </a>
 </div>
+{/if}
 
 <style>
 /* -----------------------------
@@ -336,6 +377,35 @@ $effect(() => {
 }
 
 /* -----------------------------
+   Scroll Indicator
+----------------------------- */
+.scroll-indicator {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    color: whitesmoke;
+    opacity: 0.7;
+    animation: bounce 2s infinite ease-in-out;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+.scroll-indicator:hover {
+    opacity: 1;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateX(-50%) translateY(0);
+    }
+    50% {
+        transform: translateX(-50%) translateY(-10px);
+    }
+}
+
+/* -----------------------------
    Corner Image
 ----------------------------- */
 .corner-image {
@@ -373,14 +443,24 @@ $effect(() => {
 
     :global(body:has(#dark-data-survey)) h2 {
         font-size: 2rem;
+        margin-top: 10rem;
+        margin-bottom: 2rem;
     }
 
     .article-meta .author {
-        font-size: var(--font-size-large);
+        font-size: var(--font-size-xlarge);
+    }
+
+    .article-meta .author a {
+        font-size: var(--font-size-xlarge);
     }
 
     .article-meta .date {
-        font-size: var(--font-size-medium);
+        font-size: var(--font-size-large);
+    }
+
+    #conclusion {
+        margin-top: 0;
     }
 }
 </style>
