@@ -25,7 +25,6 @@
 		"prettier-plugin-svelte": "^3.3.3",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
-		"svelte-reveal": "^1.1.0",
 		"typescript": "^5.0.0",
 		"vite": "^7.1.6"
 	},
