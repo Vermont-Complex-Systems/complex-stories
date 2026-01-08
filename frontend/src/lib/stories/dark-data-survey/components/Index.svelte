@@ -1,6 +1,7 @@
 <script>
 import { base } from "$app/paths";
 import { innerWidth, outerHeight } from 'svelte/reactivity/window';
+import { ArrowDown } from "@lucide/svelte";
 
 import { generateFingerprint } from '$lib/utils/browserFingerprint.js';
 
@@ -22,10 +23,7 @@ let hasConsented = $state(false);
 let userFingerprint = $state('');
 let saveAnswer = $derived(createSaveAnswerHandler(userFingerprint));
 
-/**
- * Handle consent acceptance - generates fingerprint only after user consent
- * This ensures GDPR/CCPA compliance by not tracking users before explicit consent
- */
+
 async function handleConsentAccept() {
     hasConsented = true;
 
@@ -112,6 +110,9 @@ let conclusionVisible = $state(false);
 let dashboardSection = $state();
 let dashboardVisible = $state(false);
 
+// Scroll indicator visibility
+let showScrollIndicator = $state(true);
+
 // Detect when conclusion section is visible
 $effect(() => {
     if (typeof window !== 'undefined' && conclusionSection) {
@@ -138,11 +139,30 @@ $effect(() => {
     }
 });
 
+// Hide scroll indicator when user scrolls
+$effect(() => {
+    if (typeof window !== 'undefined') {
+        const handleScroll = () => {
+            showScrollIndicator = window.scrollY < 100;
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }
+});
+
 </script>
 
 
 <!-- Consent Popup -->
 <ConsentPopup onAccept={handleConsentAccept} {userFingerprint} {saveAnswer} />
+
+<!-- Scroll indicator -->
+{#if showScrollIndicator}
+    <div class="scroll-indicator">
+        <ArrowDown size={32} strokeWidth={2} />
+    </div>
+{/if}
 
 <article id="dark-data-survey">
 
@@ -333,6 +353,35 @@ $effect(() => {
 :global(#dark-data-survey .scrolly-content .step.active > *) {
     background: white;
     color: black;
+}
+
+/* -----------------------------
+   Scroll Indicator
+----------------------------- */
+.scroll-indicator {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    color: whitesmoke;
+    opacity: 0.7;
+    animation: bounce 2s infinite ease-in-out;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+.scroll-indicator:hover {
+    opacity: 1;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateX(-50%) translateY(0);
+    }
+    50% {
+        transform: translateX(-50%) translateY(-10px);
+    }
 }
 
 /* -----------------------------

@@ -165,16 +165,16 @@ async def upsert_answer(db: AsyncSession, fingerprint: str, field: str, value):
     existing = result.scalar_one_or_none()
 
     if existing:
-        # Update existing record - use Column object for safety
+        # Update existing record - use column.key to get string field name
         update_stmt = (
             update(DarkDataSurvey)
             .where(DarkDataSurvey.fingerprint == fingerprint)
-            .values({column: value})
+            .values({column.key: value})
         )
         await db.execute(update_stmt)
     else:
-        # Insert new record - use Column object for safety
-        insert_stmt = insert(DarkDataSurvey).values(fingerprint=fingerprint, **{column: value})
+        # Insert new record - use column.key to get string field name
+        insert_stmt = insert(DarkDataSurvey).values(fingerprint=fingerprint, **{column.key: value})
         await db.execute(insert_stmt)
 
     await db.commit()

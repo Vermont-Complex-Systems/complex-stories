@@ -1,5 +1,5 @@
 <script>
-    let { question, name, value = $bindable([]), options, onchange } = $props();
+    let { question, name, value = $bindable([]), options, onchange, saveStatus = 'idle', saveMessage = '' } = $props();
 
     function handleCheckboxChange(optionValue, isChecked) {
         if (isChecked) {
@@ -12,7 +12,9 @@
 </script>
 
 <div class="checkbox-question">
-    <h3>{question}</h3>
+    <div class="question-header">
+        <h3>{question}</h3>
+    </div>
     <div class="options">
         {#each options as option}
             <label class="checkbox-option">
@@ -27,6 +29,18 @@
             </label>
         {/each}
     </div>
+    <div class="save-feedback-container">
+        {#if saveMessage}
+            <span
+                class="save-feedback"
+                class:success={saveStatus === 'saved'}
+                class:error={saveStatus === 'error'}
+                class:saving={saveStatus === 'saving'}
+            >
+                {saveMessage}
+            </span>
+        {/if}
+    </div>
 </div>
 
 <style>
@@ -34,8 +48,13 @@
         width: 100%;
     }
 
+    .question-header {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
     h3 {
-        margin: 0 0 1rem 0;
+        margin: 0 0 0.5rem 0;
         font-size: 1.1rem;
         font-weight: 500;
         color: #333;
@@ -76,6 +95,51 @@
         flex: 1;
         font-size: 1rem;
         color: #333;
+    }
+
+    .save-feedback-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 0.75rem;
+        min-height: 1.5rem;
+    }
+
+    .save-feedback {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.2rem 0.6rem;
+        border-radius: 3px;
+        opacity: 0;
+        animation: fadeInOut 2s ease-in-out;
+        white-space: nowrap;
+    }
+
+    .save-feedback.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .save-feedback.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .save-feedback.saving {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+        opacity: 1;
+    }
+
+    @keyframes fadeInOut {
+        0% { opacity: 0; transform: translateY(-2px); }
+        20% { opacity: 1; transform: translateY(0); }
+        80% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(-2px); }
     }
 
     @media (max-width: 640px) {
