@@ -15,7 +15,7 @@
 		{
 			"type": "question",
 			"value": {
-				"question": "Which social media platforms do you use?",
+				"question": "Which social media platforms do you use? (multiple choices)",
 				"name": "platformMatters",
 				"multiple": true,
 				"options": [

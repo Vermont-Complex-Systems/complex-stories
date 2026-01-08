@@ -134,4 +134,11 @@ let { question, name, value = $bindable(), options, errors, onchange, saveStatus
         80% { opacity: 1; transform: translateY(0); }
         100% { opacity: 0; transform: translateY(-2px); }
     }
+
+    @media (max-width: 640px) {
+        .question-text h3 {
+            font-size: 1.3rem !important;
+        }
+
+    }
 </style>

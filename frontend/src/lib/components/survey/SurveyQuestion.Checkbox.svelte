@@ -56,7 +56,7 @@
     h3 {
         margin: 0 0 0.5rem 0;
         font-size: 1.1rem;
-        font-weight: 500;
+        font-weight: 600;
         color: #333;
         line-height: 1.4;
     }
@@ -144,7 +144,7 @@
 
     @media (max-width: 640px) {
         h3 {
-            font-size: 1rem;
+            font-size: 1.3rem !important;
         }
 
         .checkbox-option {

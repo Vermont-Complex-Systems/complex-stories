@@ -5,6 +5,7 @@ import { ArrowDown } from "@lucide/svelte";
 
 import { generateFingerprint } from '$lib/utils/browserFingerprint.js';
 
+import Nav from './Nav.svelte';
 import TrustEvo from './TrustEvo.svelte';
 import ConsentPopup from './ConsentPopup.svelte';
 import Dashboard from './Dashboard.svelte';
@@ -87,9 +88,14 @@ function createSaveAnswerHandler(userFingerprint) {
 
 // Scrolly state management - separate states for survey and story
 let surveyScrollyState = $state({
-    scrollyIndex: 0,
+    scrollyIndex: undefined,
     isMobile: false,
     isTablet: false
+});
+
+// Keep surveyScrollyState.isMobile in sync with isMobile
+$effect(() => {
+    surveyScrollyState.isMobile = isMobile;
 });
 
 let storyScrollyState = $state({
@@ -102,6 +108,9 @@ let storyScrollyState = $state({
 // Layout calculations using D3 - responsive width and height
 let width = $state(innerWidth.current);
 let height = $state(outerHeight.current);
+
+// Responsive breakpoints
+let isMobile = $derived(innerWidth.current <= 768);
 
 // Reference to story section for visibility detection
 let storySection = $state();
@@ -153,6 +162,10 @@ $effect(() => {
 
 </script>
 
+
+{#if isMobile}
+<Nav />
+{/if}
 
 <!-- Consent Popup -->
 <ConsentPopup onAccept={handleConsentAccept} {userFingerprint} {saveAnswer} />
@@ -216,16 +229,24 @@ $effect(() => {
         {/each}
     </section>
 
+    {#if !isMobile}
     <section id="dashboard" bind:this={dashboardSection}>
-        <Dashboard {width} {height} />
+        <div class="scrolly-container">
+            <div class="scrolly-chart">
+                <Dashboard {width} {height} />
+            </div>
+        </div>
     </section>
+    {/if}
 </article>
 
+{#if !isMobile}
 <div class="corner-image" class:hidden={conclusionVisible || dashboardVisible}>
     <a href="{base}/">
         <img src="{base}/common/thumbnails/screenshots/dark-data-survey.png" alt="Dark data visualization" />
     </a>
 </div>
+{/if}
 
 <style>
 /* -----------------------------
@@ -422,14 +443,24 @@ $effect(() => {
 
     :global(body:has(#dark-data-survey)) h2 {
         font-size: 2rem;
+        margin-top: 10rem;
+        margin-bottom: 2rem;
     }
 
     .article-meta .author {
-        font-size: var(--font-size-large);
+        font-size: var(--font-size-xlarge);
+    }
+
+    .article-meta .author a {
+        font-size: var(--font-size-xlarge);
     }
 
     .article-meta .date {
-        font-size: var(--font-size-medium);
+        font-size: var(--font-size-large);
+    }
+
+    #conclusion {
+        margin-top: 0;
     }
 }
 </style>

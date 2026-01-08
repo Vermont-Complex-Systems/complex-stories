@@ -380,7 +380,22 @@
             opacity: 1;
         }
     }
-    
-    
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+        .chart-overlay {
+            display: none !important;
+        }
+
+        .plot-container {
+            /* Center the circles better on mobile and position them lower */
+            top: 20vh;
+        }
+
+        .trust-visualization {
+            /* Ensure circles appear behind survey boxes */
+            z-index: 0;
+        }
+    }
 
 </style>
