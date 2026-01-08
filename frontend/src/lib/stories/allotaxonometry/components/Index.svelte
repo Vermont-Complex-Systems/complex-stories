@@ -12,6 +12,7 @@
     import MultiFileUploadLocal from './sidebar/MultiFileUploadLocal.svelte';
     import DownloadSection from './sidebar/DownloadSection.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
+    import { createQuery } from '@tanstack/svelte-query';
     import { getTopBabyNames, getAdapter } from '../allotax.remote';
     
     import boys1968 from '../data/boys-1968.json';
@@ -137,52 +138,72 @@
         uploadedTitle = titles;
     }
 
-    // Fetch data from API (only when committed parameters change and no uploaded files)
-    const apiQuery = $derived(!hasUploadedFiles ? getTopBabyNames({
-        dates,
-        dates2,
-        locations: committedLocation,  // Must be 'locations' to match API
-        sex: committedSex,
-        limit: committedLimit
-    }) : null);
+    // Create TanStack query for baby names data
+    const babyNamesQuery = createQuery(() => ({
+        queryKey: [
+            'babynames',
+            committedPeriod1[0], committedPeriod1[1],
+            committedPeriod2[0], committedPeriod2[1],
+        ],
+        queryFn: async () => {
+            if (hasUploadedFiles) {
+                return {
+                    sys1: uploadedSys1,
+                    sys2: uploadedSys2,
+                    title: uploadedTitle
+                };
+            }
 
-    // Extract data from query
-    const apiData = $derived(apiQuery?.current);
+            const ngrams = await getTopBabyNames({
+                dates,
+                dates2,
+                locations: committedLocation,
+                sex: committedSex,
+                limit: committedLimit
+            });
 
-    // Extract systems from either uploaded files or API response
-    // Only fallback to static data if API has error (not while loading)
+            // Extract the two systems from the API response
+            const keys = Object.keys(ngrams);
+            const sys1Data = ngrams[dates] || ngrams[keys[0]];
+            const sys2Data = ngrams[dates2] || ngrams[keys[1]];
+
+            const range1 = `${committedPeriod1[0]}-${committedPeriod1[1]}`;
+            const range2 = `${committedPeriod2[0]}-${committedPeriod2[1]}`;
+
+            return {
+                sys1: sys1Data,
+                sys2: sys2Data,
+                title: [`${committedSex === 'M' ? 'Boys' : 'Girls'} ${range1}`, `${committedSex === 'M' ? 'Boys' : 'Girls'} ${range2}`]
+            };
+        },
+        enabled: true,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        gcTime: 10 * 60 * 1000, // 10 minutes
+        placeholderData: (previousData) => previousData,
+    }));
+
+    // Extract systems and title from query data with fallback
     const sys1 = $derived.by(() => {
         if (hasUploadedFiles) return uploadedSys1;
-        if (apiData) {
-            // Try to find matching data by key
-            const startYear = dates.split(',')[0];
-            return apiData[dates] || apiData[startYear] || apiData[Object.keys(apiData)[0]];
-        }
+        if (babyNamesQuery.data) return babyNamesQuery.data.sys1;
         // Only fallback to static if API has error, not while loading
-        if (apiQuery?.error) return boys1895;
-        return null;  // Return null while loading
+        if (babyNamesQuery.error) return boys1895;
+        return null;
     });
 
     const sys2 = $derived.by(() => {
         if (hasUploadedFiles) return uploadedSys2;
-        if (apiData) {
-            // Try to find matching data by key
-            const startYear = dates2.split(',')[0];
-            return apiData[dates2] || apiData[startYear] || apiData[Object.keys(apiData)[1]];
-        }
+        if (babyNamesQuery.data) return babyNamesQuery.data.sys2;
         // Only fallback to static if API has error, not while loading
-        if (apiQuery?.error) return boys1968;
-        return null;  // Return null while loading
+        if (babyNamesQuery.error) return boys1968;
+        return null;
     });
 
     const title = $derived.by(() => {
         if (hasUploadedFiles) return uploadedTitle;
-        // If using fallback static data, show static data titles (single years only)
-        if (!apiData) return ['Boys 1895', 'Boys 1968'];
-        // Otherwise show the actual requested dates with dash separator
-        const range1 = `${committedPeriod1[0]}-${committedPeriod1[1]}`;
-        const range2 = `${committedPeriod2[0]}-${committedPeriod2[1]}`;
-        return [`${sex === 'M' ? 'Boys' : 'Girls'} ${range1}`, `${sex === 'M' ? 'Boys' : 'Girls'} ${range2}`];
+        if (babyNamesQuery.data) return babyNamesQuery.data.title;
+        // Fallback titles while loading or on error
+        return ['Boys 1895', 'Boys 1968'];
     });
 
     // Compute visualization data using utility functions
