@@ -279,7 +279,7 @@
 	}
 
 	.save-btn {
-		background: #28a745;
+		background: #000;
 		color: white;
 		border: none;
 		padding: 0.5rem 1rem;
@@ -289,11 +289,11 @@
 	}
 
 	.save-btn:hover {
-		background: #218838;
+		background: #333;
 	}
 
 	.change-password-btn {
-		background: #007bff;
+		background: #000;
 		color: white;
 		border: none;
 		padding: 0.5rem 1rem;
@@ -303,11 +303,11 @@
 	}
 
 	.change-password-btn:hover {
-		background: #0056b3;
+		background: #333;
 	}
 
 	.logout-btn {
-		background: #6c757d;
+		background: #000;
 		color: white;
 		border: none;
 		padding: 0.5rem 1rem;
@@ -338,10 +338,12 @@
 		font-weight: 500;
 		color: #333;
 		text-align: left;
+		flex-shrink: 0;
 	}
 
 	.input-wrapper {
 		flex: 1;
+		min-width: 0;
 	}
 
 	.input-wrapper input {
@@ -386,5 +388,31 @@
 		color: #666;
 		margin-top: 0.25rem;
 		font-style: italic;
+	}
+
+	/* Mobile styles */
+	@media screen and (max-width: 768px) {
+		.form-row {
+			flex-direction: column;
+			gap: 0.25rem;
+		}
+
+		.form-row label {
+			min-width: auto;
+			padding-top: 0;
+		}
+
+		.value-display {
+			padding: 0.5rem 0;
+		}
+
+		.user-actions {
+			flex-direction: column;
+			width: 100%;
+		}
+
+		.user-actions button {
+			width: 100%;
+		}
 	}
 </style>
