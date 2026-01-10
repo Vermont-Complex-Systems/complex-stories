@@ -11,7 +11,7 @@
     },
     {
         "slug": "dark-data-survey",
-        "bg": "#fefae0",
+        "bg": "#dda15e",
         "text": "#283618"
     },
     {
@@ -61,7 +61,7 @@
     },
     {
         "slug": "interdisciplinarity",
-        "bg": "#606c38",
+        "bg": "#2a9d8f",
         "text": "#fefae0"
     }
 ]

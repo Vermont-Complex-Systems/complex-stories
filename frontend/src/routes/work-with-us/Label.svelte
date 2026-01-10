@@ -1,15 +1,11 @@
 <!-- Label.svelte with modern CSS variants -->
 <script>
-	import { reveal } from 'svelte-reveal'
-	
-	export let useReveal = {};
 	export let variant = 'primary';
 	export let size = 'medium';
 </script>
 
-<p 
-	use:reveal={useReveal} 
-	class="label" 
+<p
+	class="label"
 	data-variant={variant}
 	data-size={size}
 >

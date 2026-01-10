@@ -50,24 +50,49 @@
 		{:else}
 			<div class="auth-success">
 				<h3>Welcome, {user.username}!</h3>
-				<p>Role: {user.role}</p>
-				<p>Email: {user.email}</p>
-				{#if user.orcid_id}
-					<p>ORCID: <a href="https://orcid.org/{user.orcid_id}" target="_blank" rel="noopener noreferrer">{user.orcid_id}</a></p>
-				{:else}
-					<p class="not-set">ORCID: Not set</p>
-				{/if}
-				{#if user.openalex_id}
-					<p>OpenAlex: <a href="https://openalex.org/{user.openalex_id}" target="_blank" rel="noopener noreferrer">{user.openalex_id}</a></p>
-				{:else}
-					<p class="not-set">OpenAlex: Not set</p>
-				{/if}
-				<button onclick={() => isEditing = true} class="edit-btn">
-					Edit Profile
-				</button>
-				<button onclick={() => logoutUser()} class="logout-btn">
-					Logout
-				</button>
+
+				<div class="profile-grid">
+					<div class="profile-item">
+						<span class="profile-label">Role:</span>
+						<span class="profile-value">{user.role}</span>
+					</div>
+
+					<div class="profile-item">
+						<span class="profile-label">Email:</span>
+						<span class="profile-value">{user.email}</span>
+					</div>
+
+					<div class="profile-item">
+						<span class="profile-label">ORCID:</span>
+						{#if user.orcid_id}
+							<span class="profile-value">
+								<a href="https://orcid.org/{user.orcid_id}" target="_blank" rel="noopener noreferrer">{user.orcid_id}</a>
+							</span>
+						{:else}
+							<span class="profile-value not-set">Not set</span>
+						{/if}
+					</div>
+
+					<div class="profile-item">
+						<span class="profile-label">OpenAlex:</span>
+						{#if user.openalex_id}
+							<span class="profile-value">
+								<a href="https://openalex.org/{user.openalex_id}" target="_blank" rel="noopener noreferrer">{user.openalex_id}</a>
+							</span>
+						{:else}
+							<span class="profile-value not-set">Not set</span>
+						{/if}
+					</div>
+				</div>
+
+				<div class="button-group">
+					<button onclick={() => isEditing = true} class="edit-btn">
+						Edit Profile
+					</button>
+					<button onclick={() => logoutUser()} class="logout-btn">
+						Logout
+					</button>
+				</div>
 			</div>
 		{/if}
 	{:else}
@@ -169,7 +194,44 @@
 		border-radius: 8px;
 		background: #d4edda;
 		color: #155724;
+	}
+
+	.auth-success h3 {
 		text-align: center;
+		margin-bottom: 1.5rem;
+	}
+
+	.profile-grid {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		margin-bottom: 1.5rem;
+		text-align: left;
+	}
+
+	.profile-item {
+		display: flex;
+		flex-direction: row;
+		gap: 0.5rem;
+		align-items: baseline;
+	}
+
+	.profile-label {
+		font-weight: 600;
+		min-width: 80px;
+		flex-shrink: 0;
+	}
+
+	.profile-value {
+		word-break: break-word;
+		overflow-wrap: break-word;
+	}
+
+	.button-group {
+		display: flex;
+		justify-content: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
 	}
 
 	.form-header {
@@ -263,8 +325,6 @@
 		padding: 0.5rem 1rem;
 		border-radius: 4px;
 		cursor: pointer;
-		margin-top: 1rem;
-		margin-right: 0.5rem;
 	}
 
 	.edit-btn:hover {
@@ -278,7 +338,6 @@
 		padding: 0.5rem 1rem;
 		border-radius: 4px;
 		cursor: pointer;
-		margin-top: 1rem;
 	}
 
 	.logout-btn:hover {
@@ -323,5 +382,43 @@
 
 	.auth-success a:hover {
 		text-decoration: underline;
+	}
+
+	/* Mobile styles */
+	@media screen and (max-width: 768px) {
+		.auth-form,
+		.auth-success {
+			padding: 1.5rem;
+			margin: 0 1rem;
+		}
+
+		:global(.profile-item) {
+			display: block !important;
+			background: rgba(255, 0, 0, 0.1); /* DEBUG: remove this */
+		}
+
+		:global(.profile-label) {
+			display: block !important;
+			min-width: auto;
+			font-size: 0.9rem;
+			margin-bottom: 0.25rem;
+			background: rgba(0, 255, 0, 0.1); /* DEBUG: remove this */
+		}
+
+		:global(.profile-value) {
+			display: block !important;
+			font-size: 0.95rem;
+			background: rgba(0, 0, 255, 0.1); /* DEBUG: remove this */
+		}
+
+		.button-group {
+			flex-direction: column;
+			width: 100%;
+		}
+
+		.edit-btn,
+		.logout-btn {
+			width: 100%;
+		}
 	}
 </style>

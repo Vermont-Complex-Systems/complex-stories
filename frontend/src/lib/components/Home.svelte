@@ -32,7 +32,7 @@
     });
     f.sort((a, b) => descending(a.id, b.id));
     // hide stories like that for now
-    return f.filter(d => d.slug !== 'interdisciplinarity' && d.slug !== 'dark-data-survey') ;
+    return f.filter(d => d.slug !== 'dark-data-survey') ;
   });
 
   

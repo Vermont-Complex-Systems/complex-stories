@@ -23,15 +23,16 @@ npm run build   # Build for production (Node.js server)
 ### Backend Development
 ```bash
 cd backend
+uv sync                         # Install dependencies (uv workspace)
 uv run fastapi dev app/main.py  # FastAPI on port 8000
 
-# Dagster pipeline (Open Academic Analytics)
-cd backend/projects/open-academic-analytics
-./run_dagster.sh  # Auto-assigns port
+# Dagster webserver (manages all workspace projects)
+uv run dg dev                   # Web UI typically on port 3333
 ```
 
 ### Code Quality
 ```bash
+cd frontend
 npm run check   # Type checking
 npm run format  # Prettier formatting
 npm run lint    # Code linting
@@ -54,13 +55,14 @@ story-slug/
 ```
 
 ### Key Technologies
-- **SvelteKit 2** with Svelte 5 runes syntax
+- **SvelteKit 2** with Svelte 5 runes syntax (experimental async components enabled)
 - **Node.js adapter** with remote functions for server-side operations
 - **D3.js** for data visualization
 - **DuckDB WASM** for client-side data processing
 - **FastAPI** backend with SQLAlchemy 2.0+ async
 - **PostgreSQL** for persistent storage
-- **Dagster** for data pipeline orchestration
+- **Dagster** for data pipeline orchestration (uv workspace)
+- **Path aliases**: `$data`, `$styles`, `$stories` for cleaner imports
 
 ### Data Flow
 1. **Static data**: Parquet files + DuckDB WASM for high-performance client-side analytics
@@ -68,10 +70,14 @@ story-slug/
 3. **Pipelines**: Dagster processes raw data → exports to PostgreSQL via FastAPI
 
 ### Remote Functions Pattern
-Stories use `data.remote.js` for backend integration:
+Stories use `data.remote.js` for type-safe backend integration:
 ```javascript
 // frontend/src/lib/stories/[story]/data/data.remote.js
 import { command, query } from '$app/server';
+import { API_BASE } from '$env/static/private';
+import * as v from 'valibot';
+
+const API_BASE_URL = API_BASE || 'http://localhost:3001';
 
 export const getData = query(
   v.object({ filter: v.optional(v.string()) }),
@@ -83,6 +89,21 @@ export const getData = query(
     return response.json();
   }
 );
+```
+
+For non-remote function API calls (in load functions, server actions):
+```typescript
+// frontend/src/lib/server/api.ts - Shared API utilities
+import { API_BASE } from '$env/static/private';
+const API_BASE_URL = API_BASE || 'http://localhost:3001';
+
+export const api = {
+  async getData(params: any) {
+    const response = await fetch(`${API_BASE_URL}/endpoint`);
+    if (!response.ok) throw Error(`Failed: ${response.status}`);
+    return response.json();
+  }
+};
 ```
 
 ## Common Patterns
@@ -118,9 +139,9 @@ pm2 start ecosystem.config.json  # Deploy both frontend and backend
 ```
 
 **Services**:
-- Frontend: Node.js server on port 3000
-- Backend: FastAPI on port 3001
-- Dagster: Runs separately via `./run_dagster.sh`
+- Frontend: Node.js server on port 3000 (`complex-stories-main`)
+- Backend: FastAPI on port 3001 (`complex-stories-api`)
+- Dagster: Webserver via `uv run dg dev` (`dagster-webserver`)
 
 ### Environment Variables
 ```bash
@@ -149,7 +170,15 @@ DROP TABLE table_name CASCADE;  # Drop table
 ### Models & Migrations
 - Models: `backend/app/models/` - SQLAlchemy models
 - Migrations: Alembic support configured (not actively used yet)
+- Tables auto-created on startup via `Base.metadata.create_all`
 - UPSERT pattern: Check existing row → UPDATE or INSERT
+
+### Authentication & Authorization
+Backend implements role-based access control:
+- **Admin**: Full access to all data and user management
+- **Annotator**: Can edit all research group entries
+- **Faculty**: Can only edit entries matching their `payroll_name`
+- **Auth**: JWT tokens, default admin user (admin/admin123) created on startup
 
 ## API Design Principles
 
@@ -193,10 +222,10 @@ Stories are defined in `frontend/src/data/stories.csv`:
 
 ### Backend
 - FastAPI app: `backend/app/`
-- Models: `backend/app/models/`
-- Routers: `backend/app/routers/`
-- Dagster pipelines: `backend/projects/`
-- Shared clients: `backend/shared/clients/`
+- Models: `backend/app/models/` (SQLAlchemy)
+- Routers: `backend/app/routers/` (API endpoints)
+- Dagster projects: `backend/projects/` (workspace members in `dg.toml`)
+- Shared package: `backend/shared/` (API clients: OpenAlex, Semantic Scholar, Complex Stories API)
 - Raw datasets: `backend/data/`
 
 ## Migration Status
@@ -210,10 +239,13 @@ Stories are defined in `frontend/src/data/stories.csv`:
 - PM2 deployment for both services
 - IT reverse proxy setup
 
+⏳ **In Progress**:
+- Authentication integration across all stories
+- Rate limiting (slowapi configured in `main.py`)
+
 ⏳ **Planned**:
 - Multi-tenant platform features
 - External institution onboarding
-- API authentication and rate limiting
 
 ## Important Notes
 
@@ -222,6 +254,8 @@ Stories are defined in `frontend/src/data/stories.csv`:
 - **Type safety**: Use Valibot schemas in remote functions for validation
 - **Privacy**: Surveys use browser fingerprinting, not cookies/localStorage
 - **Performance**: DuckDB WASM for heavy client-side analytics, PostgreSQL for persistence
+- **Backend workspace**: `uv` manages `backend/` and `backend/shared/` as a workspace
+- **Vite path aliases**: Use `$data`, `$styles`, `$stories` for cleaner imports
 - **Clean code**: Prefer existing patterns, avoid over-engineering
 
 ## Getting Help
