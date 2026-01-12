@@ -41,20 +41,54 @@
 		border-radius: 8px;
 		padding: 2rem;
 		margin-bottom: 2rem;
+		max-width: 100%;
 	}
 
-	h2 {
-		font-size: 1.5rem;
+	.story h2 {
+		font-size: var(--font-size-medium);
 		margin: 0 0 1rem 0;
 		color: #1a1a1a;
 		line-height: 1.3;
-    }
+		padding: 0 1rem;
+	}
 
-    p {
+	.story p {
 		color: #666;
 		line-height: 1.6;
 		margin: 0;
-        font-size: 1.3rem;
-        padding: 1rem;
+		font-size: var(--font-size-small) !important;
+		padding: 1rem;
+		max-width: 100%;
+	}
+
+	/* Mobile styles */
+	@media (max-width: 768px) {
+		.story {
+			padding: 1rem;
+			margin-bottom: 1rem;
+			border-radius: 4px;
+		}
+        
+		.story h2 {
+            font-size: 1.6rem !important;
+			padding: 0 0.5rem;
+		}
+
+		.story p {
+			padding: 0.75rem 0.5rem;
+            font-size: var(--font-size-large) !important;
+		}
+
+		.story :global(img) {
+			max-width: 100%;
+			height: auto;
+		}
+
+		.story :global(div[style*="width"]) {
+			width: 100% !important;
+			max-width: 100% !important;
+			margin-inline: 0 !important;
+			padding: 0.5rem;
+		}
 	}
 </style>
