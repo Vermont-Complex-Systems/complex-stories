@@ -2,7 +2,11 @@
 
 Computational projects typically involve components of the data engineering lifecycle (Figure 1-1). Data generation takes one of three forms: (i) simulation, (ii) direct collection via surveys, experiments, or sampling, or (iii) ingestion from upstream providers such as APIs or public datasets. Unlike traditional qualitative research, computational projects require extensive custom code for data ingestion, transformation, and sharing—or data pipelines.
 
+![](./figs/EngineeringLifecycle.webp)
+
 In industry, this lifecycle is supported by specialized roles (Figure 1-2): software engineers and data architects design systems, data engineers implement pipelines, DevOps engineers maintain infrastructure, and downstream consumers (data analysts, scientists, ML engineers) focus on analysis. This division of labor is a testimony that robust data infrastructure requires dedicated expertise and accountability structures. But academia is not industry. 
+
+![](./figs/EngineeringSpecialization.webp)
 
 Individual researchers, typically graduate students in emerging computational fields, are expected to perform all these specialized roles simultaneously while lacking formal training in software engineering, data architecture, or systems design. A PhD student is expected to scrape data, wrangled the data in a way that is reproducible and bug-free, provide data visualization—while also conducting their research. Yet the validity of their scientific conclusions depends entirely on the robustness of infrastructure they build, leading to the [Software Sustainability Institute](https://www.software.ac.uk/) mantra: "Better Software Better Researcher".
 
