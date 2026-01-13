@@ -1,4 +1,4 @@
-# Section 3.2: Visual Data Essays and Interactive Storytelling
+# Section 3.2: Visual Data Essays and Interactive Dashboards
 
 ## The Communication Gap
 
@@ -18,132 +18,230 @@ Maria wants to do better. She explores her options:
 
 **The gap:** Researchers want engaging communication but existing tools either limit creative control or require prohibitive technical investment. The middle ground—publication-quality interactive storytelling without becoming a frontend specialist—isn't readily accessible.
 
-## What We Build: Accessible Interactive Storytelling
+## Our Solution: Two Interaction Patterns
 
-We create publication-quality visual data essays—interactive stories that make research findings accessible to broader audiences. Think data journalism quality (The Pudding, The Upshot) specifically designed for academic research communication.
+We build interactive data experiences using modern web technologies (SvelteKit, D3, responsive design). The key distinction is **interaction pattern**:
 
-**Our approach addresses the tooling gap:**
+### Pattern 1: Narrative-Driven Stories (Scrollytelling)
 
-Researchers provide clean data and clear narrative. We handle the technical implementation—scrollytelling interactions, custom visualizations, responsive design, performance optimization. The result is engaging storytelling without requiring researchers to become frontend developers.
+**Best for:** Communicating research findings to broader audiences with a guided, linear narrative
 
-**Technical implementation uses modern web stack:**
-- SvelteKit for efficient component development
-- Custom visualization library (building on D3 patterns without requiring researchers to learn D3)
-- Mobile-first responsive design (50-60% of readers access on phones)
-- Static site generation for performance and longevity
-- Progressive enhancement (works across browser capabilities)
+**Characteristics:**
+- Author-controlled narrative flow (scroll-based progression)
+- Visualizations reveal insights as reader progresses
+- Text and graphics tightly integrated
+- Mobile-first design (50-60% of readers use phones)
+- Goal: Persuade, inform, engage
 
-**Example: Prison Survey Interactive Story**
+**Example: Complex Stories Platform**
 
-Maria's survey findings became a scrolling narrative with:
-- Aggregate visualizations showing population-level patterns (protecting individual privacy)
-- Interactive elements letting readers explore different demographic breakdowns
-- Personal quotes (anonymized, with consent) integrated into visual narrative
-- Analytics tracking engagement
-
-The story reached family members of incarcerated individuals, policymakers, advocacy organizations, and concerned public. Participants' voices were heard by intended audiences, fulfilling the implicit promise that motivated their participation.
-
-**From researcher perspective:** Maria provided cleaned survey data, drafted narrative arc, participated in design meetings. We handled visualization design, interaction development, and deployment. 
-
-**Timeline varies significantly:**
-- **Adding to existing website infrastructure:** 3-4 weeks
-- **First project with new group:** 2-3 months (includes establishing design system, hosting setup, collaboration workflow)
-
-## How It Works
-
-**Standard visual data essay workflow:**
-
-1. **Discovery meeting:** Understand research findings, identify key insights, discuss narrative structure
-2. **Data preparation:** Researcher provides cleaned data in structured format (CSV, JSON); we assess visualization needs
-3. **Narrative development:** Researcher drafts story arc and key points; we provide feedback on interactive format
-4. **Design and development:** Build scrollytelling structure, create custom visualizations, implement interactions
-5. **Iteration:** Refine based on researcher feedback
-6. **Publication:** Deploy to hosting, set up analytics, coordinate with institutional communications
-
-**Timeline:** 3-4 weeks for groups with existing website infrastructure; 2-3 months for first collaboration (includes establishing design system, hosting, workflow)
-
-**Technical architecture:**
-
-Stories are built as static sites—HTML/CSS/JavaScript generated at build time, hosted on simple infrastructure. No server required for most cases, enabling fast loading (<1 second), infinite scaling, and minimal ongoing costs (~$50-100/year hosting).
-
-For data-heavy cases requiring databases or real-time queries, we build FastAPI backends with PostgreSQL or DuckDB (for datasets under ~1TB). Progressive enhancement ensures core narrative remains accessible as static snapshots even if backend becomes unavailable.
-
-**Content separation principle:** Narrative text lives in JSON files (but writing markdown), data in structured formats (CSV/JSON), visualization logic in reusable components. This separation means updating content doesn't require touching code, and components can be reused across multiple stories.
-
-## What We Provide
-
-**Standard interactive visual essay:**
-
-Scrolling narrative with 3-6 sections, custom visualizations integrated with text, responsive design working across devices.
+Publication-quality interactive essays that make research accessible. Think data journalism (The Pudding, The Upshot) for academic research.
 
 **Typical features:**
 - Scrollytelling (visualizations respond to scroll position)
-- Interactive charts, maps, or animations
-- Mobile-first design (automatically adapts to phone/tablet/desktop)
-- Static generation for performance and longevity
+- Embedded interactive elements within narrative
+- Aggregate visualizations with careful privacy protections
+- Personal quotes/stories integrated with data
+- Analytics tracking engagement
 
-**Requirements from researchers:**
-- Cleaned data in structured format
-- Clear narrative: main finding and story arc
-- Availability for 2-3 collaboration meetings over 3-4 weeks
-
-**Pricing:** $3,200-4,800 (20-30 hours combined effort)  
-**Timeline:** 
-- With existing infrastructure: 3-4 weeks
-- First collaboration: 2-3 months (includes setup)  
+**Pricing:** $3,200-4,800 (20-30 hours)
+**Timeline:** 3-4 weeks with existing infrastructure, 2-3 months for first collaboration
 **Includes:** First year hosting, minor updates
+
+**Workflow:**
+1. Discovery meeting: Understand findings, identify key insights
+2. Data preparation: Researcher provides cleaned data (CSV/JSON)
+3. Narrative development: Researcher drafts story arc
+4. Design & development: Build scrollytelling structure, custom visualizations
+5. Iteration & refinement
+6. Publication: Deploy, set up analytics
 
 **Best for:**
 - Published findings worth sharing beyond academic audiences
-- Research with clear narrative structure
-- Data that benefits from visual exploration
-- Projects with public engagement requirements
+- Research with clear narrative arc and key takeaways
+- Public engagement requirements or commitments to participants
+- Policy implications or societal relevance
 
-**Complex interactive stories** (multiple interconnected visualizations, real-time data, custom features): Pricing adjusts based on scope, typically $6,400-9,600.
+### Pattern 2: Exploratory Dashboards (User-Driven)
+
+**Best for:** Enabling users to query, filter, and explore data themselves
+
+**Characteristics:**
+- User-controlled exploration (not author-directed)
+- Multiple visualization modes and filtering options
+- Real-time queries against backend databases
+- Performance optimization for large datasets
+- Goal: Enable discovery, answer user-specific questions
+
+**Example: Wikigrams Dashboard**
+
+Interactive interface for exploring Wikipedia n-grams data across time, geography, and topics. Users query millions of records through intuitive controls.
+
+**Architecture:**
+- MongoDB backend (handling large-scale data efficiently)
+- FastAPI with intelligent caching strategies
+- SvelteKit frontend with responsive visualizations
+- Real-time query performance (<500ms for most requests)
+
+**Typical features:**
+- Multi-dimensional filtering (date, geography, categories)
+- Sortable/searchable data tables
+- Interactive charts responding to user selections
+- Export functionality for user-defined subsets
+- Progressive disclosure (simple → advanced controls)
+
+**Pricing:** $4,800-9,600 (30-60 hours)
+**Timeline:** 4-8 weeks depending on data complexity
+**Includes:** Backend setup, API development, frontend implementation, first year hosting
+
+**Workflow:**
+1. Discovery: Understand data structure, user questions, query patterns
+2. Backend architecture: Design database schema, API endpoints, caching strategy
+3. Frontend development: Build query interface, visualization components
+4. Performance optimization: Ensure responsive queries at scale
+5. Documentation: API docs, user guides
+6. Deployment: Backend + frontend hosting, monitoring setup
+
+**Best for:**
+- Large datasets requiring user-driven exploration
+- Multiple valid ways to slice/analyze data
+- Researchers wanting to share datasets publicly with query interfaces
+- Projects where users have diverse, specific questions
+- Datasets requiring backend infrastructure (>100MB, complex queries)
+
+## Technical Architecture: How We Handle "Big-ish" Data
+
+Many research datasets are too large for static sites (>100MB) but don't require enterprise database infrastructure. We specialize in this middle ground.
+
+**Our approach:**
+
+**For narrative stories (<100MB data):**
+- Static site generation (fast, cheap, scalable)
+- Data embedded as JSON/CSV
+- No backend required
+- Hosting: ~$50-100/year
+
+**For exploratory dashboards (>100MB to ~1TB):**
+- FastAPI backend with PostgreSQL or MongoDB
+- Intelligent caching (Redis for frequently-accessed queries)
+- API design prioritizing common query patterns
+- Frontend optimizations (virtualization, pagination, lazy loading)
+- Progressive enhancement (core functionality works even if backend slow)
+- Hosting: ~$250-500/year
+
+**Performance tricks we use:**
+- Pre-aggregate common queries during ETL
+- Cache results with smart invalidation
+- Frontend pagination/virtualization for large result sets
+- Responsive design that adapts to mobile constraints
+- Progressive loading (show results as they arrive)
+
+**Example: Wikigrams serves millions of n-grams efficiently** through pre-computed indexes, intelligent caching, and frontend optimizations—enabling real-time exploration without enterprise infrastructure costs.
+
+## Working with Sensitive/Proprietary Data
+
+Both patterns can handle sensitive or proprietary data with appropriate controls:
+
+**Access control options:**
+- Public (anyone can access)
+- Authentication required (ORCID, institutional SSO)
+- IP-restricted (campus networks only)
+- Time-limited access (conference attendees during event)
+- Request-based access (researchers apply for credentials)
+
+**Privacy protections:**
+- Aggregate-only visualizations (no individual-level data)
+- Differential privacy techniques for statistical releases
+- Data minimization (only expose necessary fields)
+- Audit logging (track who accessed what, when)
+
+**Compliance support:**
+- IRB protocol implementation
+- FERPA/HIPAA compliance consultation
+- Data sharing agreements
+- Usage analytics for reporting requirements
+
+**Example: Wikigrams demonstrates public data sharing** with API-based access, but the same architecture supports authenticated access for proprietary datasets.
+
+## Pricing Summary
+
+**Narrative-Driven Story (Simple):** $3,200-4,800 (20-30 hours)
+- Scrollytelling narrative
+- Static site (no backend)
+- 3-6 sections with custom visualizations
+- Timeline: 3-4 weeks
+
+**Narrative-Driven Story (Complex):** $6,400-9,600 (40-60 hours)
+- Multiple interconnected visualizations
+- Backend required (large dataset or real-time updates)
+- Custom interactive features
+- Timeline: 6-8 weeks
+
+**Exploratory Dashboard (Standard):** $4,800-9,600 (30-60 hours)
+- Query interface with multiple views
+- Backend + API + frontend
+- Datasets up to ~100GB
+- Timeline: 4-8 weeks
+
+**Exploratory Dashboard (Complex):** $9,600-16,000 (60-100 hours)
+- Multiple linked datasets
+- Advanced query capabilities
+- Performance optimization for large scale
+- Timeline: 8-12 weeks
 
 > [!NOTE] **📦 INTEGRATION WITH RESEARCH WEBSITES (SECTION 3.1)**
-> Visual essays become more efficient when research groups already have custom websites:
+> Both narrative essays and dashboards become more efficient when research groups already have custom websites:
 > - Reuse design system and infrastructure (consistent branding)
-> - Integrate stories into site navigation
+> - Integrate into site navigation
 > - Share hosting and analytics setup
-> 
-> First essay might take 20 hours; subsequent essays take 10-15 hours because website infrastructure exists. Many groups start with website (Section 3.1), then add visual essays as they publish findings.
+>
+> First project: 20-30 hours. Subsequent projects: 10-20 hours because infrastructure exists.
 
-> [!NOTE] **📦 DATA-HEAVY STORIES AND BACKEND INFRASTRUCTURE**
-> Most visual essays work as static sites, but some require server-side data processing.
-> 
-> **When backend infrastructure is needed:**
-> - Datasets exceeding browser memory (typically >100MB)
-> - Real-time updates or user-contributed data
-> - Complex queries requiring database operations
-> - Integration with existing research data infrastructure (Section 3.4)
-> 
-> **Our approach:** FastAPI backend with PostgreSQL (for relational data) or DuckDB (for analytical queries on datasets <1TB). Frontend queries via REST API. Progressive enhancement ensures if backend becomes unavailable, static snapshots remain accessible.
-> 
-> For groups with existing data infrastructure (Section 3.4), visual essays can query directly from centralized databases—eliminating data duplication and ensuring currency.
+> [!NOTE] **📦 CONNECTION TO DATA INFRASTRUCTURE (SECTION 3.3)**
+> Exploratory dashboards are most efficient when built on top of existing research data infrastructure:
+> - Query centralized databases directly (no data duplication)
+> - Reuse ETL pipelines and data cleaning logic
+> - Leverage existing API endpoints
+> - Inherit access controls and audit logging
+>
+> If you're building data infrastructure (Section 3.3), adding an exploratory dashboard is incremental work—the hard part (backend) already exists.
 
-**Reusable infrastructure enables efficiency:** Component library for common visualization patterns, content separation workflows, deployment automation. This infrastructure is why subsequent stories require less development time—we're assembling proven components, not building from scratch.
+## When to Choose Which Pattern
 
+**Choose Narrative-Driven Story if:**
+- You have a clear story to tell with defined takeaways
+- Target audience is general public, policymakers, or journalists
+- Goal is persuasion or engagement (not self-service exploration)
+- Data is manageable size (<100MB) or can be aggregated
+- You want author control over how findings are presented
 
-## When Visual Storytelling Makes Sense
+**Choose Exploratory Dashboard if:**
+- Users have diverse, specific questions you can't anticipate
+- Dataset is too large/complex for static embedding
+- Goal is enabling discovery and self-service analysis
+- You're sharing a dataset publicly with query capabilities
+- Target audience includes researchers who want to explore independently
 
-**You probably benefit from interactive essays if:**
-- Research has clear public relevance or policy implications
-- You've made commitments to participants about sharing findings
-- Grant requires demonstrated public engagement
-- Findings challenge conventional understanding and need careful explanation
-- Data patterns are best understood through visual exploration
-- Mobile access matters for your intended audience
+**Not sure?** Start with a narrative story. If users consistently ask "can I filter by X?" or "show me Y subset," that signals need for exploratory dashboard. We can add query capabilities later.
 
-**You probably don't need this if:**
-- Target audience is exclusively academic specialists
-- Findings are incremental contributions to narrow subfield
-- No public engagement requirements or goals
-- Budget constraints prohibit professional development
-- Timeline doesn't allow 3-4 week development process
+## Growth Path: From Story to Platform
 
-**Simpler alternatives might suffice:** Well-written blog post, institutional press release, static infographic. We provide honest assessment during discovery meetings—sometimes the recommendation is "you don't need us for this."
+Many research groups follow this progression:
+
+**Stage 1: Simple Narrative Story**
+Communicate one key finding → **$3,200-4,800**
+
+**Stage 2: Add Backend for Interactivity**
+Enable user filtering/exploration within narrative → **Additional $3,200-4,800**
+
+**Stage 3: Build Exploratory Dashboard**
+Full self-service query interface → **$4,800-9,600** (or incremental if backend exists)
+
+**Stage 4: Connect to Data Infrastructure**
+Dashboard queries centralized research databases → **$6,400-9,600 for infrastructure** (Section 3.3)
+
+**The value:** Each stage builds on previous work. Code reused. Lessons learned. Institutional knowledge preserved.
 
 ---
 
-**Next:** Section 3.3 (Team Annotations) addresses specialized infrastructure for collecting labeled data at scale with quality control and team coordination.
+**Next:** Section 3.3 (Research Data Infrastructure) shows how to build centralized data systems that enable collaboration, reproducibility, and institutional memory—the foundation for exploratory dashboards and growing research groups.

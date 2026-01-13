@@ -1,6 +1,6 @@
 # Section 2: The Two-Mode Solution
 
-## 2.1 Why RSEs Are The Answer
+## 2.1 Building digital infrastructure at VERSO
 
 The infrastructure crisis in computational research cannot be solved by training researchers to become better programmers. The solution requires recognizing that robust computational infrastructure demands dedicated professional roles with specialized expertise in data architecture, software engineering, and computational systems—knowledge that cannot be acquired incidentally while pursuing domain research.
 
@@ -8,7 +8,28 @@ Research Software Engineers (RSEs) sit at the intersection of domain science and
 
 The Open Source Programming Office at the Vermont Complex Systems Center represents an experiment in making RSE support accessible to research groups across UVM. Rather than expecting each group to independently solve computational infrastructure challenges, we provide two complementary modes of support.
 
-## 2.2 Our Two-Mode Approach
+## 2.2 What We've Already Built
+
+We're not proposing a hypothetical model—we've been building and refining this infrastructure for 3 years. Current production deployments:
+
+**Annotation Infrastructure (13 active users)**
+Self-hosted Label Studio serving 4 research groups, plus a custom mobile-first annotator enabling work during "dead time" (commutes, waiting rooms). Built in 1 week using SvelteKit + FastAPI + PostgreSQL, now reused across multiple projects with minimal customization.
+
+**Research Data Infrastructure (course catalogs platform)**
+Multi-year study processing PDFs from hundreds of institutions. Integrated pipeline: scraping → LLM-assisted extraction → PostgreSQL → FastAPI → dashboards. Enables collaboration between data engineers, ML researchers, and domain experts without coordination overhead. Researchers query clean data through documented APIs rather than reverse-engineering scrapers.
+
+**Visual Data Essays (Complex Stories platform)**
+Publication-quality interactive storytelling for academic research. Mobile-first, static generation for performance (<1s load times), progressive enhancement for longevity. Stories reach audiences beyond academic papers—policymakers, families, concerned public—while maintaining scientific rigor.
+
+**Custom Research Websites (data-driven, auto-updating)**
+SvelteKit sites pulling from OpenAlex/ORCID APIs. Publications, topics, and team profiles update automatically from authoritative sources. Solves the discovery problem: new students find relevant datasets and collaborators through search rather than relying on PI's memory of who's working on what.
+
+**Value Proposition Example:**
+Consider a typical annotation project: 2,000 items, 3 research assistants, standard categorical labeling. DIY approach (Excel + commercial cloud): ~$10,000 in time and subscriptions, with questionable inter-rater reliability tracking. Using our Tier 1 infrastructure: $2,450 Year 1 for production-quality workflows, full inter-rater metrics, and reusable infrastructure for future projects. **Potential savings: $7,500+ first year.**
+
+These aren't demonstrations—they're production systems supporting active research.
+
+## 2.3 Our Two-Mode Approach
 
 We reduce the infrastructure burden on research groups through two complementary strategies:
 
@@ -40,7 +61,7 @@ We reduce the infrastructure burden on research groups through two complementary
 
 **Value Proposition:** Purpose-built infrastructure that solves your exact problem, with explicit plans for long-term sustainability and knowledge transfer.
 
-## 2.3 Progressive Enhancement: Infrastructure That Survives
+## 2.4 Progressive Enhancement: Infrastructure That Survives
 
 A critical insight from three years of building computational infrastructure: **academic funding is inherently unstable**. Grants end. Students graduate. Priorities shift. Infrastructure that requires continuous specialized support becomes abandoned technical debt.
 
@@ -87,7 +108,7 @@ When you invest in our infrastructure:
 
 **This is why self-hosted, open-source infrastructure is a strategic investment, not merely an operational cost.** You're building institutional capacity that survives individual funding cycles.
 
-## 2.4 Service Tier Framework
+## 2.5 Service Tier Framework
 
 Our offerings are organized into three tiers, each serving different research needs:
 
@@ -96,19 +117,23 @@ Our offerings are organized into three tiers, each serving different research ne
 
 **Current offerings:**
 - Self-hosted Label Studio annotation platform
-- Research data hosting infrastructure  
+- Research data hosting infrastructure
 - Standard preprocessing and analysis pipelines
+
+**Pricing Example - Label Studio Access:**
+- Setup: $500 one-time
+- Annual access: $200/year per research group
+- Includes: Platform maintenance, security updates, basic technical support
 
 **Characteristics:**
 - **Setup time:** 1-4 hours (primarily onboarding)
-- **Cost structure:** Low one-time setup fee + modest annual access fee
 - **Maintenance:** Covered by institutional investment (security patches, platform upgrades)
 - **Customization:** Limited—you adapt to the platform
 - **Best for:** Standard research workflows, groups starting computational work
 
 **Trade-off:** Less flexibility, but near-zero marginal cost and guaranteed professional maintenance
 
-### Tier 2: Custom Implementation with Knowledge Transfer  
+### Tier 2: Custom Implementation with Knowledge Transfer
 **What it is:** Purpose-built solutions designed for sustainability and eventual independence
 
 **Deliverables:**
@@ -118,9 +143,26 @@ Our offerings are organized into three tiers, each serving different research ne
 - Initial maintenance period (typically 6 months)
 - Optional: Training for motivated students on the codebase
 
+**Pricing Examples:**
+- **Custom research website:** $6,400-8,000 (40-50 hours @ $160/hr effective rate including fringe)
+  - Includes: 5-10 pages, data-driven components, responsive design, first year hosting
+  - Timeline: 4-6 weeks
+- **Visual data essay:** $3,200-4,800 (20-30 hours)
+  - Includes: Scrollytelling, custom visualizations, mobile-first design, first year hosting
+  - Timeline: 3-4 weeks with existing infrastructure, 2-3 months for first collaboration
+- **Custom annotation platform:** $6,400-13,600 (40-85 hours)
+  - Includes: Domain-specific workflows, mobile-first UI, 6 months maintenance
+  - Timeline: 2-4 weeks development + knowledge transfer
+- **Basic data infrastructure:** $6,400-9,600 (40-60 hours)
+  - Includes: PostgreSQL setup, API endpoints, documentation, first year hosting
+  - Timeline: 4-6 weeks
+
+**After initial 6 months, choose:**
+- Ongoing maintenance retainer: $250/month
+- Consulting retainer (for self-maintaining groups): $150/month (10% FTE)
+- Sunset project (infrastructure remains accessible, code is yours)
+
 **Characteristics:**
-- **Setup time:** 2-4 weeks development + 1 week knowledge transfer
-- **Cost structure:** Project-based pricing + optional ongoing maintenance retainer
 - **Maintenance:** Initially us, with transition pathway to self-maintenance or ongoing support contract
 - **Customization:** High—built specifically for your workflow
 - **Best for:** Groups with specific needs AND capacity to potentially self-maintain
@@ -136,16 +178,40 @@ Our offerings are organized into three tiers, each serving different research ne
 - Co-investment in long-term computational maturity
 - Continuous adaptation as research questions evolve
 
+**Pricing:**
+- **Initial sprint:** $11,366 (1 month full-time, includes fringe benefits)
+- **Ongoing engagement:** $2,273/month (20% FTE)
+- **Minimum duration:** 12 months
+- **Complex integrated platform:** $17,250-27,360 for initial 6-8 week build, then monthly retainer
+
 **Characteristics:**
-- **Setup time:** Initial 1-month sprint, then ongoing engagement
-- **Cost structure:** Initial sprint + monthly retainer (typically 20% FTE)
-- **Duration:** Minimum 12 months, often extended
 - **Customization:** Continuous—infrastructure evolves with your research
 - **Best for:** Well-funded groups making long-term commitment to computational research
+- **Examples:** Multi-institutional studies, research centers coordinating multiple PIs, long-running observational studies
 
 **Trade-off:** Expensive but transforms computational capacity of the research group
 
-## 2.5 The Triage Question: Which Tier Do You Need?
+## 2.6 Comparison: DIY vs. Commercial vs. RSE Support
+
+| Approach | Year 1 Cost* | Maintenance | Customization | Data Control | Knowledge Transfer |
+|----------|-------------|-------------|---------------|--------------|-------------------|
+| **DIY (Excel/Dropbox)** | $2,500 (50hr student labor) | High burden on students | Full | Full | Lost when students graduate |
+| **Commercial Cloud** | $1,200-3,600/yr | Included (vendor-dependent) | Limited by platform | Vendor lock-in risk | None |
+| **Central IT** | "Free" (budgeted) | Included | Very limited | University policy | Minimal |
+| **Our Tier 1** | $700 | Included, professional | Medium (adapt to platform) | Full (self-hosted) | Institutional memory |
+| **Our Tier 2** | $6,400-13,600 | Optional retainer or self-maintain | High (custom-built) | Full (open source) | Documentation + training |
+| **Our Tier 3** | $38,662 Year 1 | Continuous partnership | Complete (evolves with research) | Full (co-developed) | Integrated student training |
+
+*Example scenario: Annotation project for 3 researchers over 12 months
+
+**Key differentiators of our approach:**
+- **Progressive enhancement:** Infrastructure survives funding uncertainty (Layer 1 always accessible)
+- **No vendor lock-in:** Open-source tools, documented schemas, standard formats
+- **Institutional memory:** Knowledge doesn't evaporate when students graduate
+- **Reusability:** Infrastructure built for one project can be adapted for future projects (custom annotator reused across multiple groups)
+- **Mobile-first when needed:** Enables annotation work during commutes and downtime
+
+## 2.7 The Triage Question: Which Tier Do You Need?
 
 **Use Tier 1 if:**
 - Your needs fit existing platforms (standard annotation, hosting, analysis)
@@ -169,62 +235,60 @@ Our offerings are organized into three tiers, each serving different research ne
 
 **Not sure?** Start with Tier 1. Many groups discover their needs through using shared infrastructure, then graduate to Tier 2 or 3 when they encounter limitations or see additional opportunities.
 
-## 2.6 Our Startup Reality: Honest Assessment
+## 2.8 Current Status & Growth Plan
 
-### Current Status
-The Open Source Programming Office is in a **pilot phase**. The Vermont Complex Systems Center has committed to a 2-year position (6 months completed, 18 months remaining) to prove this model can provide sufficient value to justify continued institutional investment.
+### Where We Are
+Six months into a 2-year Vermont Complex Systems Center initiative. We've validated the technical model (4 deployed production systems, 13 active users across multiple research groups) and are now scaling the customer base toward financial sustainability.
 
-This is an experiment in whether fee-for-service RSE support can be:
-1. **Financially sustainable** (~$100-135k annually including salary and overhead)
-2. **High-impact** (demonstrably improving computational research outcomes across UVM)
-3. **Scalable** (building reusable infrastructure that compounds over time)
+**What we've delivered:**
+- Label Studio infrastructure serving 4 research groups
+- Custom annotation platform (interdisciplinarity project, now reused)
+- Course catalogs data infrastructure (multi-year, multi-institutional study)
+- Visual data essays platform (Complex Stories)
+- Custom research websites with auto-updating publications
 
-### What We're Building Toward
+**Demonstrated capabilities:**
+- 13 active annotation users across 4 research groups (Label Studio + custom platform)
+- Mobile-first annotation interface enabling work during commutes and downtime
+- Multi-year course catalogs dataset with documented API access for new researchers
+- Visual data essays reaching broader audiences beyond academic papers
 
-**Phase 1 (Months 1-6, Complete):**
-- Established core infrastructure (annotation platforms, hosting pipelines)
-- Delivered pilot projects demonstrating feasibility
-- Documented best practices from 3 years of institutional learning
-- Built initial customer base (13 active users on shared infrastructure)
+### Path to Sustainability
 
-**Phase 2 (Months 7-18, Current):**
-- Expand service offerings through 9 core propositions
-- Build customer pipeline across diverse research groups
-- Refine pricing and service tiers based on market feedback
-- Subsidize early adoption projects to demonstrate value
-- Generate increasing revenue trajectory toward sustainability
+**Our goal:** $100-135k annual revenue by Month 18, demonstrating the model can support permanent RSE capacity at UVM.
 
-**Phase 3 (Months 19-24):**
-- Achieve or approach financial sustainability
-- Demonstrate institutional impact (publications enabled, grants won, student training)
-- Make case for permanent RSE capacity at UVM
-- If sustainable: Plan for expansion (hire additional RSEs)
-- If not sustainable: Document lessons learned, preserve open-source infrastructure
+**How we get there:**
+- Expand from 4 to 10-12 research groups using our infrastructure
+- Mix of Tier 1 (shared platforms), Tier 2 (custom projects), and Tier 3 (partnerships)
+- Early adopters benefit from subsidized rates while we build portfolio
+- Refine offerings based on real customer feedback
 
-### The Investment Proposition
+**If successful:** UVM gains permanent RSE capacity—rare at universities our size—with compounding institutional infrastructure, reduced vendor lock-in, and knowledge transfer across research groups.
 
-**To the Vermont Complex Systems Center:**
-We need 18 months of runway to build customer base and prove the sustainability model. This requires:
-- Flexibility to adjust pricing and offerings based on real demand
-- Support connecting with potential customers across UVM
-- Some subsidized or discounted projects to build portfolio and demonstrate value
-- Honest evaluation at 18 months: Is this working? Should we continue?
+### Your Investment is Protected
 
-**To Research Groups:**
-We're asking you to take a bet on this model. In exchange for early adoption:
-- **Discounted or subsidized initial projects** (we have budget to demonstrate value)
+**Progressive enhancement guarantee:** Even if our office doesn't secure permanent funding, your infrastructure survives:
+- **Layer 1 (always):** Data in PostgreSQL with documented schemas, accessible via standard SQL
+- **Layer 2 (likely):** Functional web applications with source code, architecture docs, deployment guides
+- **Layer 3 (at risk):** Advanced features requiring ongoing RSE expertise
+
+**All code is open source. All data in standard formats. All documentation complete.**
+
+Compare to commercial alternatives: vendor closes → expensive migration, feature deprecation → broken workflows, pricing changes → locked-in costs.
+
+### Early Adopter Benefits
+
+For the next 6-12 months, we're offering:
+- **Subsidized pilot projects** (50% discount on select Tier 2 projects)
 - **Priority access** to RSE services while capacity is available
-- **Influence over offerings** (your feedback shapes what we build)
-- **Progressive enhancement guarantee** (infrastructure survives even if we don't)
+- **Influence over offerings** (your feedback shapes what we build next)
+- **Flexible pricing** as we refine the model
 
-**If this experiment succeeds:**
-UVM gains permanent RSE capacity—rare at universities our size—with compounding institutional computational infrastructure, reduced vendor lock-in, and knowledge transfer across research groups.
-
-**If this experiment fails:**
-- All code and infrastructure remains open source
-- Documentation serves as institutional knowledge
-- Early adopters retain their infrastructure (progressive enhancement design)
-- We'll have learned what RSE support model doesn't work, informing future attempts
+**Why early adoption makes sense:**
+- Get production-quality infrastructure at discounted rates
+- Shape services to fit your actual needs
+- Build relationship before capacity fills
+- Progressive enhancement protects your investment
 
 ### Capacity Constraints: Radical Transparency
 
@@ -245,16 +309,24 @@ UVM gains permanent RSE capacity—rare at universities our size—with compound
 - Price adjustments to match supply and demand
 - Evidence-based case for hiring additional RSEs (~$200k annual revenue supports 2 FTE)
 
-## 2.7 Why This Model Matters
+## 2.9 Why This Model Matters
 
 Traditional approaches to computational research support at universities:
 
-**Central IT approach:** Generic infrastructure that doesn't understand research workflows. Can host a server but can't help design an annotation scheme.
+**Central IT approach:** Generic infrastructure that doesn't understand research workflows. Can host a server but can't help design an annotation scheme or preprocess domain-specific data.
 
-**Commercial cloud approach:** Convenient but creates vendor lock-in, recurring costs without building internal capacity, and no knowledge transfer.
+**Commercial cloud approach:** Convenient initially but creates vendor lock-in, recurring costs without building internal capacity, no knowledge transfer, and data portability risks.
 
-**Every-group-for-themselves approach:** Massive redundancy, fragile infrastructure, knowledge evaporates when students graduate.
+**Every-group-for-themselves approach:** Massive redundancy (every lab rebuilds annotation systems, scraping pipelines, dashboards), fragile infrastructure (breaks when students graduate), and knowledge evaporation (next cohort starts from zero).
 
 **Our approach:** Professional infrastructure development with institutional memory, open-source design, and progressive sustainability models. We're building capacity that compounds over time rather than repeatedly solving the same problems.
 
-The next section details our nine core propositions—specific infrastructure offerings addressing concrete pain points in computational research at UVM.
+**The compounding value:**
+- Infrastructure built for one project can be adapted and reused
+- Component libraries make subsequent projects faster (custom annotator built once, reused across multiple groups with minimal customization)
+- Institutional knowledge accumulates rather than evaporating with each graduate cohort
+- Research groups can focus on science rather than DevOps
+
+---
+
+**Next:** Section 3 details our four core propositions—specific infrastructure offerings addressing concrete pain points in computational research at UVM.

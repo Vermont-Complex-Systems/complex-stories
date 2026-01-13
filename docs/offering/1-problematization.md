@@ -1,10 +1,10 @@
-# 1.
+# 1. Problematization
 
 Computational projects typically involve components of the data engineering lifecycle (Figure 1-1). Data generation takes one of three forms: (i) simulation, (ii) direct collection via surveys, experiments, or sampling, or (iii) ingestion from upstream providers such as APIs or public datasets. Unlike traditional qualitative research, computational projects require extensive custom code for data ingestion, transformation, and sharing—or data pipelines.
 
 In industry, this lifecycle is supported by specialized roles (Figure 1-2): software engineers and data architects design systems, data engineers implement pipelines, DevOps engineers maintain infrastructure, and downstream consumers (data analysts, scientists, ML engineers) focus on analysis. This division of labor is a testimony that robust data infrastructure requires dedicated expertise and accountability structures. But academia is not industry. 
 
-Individual researchers, typically graduate students in emerging computational fields, are expected to perform all these specialized roles simultaneously while lacking formal training in software engineering, data architecture, or systems design. A PhD student is expected to scrape data, wrangled the data in a way that is reproducible and bug-free, provide data visualization—while also conducting their research. Yet the validity of their scientific conclusions depends entirely on the robustness of infrastructure they build.
+Individual researchers, typically graduate students in emerging computational fields, are expected to perform all these specialized roles simultaneously while lacking formal training in software engineering, data architecture, or systems design. A PhD student is expected to scrape data, wrangled the data in a way that is reproducible and bug-free, provide data visualization—while also conducting their research. Yet the validity of their scientific conclusions depends entirely on the robustness of infrastructure they build, leading to the [Software Sustainability Institute](https://www.software.ac.uk/) mantra: "Better Software Better Researcher".
 
 ## The Consequences Are Measurable
 
@@ -25,10 +25,9 @@ This crisis emerges from treating code as ancillary to research rather than as r
 
 Institutions have externalized the cost of computational infrastructure onto the researchers least equipped to bear it. Graduate students absorb impossible technical burdens, producing the computational scaffolding that enables senior researchers' careers while receiving minimal credit, training, or compensation for this specialized labor. When their code fails to replicate, the failure is individualized rather than recognized as inevitable outcome of systematic underinvestment.
 
-
 ## What This Requires: Professional Infrastructure Development
 
-This is where the Open Source Programming Office enters: as an experiment in whether fee-for-service Research Software Engineering support can provide sufficient value to justify institutional investment while building computational capacity that compounds over time.
+This is where the Open Source Programming Office enters: building on 3 years of infrastructure development, we're demonstrating that fee-for-service Research Software Engineering support can provide sufficient value to justify institutional investment while building computational capacity that compounds over time.
 
 The solution is not training researchers to become better programmers—it is recognizing that robust computational infrastructure requires dedicated professional roles. Research Software Engineers (RSEs) possess specialized expertise in data architecture, software engineering, and computational systems.
 
@@ -36,7 +35,7 @@ The solution is not training researchers to become better programmers—it is re
 
 **Institutional memory:** Preventing the knowledge evaporation that occurs when PhD students graduate and their hard-won computational expertise leaves with them. An RSE who supports a research center for 3-5 years accumulates understanding of what works, what fails, and why—knowledge that would otherwise be rebuilt from scratch by each cohort.
 
-**Force multipliers:** One RSE supporting 3-5 research teams produces better computational science than those teams struggling independently. This is an efficiency argument: the collective time saved across research groups exceeds the cost of professional support.
+**Force multipliers:** RSEs supporting multiple research teams enable better computational science than those teams struggling independently. This is an efficiency argument: the collective time saved across research groups exceeds the cost of professional support.
 
 **Progressive enhancement philosophy:** RSEs architect infrastructure to survive funding uncertainty. When sophisticated features require ongoing support, core functionality remains accessible through simpler pathways. Data persists in open-source formats. Pipelines degrade gracefully rather than catastrophically. This isn't just good engineering—it's recognizing the reality of academic funding cycles.
 
@@ -49,11 +48,11 @@ We cannot change tenure requirements that prioritize publications over infrastru
 
 **What we can do:**
 - Provide professional infrastructure that research groups cannot build themselves
-- Establish institutional memory that survives personnel turnover  
+- Establish institutional memory that survives personnel turnover (currently supporting 13 active users across 4 research groups)
 - Build reusable systems that compound value over time
 - Design with progressive enhancement so infrastructure survives funding uncertainty
 - Train motivated researchers in computational best practices
-- Demonstrate that professional RSE support is cost-effective compared to alternatives
+- Demonstrate how professional RSE support compares to DIY and commercial alternatives
 
 If this experiment succeeds, it provides evidence that universities should invest in permanent RSE capacity. If it fails, we'll have learned what support model doesn't work—and the infrastructure we've built remains open-source, documented, and available for future attempts.
 
