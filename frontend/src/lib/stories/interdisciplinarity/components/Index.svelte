@@ -315,7 +315,7 @@
 <style>
 	:global(main:has(.dataset-preview-container)) {
 		max-width: none;
-		padding: 1.5rem 1.5rem 0.5rem 9.5rem;
+		padding: 1.5rem var(--margin-left) 0.5rem var(--margin-left);
 	}
 
 	.container {
@@ -323,6 +323,17 @@
 		margin: 0 auto;
 		padding: 2rem;
 		font-family: system-ui, -apple-system, sans-serif;
+	}
+
+	/* Mobile styles */
+	@media (max-width: 768px) {
+		:global(main:has(.dataset-preview-container)) {
+			padding: 1rem var(--margin-left-mobile) 0.5rem var(--margin-left-mobile);
+		}
+
+		.container {
+			padding: 1rem;
+		}
 	}
 
 	.loading {
