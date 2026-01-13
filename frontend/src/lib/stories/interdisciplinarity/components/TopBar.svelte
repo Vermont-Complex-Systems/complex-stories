@@ -234,7 +234,7 @@
 		}
 
 		.octopus-icon {
-			height: 2.5rem;
+			height: 3.5rem;
 		}
 
 		.mode-switcher {
@@ -242,7 +242,7 @@
 		}
 
 		.mode-btn {
-			padding: 0.4rem 0.75rem;
+			padding: 0.4rem 0.9rem;
 			font-size: 0.75rem;
 			flex: 0 1 auto;
 		}
@@ -250,16 +250,13 @@
 
 	@media (max-width: 480px) {
 		.mode-btn {
-			font-size: 0.7rem;
+			font-size: 0.9rem;
 			padding: 0.35rem 0.6rem;
 		}
 
 		.octopus-icon {
-			height: 2rem;
+			height: 3rem;
 		}
 
-		.right-section {
-			gap: 0.5rem;
-		}
 	}
 </style>
