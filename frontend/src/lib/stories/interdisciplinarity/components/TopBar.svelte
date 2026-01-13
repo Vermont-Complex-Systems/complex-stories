@@ -25,97 +25,105 @@
 </script>
 
 <div class="top-bar">
-	<a href="{base}/" class="logo-link">
-		<img src="{base}/octopus-swim-right.png" alt="Home" class="octopus-icon" />
-	</a>
-	<div class="auth-section">
-		<div class="mode-switcher">
-			<button
-				class="mode-btn"
-				class:active={mode === 'story'}
-				onclick={() => onModeChange('story')}
-			>
-				Why
-			</button>
-			<button
-				class="mode-btn"
-				class:active={mode === 'overview'}
-				onclick={() => onModeChange('overview')}
-			>
-				📊 Overview
-			</button>
-			<button
-				class="mode-btn"
-				class:active={mode === 'csv-queue'}
-				onclick={() => onModeChange('csv-queue')}
-				disabled={generalQueueCount === 0}
-			>
-				📝 General Queue ({generalQueueCount})
-			</button>
-			{#if communityQueueCount > 0}
-				<button
-					class="mode-btn"
-					class:active={mode === 'community-queue'}
-					onclick={() => onModeChange('community-queue')}
-					disabled={communityQueueCount === 0}
-				>
-					🌐 Community ({communityQueueCount})
-				</button>
-			{/if}
-			{#if myPapersCount > 0}
-				<button
-					class="mode-btn"
-					class:active={mode === 'my-papers-queue'}
-					onclick={() => onModeChange('my-papers-queue')}
-					disabled={myPapersQueueCount === 0}
-				>
-					📄 My Papers ({myPapersQueueCount})
-				</button>
-			{/if}
-			<button
-				class="mode-btn"
-				class:active={mode === 'stats'}
-				onclick={() => onModeChange('stats')}
-			>
-				📈 Stats
-			</button>
-		</div>
-		<HelpPopover side="bottom" align="end" sideOffset={2} iconSize={30} />
-		{#await getCurrentUser()}
-			<!-- Loading auth state -->
-		{:then user}
-			{#if user}
-				<a href="{base}/auth" class="avatar-button">
-					<Avatar.Root class="avatar-root">
-						<Avatar.Fallback class="avatar-fallback">
-							{getUserInitials(user.username)}
-						</Avatar.Fallback>
-					</Avatar.Root>
-				</a>
-			{:else}
+	<div class="top-row">
+		<a href="{base}/" class="logo-link">
+			<img src="{base}/octopus-swim-right.png" alt="Home" class="octopus-icon" />
+		</a>
+		<div class="right-section">
+			<HelpPopover side="bottom" align="end" sideOffset={2} iconSize={30} />
+			{#await getCurrentUser()}
+				<!-- Loading auth state -->
+			{:then user}
+				{#if user}
+					<a href="{base}/auth" class="avatar-button">
+						<Avatar.Root class="avatar-root">
+							<Avatar.Fallback class="avatar-fallback">
+								{getUserInitials(user.username)}
+							</Avatar.Fallback>
+						</Avatar.Root>
+					</a>
+				{:else}
+					<a href="{base}/auth" class="login-button">
+						Log in
+					</a>
+				{/if}
+			{:catch}
 				<a href="{base}/auth" class="login-button">
 					Log in
 				</a>
-			{/if}
-		{:catch}
-			<a href="{base}/auth" class="login-button">
-				Log in
-			</a>
-		{/await}
+			{/await}
+		</div>
+	</div>
+	<div class="mode-switcher">
+		<button
+			class="mode-btn"
+			class:active={mode === 'story'}
+			onclick={() => onModeChange('story')}
+		>
+			Why
+		</button>
+		<button
+			class="mode-btn"
+			class:active={mode === 'overview'}
+			onclick={() => onModeChange('overview')}
+		>
+			📊 Overview
+		</button>
+		<button
+			class="mode-btn"
+			class:active={mode === 'csv-queue'}
+			onclick={() => onModeChange('csv-queue')}
+			disabled={generalQueueCount === 0}
+		>
+			📝 General Queue ({generalQueueCount})
+		</button>
+		{#if communityQueueCount > 0}
+			<button
+				class="mode-btn"
+				class:active={mode === 'community-queue'}
+				onclick={() => onModeChange('community-queue')}
+				disabled={communityQueueCount === 0}
+			>
+				🌐 Community ({communityQueueCount})
+			</button>
+		{/if}
+		{#if myPapersCount > 0}
+			<button
+				class="mode-btn"
+				class:active={mode === 'my-papers-queue'}
+				onclick={() => onModeChange('my-papers-queue')}
+				disabled={myPapersQueueCount === 0}
+			>
+				📄 My Papers ({myPapersQueueCount})
+			</button>
+		{/if}
+		<button
+			class="mode-btn"
+			class:active={mode === 'stats'}
+			onclick={() => onModeChange('stats')}
+		>
+			📈 Stats
+		</button>
 	</div>
 </div>
 
 <style>
 	.top-bar {
 		display: flex;
-		justify-content: space-between;
-		align-items: center;
+		flex-direction: column;
+		gap: 1rem;
 		padding: 1rem 2rem;
 		background: white;
 		border-bottom: 1px solid #e0e0e0;
 		position: sticky;
 		top: 0;
 		z-index: 100;
+	}
+
+	.top-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 	}
 
 	.logo-link {
@@ -135,16 +143,18 @@
 		object-fit: contain;
 	}
 
-	.auth-section {
+	.right-section {
 		display: flex;
 		align-items: center;
+		gap: 0.75rem;
 		font-size: 0.875rem;
 	}
 
 	.mode-switcher {
 		display: flex;
 		gap: 0.5rem;
-		margin-right: 1rem;
+		justify-content: flex-end;
+		flex-wrap: wrap;
 	}
 
 	.mode-btn {
@@ -214,5 +224,39 @@
 		border-radius: 50%;
 		font-size: 0.75rem;
 		font-weight: 600;
+	}
+
+	/* Mobile styles */
+	@media (max-width: 768px) {
+		.top-bar {
+			padding: 0.75rem 1rem;
+			gap: 0.75rem;
+		}
+
+		.octopus-icon {
+			height: 3.5rem;
+		}
+
+		.mode-switcher {
+			justify-content: flex-start;
+		}
+
+		.mode-btn {
+			padding: 0.4rem 0.9rem;
+			font-size: 0.75rem;
+			flex: 0 1 auto;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.mode-btn {
+			font-size: 0.9rem;
+			padding: 0.35rem 0.6rem;
+		}
+
+		.octopus-icon {
+			height: 3rem;
+		}
+
 	}
 </style>
