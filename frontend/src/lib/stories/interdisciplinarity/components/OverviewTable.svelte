@@ -123,7 +123,7 @@
 </script>
 
 <header>
-	<h1>Your Annotation Progress</h1>
+	<h2>Your Annotation Progress</h2>
 	<p class="subtitle">
 		{myAnnotations.length} of {totalPapers} papers annotated
 		({paperIds.length} CSV + {generalPapers.length} community + {myPapers.length} your papers)
@@ -147,15 +147,14 @@
 	<table>
 		<thead>
 			<tr>
-				<th>#</th>
-				<th>Source</th>
+				<th class="number-col">#</th>
+				<th class="source-col">Source</th>
 				<th>Title</th>
-				<th>Authors</th>
-				<th>Year</th>
-				<th>Annotations</th>
-				<th>Status</th>
-				<th>Rating</th>
-				<th>Action</th>
+				<th class="desktop-only">Authors</th>
+				<th class="desktop-only">Year</th>
+				<th class="desktop-only">Annotations</th>
+				<th class="desktop-only">Status</th>
+				<th class="desktop-only">Rating</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -163,32 +162,65 @@
 				{@const annotation = myAnnotations.find(a => a.paper_id === item.id)}
 				{#if (item.source === 'my-papers' || item.source === 'community') && matchesFilters(item, item.paper, annotation)}
 					<!-- Papers with full metadata (user's papers or community papers) -->
-					<tr class:annotated={annotation} class:my-paper={item.source === 'my-papers'}>
+					<tr
+						class:annotated={annotation}
+						class:my-paper={item.source === 'my-papers'}
+						class="clickable-row"
+						onclick={() => {
+							if (item.source === 'my-papers') {
+								const myPaperIndex = myPapersQueueIds.indexOf(item.id)
+								if (myPaperIndex >= 0) {
+									onJumpToPaper('my-papers-queue', myPaperIndex)
+								} else if (annotation) {
+									onJumpToPaper('my-papers-queue', 0)
+									alert('This paper is already annotated. You can re-annotate it from the My Papers queue.')
+								}
+							} else {
+								const communityIndex = communityQueuePaperIds.indexOf(item.id)
+								onJumpToPaper('community-queue', communityIndex >= 0 ? communityIndex : 0)
+							}
+						}}
+					>
 						<td class="number-col">{index + 1}</td>
 						<td class="source-col">
 							{#if item.source === 'my-papers'}
-								<span class="source-badge my">Mine</span>
+								<span class="source-badge my" title="Mine">
+									<span class="desktop-only">Mine</span>
+									<span class="mobile-only">M</span>
+								</span>
 							{:else}
-								<span class="source-badge community">Community</span>
+								<span class="source-badge community" title="Community">
+									<span class="desktop-only">Community</span>
+									<span class="mobile-only">C</span>
+								</span>
 							{/if}
 						</td>
-						<td class="title-col">{item.paper.title}</td>
-						<td class="authors-col">
+						<td class="title-col">
+							<div class="title-wrapper">
+								<span class="title-text">{item.paper.title}</span>
+								{#if annotation}
+									<span class="mobile-status completed" title="Completed">✓</span>
+								{:else}
+									<span class="mobile-status pending" title="Pending">○</span>
+								{/if}
+							</div>
+						</td>
+						<td class="authors-col desktop-only">
 							{item.paper.authors?.slice(0, 3).join(', ') || '—'}
 							{#if item.paper.authors?.length > 3}
 								<span class="et-al">et al.</span>
 							{/if}
 						</td>
-						<td class="year-col">{item.paper.year || '—'}</td>
-						<td class="count-col">{annotationCounts[item.id] || 0}</td>
-						<td class="status-col">
+						<td class="year-col desktop-only">{item.paper.year || '—'}</td>
+						<td class="count-col desktop-only">{annotationCounts[item.id] || 0}</td>
+						<td class="status-col desktop-only">
 							{#if annotation}
 								<span class="status-badge completed">✓</span>
 							{:else}
 								<span class="status-badge pending">○</span>
 							{/if}
 						</td>
-						<td class="rating-col">
+						<td class="rating-col desktop-only">
 							{#if annotation}
 								<span class="rating-display">
 									{ratingLabels[annotation.interdisciplinarity_rating - 1]}
@@ -197,49 +229,52 @@
 								—
 							{/if}
 						</td>
-						<td class="action-col">
-							<button class="jump-btn" onclick={() => {
-								if (item.source === 'my-papers') {
-									const myPaperIndex = myPapersQueueIds.indexOf(item.id)
-									if (myPaperIndex >= 0) {
-										onJumpToPaper('my-papers-queue', myPaperIndex)
-									} else if (annotation) {
-										onJumpToPaper('my-papers-queue', 0)
-										alert('This paper is already annotated. You can re-annotate it from the My Papers queue.')
-									}
-								} else {
-									const communityIndex = communityQueuePaperIds.indexOf(item.id)
-									onJumpToPaper('community-queue', communityIndex >= 0 ? communityIndex : 0)
-								}
-							}}>
-								{annotation ? 'Re-annotate' : 'Annotate'}
-							</button>
-						</td>
 					</tr>
 				{:else if item.source === 'csv'}
 					<!-- General dataset paper - need to fetch -->
 					{#await getPaperById(item.id) then paperData}
 						{#if matchesFilters(item, paperData, annotation)}
-							<tr class:annotated={annotation}>
+							<tr
+								class:annotated={annotation}
+								class="clickable-row"
+								onclick={() => {
+									const csvIndex = csvQueuePaperIds.indexOf(item.id)
+									onJumpToPaper('csv-queue', csvIndex >= 0 ? csvIndex : 0)
+								}}
+							>
 							<td class="number-col">{index + 1}</td>
-							<td class="source-col"><span class="source-badge general">General</span></td>
-							<td class="title-col">{paperData?.title || 'Loading...'}</td>
-							<td class="authors-col">
+							<td class="source-col">
+								<span class="source-badge general" title="General">
+									<span class="desktop-only">General</span>
+									<span class="mobile-only">G</span>
+								</span>
+							</td>
+							<td class="title-col">
+								<div class="title-wrapper">
+									<span class="title-text">{paperData?.title || 'Loading...'}</span>
+									{#if annotation}
+										<span class="mobile-status completed" title="Completed">✓</span>
+									{:else}
+										<span class="mobile-status pending" title="Pending">○</span>
+									{/if}
+								</div>
+							</td>
+							<td class="authors-col desktop-only">
 								{paperData?.authors?.slice(0, 3).join(', ') || '—'}
 								{#if paperData?.authors?.length > 3}
 									<span class="et-al">et al.</span>
 								{/if}
 							</td>
-							<td class="year-col">{paperData?.year || '—'}</td>
-							<td class="count-col">{annotationCounts[item.id] || 0}</td>
-							<td class="status-col">
+							<td class="year-col desktop-only">{paperData?.year || '—'}</td>
+							<td class="count-col desktop-only">{annotationCounts[item.id] || 0}</td>
+							<td class="status-col desktop-only">
 								{#if annotation}
 									<span class="status-badge completed">✓</span>
 								{:else}
 									<span class="status-badge pending">○</span>
 								{/if}
 							</td>
-							<td class="rating-col">
+							<td class="rating-col desktop-only">
 								{#if annotation}
 									<span class="rating-display">
 										{ratingLabels[annotation.interdisciplinarity_rating - 1]}
@@ -247,14 +282,6 @@
 								{:else}
 									—
 								{/if}
-							</td>
-							<td class="action-col">
-								<button class="jump-btn" onclick={() => {
-									const csvIndex = csvQueuePaperIds.indexOf(item.id)
-									onJumpToPaper('csv-queue', csvIndex >= 0 ? csvIndex : 0)
-								}}>
-									{annotation ? 'Re-annotate' : 'Annotate'}
-								</button>
 							</td>
 						</tr>
 						{/if}
@@ -418,11 +445,6 @@
 		width: 8rem;
 	}
 
-	.action-col {
-		width: 8rem;
-		text-align: center;
-	}
-
 	.status-badge {
 		display: inline-block;
 		padding: 0.25rem 0.5rem;
@@ -471,20 +493,125 @@
 		color: #166534;
 	}
 
-	.jump-btn {
-		padding: 0.375rem 0.75rem;
-		font-size: 0.75rem;
-		background: white;
-		border: 1px solid #e0e0e0;
-		border-radius: 4px;
+	/* Clickable row styles */
+	.clickable-row {
 		cursor: pointer;
-		transition: all 0.2s;
-		font-weight: 500;
+		transition: transform 0.1s;
 	}
 
-	.jump-btn:hover {
-		background: #2563eb;
-		color: white;
-		border-color: #2563eb;
+	.clickable-row:active {
+		transform: scale(0.995);
+	}
+
+	/* Title wrapper for mobile status indicator */
+	.title-wrapper {
+		display: block;
+	}
+
+	.title-text {
+		display: inline;
+	}
+
+	.mobile-status {
+		display: none;
+	}
+
+	.mobile-status.completed {
+		color: #065f46;
+	}
+
+	.mobile-status.pending {
+		color: #92400e;
+	}
+
+	/* Mobile-specific styles */
+	.mobile-only {
+		display: none;
+	}
+
+	@media (max-width: 768px) {
+
+		.filters {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0.5rem;
+		}
+
+		.sort-group {
+			justify-content: space-between;
+		}
+
+		th.desktop-only,
+		td.desktop-only {
+			display: none !important;
+		}
+
+		span.desktop-only {
+			display: none !important;
+		}
+
+		.mobile-only {
+			display: inline !important;
+		}
+
+		.mobile-status {
+			display: inline-block;
+			font-size: 1rem;
+			flex-shrink: 0;
+		}
+
+		.title-wrapper {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			justify-content: space-between;
+		}
+
+		.title-text {
+			flex: 1;
+		}
+
+		.overview-table {
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+		}
+
+		table {
+			min-width: 100%;
+		}
+
+		.number-col {
+			width: 2rem;
+			padding: 0.5rem 0.25rem;
+		}
+
+		.source-col {
+			width: 2.5rem;
+			padding: 0.5rem 0.25rem;
+		}
+
+		.source-badge {
+			padding: 0.25rem 0.4rem;
+			min-width: 1.75rem;
+			text-align: center;
+		}
+
+		.title-col {
+			min-width: 60vw;
+		}
+
+		th {
+			padding: 0.5rem 0.5rem;
+			font-size: 0.8rem;
+		}
+
+		td {
+			padding: 0.5rem 0.5rem;
+			font-size: 0.875rem;
+		}
+
+		.subtitle {
+			font-size: 0.875rem;
+		}
 	}
 </style>

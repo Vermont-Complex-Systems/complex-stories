@@ -275,4 +275,24 @@
 		border: 1px solid #fcc;
 		border-radius: 8px;
 	}
+
+	@media (max-width: 768px) {
+		.paper h2 {
+			font-size: var(--font-size-large) !important;
+		}
+
+		.rating-section h3 {
+			font-size: 1.325rem !important;
+		}
+
+		.rating-buttons {
+			display: flex;
+			gap: 0.35rem;
+			margin-bottom: 1rem;
+		}
+
+		.rating-btn {
+			font-size: 0.965rem !important;
+		}
+	}
 </style>

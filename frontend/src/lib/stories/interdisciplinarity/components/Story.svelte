@@ -56,7 +56,7 @@
 		color: #666;
 		line-height: 1.6;
 		margin: 0;
-		font-size: var(--font-size-xsmall) !important;
+		font-size: var(--font-size-small) !important;
 		padding: 1rem;
 		max-width: 100%;
 	}
