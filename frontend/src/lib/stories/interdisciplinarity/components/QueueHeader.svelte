@@ -17,7 +17,7 @@
 </script>
 
 <header>
-	<h1>{title}</h1>
+	<h2>{title}</h2>
 	<p class="subtitle">{subtitle}</p>
 
 	<div class="progress">
@@ -46,9 +46,8 @@
 		margin-bottom: 2rem;
 	}
 
-	h1 {
-		font-size: 2rem;
-		margin: 0 0 0.5rem 0;
+	h2 {
+		margin: 0.5rem 0 0.5rem 0;
 		color: #1a1a1a;
 	}
 
