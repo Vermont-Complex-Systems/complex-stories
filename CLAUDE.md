@@ -9,7 +9,7 @@ Complex Stories is a scientific data essay platform built with SvelteKit, inspir
 **Architecture**: Monorepo with separate frontend (SvelteKit) and backend (FastAPI + Dagster)
 - **Frontend**: `complexstories.uvm.edu` - Node.js server via PM2
 - **Backend**: `api.complexstories.uvm.edu` - FastAPI + PostgreSQL via PM2
-- **Database**: PostgreSQL for persistent data, DuckDB WASM for client-side analytics
+- **Database**: PostgreSQL for persistent data, DuckDB for backend analytics
 
 ## Quick Start
 
@@ -58,16 +58,18 @@ story-slug/
 - **SvelteKit 2** with Svelte 5 runes syntax (experimental async components enabled)
 - **Node.js adapter** with remote functions for server-side operations
 - **D3.js** for data visualization
-- **DuckDB WASM** for client-side data processing
 - **FastAPI** backend with SQLAlchemy 2.0+ async
 - **PostgreSQL** for persistent storage
 - **Dagster** for data pipeline orchestration (uv workspace)
 - **Path aliases**: `$data`, `$styles`, `$stories` for cleaner imports
 
 ### Data Flow
-1. **Static data**: Parquet files + DuckDB WASM for high-performance client-side analytics
+1. **Static data**: JSON/CSV files bundled via Vite imports for direct use in components
 2. **Dynamic data**: Remote functions → FastAPI endpoints → PostgreSQL
-3. **Pipelines**: Dagster processes raw data → exports to PostgreSQL via FastAPI
+3. **Pipelines**: External APIs → DuckDB (processing) → PostgreSQL (storage) via FastAPI
+   - Extract: Dagster fetches from external APIs into DuckDB
+   - Transform: SQL/pandas transformations in DuckDB
+   - Export: Bulk uploads to PostgreSQL via FastAPI endpoints
 
 ### Remote Functions Pattern
 Stories use `data.remote.js` for type-safe backend integration:
@@ -107,6 +109,47 @@ export const api = {
 ```
 
 ## Common Patterns
+
+### Frontend Data Loading
+Stories use three primary patterns for data:
+
+1. **Static Imports**: JSON/CSV files imported directly from `data/` directory
+   ```javascript
+   import nodes from '../data/nodes.csv';
+   import edges from '../data/edges.json';
+   ```
+   - CSV files parsed via `@rollup/plugin-dsv` in `vite.config.ts`
+   - Bundled at build time for immediate availability
+
+2. **Remote Functions**: Type-safe server-side API calls with Valibot validation
+   ```javascript
+   import { loadPaperData } from './data.remote.js';
+   const papers = await loadPaperData({ authorName, filterBigPapers });
+   ```
+   - Used for dynamic data from PostgreSQL
+   - Validation at runtime
+
+3. **TanStack Query**: Reactive data fetching with caching (used in some stories)
+   ```javascript
+   import { createQuery } from '@tanstack/svelte-query';
+   const query = createQuery(() => ({
+     queryKey: ['data', params],
+     queryFn: () => fetchData(params)
+   }));
+   ```
+
+**State Management**: Complex stories use `state.svelte.ts` with Svelte 5 runes:
+```typescript
+export const dashboardState = $state({
+  selectedAuthor: 'Peter Sheridan Dodds',
+  filterBigPapers: true
+});
+
+export const data = $state({
+  papers: null,
+  isLoading: false
+});
+```
 
 ### Interactive Surveys with Fingerprinting
 See `dark-data-survey` story for complete pattern:
@@ -228,24 +271,9 @@ Stories are defined in `frontend/src/data/stories.csv`:
 - Shared package: `backend/shared/` (API clients: OpenAlex, Semantic Scholar, Complex Stories API)
 - Raw datasets: `backend/data/`
 
-## Migration Status
+### Docs
 
-✅ **Completed**:
-- Frontend/backend separation
-- Node.js adapter with remote functions
-- PostgreSQL database layer
-- FastAPI endpoints for academic data and surveys
-- Dagster pipeline integration
-- PM2 deployment for both services
-- IT reverse proxy setup
-
-⏳ **In Progress**:
-- Authentication integration across all stories
-- Rate limiting (slowapi configured in `main.py`)
-
-⏳ **Planned**:
-- Multi-tenant platform features
-- External institution onboarding
+- Offering: `docs/offering` (report about our service offering)
 
 ## Important Notes
 
@@ -253,7 +281,7 @@ Stories are defined in `frontend/src/data/stories.csv`:
 - **No CSS framework**: Custom styling per story, global styles in `frontend/src/styles/`
 - **Type safety**: Use Valibot schemas in remote functions for validation
 - **Privacy**: Surveys use browser fingerprinting, not cookies/localStorage
-- **Performance**: DuckDB WASM for heavy client-side analytics, PostgreSQL for persistence
+- **Performance**: DuckDB for backend analytics, PostgreSQL for persistence (DuckDB WASM not currently implemented)
 - **Backend workspace**: `uv` manages `backend/` and `backend/shared/` as a workspace
 - **Vite path aliases**: Use `$data`, `$styles`, `$stories` for cleaner imports
 - **Clean code**: Prefer existing patterns, avoid over-engineering
