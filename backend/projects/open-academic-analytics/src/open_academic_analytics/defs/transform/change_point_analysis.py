@@ -1,8 +1,6 @@
 import dagster as dg
 from dagster_duckdb import DuckDBResource
 import numpy as np
-import arviz as az
-from cmdstanpy import CmdStanModel
 from pathlib import Path
 
 @dg.asset(
@@ -11,6 +9,9 @@ from pathlib import Path
     group_name="modelling"
 )
 def change_point_analysis(duckdb: DuckDBResource) -> dg.MaterializeResult:
+    # Lazy imports for bayesian dependencies
+    import arviz as az
+    from cmdstanpy import CmdStanModel
     """Add Bayesian change point analysis (changing_rate) to training dataset using database data"""
 
     with duckdb.get_connection() as conn:

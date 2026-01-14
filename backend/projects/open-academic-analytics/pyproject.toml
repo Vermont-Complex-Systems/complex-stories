@@ -10,7 +10,6 @@ dependencies = [
     "pymongo>=4.15.1",
     "requests>=2.25.0",
     "shared @ file:///users/j/s/jstonge1/complex-stories-dev/backend/shared",
-    "umap-learn>=0.5.9.post2",
 ]
 
 [dependency-groups]
@@ -23,6 +22,9 @@ bayesian = [
     "arviz>=0.18.0",
     "numpy>=1.24.0",
     "scipy>=1.11.0",
+]
+umap = [
+    "umap-learn>=0.5.6",
 ]
 
 [build-system]

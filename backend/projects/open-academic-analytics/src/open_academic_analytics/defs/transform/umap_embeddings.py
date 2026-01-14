@@ -2,7 +2,6 @@ import numpy as np
 import dagster as dg
 from dagster import MaterializeResult, MetadataValue
 from dagster_duckdb import DuckDBResource
-import umap
 
 
 @dg.asset(
@@ -11,6 +10,8 @@ import umap
     group_name="transform"
 )
 def umap_embeddings(duckdb: DuckDBResource):
+    # Lazy import to avoid loading umap at module import time
+    import umap
     """Apply UMAP dimensionality reduction to all embeddings using DuckDB."""
 
     with duckdb.get_connection() as conn:
