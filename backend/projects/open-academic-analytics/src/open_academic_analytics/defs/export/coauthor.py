@@ -1,8 +1,6 @@
 import dagster as dg
 from dagster_duckdb import DuckDBResource
-import requests
-
-from ..resources import get_api_headers, get_api_base_url
+from open_academic_analytics.defs.resources import ComplexStoriesAPIResource
 
 @dg.asset(
     kinds={"duckdb"},
@@ -92,7 +90,7 @@ def processed_coauthors(duckdb: DuckDBResource) -> dg.MaterializeResult:
     deps=["processed_coauthors"],
     group_name="export"
 )
-def coauthor_database_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
+def coauthor_database_upload(duckdb: DuckDBResource, complex_stories_api: ComplexStoriesAPIResource) -> dg.MaterializeResult:
     """Export final coauthor collaboration data to database via API"""
 
     with duckdb.get_connection() as conn:
@@ -113,7 +111,11 @@ def coauthor_database_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
                         ELSE NULL
                     END as coauthor_age
 
-                FROM oa.transform.processed_coauthors
+                FROM oa.transform.processed_coauthors pc
+                -- Join sync status to filter for recently updated professors
+                JOIN oa.cache.uvm_profs_sync_status sync ON pc.ego_author_id = sync.ego_author_id
+                -- Only include coauthors for professors synced in the last 24 hours
+                WHERE sync.last_synced_date >= NOW() - INTERVAL '1 day'
             )
             SELECT
                 -- UVM professor information
@@ -212,64 +214,36 @@ def coauthor_database_upload(duckdb: DuckDBResource) -> dg.MaterializeResult:
             for key, value in record.items():
                 record[key] = clean_for_json(value)
 
+        # Save processed data to DuckDB for downstream assets
+        import pandas as pd
+        df_coauthors = pd.DataFrame(coauthor_data)
+        conn.execute("CREATE OR REPLACE TABLE oa.transform.processed_coauthors_final AS SELECT * FROM df_coauthors")
+        dg.get_dagster_logger().info(f"Saved {len(df_coauthors)} processed coauthor records to DuckDB table")
+
         # Debug: Log first record for troubleshooting
         if coauthor_data:
             dg.get_dagster_logger().info(f"Sample record keys: {list(coauthor_data[0].keys())}")
             dg.get_dagster_logger().info(f"Sample record: {coauthor_data[0]}")
             dg.get_dagster_logger().info(f"Total records to upload: {len(coauthor_data)}")
 
-        # POST to the database API in batches to avoid timeouts
-        api_base = get_api_base_url()
-        api_url = f"{api_base}/admin/open-academic-analytics/coauthors/bulk"
-        batch_size = 10_000  # Process 100k records at a time
-        total_uploaded = 0
-
+        # Upload to database using the API resource
         try:
-            # Get authentication headers
-            headers = get_api_headers()
-
-            # Process in batches
-            for i in range(0, len(coauthor_data), batch_size):
-                batch = coauthor_data[i:i + batch_size]
-                batch_num = (i // batch_size) + 1
-                total_batches = (len(coauthor_data) + batch_size - 1) // batch_size
-
-                dg.get_dagster_logger().info(f"Uploading batch {batch_num}/{total_batches} ({len(batch)} records)")
-
-                response = requests.post(
-                    api_url,
-                    json=batch,
-                    headers=headers,
-                    verify=False,
-                    timeout=120
-                )
-
-                # Log response details for debugging
-                dg.get_dagster_logger().info(f"Batch {batch_num} response status: {response.status_code}")
-                if response.status_code != 200:
-                    dg.get_dagster_logger().error(f"Batch {batch_num} response content: {response.text[:1000]}")
-
-                response.raise_for_status()
-                total_uploaded += len(batch)
-
-                dg.get_dagster_logger().info(f"Batch {batch_num} successful: {len(batch)} records uploaded")
-
-            dg.get_dagster_logger().info(f"Successfully uploaded all {total_uploaded} coauthor records to database")
+            client = complex_stories_api.get_client()
+            upload_result = client.bulk_upload(
+                endpoint="open-academic-analytics/coauthors/bulk",
+                data=coauthor_data,
+                batch_size=100_000
+            )
 
             return dg.MaterializeResult(
                 metadata={
-                    "records_uploaded": total_uploaded,
-                    "batches_processed": (len(coauthor_data) + batch_size - 1) // batch_size,
-                    "batch_size": batch_size,
-                    "api_endpoint": api_url,
+                    **upload_result,
                     "upload_status": "success"
                 }
             )
 
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             dg.get_dagster_logger().error(f"Failed to upload coauthor data: {str(e)}")
-            if hasattr(e, 'response') and e.response is not None:
-                dg.get_dagster_logger().error(f"Error response content: {e.response.text[:1000]}")
             raise
 
 

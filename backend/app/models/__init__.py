@@ -6,5 +6,19 @@ from ..core.database import Base
 from .academic import Paper, Coauthor
 from .annotation_datasets import AcademicResearchGroups
 from .auth import User, AnnotationHistory
+from .sciscidb import FieldYearCount
+from .datalakes import Datalake
+from .interdisciplinarity import PaperAnnotation
+from .cached_papers import CachedPaper
 
-__all__ = ["Base", "Paper", "Coauthor", "AcademicResearchGroups", "User", "AnnotationHistory"]
+__all__ = [
+    "Base",
+    "Paper",
+    "Coauthor",
+    "AcademicResearchGroups",
+    "User",
+    "AnnotationHistory",
+    "PaperAnnotation",
+    "CachedPaper", 
+    "FieldYearCount", 
+    "Datalake"]

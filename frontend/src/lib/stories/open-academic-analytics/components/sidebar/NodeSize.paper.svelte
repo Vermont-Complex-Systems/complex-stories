@@ -1,10 +1,12 @@
 <script>
-  import { dashboardState } from '../state.svelte.ts';
+  import { dashboardState } from '$stories/open-academic-analytics/state.svelte.js';
+  import { Circle } from "@lucide/svelte";
 </script>
 
 <div class="color-mode-section">
-  <div class="section-header">
-    <span class="section-title">Paper Node Size</span>
+  <div class="widget-header">
+    <Circle size={14} />
+    <span class="widget-title">Paper Node Size</span>
   </div>
   
 <select bind:value={dashboardState.paperNodeSize} class="filter-select">
@@ -12,31 +14,27 @@
     <option value="nb_coauthors"># Coauthors</option>
   </select>
   
-  <div class="color-info">
-    {#if dashboardState.paperNodeSize === 'cited_by_count'}
-      <p class="info-text">Node size based on citation count</p>
-    {:else}
-      <p class="info-text">Node size based on number of coauthors.</p>
-    {/if}
-  </div>
 </div>
 
 <style>
   .color-mode-section {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
   }
 
-  .section-header {
+  .widget-header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--color-border);
   }
 
-  .section-title {
-    font-size: var(--font-size-small);
+  .widget-title {
+    font-size: var(--font-size-xsmall);
     font-weight: var(--font-weight-medium);
     color: var(--color-fg);
   }
@@ -56,14 +54,4 @@
     border-color: var(--color-good-blue);
   }
 
-  .color-info {
-    margin-top: 0.25rem;
-  }
-
-  .info-text {
-    font-size: var(--font-size-xsmall);
-    color: var(--color-secondary-gray);
-    margin: 0;
-    font-style: italic;
-  }
 </style>

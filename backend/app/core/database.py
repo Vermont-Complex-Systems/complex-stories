@@ -8,7 +8,6 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import text
 from typing import Optional, AsyncGenerator
 import logging
-import pymongo
 from pymongo import MongoClient
 
 logger = logging.getLogger(__name__)
@@ -125,3 +124,59 @@ def get_mongo_client():
     if not database.mongo_client:
         raise RuntimeError("MongoDB not available - connection failed during startup")
     return database.mongo_client
+
+
+# MongoDB database caching for performance
+_mongo_db_cache = {}
+
+def get_wikimedia_db():
+    """
+    Get cached wikimedia database reference with optimizations.
+
+    This reduces the overhead of repeatedly getting the database reference
+    and allows us to apply database-level optimizations.
+    """
+    if "wikimedia" not in _mongo_db_cache:
+        client = get_mongo_client()
+        db = client.get_database("wikimedia")
+
+        # Set read preference for analytics workloads
+        # Using secondary preferred for better read performance
+        from pymongo import ReadPreference
+        db = db.with_options(read_preference=ReadPreference.SECONDARY_PREFERRED)
+
+        _mongo_db_cache["wikimedia"] = db
+        logger.info("Cached wikimedia database with analytics optimizations")
+
+    return _mongo_db_cache["wikimedia"]
+
+
+def get_optimized_collection(db, collection_name: str, query_type: str = "analytics"):
+    """
+    Get MongoDB collection with optimizations based on query type.
+
+    Args:
+        db: MongoDB database instance
+        collection_name: Name of the collection
+        query_type: Type of queries ("analytics", "search", "aggregation")
+
+    Returns:
+        Optimized collection instance
+    """
+    collection = db.get_collection(collection_name)
+
+    # Apply collection-level optimizations based on query type
+    if query_type == "analytics":
+        # For analytical queries, hint common indexes and batch size
+        from pymongo import ReadPreference
+        collection = collection.with_options(
+            read_preference=ReadPreference.SECONDARY_PREFERRED,
+            read_concern={"level": "majority"}
+        )
+    elif query_type == "search":
+        # For search queries, prioritize low latency
+        collection = collection.with_options(
+            read_preference=ReadPreference.PRIMARY_PREFERRED
+        )
+
+    return collection

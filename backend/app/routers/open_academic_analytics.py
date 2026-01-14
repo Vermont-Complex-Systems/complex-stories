@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 from typing import Optional, List, Dict, Any
 from ..core.database import get_db_session
 from ..routers.auth import get_admin_user
 from ..models.auth import User
+
 router = APIRouter()
 admin_router = APIRouter()
 
@@ -13,7 +15,7 @@ async def get_papers_for_author(
     filter_big_papers: bool = Query(False, description="Filter out papers with >25 coauthors"),
     limit: Optional[int] = Query(None, description="Limit number of results"),
     db: AsyncSession = Depends(get_db_session)
-) -> Dict[str, Any]:
+) -> List[Dict[str, Any]]:
     """
     Get processed papers data for a specific author.
 
@@ -117,16 +119,7 @@ async def get_papers_for_author(
             }
             papers_data.append(paper_dict)
 
-        return {
-            "author_name": author_name,
-            "total_papers": len(papers_data),
-            "filters_applied": {
-                "filter_big_papers": filter_big_papers,
-                "max_coauthors": 25 if filter_big_papers else None,
-                "limit": limit
-            },
-            "papers": papers_data
-        }
+        return papers_data
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching papers: {str(e)}")
@@ -136,7 +129,7 @@ async def get_all_authors(
     ipeds_id: Optional[str] = Query(None, description="IPEDS ID to filter by institution (defaults to UVM)"),
     year: Optional[int] = Query(None, description="Year to filter faculty list (defaults to 2023)"),
     db: AsyncSession = Depends(get_db_session)
-) -> Dict[str, Any]:
+) -> List[Dict[str, Any]]:
     """
     Get all available authors with their current age, last publication year, and paper count.
 
@@ -156,23 +149,21 @@ async def get_all_authors(
         # Fast query using just the coauthor table
         # Paper counts can be added later if needed via a separate endpoint
 
-        query = select(
-            Coauthor.ego_display_name,
-            func.max(Coauthor.ego_age).label('current_age'),
-            func.max(Coauthor.publication_year).label('last_pub_year')
-        ).where(
-            (Coauthor.ego_display_name.is_not(None)) &
-            (Coauthor.ego_age.is_not(None))
-            # TODO: Add institution and year filtering when data model supports it
-            # & (Coauthor.institution_ipeds_id == effective_ipeds_id)
-            # & (Coauthor.faculty_year == effective_year)
-        ).group_by(
-            Coauthor.ego_display_name
-        ).order_by(
-            Coauthor.ego_display_name
-        )
+        # Simple query to get authors with research group status
+        query = text("""
+            SELECT
+                c.ego_display_name,
+                MAX(c.ego_age) as current_age,
+                MAX(c.publication_year) as last_pub_year,
+                COALESCE(MAX(t.has_research_group::int), 0) as has_research_group
+            FROM coauthors c
+            LEFT JOIN training t ON c.ego_display_name = t.name
+            WHERE c.ego_display_name IS NOT NULL
+                AND c.ego_age IS NOT NULL
+            GROUP BY c.ego_display_name
+            ORDER BY c.ego_display_name
+        """)
 
-        # Execute query
         result = await db.execute(query)
         authors_data = result.all()
 
@@ -182,15 +173,11 @@ async def get_all_authors(
             authors.append({
                 "ego_display_name": row.ego_display_name,
                 "current_age": row.current_age,
-                "last_pub_year": row.last_pub_year
+                "last_pub_year": row.last_pub_year,
+                "has_research_group": bool(row.has_research_group)
             })
 
-        return {
-            "total_authors": len(authors),
-            "institution": effective_ipeds_id,
-            "year": effective_year,
-            "authors": authors
-        }
+        return authors
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching authors: {str(e)}")
@@ -201,7 +188,7 @@ async def get_coauthors_for_author(
     filter_big_papers: bool = Query(False, description="Filter out papers with >25 coauthors"),
     limit: Optional[int] = Query(None, description="Limit number of results"),
     db: AsyncSession = Depends(get_db_session)
-) -> Dict[str, Any]:
+) -> List[Dict[str, Any]]:
     """
     Get processed coauthor data for a specific author.
 
@@ -271,19 +258,94 @@ async def get_coauthors_for_author(
             }
             coauthors_data.append(coauthor_dict)
 
-        return {
-            "author_name": author_name,
-            "total_coauthor_records": len(coauthors_data),
-            "filters_applied": {
-                "filter_big_papers": filter_big_papers,
-                "max_coauthors": 25 if filter_big_papers else None,
-                "limit": limit
-            },
-            "coauthors": coauthors_data
-        }
+        return coauthors_data
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching coauthors: {str(e)}")
+
+@router.get("/embeddings")
+async def get_embeddings_data(db: AsyncSession = Depends(get_db_session)) -> List[Dict[str, Any]]:
+    """
+    Get processed embeddings data for research visualization.
+
+    Returns papers with UMAP embeddings joined with training data from PostgreSQL database.
+    """
+    try:
+            # Execute the complex SQL query using PostgreSQL
+            query = text("""
+                WITH exploded_depts AS (
+                    SELECT
+                        DISTINCT t.name,
+                        t.oa_uid,
+                        t.has_research_group,
+                        trim(unnest(string_to_array(t.host_dept, ';'))) as host_dept,
+                        t.perceived_as_male,
+                        t.college,
+                        t.group_url,
+                        t.group_size
+                    FROM training t
+                    WHERE oa_uid IS NOT NULL
+                )
+                SELECT
+                    p.doi,
+                    p.id,
+                    p.ego_author_id,
+                    p.ego_display_name,
+                    p.title,
+                    p.publication_year,
+                    p.publication_date,
+                    TO_CHAR(p.publication_date, 'YYYY-MM-DD') as pub_date,
+                    p.cited_by_count,
+                    p.umap_1,
+                    p.umap_2,
+                    p.abstract,
+                    p."s2FieldsOfStudy",
+                    p."fieldsOfStudy",
+                    p.coauthor_names,
+                    e.host_dept,
+                    e.college
+                FROM papers p
+                LEFT JOIN exploded_depts e ON (
+                    p.ego_author_id = 'https://openalex.org/' || e.oa_uid OR
+                    p.ego_author_id = e.oa_uid
+                )
+                WHERE p.umap_1 IS NOT NULL
+                ORDER BY
+                    CASE WHEN p.ego_author_id = 'https://openalex.org/A5040821463' THEN 0 ELSE 1 END,
+                    RANDOM()
+                LIMIT 6000
+            """)
+
+            result = await db.execute(query)
+            rows = result.fetchall()
+
+            # Convert to list of dictionaries
+            embeddings_data = []
+            for row in rows:
+                embeddings_data.append({
+                    "doi": row.doi,
+                    "id": row.id,
+                    "ego_author_id": row.ego_author_id,
+                    "ego_display_name": row.ego_display_name,
+                    "title": row.title,
+                    "publication_year": row.publication_year,
+                    "publication_date": row.publication_date.isoformat() if row.publication_date else None,
+                    "pub_date": row.pub_date,
+                    "cited_by_count": row.cited_by_count,
+                    "umap_1": row.umap_1,
+                    "umap_2": row.umap_2,
+                    "abstract": row.abstract,
+                    "s2FieldsOfStudy": row.s2FieldsOfStudy,
+                    "fieldsOfStudy": row.fieldsOfStudy,
+                    "coauthor_names": row.coauthor_names,
+                    "host_dept": row.host_dept,
+                    "college": row.college
+                })
+
+            return embeddings_data
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching embeddings data: {str(e)}")
 
 
 # ================================
@@ -330,6 +392,24 @@ async def upload_papers_bulk(
         for paper_data in papers:
             filtered_data = {k: v for k, v in paper_data.items() if k in expected_fields}
             filtered_papers.append(filtered_data)
+
+        # Get unique ego_author_ids from the incoming papers
+        # These represent ONLY professors that were recently synced (safe to cleanup)
+        ego_author_ids = list(set(paper['ego_author_id'] for paper in filtered_papers if 'ego_author_id' in paper))
+
+        # Clean up existing papers for recently synced professors
+        # This is safe because exports are filtered to only include recently updated professors
+        if ego_author_ids:
+            from sqlalchemy import text
+
+            cleanup_stmt = """
+            DELETE FROM papers
+            WHERE ego_author_id = ANY(:ego_author_ids)
+            """
+
+            result = await db.execute(text(cleanup_stmt), {"ego_author_ids": ego_author_ids})
+            deleted_count = result.rowcount
+            logger.info(f"Deleted {deleted_count} existing papers for {len(ego_author_ids)} recently synced professors")
 
         # Use efficient bulk insert with correct composite key
         try:
@@ -379,8 +459,32 @@ async def upload_coauthors_bulk(
     try:
         from ..models.academic import Coauthor
         from sqlalchemy.dialects.postgresql import insert
+        from sqlalchemy import text
+        import logging
 
-        # Use upsert approach instead of delete + insert to handle batching
+        logger = logging.getLogger(__name__)
+        logger.info(f"Starting bulk upload of {len(coauthors)} coauthors")
+
+        if not coauthors:
+            return {"status": "success", "coauthor_records_processed": 0, "message": "No coauthors to process"}
+
+        # Get unique ego_author_ids from the incoming coauthors
+        # These represent ONLY professors that were recently synced (safe to cleanup)
+        ego_author_ids = list(set(coauthor['ego_author_id'] for coauthor in coauthors if 'ego_author_id' in coauthor))
+
+        # Clean up existing coauthors for recently synced professors
+        # This is safe because exports are filtered to only include recently updated professors
+        if ego_author_ids:
+            cleanup_stmt = """
+            DELETE FROM coauthors
+            WHERE ego_author_id = ANY(:ego_author_ids)
+            """
+
+            result = await db.execute(text(cleanup_stmt), {"ego_author_ids": ego_author_ids})
+            deleted_count = result.rowcount
+            logger.info(f"Deleted {deleted_count} existing coauthor records for {len(ego_author_ids)} recently synced professors")
+
+        # Use efficient batch upsert approach
         for coauthor_data in coauthors:
             stmt = insert(Coauthor).values(**coauthor_data)
             # Update all fields if conflict on primary key
@@ -392,13 +496,138 @@ async def upload_coauthors_bulk(
 
         await db.commit()
 
+        logger.info(f"Successfully processed {len(coauthors)} coauthor records")
+
         return {
             "status": "success",
             "coauthor_records_processed": len(coauthors),
-            "message": f"Successfully processed {len(coauthors)} coauthor records (inserted or updated)"
+            "professors_updated": len(ego_author_ids),
+            "previous_records_deleted": deleted_count if ego_author_ids else 0,
+            "message": f"Successfully processed {len(coauthors)} coauthor records for {len(ego_author_ids)} recently synced professors"
         }
 
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Error uploading coauthors: {str(e)}")
+
+
+@admin_router.post("/training/bulk")
+async def upload_training_bulk(
+    training_records: List[Dict[str, Any]],
+    current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db_session)
+) -> Dict[str, Any]:
+    """
+    Bulk upload processed training data from Dagster pipeline.
+    """
+    try:
+        from ..models.academic import Training
+        from sqlalchemy.dialects.postgresql import insert
+
+        # Use upsert approach with composite key
+        for training_data in training_records:
+            stmt = insert(Training).values(**training_data)
+            # Update all fields if conflict on composite primary key (aid, pub_year)
+            stmt = stmt.on_conflict_do_update(
+                index_elements=['aid', 'pub_year'],
+                set_={key: stmt.excluded[key] for key in training_data.keys() if key not in ['aid', 'pub_year']}
+            )
+            await db.execute(stmt)
+
+        await db.commit()
+
+        return {
+            "status": "success",
+            "training_processed": len(training_records),
+            "message": f"Successfully processed {len(training_records)} training records (inserted or updated)"
+        }
+
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error uploading training data: {str(e)}")
+
+
+@router.get("/training/{author_name}")
+async def get_training_data(
+    author_name: str,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Get aggregated training data for change point analysis by author name.
+    Returns collaboration patterns by age and research group status.
+    """
+    try:
+        # Query to get training data for change point analysis
+        # Create rows for each age category (older, same, younger) per year
+        query = text("""
+            WITH age_data AS (
+                SELECT
+                    author_age as pub_year,
+                    older as counts,
+                    'older' as age_category,
+                    has_research_group,
+                    college,
+                    changing_rate
+                FROM training
+                WHERE name = :author_name AND older > 0
+
+                UNION ALL
+
+                SELECT
+                    author_age as pub_year,
+                    same as counts,
+                    'same' as age_category,
+                    has_research_group,
+                    college,
+                    changing_rate
+                FROM training
+                WHERE name = :author_name AND same > 0
+
+                UNION ALL
+
+                SELECT
+                    author_age as pub_year,
+                    younger as counts,
+                    'younger' as age_category,
+                    has_research_group,
+                    college,
+                    changing_rate
+                FROM training
+                WHERE name = :author_name AND younger > 0
+            )
+            SELECT
+                pub_year,
+                counts,
+                age_category,
+                has_research_group,
+                college,
+                COALESCE(changing_rate, 0) as changing_rate
+            FROM age_data
+            ORDER BY pub_year, age_category
+        """)
+
+        result = await db.execute(query, {"author_name": author_name})
+        training_data = result.fetchall()
+
+        if not training_data:
+            raise HTTPException(status_code=404, detail=f"No training data found for author: {author_name}")
+
+        # Convert to list of dictionaries
+        columns = ['pub_year', 'counts', 'age_category', 'has_research_group', 'college', 'changing_rate']
+        result_data = [
+            {col: float(val) if val is not None and col not in ['age_category', 'college'] else val for col, val in zip(columns, row)}
+            for row in training_data
+        ]
+
+        return {
+            "status": "success",
+            "author": author_name,
+            "training_data": result_data,
+            "count": len(result_data)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching training data: {str(e)}")
 

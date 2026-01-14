@@ -1,5 +1,4 @@
 <script>
-  import { Accordion } from "bits-ui";
   import domtoimage from 'dom-to-image-more';
 
   let { isDataReady = false } = $props();
@@ -63,121 +62,103 @@
   }
 </script>
 
-<Accordion.Item value="download">
-  <Accordion.Header>
-    <Accordion.Trigger class="section-trigger">
-      <div class="section-header">
-        <div class="icon">📥</div>
-        <span>Export</span>
-      </div>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M6 9l6 6 6-6"/>
-      </svg>
-    </Accordion.Trigger>
-  </Accordion.Header>
-  
-  <Accordion.Content class="section-content">
-    <div class="download-section">
-      <button onclick={exportToPNG} disabled={!isDataReady}>
-        Download PNG
-      </button>
-      <button onclick={exportToSVG} disabled={!isDataReady}>
-        Download SVG  
-      </button>
-      
-      <div 
-        class="pdf-button-container"
-        onmouseenter={() => showTooltip = true}
-        onmouseleave={() => showTooltip = false}
-    >
-        <button disabled={true}>
-        📄 PDF (Limited by Browser)
-        </button>
+<div class="download-section">
+  <div class="section-header">
+    <span class="section-label">Export Dashboard</span>
+  </div>
 
-        {#if showTooltip}
-        <div class="tooltip">
-            Browser PDF export has poor quality. Download SVG and convert with Inkscape/Illustrator for publication-quality PDFs.
-        </div>
-        {/if}
+  <div class="download-buttons">
+    <button onclick={exportToPNG} disabled={!isDataReady} class="download-btn">
+      <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+      </svg>
+      Download PNG
+    </button>
+    <button onclick={exportToSVG} disabled={!isDataReady} class="download-btn">
+      <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+      </svg>
+      Download SVG
+    </button>
+
+    <div
+      class="pdf-button-container"
+      role="button"
+      tabindex="0"
+      onmouseenter={() => showTooltip = true}
+      onmouseleave={() => showTooltip = false}
+  >
+      <button disabled={true} class="download-btn disabled-btn">
+        📄 PDF (Limited)
+      </button>
+
+      {#if showTooltip}
+      <div class="tooltip">
+          Browser PDF export has poor quality. Download SVG and convert with Inkscape/Illustrator for publication-quality PDFs.
       </div>
+      {/if}
     </div>
-  </Accordion.Content>
-</Accordion.Item>
+  </div>
+</div>
 
 <style>
-  .section-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 0.75rem 0;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: var(--font-size-small);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-fg);
-    font-family: var(--font-body);
-  }
 
   .section-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    margin-bottom: 0.5rem;
   }
 
   .icon {
     font-size: 1.2em;
   }
 
-  .section-content {
-    padding-bottom: 1rem;
-  }
-
-  .download-section {
+  .download-buttons {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
   }
-  
-  button {
-    padding: 0.5rem 1rem;
+
+  .download-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
     border: 1px solid var(--color-border);
-    background: var(--color-bg);
-    border-radius: var(--border-radius);
+    background-color: var(--color-bg);
+    border-radius: 6px;
     cursor: pointer;
-    font-family: var(--font-body);
-    font-size: var(--font-size-small);
-    color: var(--color-fg);
-    transition: all var(--transition-medium) ease;
-    width: 100%; /* Make button fill container */
-  }
-  
-  button:hover:not(:disabled) {
-    background: var(--color-gray-100);
-    border-color: var(--color-gray-300);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    transition: all 0.15s ease;
   }
 
-  button:disabled {
+  .btn-icon {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+  }
+
+  .download-btn:hover:not(:disabled) {
+    background-color: var(--color-input-bg);
+    border-color: var(--color-good-blue, #3b82f6);
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.1);
+  }
+
+  .download-btn:disabled {
     opacity: 0.5;
-    cursor: help; /* Change cursor to indicate hoverable */
+    cursor: not-allowed;
   }
 
-  :global(.dark) button {
-    background: var(--color-gray-800);
-    border-color: var(--color-gray-600);
-  }
-
-  :global(.dark) button:hover:not(:disabled) {
-    background: var(--color-gray-700);
-    border-color: var(--color-gray-500);
+  .disabled-btn {
+    cursor: help !important;
   }
 
   .pdf-button-container {
     position: relative;
-    cursor: help; /* Show help cursor on container */
   }
-  
+
   .tooltip {
     position: absolute;
     bottom: 100%;
@@ -185,17 +166,18 @@
     transform: translateX(-50%);
     background: #333;
     color: white;
-    padding: 8px 12px;
+    padding: 0.5rem 0.75rem;
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 0.75rem;
     max-width: 250px;
     white-space: normal;
     z-index: 1000;
-    margin-bottom: 5px;
+    margin-bottom: 0.5rem;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    line-height: 1.4;
   }
-  
+
   .tooltip::after {
     content: '';
     position: absolute;
@@ -204,5 +186,13 @@
     transform: translateX(-50%);
     border: 5px solid transparent;
     border-top-color: #333;
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    .download-btn {
+      padding: 1rem;
+      font-size: 1rem;
+    }
   }
 </style>

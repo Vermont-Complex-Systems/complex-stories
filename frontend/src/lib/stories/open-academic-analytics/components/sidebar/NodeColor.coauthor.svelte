@@ -1,12 +1,12 @@
 <script>
-  import { dashboardState } from '../state.svelte.js';
-  import { Palette } from "@lucide/svelte";
+  import { dashboardState } from '$stories/open-academic-analytics/state.svelte.js';
+  import { Palette, Info } from "@lucide/svelte";
 </script>
 
 <div class="color-mode-section">
-  <div class="section-header">
-    <Palette size={16} />
-    <span class="section-title">Coauthor Node Color</span>
+  <div class="widget-header">
+    <Palette size={14} />
+    <span class="widget-title">Coauthor Node Color</span>
   </div>
   
   <select bind:value={dashboardState.coauthorNodeColor} class="filter-select">
@@ -15,36 +15,27 @@
     <option value="institutions">Institutions</option>
     <option value="shared_institutions">Shared Institutions</option>
   </select>
-  
-  <div class="color-info">
-    {#if dashboardState.coauthorNodeColor === 'age_category'}
-      <p class="info-text">Colors based on age relative to main author</p>
-    {:else if dashboardState.coauthorNodeColor === 'institutions'} 
-      <p class="info-text">Colors based on coauthor's institution</p>
-    {:else if dashboardState.coauthorNodeColor === 'shared_institutions'} 
-      <p class="info-text">Colors based on shared institutions</p>
-    {:else}
-      <p class="info-text">Colors based on collaboration history</p>
-    {/if}
-  </div>
 </div>
 
 <style>
   .color-mode-section {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
   }
 
-  .section-header {
+  .widget-header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--color-border);
   }
 
-  .section-title {
-    font-size: var(--font-size-small);
+  .widget-title {
+    font-size: var(--font-size-xsmall);
     font-weight: var(--font-weight-medium);
     color: var(--color-fg);
   }
@@ -64,14 +55,5 @@
     border-color: var(--color-good-blue);
   }
 
-  .color-info {
-    margin-top: 0.25rem;
-  }
 
-  .info-text {
-    font-size: var(--font-size-xsmall);
-    color: var(--color-secondary-gray);
-    margin: 0;
-    font-style: italic;
-  }
 </style>

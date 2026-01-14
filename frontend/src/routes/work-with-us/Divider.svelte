@@ -1,10 +1,4 @@
-<script>
-	import { reveal } from 'svelte-reveal';
-	
-	export let useReveal = {};
-</script>
-
-<div use:reveal={ useReveal }></div>
+<div></div>
 
 <style>
 	div {

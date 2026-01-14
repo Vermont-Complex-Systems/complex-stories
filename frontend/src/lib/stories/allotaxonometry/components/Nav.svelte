@@ -1,7 +1,7 @@
 <script>
     import { base } from '$app/paths';
     import ThemeToggle from './ThemeToggle.svelte';
-    import { uiState } from '../state.svelte.ts';
+    let isDarkMode = $state(false);
 </script>
 
 <nav class="nav">
@@ -13,7 +13,7 @@
     
     <div class="nav-controls">
         <ThemeToggle 
-            bind:isDark={uiState.isDarkMode}
+            bind:isDark={isDarkMode}
             class="nav-theme-toggle"
         />
     </div>

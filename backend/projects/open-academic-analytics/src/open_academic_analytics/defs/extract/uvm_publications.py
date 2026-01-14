@@ -423,29 +423,54 @@ def uvm_publications(
     group_name="import"
 )
 def uvm_profs_sync_status(duckdb: DuckDBResource) -> dg.MaterializeResult:
-    """Track when each professor was last synced with OpenAlex"""
-    
+    """Track when each professor was last synced with OpenAlex and detect data changes"""
+
     with duckdb.get_connection() as conn:
-        # Schema and tables are auto-initialized by InitDuckDBResource
-        
+        # Insert new professors or update existing ones with data change detection
+        # Use the uvm_profs_2023 table directly with consistent 'department' column name
         conn.execute("""
-            INSERT OR IGNORE INTO oa.cache.uvm_profs_sync_status (ego_author_id)
-            SELECT DISTINCT ego_author_id 
-            FROM oa.raw.uvm_profs_2023
-            WHERE ego_author_id IS NOT NULL
+            INSERT OR REPLACE INTO oa.cache.uvm_profs_sync_status (
+                ego_author_id,
+                needs_update,
+                prof_data_last_updated
+            )
+            SELECT
+                profs.ego_author_id,
+                CASE
+                    WHEN sync.ego_author_id IS NULL THEN TRUE  -- New professor
+                    WHEN sync.prof_data_last_updated IS NULL THEN TRUE  -- Never tracked data changes
+                    WHEN profs.last_updated > sync.prof_data_last_updated THEN TRUE  -- Data changed
+                    WHEN sync.last_synced_date IS NULL THEN TRUE  -- Never synced
+                    WHEN sync.last_synced_date < NOW() - INTERVAL '30 days' THEN TRUE  -- Time-based refresh
+                    ELSE sync.needs_update  -- Keep existing status
+                END as needs_update,
+                profs.last_updated as prof_data_last_updated
+            FROM oa.raw.uvm_profs_2023 profs
+            LEFT JOIN oa.cache.uvm_profs_sync_status sync
+                ON profs.ego_author_id = sync.ego_author_id
         """)
-        
+
+        # Get comprehensive statistics
         stats = conn.execute("""
-            SELECT 
+            SELECT
                 COUNT(*) as total_uvm_profs,
-                COUNT(CASE WHEN needs_update = TRUE OR last_synced_date IS NULL THEN 1 END) as need_update
+                COUNT(CASE WHEN needs_update = TRUE THEN 1 END) as need_update,
+                COUNT(CASE WHEN last_synced_date IS NULL THEN 1 END) as never_synced,
+                COUNT(CASE WHEN prof_data_last_updated IS NOT NULL
+                           AND last_synced_date IS NOT NULL
+                           AND prof_data_last_updated > last_synced_date THEN 1 END) as data_changed,
+                COUNT(CASE WHEN last_synced_date IS NOT NULL
+                           AND last_synced_date < NOW() - INTERVAL '30 days' THEN 1 END) as time_based_refresh
             FROM oa.cache.uvm_profs_sync_status
         """).fetchone()
-    
+
     return dg.MaterializeResult(
         metadata={
             "total_uvm_profs": stats[0],
-            "needs_update": stats[1]
+            "needs_update": stats[1],
+            "never_synced": stats[2],
+            "data_changed_since_last_sync": stats[3],
+            "time_based_refresh_needed": stats[4]
         }
     )
 

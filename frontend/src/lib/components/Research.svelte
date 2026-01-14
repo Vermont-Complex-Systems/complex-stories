@@ -3,7 +3,6 @@
   import { descending } from "d3";
   import ResearchPosts from "$lib/components/Research.Posts.svelte";
   import FilterBar from "$lib/components/FilterBar.svelte";
-  import HeroText from "$lib/components/HeroText.svelte";
   import { ChevronDown } from "@lucide/svelte";
 
   let { posts } = $props();
@@ -53,14 +52,12 @@
 </script>
 
 <div class="blog-container">
-  <!-- Hero section -->
-  <section class="blog-hero">
-    <HeroText>
-      <h1>Research groups at UVM</h1>
-      <p>
-        What groups are there at the University of Vermont?
-      </p>
-    </HeroText>
+  <!-- Header section -->
+  <section class="research-header">
+    <h1>Research groups at UVM</h1>
+    <p class="research-description">
+      What groups are there at the University of Vermont?
+    </p>
   </section>
 
   <!-- Filter bar -->
@@ -84,9 +81,9 @@
 
 <style>
   /* Override main element constraints for full-width layout */
-  :global(main:has(.blog-container)) {
+  :global(main#content:has(.blog-container)) {
     max-width: none;
-    padding: 0; /* Remove default padding to let column-screen handle spacing */
+    padding: 0 !important; /* Remove default padding to let column-screen handle spacing */
   }
 
   .blog-container {
@@ -94,8 +91,25 @@
     min-height: 100vh;
   }
 
-  .blog-hero {
-    padding: 2rem 4.5rem;
+  .research-header {
+    padding: 7rem var(--margin-left) 0.5rem var(--margin-left);
+    text-align: left;
+  }
+
+  .research-header h1 {
+    font-family: var(--mono);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-fg);
+    margin: 0 0 1rem 0;
+  }
+
+  .research-description {
+    font-family: var(--mono);
+    font-size: var(--font-size-medium);
+    color: var(--color-secondary-gray);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
   }
 
 
@@ -162,8 +176,9 @@
   }
 
   @media (max-width: 768px) {
-    .blog-hero {
-      padding: 1rem 2rem;
+    .research-header {
+      padding: 1.5rem var(--margin-left-mobile);
+      text-align: left;
     }
 
     .load-more-btn {

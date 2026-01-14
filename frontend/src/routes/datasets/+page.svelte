@@ -5,13 +5,11 @@
 
 <div class="datasets-container">
 	<section class="datasets-header">
-		<div class="datasets-header-content">
-			<h1>Datasets</h1>
-			<p class="datasets-description">
-				Explore the datasets available through the Complex Stories platform. These datasets power our
-				interactive stories and visualizations.
-			</p>
-		</div>
+		<h1>Datasets</h1>
+		<p class="datasets-description">
+			Explore the datasets available through the Complex Stories platform. These datasets power our
+			interactive stories and visualizations.
+		</p>
 	</section>
 
 {#await getDatasets()}
@@ -41,12 +39,21 @@
 				{/if}
 
 				<div class="card-actions">
-					<a href="https://api.complexstories.uvm.edu/datasets/{dataset.name}?format=parquet" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
-						Download
-					</a>
-					<a href="/datasets/{dataset.name}" class="btn btn-secondary">
-						Preview
-					</a>
+					{#if dataset.format && dataset.format.includes('Streaming')}
+						<a href="/datasets/{dataset.name}" class="btn btn-primary">
+							Preview
+						</a>
+						{#if dataset.auth_required}
+							<span class="auth-badge">Auth Required</span>
+						{/if}
+					{:else}
+						<a href="https://api.complexstories.uvm.edu/datasets/{dataset.name}?format=parquet" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+							Download
+						</a>
+						<a href="/datasets/{dataset.name}" class="btn btn-secondary">
+							Preview
+						</a>
+					{/if}
 				</div>
 			</div>
 		{/each}
@@ -61,9 +68,9 @@
 
 <style>
 	/* Override main element constraints for full-width layout */
-	:global(main:has(.datasets-container)) {
+	:global(main#content:has(.datasets-container)) {
 		max-width: none;
-		padding: 0; /* Remove default padding to let component handle spacing */
+		padding: 0 !important;
 	}
 
 	.datasets-container {
@@ -72,12 +79,8 @@
 	}
 
 	.datasets-header {
-		padding: 1.5rem 1.5rem 0.5rem 9.5rem;
+		padding: 7.5rem var(--margin-left) 0.5rem var(--margin-left);
 		text-align: left;
-	}
-
-	.datasets-header-content {
-		padding-top: 1rem;
 	}
 
 	.datasets-header h1 {
@@ -96,20 +99,18 @@
 		line-height: 1.6;
 	}
 
+	.datasets-section {
+		margin: 2rem 0;
+		padding: 0 var(--margin-left);
+	}
+
 	/* Mobile responsive */
 	@media (max-width: 768px) {
 		.datasets-header {
-			padding: 1rem var(--margin-left-mobile);
+			padding: 1.5rem var(--margin-left-mobile);
 			text-align: left;
 		}
-	}
 
-	.datasets-section {
-		margin: 2rem 0;
-		padding: 0 9.5rem;
-	}
-
-	@media (max-width: 768px) {
 		.datasets-section {
 			padding: 0 var(--margin-left-mobile);
 		}
@@ -191,6 +192,21 @@
 		color: #065f46;
 	}
 
+	.auth-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.5rem 0.75rem;
+		background-color: #fef3c7;
+		color: #92400e;
+		border-radius: 0.25rem;
+		font-size: var(--font-size-xsmall);
+		font-weight: var(--font-weight-medium);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		border: 1px solid #fbbf24;
+		white-space: nowrap;
+	}
+
 	.dataset-description {
 		color: var(--color-secondary-gray);
 		font-size: var(--font-size-small);
@@ -267,88 +283,6 @@
 		transform: translateY(-1px);
 	}
 
-	.preview-section {
-		margin: 3rem 1rem 0;
-		padding: 2rem;
-		background: rgba(255, 255, 255, 0.8);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		border-radius: 12px;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-	}
-
-	.preview-section h2 {
-		font-family: var(--sans);
-		font-size: var(--font-size-large);
-		font-weight: var(--font-weight-bold);
-		color: var(--color-fg);
-		margin: 0 0 1rem 0;
-		text-transform: capitalize;
-	}
-
-	.preview-section > button {
-		background: var(--color-bg);
-		color: var(--color-fg);
-		border: 1px solid var(--color-border);
-		padding: 0.5rem 1rem;
-		border-radius: var(--border-radius);
-		font-size: var(--font-size-small);
-		cursor: pointer;
-		margin-bottom: 1.5rem;
-		transition: all var(--transition-medium);
-	}
-
-	.preview-section > button:hover {
-		background: var(--color-button-hover);
-		color: var(--color-button-fg);
-	}
-
-	.preview-table {
-		overflow: auto;
-		border: 1px solid var(--color-border);
-		border-radius: var(--border-radius);
-		margin-top: 1rem;
-	}
-
-	.preview-table p {
-		font-size: var(--font-size-small);
-		color: var(--color-secondary-gray);
-		margin: 0 0 1rem 0;
-		font-weight: var(--font-weight-medium);
-	}
-
-	.preview-table table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: var(--font-size-small);
-	}
-
-	.preview-table th,
-	.preview-table td {
-		padding: 0.75rem;
-		text-align: left;
-		border-bottom: 1px solid var(--color-border);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		max-width: 200px;
-	}
-
-	.preview-table th {
-		background: var(--color-bg-alt);
-		font-weight: var(--font-weight-semibold);
-		color: var(--color-fg);
-		position: sticky;
-		top: 0;
-	}
-
-	.preview-table td {
-		color: var(--color-secondary-gray);
-	}
-
-	.preview-table tbody tr:hover {
-		background: var(--color-bg-alt);
-	}
-
 	/* Dark mode */
 	:global(.dark) .dataset-card {
 		background: rgba(30, 30, 30, 0.8);
@@ -361,11 +295,6 @@
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 	}
 
-	:global(.dark) .preview-section {
-		background: rgba(30, 30, 30, 0.8);
-		border-color: rgba(255, 255, 255, 0.1);
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-	}
 
 	/* Mobile responsive */
 	@media (max-width: 768px) {
@@ -374,9 +303,5 @@
 			padding: 0 0.5rem;
 		}
 
-		.preview-section {
-			margin: 2rem 0.5rem 0;
-			padding: 1rem;
-		}
 	}
 </style>

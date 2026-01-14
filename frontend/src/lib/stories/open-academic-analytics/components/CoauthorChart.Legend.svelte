@@ -37,11 +37,36 @@
     backdrop-filter: blur(10px);
     min-width: 180px;
     max-width: 220px;
-    
+
     /* Transition properties */
     opacity: 0;
     transform: translateY(-10px);
     transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  /* Mobile-specific legend styling */
+  @media (max-width: 480px) {
+    .legend {
+      min-width: 160px;
+      max-width: 100%;
+      width: auto;
+      padding: 10px;
+      font-size: 10px;
+    }
+
+    .legend-items {
+      gap: 4px;
+    }
+
+    .legend-item {
+      margin-bottom: 2px;
+    }
+
+    .legend-item span {
+      font-size: 9px;
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
   }
 
   .legend.visible {

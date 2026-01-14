@@ -18,15 +18,13 @@ export default defineConfig({
 		__VERSION__: JSON.stringify(version),
 		__TIMESTAMP__: JSON.stringify(timestamp)
 	},
-	plugins: [enhancedImages(), sveltekit(), dsv()],
+	plugins: [dsv(), enhancedImages(), sveltekit()],
 	resolve: {
 		alias: {
 			$data: path.resolve("./src/data"),
 			$styles: path.resolve("./src/styles"),
+			$stories: path.resolve("./src/lib/stories"),
 		}
-	},
-	optimizeDeps: {
-		exclude: ['@duckdb/duckdb-wasm'],
 	},
 	ssr: {
 		noExternal: ['d3-regression']

@@ -4,9 +4,10 @@
   import Stories from "$lib/components/Stories.svelte";
   import FilterBar from "$lib/components/FilterBar.svelte";
   import { ChevronDown } from "@lucide/svelte";
-  
-  const initMax = 6;
+
   const { stories } = getContext("Home");
+
+  const initMax = 6;
 
   let maxStories = $state(initMax);
   let activeFilter = $state(undefined);
@@ -25,13 +26,16 @@
   
   let filtered = $derived.by(() => {
     const f = stories.filter((d) => {
+      
       // Simplified: if no active filter, show all; otherwise check if story has the filter
       return !activeFilter || d.filters.includes(activeFilter);
     });
     f.sort((a, b) => descending(a.id, b.id));
-    return f;
+    // hide stories like that for now
+    return f.filter(d => d.slug !== 'dark-data-survey') ;
   });
 
+  
   let displayedStories = $derived(filtered.slice(0, maxStories));
 
   function onLoadMore(e) {
@@ -73,6 +77,7 @@
 
   .content {
     position: relative;
+    padding-bottom: 8rem; 
   }
 
   .stories {

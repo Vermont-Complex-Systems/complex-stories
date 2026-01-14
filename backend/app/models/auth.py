@@ -13,6 +13,8 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     role = Column(String(20), nullable=False, default="annotator")  # admin, annotator, faculty
     payroll_name = Column(String(255), nullable=True, index=True)  # Links to AcademicResearchGroups.payroll_name
+    orcid_id = Column(String(19), nullable=True, index=True)  # ORCID identifier (e.g., 0000-0002-1825-0097)
+    openalex_id = Column(String(20), nullable=True, index=True)  # OpenAlex identifier (e.g., A5017712502)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login = Column(DateTime(timezone=True), nullable=True)

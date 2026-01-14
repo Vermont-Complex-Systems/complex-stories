@@ -4,15 +4,18 @@
   import BrushableCoauthorChart from './BrushableCoauthorChart.svelte';
   import * as d3 from 'd3';
   import { innerWidth } from 'svelte/reactivity/window';
-  import { dashboardState } from '../state.svelte';
-  import { ageColorScale, processCoauthorData, getCombinedDateRange, parseDate } from '../utils/combinedChartUtils2'
+  import { ageColorScale, processCoauthorData, parseDate } from '../utils/combinedChartUtils2'
   
   let { embeddingData, coauthorData } = $props();
-  
+
+  let chartWidth = 250
+  const chartHeight = 1045
+
   let isMobile = $derived(innerWidth.current <= 1200);
-
-  $inspect(embeddingData);
-
+  let colorMode = $state('age_diff');
+  let highlightedCoauthor = $state(null);
+  let selectedCoauthors = $state([]);
+  
   // Process coauthor data into positioned points
   let processedCoauthorData = $derived.by(() => {
     if (!filteredCoauthorData || filteredCoauthorData.length === 0) return [];
@@ -32,16 +35,12 @@
       .range([50, chartHeight - 50]); // MARGIN_TOP to height - MARGIN_BOTTOM
   });
 
-  let chartWidth = 280
-  const chartHeight = 1045
-
   let styledCoauthorData = $derived.by(() => {
     if (!processedCoauthorData.length) return [];
     
     return processedCoauthorData.map(point => {
       // Get the value for coloring
       let colorValue;
-      const colorMode = dashboardState.colorMode;
       if (colorMode === 'age_diff') {
         colorValue = point.age_category;
       } else if (colorMode === 'acquaintance') {
@@ -77,8 +76,8 @@
       }
       
       // Apply highlight filter
-      if (dashboardState.highlightedCoauthor) {
-        const isHighlightedCoauthor = point.ego_display_name === dashboardState.highlightedCoauthor;
+      if (highlightedCoauthor) {
+        const isHighlightedCoauthor = point.ego_display_name === highlightedCoauthor;
         opacity *= isHighlightedCoauthor ? 1 : 0.2;
       }
       
@@ -92,14 +91,6 @@
   });
 
   let filteredCoauthorData = coauthorData;
-
-  let selectedCoauthors = $state([]);
-  
-  // Extract both coauthor IDs and time range
-  let highlightedIds = $derived(
-    selectedCoauthors.map(coauthor => coauthor.coauth_aid).filter(Boolean)
-  );
-
 
   let timeRange = $derived.by(() => {
     if (selectedCoauthors.length === 0) return null;

@@ -3,15 +3,17 @@
 
   import CoauthorChart from './CoauthorChart.svelte';
   import PaperChart from './PaperChart.svelte';
-  import { data } from './state.svelte.ts';
+  import { data, uiState, initializeAutoSelection } from '$stories/open-academic-analytics/state.svelte.ts';
   import { innerWidth } from 'svelte/reactivity/window';
-  import { calculateChartWidth, calculateChartHeight, spacing } from './utils/layout.js';
+  import { calculateChartWidth, calculateChartHeight, spacing } from '$stories/open-academic-analytics/utils/layout.js';
+  import {  getCombinedDateRange } from '$stories/open-academic-analytics/utils/combinedChartUtils.js';
 
-  import {  getCombinedDateRange } from './utils/combinedChartUtils.js';
-  
+  // Initialize auto-selection effect
+  initializeAutoSelection();
+
   // Calculate available width for charts considering sidebar and layout
   let width = $derived(
-    calculateChartWidth(innerWidth.current, true)
+    calculateChartWidth(innerWidth.current, uiState.sidebarCollapsed)
   )
 
   const height = $derived(
@@ -86,23 +88,7 @@
     width: 100%;
   }
 
-  .toggle-controls {
-    display: flex;
-    max-width: 200px;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .toggle-controls > span {
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-    font-size: 0.75rem;
-    color: var(--color-fg);
-    margin-right: 0.5rem;
-  }
-
+ 
   /* Responsive design */
   @media (max-width: 1200px) {
     .charts-grid {

@@ -63,6 +63,10 @@
     <a href="{base}/research-at-uvm" class="text-button">
 			Groups@UVM
 		</a>
+    
+    <a href="{base}/work-with-us" class="text-button">
+			Work with us
+		</a>
 
 		{#await getCurrentUser()}
 			<!-- Loading auth state -->
@@ -87,8 +91,12 @@
 		{/await}
 
 		<div class="logo-container">
-			<a href="{base}/" class="logo-link">
-				<img src="{base}/vcsi-bumper-sticker-horizontal.jpg" alt="Home" class="logo" />
+			<a href="https://vermontcomplexsystems.org/" class="logo-link">
+				{#if isDark}
+					<img src="{base}/bumper-sticker2-white-transparent.png" alt="Home" class="logo" />
+				{:else}
+					<img src="{base}/vcsi-bumper-sticker-horizontal-arial-transparent.png" alt="Home" class="logo" />
+				{/if}
 			</a>
 		</div>
 
@@ -231,10 +239,11 @@
     text-decoration: none;
     font-family: var(--sans);
     font-weight: var(--font-weight-medium);
-    font-size: var(--font-size-small);
+    font-size: 0.885rem;
     letter-spacing: 0.05em;
     transition: all var(--transition-medium);
     cursor: pointer;
+    white-space: nowrap;
   }
 
   .text-button:hover {
@@ -254,10 +263,11 @@
     text-decoration: none;
     font-family: var(--sans);
     font-weight: var(--font-weight-medium);
-    font-size: var(--font-size-small);
+    font-size: 0.885rem;
     letter-spacing: 0.05em;
     transition: all var(--transition-medium);
     cursor: pointer;
+    white-space: nowrap;
   }
 
   .avatar-button:hover {
@@ -286,6 +296,7 @@
     font-size: 0.75rem;
     text-transform: uppercase;
   }
+
 
   /* Button styles */
   .icon-button {

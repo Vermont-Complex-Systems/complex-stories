@@ -7,51 +7,12 @@ from dotenv import load_dotenv
 
 from shared.clients.semantic_scholar import SemanticScholarClient
 from shared.clients.openalex import OpenAlexClient
-from shared.clients.complex_stories_api import ComplexStoriesAPIResource
+from shared.clients.complex_stories_api import ComplexStoriesAPIClient
+from dotenv import load_dotenv
 
 load_dotenv()
 logger = dg.get_dagster_logger()
-
-def get_admin_token():
-    """Get admin authentication token for API calls"""
-    # Use API_BASE from environment, fallback to production
-    api_base_url = os.getenv("API_BASE", "https://api.complexstories.uvm.edu")
-
-    # Get credentials from environment
-    username = os.getenv("ADMIN_USERNAME")
-    password = os.getenv("ADMIN_PASSWORD")
-
-    if not username or not password:
-        raise ValueError("ADMIN_USERNAME and ADMIN_PASSWORD must be set in environment")
-
-    try:
-        response = requests.post(
-            f"{api_base_url}/auth/login",
-            json={"username": username, "password": password},
-            verify=False,
-            timeout=30
-        )
-        response.raise_for_status()
-
-        data = response.json()
-        return data["access_token"]
-
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Failed to get admin token from {api_base_url}: {str(e)}")
-        raise
-
-def get_api_headers():
-    """Get authenticated headers for API calls"""
-    token = get_admin_token()
-    return {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
-
-def get_api_base_url():
-    """Get the API base URL from environment"""
-    return os.getenv("API_BASE", "https://api.complexstories.uvm.edu")
-
+load_dotenv()
 
 class InitDuckDBResource(DuckDBResource):
     """A DuckDB resource that ensures schema/tables exist on initialization."""
@@ -194,7 +155,8 @@ class InitDuckDBResource(DuckDBResource):
                 ego_author_id VARCHAR PRIMARY KEY,
                 last_synced_date TIMESTAMP,
                 paper_count INTEGER,
-                needs_update BOOLEAN DEFAULT TRUE
+                needs_update BOOLEAN DEFAULT TRUE,
+                prof_data_last_updated TIMESTAMP  -- Track when professor data was last modified
             )
         """)
 
@@ -238,12 +200,12 @@ class InitDuckDBResource(DuckDBResource):
                 has_research_group BOOLEAN,
                 perceived_as_male BOOLEAN,
                 position VARCHAR,
-                notes VARCHAR
+                notes VARCHAR,
+                last_updated TIMESTAMP
             )
         """)
 
         logger.info("DuckDB schema initialized successfully.")
-
 
 database_resource = InitDuckDBResource(
     database="~/oa.duckdb"
@@ -278,6 +240,17 @@ class OpenAlexResource(dg.ConfigurableResource):
             max_requests_per_second=self.max_requests_per_second,
             max_requests_per_day=self.max_requests_per_day,
             base_url=self.base_url,
+        )
+
+class ComplexStoriesAPIResource(dg.ConfigurableResource):
+    """Complex Stories FastAPI client resource"""
+    base_url: str = os.environ.get('API_BASE', 'https://api.complexstories.uvm.edu')
+    timeout: int = 30
+
+    def get_client(self) -> ComplexStoriesAPIClient:
+        return ComplexStoriesAPIClient(
+            base_url=self.base_url,
+            timeout=self.timeout
         )
 
 @dg.definitions  

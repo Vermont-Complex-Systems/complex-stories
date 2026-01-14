@@ -1,111 +1,27 @@
 from fastapi import APIRouter, HTTPException, Query
-from typing import Dict, List
+from typing import Dict, List, Optional
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import time
 import asyncio
-from ..core.database import get_mongo_client
+from ..core.database import get_mongo_client, get_wikimedia_db, get_optimized_collection
 
 router = APIRouter()
-
-@router.get("/datasets")
-async def get_wikimedia_datasets():
-    """Get available Wikimedia MongoDB datasets"""
-    try:
-        client = get_mongo_client()
-        wikimedia_db = client.get_database("wikimedia")
-
-        # Get collection stats for en_1grams
-        stats = wikimedia_db.command("collstats", "en_1grams")
-
-        return {
-            "datasets": [
-                {
-                    "name": "wikimedia-en-1grams",
-                    "display_name": "Wikimedia English 1-grams",
-                    "description": "English unigram frequencies from Wikimedia data, providing insights into language usage patterns and word frequencies.",
-                    "type": "mongodb",
-                    "database": "wikimedia",
-                    "collection": "en_1grams",
-                    "document_count": stats.get("count", 0),
-                    "size_mb": round(stats.get("size", 0) / (1024 * 1024), 2),
-                    "keywords": ["language", "frequency", "unigrams", "wikimedia", "natural language processing"]
-                }
-            ]
-        }
-    except Exception as e:
-        return {
-            "error": str(e),
-            "datasets": []
-        }
-
-
-@router.get("/test-connection")
-async def test_wikimedia_connection():
-    """Test MongoDB connection by accessing wikimedia.en_1grams collection"""
-    try:
-        client = get_mongo_client()
-        database = client.get_database("wikimedia")
-        en_1grams = database.get_collection("en_1grams")
-
-        doc = en_1grams.find_one({})
-        if doc and "_id" in doc:
-            doc["_id"] = str(doc["_id"])
-        return doc
-    except Exception as e:
-        return {
-            "status": "error",
-            "error": str(e)
-        }
-
-
-@router.get("/sample/{collection}")
-async def get_collection_sample(
-    collection: str,
-    limit: int = Query(1, ge=1, le=10, description="Number of sample documents (1-10)")
-):
-    """Get sample documents from a Wikimedia MongoDB collection"""
-    try:
-        client = get_mongo_client()
-        wikimedia_db = client.get_database("wikimedia")
-
-        # Security: only allow specific collections
-        allowed_collections = ["en_1grams"]
-        if collection not in allowed_collections:
-            raise HTTPException(status_code=400, detail=f"Collection '{collection}' not allowed. Allowed: {allowed_collections}")
-
-        coll = wikimedia_db.get_collection(collection)
-
-        # Get sample documents
-        documents = list(coll.find().limit(limit))
-
-        # Convert ObjectId to string for JSON serialization
-        for doc in documents:
-            if "_id" in doc:
-                doc["_id"] = str(doc["_id"])
-
-        return {
-            "collection": collection,
-            "limit": limit,
-            "total_documents": len(documents),
-            "documents": documents
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 
 class NgramResult(BaseModel):
     types: str
     counts: int
-    probs: float
-    totalunique: int
+    probs: Optional[float] = None
+    totalunique: Optional[int] = None
 
 
-@router.get("/top-ngrams")
+@router.get("/top-ngrams", response_model_exclude_unset=True)
 async def get_top_ngrams(
     dates: str = Query("2024-10-10,2024-10-20", description="Date or comma-separated dates (ISO format)"),
     countries: str = Query("United States", description="Country or comma-separated countries"),
-    topN: int = Query(10000, ge=1, le=100000, description="Maximum number of ngrams to return")
+    topN: int = Query(10000, description="Number of ngrams to return"),
+    include_probs: bool = Query(False, description="Include probability calculations"),
+    include_totalunique: bool = Query(False, description="Include total unique count")
 ) -> Dict[str, List[NgramResult]]:
     """
     Get top N-grams for given dates and countries.
@@ -178,18 +94,34 @@ async def get_top_ngrams(
 
                 # Filter out NaN ngrams before processing
                 valid_docs = [doc for doc in docs if doc.get("ngram") is not None and str(doc.get("ngram")).lower() != "nan"]
-                total_count = sum(get_pv_count(doc) for doc in valid_docs)
-                total_unique = len(valid_docs)
 
-                results[key] = [
-                    NgramResult(
-                        types=str(doc.get("ngram", "")),
-                        counts=get_pv_count(doc),
-                        probs=(get_pv_count(doc) / total_count) if total_count > 0 else 0.0,
-                        totalunique=total_unique
-                    )
-                    for doc in valid_docs
-                ]
+                # Only calculate these if requested (performance optimization)
+                total_count = None
+                total_unique = None
+                if include_probs:
+                    total_count = sum(get_pv_count(doc) for doc in valid_docs)
+                if include_totalunique:
+                    total_unique = len(valid_docs)
+
+                # Build results with conditional field inclusion
+                ngram_results = []
+                for doc in valid_docs:
+                    # Start with required fields
+                    result_kwargs = {
+                        "types": str(doc.get("ngram", "")),
+                        "counts": get_pv_count(doc)
+                    }
+
+                    # Only add optional fields if requested
+                    if include_probs and total_count > 0:
+                        result_kwargs["probs"] = get_pv_count(doc) / total_count
+
+                    if include_totalunique:
+                        result_kwargs["totalunique"] = total_unique
+
+                    ngram_results.append(NgramResult(**result_kwargs))
+
+                results[key] = ngram_results
 
         # Log performance and payload info
         duration = (time.time() - start_time) * 1000  # Convert to milliseconds
@@ -206,9 +138,21 @@ async def get_top_ngrams(
 @router.get("/search-term/{term}")
 async def search_term(
     term: str,
-    country: str = Query("United States", description="Country to search in")
+    country: str = Query("United States", description="Country to search in"),
+    date: Optional[str] = Query(None, description="Optional date filter (YYYY-MM-DD)")
 ):
-    """Search for a specific ngram term"""
+    """
+    Search for a specific ngram term.
+
+    Args:
+        term: The ngram term to search for
+        country: Country to search in (default: "United States")
+        date: Optional date filter in YYYY-MM-DD format. If provided, returns data for only that date.
+              If omitted, returns all available dates for the term and country.
+
+    Returns:
+        Dictionary containing termData array and query duration
+    """
     try:
         client = get_mongo_client()
         wikimedia_db = client.get_database("wikimedia")
@@ -216,12 +160,23 @@ async def search_term(
 
         start_time = time.time()
 
+        # Build query based on whether date is provided
+        query = {
+            "country": country,
+            "ngram": term.lower()
+        }
+
+        # Add date filter if provided
+        if date:
+            try:
+                parsed_date = datetime.fromisoformat(date.replace('Z', '+00:00'))
+                query["date"] = parsed_date
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=f"Invalid date format. Use YYYY-MM-DD: {e}")
+
         # Execute search query in thread pool
         def execute_search():
-            cursor = coll.find({
-                "country": country,
-                "ngram": term.lower()
-            }).max_time_ms(25000)
+            cursor = coll.find(query).max_time_ms(25000)
             return list(cursor)
 
         loop = asyncio.get_event_loop()
@@ -250,44 +205,6 @@ async def search_term(
 
         return {
             "termData": clean_results,
-            "duration": duration
-        }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/count")
-async def get_count(
-    date: str = Query(..., description="Date in ISO format (YYYY-MM-DD)"),
-    country: str = Query(..., description="Country name")
-):
-    """Get document count for a specific date and country"""
-    try:
-        client = get_mongo_client()
-        wikimedia_db = client.get_database("wikimedia")
-        coll = wikimedia_db.get_collection("en_1grams")
-
-        start_time = time.time()
-
-        # Parse date
-        try:
-            parsed_date = datetime.fromisoformat(date.replace('Z', '+00:00'))
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=f"Invalid date format: {e}")
-
-        # Execute count query in thread pool
-        def execute_count():
-            return coll.count_documents({"date": parsed_date, "country": country})
-
-        loop = asyncio.get_event_loop()
-        count = await loop.run_in_executor(None, execute_count)
-
-        duration = (time.time() - start_time) * 1000
-        print(f"getCount query took {duration:.2f}ms")
-
-        return {
-            "count": count,
             "duration": duration
         }
 

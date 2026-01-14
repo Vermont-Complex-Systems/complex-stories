@@ -50,7 +50,7 @@
 <style>
   .blog-posts {
     margin: 2rem 0;
-    padding: 0 9.5rem;
+    padding: 0 var(--margin-left);
   }
 
   @media (max-width: 768px) {

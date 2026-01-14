@@ -23,7 +23,7 @@ class AcademicResearchGroups(Base):
     first_pub_year = Column(Integer, nullable=True)
     inst_ipeds_id = Column(String(50), nullable=True)
     notes = Column(Text, nullable=True)
-    last_updated = Column(DateTime(timezone=True), server_default=func.now())
+    last_updated = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     college = Column(String(255), nullable=True)
 
     def __repr__(self):
@@ -46,3 +46,26 @@ class AcademicResearchGroupCreate(BaseModel):
     inst_ipeds_id: Optional[str] = None
     notes: Optional[str] = None
     college: Optional[str] = None
+
+
+class GoogleScholarVenues(Base):
+    __tablename__ = "google_scholar_venues"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    source = Column(String(100), nullable=False)
+    venue = Column(String(500), nullable=False)
+    field = Column(String(200), nullable=False)
+    h5_index = Column(Integer, nullable=False)
+    h5_median = Column(Integer, nullable=False)
+    last_updated = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    def __repr__(self):
+        return f"<GoogleScholarVenues(id={self.id}, venue='{self.venue}', field='{self.field}')>"
+
+
+class GoogleScholarVenueCreate(BaseModel):
+    source: str
+    venue: str
+    field: str
+    h5_index: int
+    h5_median: int
