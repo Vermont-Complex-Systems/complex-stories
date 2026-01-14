@@ -279,16 +279,6 @@
         margin-bottom: 0.5rem;
     }
 
-    .upload-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.5rem 0;
-        font-weight: 500;
-        color: var(--color-text-primary);
-        font-size: 0.9rem;
-    }
-
     .upload-content {
         margin-top: 0.25rem;
     }
@@ -298,17 +288,6 @@
         flex-direction: column;
         gap: 0.75rem;
         margin-top: 0.5rem;
-    }
-
-    .file-count {
-        background: var(--color-good-blue);
-        color: white;
-        padding: 0.125rem 0.375rem;
-        border-radius: 10px;
-        font-size: var(--11px);
-        font-weight: 600;
-        min-width: 1.25rem;
-        text-align: center;
     }
 
     /* Drop Zone */
@@ -359,7 +338,7 @@
     }
 
     .browse-link {
-        color: var(--color-good-blue);
+        color: #6789f8;
         text-decoration: underline;
         background: none;
         border: none;

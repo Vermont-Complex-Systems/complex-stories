@@ -88,23 +88,7 @@
     width: 100%;
   }
 
-  .toggle-controls {
-    display: flex;
-    max-width: 200px;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .toggle-controls > span {
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-    font-size: 0.75rem;
-    color: var(--color-fg);
-    margin-right: 0.5rem;
-  }
-
+ 
   /* Responsive design */
   @media (max-width: 1200px) {
     .charts-grid {

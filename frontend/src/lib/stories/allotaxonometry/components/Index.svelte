@@ -1,434 +1,375 @@
-<script lang="ts">
-    // import Sidebar from './Sidebar.svelte';
-    import Spinner from '$lib/components/helpers/Spinner.svelte';
-    import { Dashboard, Allotaxonograph } from 'allotaxonometer-ui';
-    import { getTopBabyNames, getAdapter } from '../allotax.remote.js';
+<script>
+    import * as d3 from 'd3';
+    import { Dashboard } from 'allotaxonometer-ui';
+    import { combElems, rank_turbulence_divergence, diamond_count, wordShift_dat, balanceDat } from 'allotaxonometer-ui';
+    import Nav from './Nav.svelte';
+    import SexToggle from './sidebar/SexToggle.svelte';
+    import TopNSelector from './sidebar/TopNSelector.svelte';
+    import AlphaSliderLocal from './sidebar/AlphaSliderLocal.svelte';
     import YearSlider from './sidebar/YearSlider.svelte';
-    import AlphaSlider from './sidebar/AlphaSlider.svelte';
     import LocationSelector from './sidebar/LocationSelector.svelte';
-    import MultiFileUpload from './sidebar/MultiFileUpload.svelte';
+    import PeriodJumpControlsLocal from './sidebar/PeriodJumpControlsLocal.svelte';
+    import MultiFileUploadLocal from './sidebar/MultiFileUploadLocal.svelte';
+    import DownloadSection from './sidebar/DownloadSection.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
     import { createQuery } from '@tanstack/svelte-query';
-    import { onMount } from 'svelte';
-    import Nav from './Nav.svelte';
+    import { getTopBabyNames, getAdapter } from '../allotax.remote';
     
-    import boys1895 from '../data/boys-1895.json'
-    import boys1968 from '../data/boys-1968.json'
-
-    // Local state for years - separate periods for each system
-    let period1 = $state([1940, 1959]);
-    let period2 = $state([1990, 2009]);
-    let sidebarCollapsed = $state(false);
-    let jumpYears = $state(5);
-    let alphaIndex = $state(7);
-    let selectedLocation = $state('united_states');
+    import boys1968 from '../data/boys-1968.json';
+    import boys1895 from '../data/boys-1895.json';
 
     // File upload state
     let uploadedSys1 = $state(null);
     let uploadedSys2 = $state(null);
     let uploadedTitle = $state(['System 1', 'System 2']);
-    let uploadStatus = $state('');
-    let uploadWarnings = $state([]);
+    const hasUploadedFiles = $derived(!!uploadedSys1 && !!uploadedSys2);
 
-    // Check if any files are uploaded
-    let hasUploadedFiles = $derived(uploadedSys1 || uploadedSys2);
+    // Year range state - two separate sliders for comparison
+    let period1 = $state([1905, 1925]); // Single year by default
+    let period2 = $state([1968, 1998]); // Single year by default
 
-    // Simple file upload handler
-    async function handleFileUpload(file: File, system: 'sys1' | 'sys2') {
-        uploadStatus = `Loading ${file.name}...`;
-        uploadWarnings = [];
+    // Other parameters (UI state - not sent to API until update)
+    let location = $state('wikidata:Q30');
+    let sex = $state('M');
+    let limit = $state(10000);
 
-        try {
-            // Simple CSV/JSON parsing - you'd implement parseDataFile or similar
-            const text = await file.text();
-            let data: any;
+    // Committed parameters (actually used for API calls)
+    // Using individual values instead of arrays for better reactivity
+    let committedPeriod1Start = $state(1905);
+    let committedPeriod1End = $state(1925);
+    let committedPeriod2Start = $state(1972);
+    let committedPeriod2End = $state(2002);
+    let committedLocation = $state('wikidata:Q30');
+    let committedSex = $state('M');
+    let committedLimit = $state(10000);
 
-            if (file.name.endsWith('.json')) {
-                data = JSON.parse(text);
-            } else if (file.name.endsWith('.csv')) {
-                // Basic CSV parsing - could use d3.csvParse here
-                const lines = text.split('\n');
-                const headers = lines[0].split(',');
-                data = lines.slice(1).filter((line: string) => line.trim()).map((line: string) => {
-                    const values = line.split(',');
-                    const obj: any = {};
-                    headers.forEach((header: string, i: number) => {
-                        obj[header.trim()] = values[i]?.trim();
-                    });
-                    return obj;
-                });
-            }
+    // Derive arrays from individual values for backwards compatibility
+    let committedPeriod1 = $derived([committedPeriod1Start, committedPeriod1End]);
+    let committedPeriod2 = $derived([committedPeriod2Start, committedPeriod2End]);
 
-            if (system === 'sys1') {
-                uploadedSys1 = data;
-                uploadedTitle[0] = file.name.replace(/\.(json|csv)$/i, '');
-            } else {
-                uploadedSys2 = data;
-                uploadedTitle[1] = file.name.replace(/\.(json|csv)$/i, '');
-            }
+    // Derive date strings from committed year ranges
+    let dates = $derived(`${committedPeriod1Start},${committedPeriod1End}`);
+    let dates2 = $derived(`${committedPeriod2Start},${committedPeriod2End}`);
 
-            uploadStatus = `${system.toUpperCase()}: ${file.name} loaded successfully!`;
-            setTimeout(() => uploadStatus = '', 3000);
-
-            // Only trigger data refresh when BOTH files are uploaded
-            // Check in next tick to allow state to update
-            setTimeout(() => {
-                if (uploadedSys1 && uploadedSys2) {
-                    uploadStatus = 'Both files loaded! Generating visualization...';
-                    loadData();
-                } else {
-                    uploadStatus = `Waiting for ${uploadedSys1 ? 'System 2' : 'System 1'} file...`;
-                }
-            }, 0);
-
-            return { success: true, fileName: file.name };
-        } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            uploadStatus = `Error loading ${file.name}: ${errorMessage}`;
-            setTimeout(() => uploadStatus = '', 5000);
-            return { success: false, error: errorMessage };
-        }
-    }
-
-    // Alpha values: 0, 1/4, 2/4, 3/4, 1, 3/2, 2, 3, 5, ∞
+    // Alpha slider state (updates immediately - no update button needed)
     const alphas = [0, 1/4, 2/4, 3/4, 1, 3/2, 2, 3, 5, Infinity];
+    let alphaIndex = $state(7); // Index for alpha = 2
+    let alpha = $derived(alphas[alphaIndex]);
 
-    let topN = $state(10_000);
+    // Fetch location adapter data
+    const adapterQuery = getAdapter();
 
-    // Alpha derived values
-    const currentAlpha = $derived(alphas[alphaIndex]);
+    // Derive date range based on selected location
+    const dateRange = $derived.by(() => {
+        const adapterData = adapterQuery.current;
+        if (!adapterData?.length) return { min: 1880, max: 2023 };
+        const locationData = adapterData.find(l => l[1] === location);
+        if (locationData && locationData[4] && locationData[5]) {
+            return { min: locationData[4], max: locationData[5] };
+        }
+        return { min: 1880, max: 2023 };
+    });
 
-    // Alpha change handler
-    function onAlphaChange(newIndex: number) {
-        alphaIndex = newIndex;
+    const dateMin = $derived(dateRange.min);
+    const dateMax = $derived(dateRange.max);
+
+    // Adjust periods when date range changes (location change)
+    $effect(() => {
+        // Calculate span of available years
+        const span = dateMax - dateMin;
+
+        // Check if current period1 is outside the new range
+        if (period1[0] < dateMin || period1[0] > dateMax) {
+            // Set period1 to approximately 25% through the range
+            const newYear = Math.floor(dateMin + span * 0.25);
+            period1 = [newYear, newYear];
+            console.log('Adjusted period1 to:', newYear);
+        }
+
+        // Check if current period2 is outside the new range
+        if (period2[0] < dateMin || period2[0] > dateMax) {
+            // Set period2 to approximately 75% through the range
+            const newYear = Math.floor(dateMin + span * 0.75);
+            period2 = [newYear, newYear];
+            console.log('Adjusted period2 to:', newYear);
+        }
+    });
+
+    // Check if there are uncommitted changes
+    let hasChanges = $derived(
+        period1[0] !== committedPeriod1[0] ||
+        period2[0] !== committedPeriod2[0] ||
+        location !== committedLocation ||
+        sex !== committedSex ||
+        limit !== committedLimit
+    );
+
+    // Track what topN was fetched for warning message
+    let fetchedTopN = $state(10000);
+    let warningDismissed = $state(false);
+
+    // Check if we got fewer results than requested
+    const showTopNWarning = $derived.by(() => {
+        if (hasUploadedFiles || !me || warningDismissed) return false;
+        const count1 = me[0]?.ranks?.length || 0;
+        const count2 = me[1]?.ranks?.length || 0;
+        return count1 < fetchedTopN || count2 < fetchedTopN;
+    });
+
+    // Auto-dismiss warning after 5 seconds
+    $effect(() => {
+        if (showTopNWarning) {
+            warningDismissed = false;
+            const timer = setTimeout(() => {
+                warningDismissed = true;
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    });
+
+    // Update function - commits changes and triggers API call
+    function updateData() {
+        committedPeriod1Start = period1[0];
+        committedPeriod1End = period1[1];
+        committedPeriod2Start = period2[0];
+        committedPeriod2End = period2[1];
+        committedLocation = location;
+        committedSex = sex;
+        committedLimit = limit;
+        fetchedTopN = limit; // Track what we actually requested
     }
 
-    // Locations state - fetch once on mount
-    let adapter = $state([]);
-    let locationsLoading = $state(true);
-    let locationsError = $state(false);
+    // Callback when files are uploaded
+    function handleFilesUploaded(sys1Data, sys2Data, titles) {
+        uploadedSys1 = sys1Data;
+        uploadedSys2 = sys2Data;
+        uploadedTitle = titles;
+    }
 
-    // Fetch locations on mount
-    $effect(() => {
-        (async () => {
-            try {
-                // console.log('Fetching locations...');
-                adapter = await getAdapter();
-                locationsLoading = false;
-            } catch (error) {
-                // console.error('Failed to fetch locations:', error);
-                locationsError = true;
-                locationsLoading = false;
-            }
-        })();
-    });
-    
-    $inspect('Locations loaded:', adapter);
-
-    // Track the parameters we're currently displaying (separate from UI state)
-    let fetchedPeriod1 = $state([1940, 1959]);
-    let fetchedPeriod2 = $state([1990, 2009]);
-    let fetchedLocation = $state('united_states');
-
-    // Create query for baby names data - uses fetched params only
-    const query = createQuery(() => ({
-        queryKey: ['babynames', fetchedPeriod1[0], fetchedPeriod1[1], fetchedPeriod2[0], fetchedPeriod2[1], fetchedLocation, topN, hasUploadedFiles, !!uploadedSys1, !!uploadedSys2, JSON.stringify(uploadedTitle)],
+    // Create TanStack query for baby names data
+    const babyNamesQuery = createQuery(() => ({
+        queryKey: [
+            'babynames',
+            committedPeriod1Start,
+            committedPeriod1End,
+            committedPeriod2Start,
+            committedPeriod2End,
+            committedLocation,
+            committedSex,
+            committedLimit,
+        ],
         queryFn: async () => {
-            // console.log('🔍 queryFn called - hasUploadedFiles:', hasUploadedFiles);
             if (hasUploadedFiles) {
-                console.log('📁 Using uploaded files:', {sys1: !!uploadedSys1, sys2: !!uploadedSys2});
-                const elem1 = uploadedSys1 || [];
-                const elem2 = uploadedSys2 || [];
                 return {
-                    elem1,
-                    elem2,
+                    sys1: uploadedSys1,
+                    sys2: uploadedSys2,
                     title: uploadedTitle
                 };
             }
 
-            const period1Str = `${fetchedPeriod1[0]},${fetchedPeriod1[1]}`;
-            const period2Str = `${fetchedPeriod2[0]},${fetchedPeriod2[1]}`;
-
             const ngrams = await getTopBabyNames({
-                dates: period1Str,
-                dates2: period2Str,
-                location: fetchedLocation,
-                limit: topN
+                dates,
+                dates2,
+                locations: committedLocation,
+                sex: committedSex,
+                limit: committedLimit
             });
 
+            // Extract the two systems from the API response
             const keys = Object.keys(ngrams);
-            const elem1 = ngrams[keys[0]];
-            const elem2 = ngrams[keys[1]];
+            const sys1Data = ngrams[dates] || ngrams[keys[0]];
+            const sys2Data = ngrams[dates2] || ngrams[keys[1]];
+
+            const range1 = `${committedPeriod1Start}-${committedPeriod1End}`;
+            const range2 = `${committedPeriod2Start}-${committedPeriod2End}`;
 
             return {
-                elem1,
-                elem2,
-                title: [`${fetchedPeriod1[0]}-${fetchedPeriod1[1]}`, `${fetchedPeriod2[0]}-${fetchedPeriod2[1]}`]
+                sys1: sys1Data,
+                sys2: sys2Data,
+                title: [`${committedSex === 'M' ? 'Boys' : 'Girls'} ${range1}`, `${committedSex === 'M' ? 'Boys' : 'Girls'} ${range2}`]
             };
         },
-        enabled: true, // Enabled, but only queries when fetched params change (on Update click)
-        staleTime: 5 * 60 * 1000, // 5 minutes - cached data is fresh for 5 mins
-        gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache for 10 mins
-        placeholderData: (previousData) => previousData, // Keep previous data while fetching new data
+        enabled: true,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        gcTime: 10 * 60 * 1000, // 10 minutes
+        placeholderData: (previousData) => previousData,
     }));
 
-    // Function to trigger data loading (Update button and arrow keys)
-    function loadData() {
-        fetchedPeriod1 = [...period1];
-        fetchedPeriod2 = [...period2];
-        fetchedLocation = selectedLocation;
-    }
-
-    // Initial data load on mount (runs exactly once)
-    onMount(() => {
-        loadData();
+    // Extract systems and title from query data with fallback
+    const sys1 = $derived.by(() => {
+        if (hasUploadedFiles) return uploadedSys1;
+        if (babyNamesQuery.data) return babyNamesQuery.data.sys1;
+        // Only fallback to static if API has error, not while loading
+        if (babyNamesQuery.error) return boys1895;
+        return null;
     });
 
-    // Create Allotaxonograph instance reactively based on query data AND currentAlpha
-    const instance = $derived(
-        query.data
-            ? new Allotaxonograph(query.data.elem1, query.data.elem2, {
-                alpha: currentAlpha,
-                title: query.data.title
-            })
-            : null
-    );
+    const sys2 = $derived.by(() => {
+        if (hasUploadedFiles) return uploadedSys2;
+        if (babyNamesQuery.data) return babyNamesQuery.data.sys2;
+        // Only fallback to static if API has error, not while loading
+        if (babyNamesQuery.error) return boys1968;
+        return null;
+    });
 
-    // Extract data properties as derived values
-    const dat = $derived(instance?.dat);
-    const barData = $derived(instance?.barData);
-    const balanceData = $derived(instance?.balanceData);
-    const maxlog10 = $derived(instance?.maxlog10);
-    const divnorm = $derived(instance?.divnorm);
-    const displayTitles = $derived(query.data?.title || ['System 1', 'System 2']);
-    const me = $derived(instance?.me);
-    const rtd = $derived(instance?.rtd);
-    const isDataReady = $derived(!!query.data && !!instance);
+    const title = $derived.by(() => {
+        if (hasUploadedFiles) return uploadedTitle;
+        if (babyNamesQuery.data) return babyNamesQuery.data.title;
+        // Fallback titles while loading or on error
+        return ['Boys 1895', 'Boys 1968'];
+    });
 
+    // Compute visualization data using utility functions
+    const me = $derived(sys1 && sys2 ? combElems(sys1, sys2) : null);
+    const rtd = $derived(me ? rank_turbulence_divergence(me, alpha) : null);
+    const dat = $derived(me && rtd ? diamond_count(me, rtd) : null);
+    const barData = $derived(me && dat ? wordShift_dat(me, dat).slice(0, 30) : []);
+    const balanceData = $derived(sys1 && sys2 ? balanceDat(sys1, sys2) : []);
+    const maxlog10 = $derived(me ? Math.ceil(d3.max([Math.log10(d3.max(me[0].ranks)), Math.log10(d3.max(me[1].ranks))])) : 0);
+    const divnorm = $derived(rtd ? rtd.normalization : 1);
 
-    
-    // Arrow navigation functions for both periods
-    function shiftBothPeriodsLeft() {
-        // Shift period 1
-        const range1Size = period1[1] - period1[0];
-        let newStart1 = period1[0] - jumpYears;
-        let newEnd1 = newStart1 + range1Size;
-
-        if (newStart1 < 1880) {
-            newStart1 = 1880;
-            newEnd1 = newStart1 + range1Size;
-        }
-
-        period1 = [newStart1, newEnd1];
-
-        // Shift period 2
-        const range2Size = period2[1] - period2[0];
-        let newStart2 = period2[0] - jumpYears;
-        let newEnd2 = newStart2 + range2Size;
-
-        if (newStart2 < 1880) {
-            newStart2 = 1880;
-            newEnd2 = newStart2 + range2Size;
-        }
-
-        period2 = [newStart2, newEnd2];
-
-        // Use setTimeout to ensure state updates before refetching
-        setTimeout(() => loadData(), 0);
-    }
-
-    function shiftBothPeriodsRight() {
-        // Shift period 1
-        const range1Size = period1[1] - period1[0];
-        let newStart1 = period1[0] + jumpYears;
-        let newEnd1 = newStart1 + range1Size;
-
-        if (newEnd1 > 2020) {
-            newEnd1 = 2020;
-            newStart1 = newEnd1 - range1Size;
-        }
-
-        period1 = [newStart1, newEnd1];
-
-        // Shift period 2
-        const range2Size = period2[1] - period2[0];
-        let newStart2 = period2[0] + jumpYears;
-        let newEnd2 = newStart2 + range2Size;
-
-        if (newEnd2 > 2020) {
-            newEnd2 = 2020;
-            newStart2 = newEnd2 - range2Size;
-        }
-
-        period2 = [newStart2, newEnd2];
-
-        // Use setTimeout to ensure state updates before refetching
-        setTimeout(() => loadData(), 0);
-    }
-
-    function canShiftLeft() {
-        return period1[0] > 1880 || period2[0] > 1880;
-    }
-
-    function canShiftRight() {
-        return period1[1] < 2020 || period2[1] < 2020;
-    }
 </script>
 
 <div class="app-container">
-    <div class="layout">
-        <aside class="sidebar-container {sidebarCollapsed ? 'collapsed' : ''}">
-            
+        <div class="layout">
+            <aside class="sidebar-container">
                 <div class="sidebar-content">
                     <div class="sidebar-header">
                         <h2 class="sidebar-title">Allotaxonograph</h2>
                     </div>
 
                     <div class="sidebar-body">
-                        <MultiFileUpload
-                            bind:sys1={uploadedSys1}
-                            bind:sys2={uploadedSys2}
-                            bind:title={uploadedTitle}
-                            {handleFileUpload}
-                            {uploadStatus}
-                            {uploadWarnings}
+                        <MultiFileUploadLocal
+                            onFilesUploaded={handleFilesUploaded}
                         />
-
 
                         <div class="separator"></div>
 
                         {#if !hasUploadedFiles}
                             <div class="location-control">
-                                <LocationSelector
-                                    bind:value={selectedLocation}
-                                    label="Location"
-                                    {adapter}
-                                    isLoading={locationsLoading}
-                                    isError={locationsError}
-                                />
+                                {#if adapterQuery.loading}
+                                    <div class="loading-dropdown">Loading locations...</div>
+                                {:else if adapterQuery.error}
+                                    <div class="error-dropdown">Failed to load locations</div>
+                                {:else}
+                                    <LocationSelector
+                                        bind:location
+                                        adapter={adapterQuery.current || []}
+                                        label="Location"
+                                    />
+                                {/if}
+                            </div>
+
+                            <div class="topn-control">
+                                <TopNSelector bind:limit />
+
+                                {#if showTopNWarning && me}
+                                    {@const count1 = me[0]?.ranks?.length || 0}
+                                    {@const count2 = me[1]?.ranks?.length || 0}
+                                    <div class="topn-warning">
+                                        <svg class="warning-icon" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
+                                        <div class="warning-text">
+                                            {#if count1 < fetchedTopN && count2 < fetchedTopN}
+                                                <span>System 1: {count1.toLocaleString()} names, System 2: {count2.toLocaleString()} names (requested {fetchedTopN.toLocaleString()})</span>
+                                            {:else if count1 < fetchedTopN}
+                                                <span>System 1: Only {count1.toLocaleString()} names available (requested {fetchedTopN.toLocaleString()})</span>
+                                            {:else}
+                                                <span>System 2: Only {count2.toLocaleString()} names available (requested {fetchedTopN.toLocaleString()})</span>
+                                            {/if}
+                                        </div>
+                                    </div>
+                                {/if}
+                            </div>
+
+                            <div class="sex-control">
+                                <SexToggle bind:sex />
                             </div>
 
                             <div class="separator"></div>
                         {/if}
 
                         <div class="alpha-control">
-                        <AlphaSlider
-                            {alphas}
-                            {alphaIndex}
-                            {currentAlpha}
-                            {onAlphaChange}
-                        />
-                    </div>
-                    <div class="separator"></div>
+                            <AlphaSliderLocal bind:alphaIndex {alphas} />
+                        </div>
 
-                    {#if !hasUploadedFiles}
-                        <div class="year-control">
-                            <YearSlider
-                                bind:value={period1}
-                                min={1880}
-                                max={2020}
-                                label="Period 1"
+                        {#if !hasUploadedFiles}
+                            <div class="separator"></div>
+
+                            <div class="year-control">
+                                <YearSlider
+                                    bind:value={period1}
+                                    label="Period 1"
+                                    min={dateMin}
+                                    max={dateMax}
+                                />
+                            </div>
+
+                            <div class="year-control">
+                                <YearSlider
+                                    bind:value={period2}
+                                    label="Period 2"
+                                    min={dateMin}
+                                    max={dateMax}
+                                />
+                            </div>
+
+                            <PeriodJumpControlsLocal
+                                bind:period1
+                                bind:period2
+                                {dateMin}
+                                {dateMax}
+                                onJump={updateData}
                             />
-                        </div>
 
-                        <div class="year-control">
-                            <YearSlider
-                                bind:value={period2}
-                                min={1880}
-                                max={2020}
-                                label="Period 2"
-                            />
-                        </div>
-
-                        <div class="arrow-controls">
-                            <button class="arrow-btn" onclick={shiftBothPeriodsLeft} disabled={!canShiftLeft()}>
-                                ← {jumpYears} yrs back
-                            </button>
-                            <span class="arrow-separator">•</span>
-                            <button class="arrow-btn" onclick={shiftBothPeriodsRight} disabled={!canShiftRight()}>
-                                {jumpYears} yrs forward →
-                            </button>
-                        </div>
-
-                        <div class="jump-control">
-                            <label for="jumpYears" class="jump-label">Jump by:</label>
-                            <input
-                                id="jumpYears"
-                                type="number"
-                                bind:value={jumpYears}
-                                min="1"
-                                max="50"
-                                class="jump-input"
-                            />
-                            <span class="jump-unit">years</span>
-                        </div>
-                    {/if}
-                    
-                    {#if !hasUploadedFiles}
-                        
-                        <button class="load-button" onclick={loadData} disabled={query.isLoading}>
-                            {#if query.isLoading}
-                                <div class="loading-spinner"></div>
-                                Loading...
-                            {:else}
+                            <button
+                                class="update-button"
+                                onclick={updateData}
+                                disabled={!hasChanges}
+                            >
                                 Update
-                            {/if}
-                        </button>
-                    {/if}
+                            </button>
+                        {/if}
 
-                    {#if isDataReady}
+                        {#if me && rtd}
+                            <DataInfo {title} {me} {rtd} />
+                        {/if}
 
-                        <DataInfo
-                            title={displayTitles}
-                            {me}
-                            {rtd}
-                            {isDataReady}
-                        />
-                    {/if}
-                    
+                        <div class="separator"></div>
 
+                        <DownloadSection isDataReady={!!dat} />
                     </div>
                 </div>
             </aside>
-            
+
             <main class="main-content">
-                
                 <Nav/>
-                
-                {#if query.isLoading && !query.data}
-                    <!-- Only show spinner on initial load when there's no data yet -->
-                    <div class="main-loading">
-                        <Spinner />
-                        <p>Loading rust-wasm and baby names comparison...</p>
-                    </div>
-                {:else if query.error}
-                    <!-- Only show error if we have no fallback data -->
-                     {@const allotax = new Allotaxonograph(boys1895, boys1968, alphas[alphaIndex], ['Boys 1895', 'Boys 1968'])}
-                     <Dashboard {...allotax} />
-                    <div class="error">
-                        <p>Failed to load baby names data: babynames API is down. Falling back on static data.</p>
-                    </div>
-                {:else if query.data}
-                    <!-- Show dashboard whenever we have data, even if loading new data -->
-                    <Dashboard
-                        {dat}
-                        {barData}
-                        {balanceData}
-                        {maxlog10}
-                        {divnorm}
-                        title={displayTitles}
-                        alpha={currentAlpha}
-                        WordshiftWidth={400}
+
+                {#if dat}
+                    <div id="allotaxonometer-dashboard">
+                        <Dashboard
+                            {dat}
+                            {barData}
+                            {balanceData}
+                            {maxlog10}
+                            {divnorm}
+                            {title}
+                            {alpha}
+                            WordshiftWidth={400}
                         />
+                    </div>
                 {:else}
-                    <div class="welcome">
-                        <h2>Baby Names Comparison</h2>
-                        <p>Adjust settings in the sidebar to explore different time periods and locations.</p>
+                    <div class="loading">
+                        <div class="loading-content">
+                            <div class="spinner"></div>
+                            <p>Loading baby names data...</p>
+                        </div>
                     </div>
                 {/if}
             </main>
         </div>
-</div>
+    </div>
 
 <style>
     .app-container {
@@ -449,45 +390,25 @@
         padding: 0;
     }
 
-    .sidebar-container {
-        flex-shrink: 0;
-        width: 17rem;
-        background-color: var(--color-input-bg);
-        border-right: 1px solid var(--color-border);
-        transition: width var(--transition-medium) ease;
-        overflow: hidden;
-    }
-
-    .sidebar-container.collapsed {
-        width: 5rem;
-    }
-
     .main-content {
         flex: 1;
         overflow: auto;
         background-color: var(--color-bg);
         max-width: none;
         margin: 0;
-        padding: 5.5rem 0 0 0; 
+        padding: 5.5rem 0 0 0;
         transition: padding-left var(--transition-medium) ease;
     }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-        .layout {
-            flex-direction: column;
-        }
-        
-        .sidebar-container {
-            width: 100% !important;
-            height: auto;
-            border-right: none;
-            border-bottom: 1px solid var(--color-border);
-        }
-
+    .sidebar-container {
+        flex-shrink: 0;
+        width: 16rem;
+        background-color: var(--color-input-bg);
+        border-right: 1px solid var(--color-border);
+        transition: width var(--transition-medium) ease;
+        overflow: hidden;
     }
 
-    
     .sidebar-content {
         height: 100%;
         display: flex;
@@ -522,13 +443,14 @@
         margin-top: 1rem;
     }
 
-    .year-control {
-        margin-bottom: 2rem;
-        margin-top: 2.5rem;
+    .topn-control {
+        margin-bottom: 1rem;
+        margin-top: 0.5rem;
     }
 
-    .year-control:last-of-type {
-        border-bottom: none;
+    .sex-control {
+        margin-bottom: 1rem;
+        margin-top: 0.5rem;
     }
 
     .alpha-control {
@@ -541,18 +463,48 @@
         justify-content: center;
     }
 
-    /* Mobile responsive styles for alpha control */
-    @media (max-width: 768px) {
-        .alpha-control {
-            width: 100%;
-            justify-content: center;
-            margin-top: 1rem;
-            margin-bottom: 1rem;
-        }
+    .year-control {
+        margin-bottom: 2rem;
+        margin-top: 2.5rem;
     }
 
+    .separator {
+        border-top: 1px solid var(--color-border);
+        margin: 1.5rem -1.5rem;
+    }
 
-    .load-button {
+    .topn-warning {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        margin-top: 0.75rem;
+        margin-bottom: 0.5rem;
+        background-color: rgba(251, 191, 36, 0.1);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 6px;
+        font-size: var(--12px, 0.75rem);
+        color: var(--color-text-primary);
+    }
+
+    .warning-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+        flex-shrink: 0;
+        color: rgba(251, 191, 36, 1);
+        margin-top: 0.125rem;
+    }
+
+    .warning-text {
+        flex: 1;
+        line-height: 1.4;
+    }
+
+    .warning-text span {
+        display: block;
+    }
+
+    .update-button {
         width: 100%;
         padding: 0.75rem 1rem;
         margin: 1rem 0;
@@ -570,138 +522,64 @@
         gap: 0.5rem;
     }
 
-    .load-button:hover:not(:disabled) {
+    .update-button:hover:not(:disabled) {
         background-color: var(--color-input-bg);
         border-color: var(--color-text);
         transform: translateY(-1px);
     }
 
-    .load-button:disabled {
+    .update-button:disabled {
         opacity: 0.6;
         cursor: not-allowed;
     }
 
-    .loading-spinner {
-        width: 1rem;
-        height: 1rem;
-        border: 2px solid var(--color-border);
-        border-top: 2px solid var(--color-text);
+    .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        color: var(--color-text-secondary);
+    }
+
+    .loading-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .loading-content p {
+        font-size: 1rem;
+        color: var(--color-text-secondary);
+        margin: 0;
+    }
+
+    .spinner {
+        width: 3rem;
+        height: 3rem;
+        border: 4px solid var(--color-border);
+        border-top-color: var(--color-good-blue, #3b82f6);
         border-radius: 50%;
         animation: spin 1s linear infinite;
     }
 
     @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        to {
+            transform: rotate(360deg);
+        }
     }
 
-    .main-loading {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        gap: 1rem;
-    }
+    /* Mobile */
+    @media (max-width: 768px) {
+        .layout {
+            flex-direction: column;
+        }
 
-    .welcome {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        text-align: center;
-        color: var(--color-text-secondary);
-    }
-
-    .welcome h2 {
-        margin-bottom: 1rem;
-        color: var(--color-text);
-    }
-
-    .arrow-controls {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0.75rem 0 0.25rem 0;
-        padding: 0.25rem 0;
-    }
-
-    .arrow-btn {
-        padding: 0.5rem;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.85rem;
-        transition: all 150ms ease;
-        white-space: nowrap;
-        color: var(--color-text);
-    }
-
-    .arrow-btn:hover:not(:disabled) {
-        transform: scale(1.05);
-        background: var(--color-input-bg);
-        border-radius: 4px;
-    }
-
-    .arrow-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .arrow-separator {
-        margin: 0 0.5rem;
-        font-size: 16px;
-
-    }
-
-    .jump-control {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        margin: 0.25rem 0 0.75rem 0;
-    }
-
-    .jump-label {
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: var(--color-text);
-    }
-
-    .jump-input {
-        width: 50px;
-        padding: 0.25rem 0.5rem;
-        border: 1px solid var(--color-border);
-        border-radius: 3px;
-        font-size: 0.85rem;
-        text-align: center;
-        background-color: var(--color-bg);
-        color: var(--color-text);
-    }
-
-    .jump-input:focus {
-        outline: none;
-        border-color: var(--color-good-blue, #3b82f6);
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-    }
-
-    .jump-unit {
-        font-size: 0.85rem;
-        color: var(--color-text-secondary);
-    }
-
-    .error {
-        padding: 2rem;
-        text-align: center;
-        color: #ef4444;
-    }
-
-    .separator {
-        border-top: 1px solid var(--color-border);
-        margin: 1.5rem -1.5rem;
+        .sidebar-container {
+            width: 100% !important;
+            height: auto;
+            border-right: none;
+            border-bottom: 1px solid var(--color-border);
+        }
     }
 </style>

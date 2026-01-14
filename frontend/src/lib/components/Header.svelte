@@ -63,6 +63,10 @@
     <a href="{base}/research-at-uvm" class="text-button">
 			Groups@UVM
 		</a>
+    
+    <a href="{base}/work-with-us" class="text-button">
+			Work with us
+		</a>
 
 		{#await getCurrentUser()}
 			<!-- Loading auth state -->
@@ -237,10 +241,11 @@
     text-decoration: none;
     font-family: var(--sans);
     font-weight: var(--font-weight-medium);
-    font-size: var(--font-size-small);
+    font-size: 0.885rem;
     letter-spacing: 0.05em;
     transition: all var(--transition-medium);
     cursor: pointer;
+    white-space: nowrap;
   }
 
   .text-button:hover {
@@ -260,10 +265,11 @@
     text-decoration: none;
     font-family: var(--sans);
     font-weight: var(--font-weight-medium);
-    font-size: var(--font-size-small);
+    font-size: 0.885rem;
     letter-spacing: 0.05em;
     transition: all var(--transition-medium);
     cursor: pointer;
+    white-space: nowrap;
   }
 
   .avatar-button:hover {
@@ -293,12 +299,6 @@
     text-transform: uppercase;
   }
 
-  .username {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 8rem;
-  }
 
   /* Button styles */
   .icon-button {
@@ -314,12 +314,6 @@
     border: none;
     cursor: pointer;
     transition: all var(--transition-medium);
-  }
-
-  .icon-button svg {
-    width: 1.25rem;  /* w-5 = 20px */
-    height: 1.25rem; /* h-5 = 20px */
-    fill: currentColor;
   }
 
   .icon-button:hover {

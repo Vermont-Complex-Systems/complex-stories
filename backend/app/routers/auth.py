@@ -32,6 +32,8 @@ class UserResponse(BaseModel):
     email: str
     role: str
     payroll_name: Optional[str] = None
+    orcid_id: Optional[str] = None
+    openalex_id: Optional[str] = None
     is_active: bool
     created_at: datetime
     last_login: Optional[datetime] = None
@@ -49,6 +51,19 @@ class Token(BaseModel):
 class ChangePassword(BaseModel):
     current_password: str
     new_password: str
+
+
+class UpdateProfile(BaseModel):
+    orcid_id: Optional[str] = None
+    openalex_id: Optional[str] = None
+
+
+class UserRegister(BaseModel):
+    username: str
+    email: str
+    password: str
+    orcid_id: Optional[str] = None
+    openalex_id: Optional[str] = None
 
 
 # Dependency to get current user from token
@@ -95,7 +110,106 @@ async def get_admin_user(current_user: User = Depends(get_current_active_user)) 
     return current_user
 
 
-# Public registration removed for security - users created by admins only
+@router.post("/register", response_model=Token)
+async def register_user(
+    user_data: UserRegister,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Register a new user (public endpoint)."""
+
+    # Validate username (alphanumeric + underscores only, 3-50 chars)
+    if not user_data.username.replace('_', '').isalnum():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username must contain only letters, numbers, and underscores"
+        )
+
+    if len(user_data.username) < 3 or len(user_data.username) > 50:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username must be between 3 and 50 characters"
+        )
+
+    # Validate email format (basic check)
+    if '@' not in user_data.email or '.' not in user_data.email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid email format"
+        )
+
+    # Validate password strength
+    if len(user_data.password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters long"
+        )
+
+    # Validate ORCID format if provided (should be XXXX-XXXX-XXXX-XXXX)
+    if user_data.orcid_id:
+        orcid_clean = user_data.orcid_id.strip()
+        if len(orcid_clean) != 19 or not all(c.isdigit() or c == '-' or c == 'X' for c in orcid_clean):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="ORCID must be in format XXXX-XXXX-XXXX-XXXX"
+            )
+        user_data.orcid_id = orcid_clean
+
+    # Validate OpenAlex ID format if provided (should be A followed by numbers, e.g., A5017712502)
+    if user_data.openalex_id:
+        openalex_clean = user_data.openalex_id.strip()
+        # Remove URL prefix if provided
+        if openalex_clean.startswith('https://openalex.org/'):
+            openalex_clean = openalex_clean.replace('https://openalex.org/', '')
+
+        # Validate format: A followed by numbers
+        if not (openalex_clean.startswith('A') and len(openalex_clean) > 1 and openalex_clean[1:].isdigit()):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="OpenAlex ID must start with 'A' followed by numbers (e.g., A5017712502)"
+            )
+        user_data.openalex_id = openalex_clean
+
+    # Check if username already exists
+    username_query = select(User).where(User.username == user_data.username.lower())
+    username_result = await db.execute(username_query)
+    if username_result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already taken"
+        )
+
+    # Check if email already exists
+    email_query = select(User).where(User.email == user_data.email.lower())
+    email_result = await db.execute(email_query)
+    if email_result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+
+    # Create new user
+    new_user = User(
+        username=user_data.username.lower(),
+        email=user_data.email.lower(),
+        password_hash=get_password_hash(user_data.password),
+        role="annotator",  # Default role for public signup
+        orcid_id=user_data.orcid_id,
+        openalex_id=user_data.openalex_id,
+        is_active=True
+    )
+
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+
+    # Automatically log in the new user
+    access_token = create_access_token(data={"sub": new_user.username})
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": new_user
+    }
 
 
 @router.post("/login", response_model=Token)
@@ -139,6 +253,53 @@ async def login_user(
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_active_user)):
     """Get current user information."""
+    return current_user
+
+
+@router.put("/profile", response_model=UserResponse)
+async def update_profile(
+    profile_data: UpdateProfile,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Update user profile (ORCID and OpenAlex IDs)."""
+
+    # Validate ORCID format if provided
+    if profile_data.orcid_id is not None:
+        if profile_data.orcid_id.strip() == "":
+            # Allow empty string to clear the field
+            current_user.orcid_id = None
+        else:
+            orcid_clean = profile_data.orcid_id.strip()
+            if len(orcid_clean) != 19 or not all(c.isdigit() or c == '-' or c == 'X' for c in orcid_clean):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="ORCID must be in format XXXX-XXXX-XXXX-XXXX"
+                )
+            current_user.orcid_id = orcid_clean
+
+    # Validate OpenAlex ID format if provided
+    if profile_data.openalex_id is not None:
+        if profile_data.openalex_id.strip() == "":
+            # Allow empty string to clear the field
+            current_user.openalex_id = None
+        else:
+            openalex_clean = profile_data.openalex_id.strip()
+            # Remove URL prefix if provided
+            if openalex_clean.startswith('https://openalex.org/'):
+                openalex_clean = openalex_clean.replace('https://openalex.org/', '')
+
+            # Validate format: A followed by numbers
+            if not (openalex_clean.startswith('A') and len(openalex_clean) > 1 and openalex_clean[1:].isdigit()):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="OpenAlex ID must start with 'A' followed by numbers (e.g., A5017712502)"
+                )
+            current_user.openalex_id = openalex_clean
+
+    await db.commit()
+    await db.refresh(current_user)
+
     return current_user
 
 

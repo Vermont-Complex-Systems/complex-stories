@@ -1,23 +1,13 @@
 <script>
     let {
-        value = $bindable('united_states'),
-        label = "Location",
+        location = $bindable('wikidata:Q30'),
         adapter = [],
-        isLoading = false,
-        isError = false
+        label = "Location"
     } = $props();
 
     function handleChange(event) {
-        value = event.target.value;
+        location = event.target.value;
     }
-
-    // Get current location display name - computed each render
-    function getCurrentLocationName() {
-        if (!adapter?.length) return value;
-        const location = adapter.find(l => l.code === value);
-        return location?.name || value;
-    }
-
 </script>
 
 <div class="location-selector">
@@ -26,22 +16,20 @@
     </div>
 
     <div class="selector-control">
-        {#if isLoading}
-            <div class="loading-dropdown">Loading locations...</div>
-        {:else if isError}
-            <div class="error-dropdown">Failed to load locations</div>
-        {:else if adapter.length > 0}
+        {#if adapter.length > 0}
             <select
-                {value}
+                value={location}
                 onchange={handleChange}
                 class="location-dropdown"
             >
                 {#each adapter as row}
-                    <option value={row[0]}>
+                    <option value={row[1]}>
                         {row[2]}
                     </option>
                 {/each}
             </select>
+        {:else}
+            <div class="loading-dropdown">Loading locations...</div>
         {/if}
     </div>
 </div>
@@ -67,11 +55,6 @@
         color: var(--color-text-primary);
     }
 
-    .current-selection {
-        font-size: var(--11px, 0.69rem);
-        color: var(--color-text-secondary);
-        font-weight: var(--font-weight-normal, 400);
-    }
 
     .selector-control {
         position: relative;

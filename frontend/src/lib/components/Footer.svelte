@@ -39,13 +39,10 @@
 		<div class="footer-section">
 			<h3>Community</h3>
 			<ul>
-				<li><a href="https://vermontcomplexsystems.org/who-we-are">Who We Are</a></li>
-				<li><a href="https://vermontcomplexsystems.org/community/students">Students</a></li>
-				<li><a href="https://vermontcomplexsystems.org/community/paper-shredder">Paper Shredder</a></li>
-				<li><a href="https://vermontcomplexsystems.org/community/scraps">SCRaPS</a></li>
-				<li><a href="https://vermontcomplexsystems.org/community/talkboctopus">Talkboctopus</a></li>
-				<li><a href="https://vermontcomplexsystems.org/community/credits">Credits</a></li>
+				<li><a href="{base}/about">About</a></li>
 				<li><a href="{base}/blog">Blog</a></li>
+				<li><a href="{base}/work-with-us">How to work with us</a></li>
+				<li><a href="{base}/datasets">Datasets</a></li>
 			</ul>
 		</div>
 
@@ -88,7 +85,7 @@
 
 <style>
 	.footer {
-	margin-top: auto;
+	margin-top: 5rem;
 	background-color: var(--color-uvm-green);
 	border-top: 1px solid var(--color-border);
 	padding: 3rem 1rem 2rem;

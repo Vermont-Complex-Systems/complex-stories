@@ -1,57 +1,67 @@
 [
     {
         "slug": "networks-fast-and-slow",
-        "bg": "hsl(343, 56%, 61%)",
-        "text": "#000"
+        "bg": "#ee6c4d",
+        "text": "#fefae0"
     },
     {
         "slug": "friends-funnier-than-you-are",
-        "bg": "hsl(343, 56%, 61%)",
-        "text": "#000"
+        "bg": "#dda15e",
+        "text": "#fefae0"
+    },
+    {
+        "slug": "dark-data-survey",
+        "bg": "#dda15e",
+        "text": "#283618"
     },
     {
         "slug": "vermont-livability-map",
-        "bg": "hsl(170, 100%, 35%)",
-        "text": "#000"
+        "bg": "#9d4edd",
+        "text": "#fefae0"
     },
     {
         "slug": "hello-sciscidb",
-        "bg": "hsl(200, 83%, 38%)",
-        "text": "#000"
+        "bg": "#669bbc",
+        "text": "#fefae0"
     },
     {
         "slug": "allotax-scrolly",
-        "bg": "hsl(170, 100%, 35%)",
-        "text": "#000"
+        "bg": "#fff3b0",
+        "text": "#fefae0"
     },
     {
         "slug": "tokenization",
-        "bg": "hsl(343, 56%, 61%)",
-        "text": "#000"
+        "bg": "#283618",
+        "text": "#fefae0"
     },
     {
         "slug": "explore-the-cat-project",
-        "bg": "hsl(52, 100%, 45%)",
-        "text": "#000"
+        "bg": "#9d4edd",
+        "text": "#283618"
     },
     {
         "slug": "uvm-research-groups",
-        "bg": "hsl(343, 56%, 61%)",
-        "text": "#000"
+        "bg": "#43aa8b",
+        "text": "#283618"
     },
     {
         "slug": "allotaxonometry",
-        "bg": "hsl(52, 100%, 45%)",
-        "text": "#000"
+        "bg": "#fff3b0",
+        "text": "#fefae0"
     },
     {
         "slug": "open-academic-analytics",
-        "bg": "hsl(52, 100%, 45%)",
-        "text": "#000"
+        "bg": "#43aa8b",
+        "text": "#fefae0"
     },
     {
         "slug": "explore-timeline",
-        "bg": "hsl(52, 100%, 45%)",
-        "text": "#000"
+        "bg": "#dda15e",
+        "text": "#283618"
+    },
+    {
+        "slug": "interdisciplinarity",
+        "bg": "#2a9d8f",
+        "text": "#fefae0"
     }
 ]

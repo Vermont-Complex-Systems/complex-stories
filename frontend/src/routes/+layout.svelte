@@ -4,7 +4,8 @@
 	import { page } from '$app/state';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
-	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query'
+	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
+	import { browser } from '$app/environment';
 
 	const queryClient = new QueryClient({
 		defaultOptions: {
@@ -14,8 +15,13 @@
 		}
 	});
 
+	// Expose queryClient for TanStack Query DevTools
+	if (browser) {
+		window.__TANSTACK_QUERY_CLIENT__ = queryClient;
+	}
+
 	let { children } = $props();
-	
+
 	let isStoryPage = $derived(page.route.id === '/[slug]');
 	let isBlogPost = $derived(page.route.id === '/blog/[slug]');
 	let showHeader = $derived(!isStoryPage && !isBlogPost);
