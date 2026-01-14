@@ -2,21 +2,15 @@
 
 ## 2.1 Building digital infrastructure at VERSO
 
-The infrastructure crisis in computational research cannot be solved by training researchers to become better programmers. The solution requires recognizing that robust computational infrastructure demands dedicated professional roles with specialized expertise in data architecture, software engineering, and computational systems—knowledge that cannot be acquired incidentally while pursuing domain research.
-
 Research Software Engineers (RSEs) sit at the intersection of domain science and professional software development. We possess the technical capabilities to architect production-grade infrastructure while understanding the unique constraints and workflows of academic research. More importantly, we serve as **institutional memory**—preventing the knowledge evaporation that occurs when PhD students graduate and their hard-won computational expertise leaves with them.
+
+We recognize that robust computational infrastructure demands dedicated professional roles with specialized expertise in data architecture, software engineering, and computational systems. It is not all or nothing. This knowledge can be transmitted in more effective ways by training researchers to become better programmers. As reearchers to balance research with computational skills, RSEs can play a multifacetted role to consolidate group and institutional knowledge about when and how adopting best software practices.
 
 The Open Source Programming Office at the Vermont Complex Systems Center represents an experiment in making RSE support accessible to research groups across UVM. Rather than expecting each group to independently solve computational infrastructure challenges, we provide two complementary modes of support.
 
 ## 2.2 What We've Already Built
 
-We're not proposing a hypothetical model—we've been building and refining this infrastructure for 3 years. Current production deployments:
-
-**Annotation Infrastructure (13 active users)**
-Self-hosted Label Studio serving 4 research groups, plus a custom mobile-first annotator enabling work during "dead time" (commutes, waiting rooms). Built in 1 week using SvelteKit + FastAPI + PostgreSQL, now reused across multiple projects with minimal customization.
-
-**Research Data Infrastructure (course catalogs platform)**
-Multi-year study processing PDFs from hundreds of institutions. Integrated pipeline: scraping → LLM-assisted extraction → PostgreSQL → FastAPI → dashboards. Enables collaboration between data engineers, ML researchers, and domain experts without coordination overhead. Researchers query clean data through documented APIs rather than reverse-engineering scrapers.
+We've been busy building and refining this infrastructure for a few years. Current projects include:
 
 **Visual Data Essays (Complex Stories platform)**
 Publication-quality interactive storytelling for academic research. Mobile-first, static generation for performance (<1s load times), progressive enhancement for longevity. Stories reach audiences beyond academic papers—policymakers, families, concerned public—while maintaining scientific rigor.
@@ -24,8 +18,11 @@ Publication-quality interactive storytelling for academic research. Mobile-first
 **Custom Research Websites (data-driven, auto-updating)**
 SvelteKit sites pulling from OpenAlex/ORCID APIs. Publications, topics, and team profiles update automatically from authoritative sources. Solves the discovery problem: new students find relevant datasets and collaborators through search rather than relying on PI's memory of who's working on what.
 
-**Value Proposition Example:**
-Consider a typical annotation project: 2,000 items, 3 research assistants, standard categorical labeling. DIY approach (Excel + commercial cloud): ~$10,000 in time and subscriptions, with questionable inter-rater reliability tracking. Using our Tier 1 infrastructure: $2,450 Year 1 for production-quality workflows, full inter-rater metrics, and reusable infrastructure for future projects. **Potential savings: $7,500+ first year.**
+**Annotation Infrastructure (13 active users)**
+Self-hosted Label Studio serving 4 research groups, plus a custom mobile-first annotator enabling work during "dead time" (commutes, waiting rooms). Built in 1 week using SvelteKit + FastAPI + PostgreSQL, now reused across multiple projects with minimal customization.
+
+**Research Data Infrastructure (course catalogs platform, in collaboration with the Computational Ethics lab)**
+Multi-year study processing PDFs from hundreds of institutions. Integrated pipeline: scraping → LLM-assisted extraction → PostgreSQL → FastAPI → dashboards. Enables collaboration between data engineers, ML researchers, and domain experts without coordination overhead. Researchers query clean data through documented APIs rather than reverse-engineering scrapers.
 
 These aren't demonstrations—they're production systems supporting active research.
 
@@ -39,7 +36,7 @@ We reduce the infrastructure burden on research groups through two complementary
 **Our Solution:** Build and maintain shared infrastructure that serves multiple research groups. One well-architected, professionally-maintained annotation platform serving 13 researchers is more efficient and reliable than 13 independently-built ad-hoc solutions.
 
 **Examples:**
-- Self-hosted Label Studio instance (currently serving 13 active users)
+- Self-hosted Label Studio instance 
 - Standardized data processing pipelines with documented best practices
 - Reusable web hosting infrastructure for research outputs
 
@@ -63,7 +60,7 @@ We reduce the infrastructure burden on research groups through two complementary
 
 ## 2.4 Progressive Enhancement: Infrastructure That Survives
 
-A critical insight from three years of building computational infrastructure: **academic funding is inherently unstable**. Grants end. Students graduate. Priorities shift. Infrastructure that requires continuous specialized support becomes abandoned technical debt.
+A critical insight from years of building computational infrastructure: **academic funding is inherently unstable**. Grants end. Students graduate. Priorities shift. Infrastructure that requires continuous specialized support becomes abandoned technical debt.
 
 Our design philosophy addresses this reality through **progressive enhancement**—layering infrastructure so that failures degrade gracefully rather than catastrophically.
 
@@ -95,7 +92,7 @@ Our design philosophy addresses this reality through **progressive enhancement**
 
 When you invest in our infrastructure:
 
-**If our office closes or funding ends:**
+**If VERSO closes or funding ends:**
 - You **lose** Layer 3 features (advanced analytics requiring specialized maintenance)
 - You **keep** Layer 2 (functional web applications with source code, documentation, and architecture diagrams)
 - You **always have** Layer 1 (your data in accessible, open-source formats with clear schema documentation)
@@ -191,27 +188,7 @@ Our offerings are organized into three tiers, each serving different research ne
 
 **Trade-off:** Expensive but transforms computational capacity of the research group
 
-## 2.6 Comparison: DIY vs. Commercial vs. RSE Support
-
-| Approach | Year 1 Cost* | Maintenance | Customization | Data Control | Knowledge Transfer |
-|----------|-------------|-------------|---------------|--------------|-------------------|
-| **DIY (Excel/Dropbox)** | $2,500 (50hr student labor) | High burden on students | Full | Full | Lost when students graduate |
-| **Commercial Cloud** | $1,200-3,600/yr | Included (vendor-dependent) | Limited by platform | Vendor lock-in risk | None |
-| **Central IT** | "Free" (budgeted) | Included | Very limited | University policy | Minimal |
-| **Our Tier 1** | $700 | Included, professional | Medium (adapt to platform) | Full (self-hosted) | Institutional memory |
-| **Our Tier 2** | $6,400-13,600 | Optional retainer or self-maintain | High (custom-built) | Full (open source) | Documentation + training |
-| **Our Tier 3** | $38,662 Year 1 | Continuous partnership | Complete (evolves with research) | Full (co-developed) | Integrated student training |
-
-*Example scenario: Annotation project for 3 researchers over 12 months
-
-**Key differentiators of our approach:**
-- **Progressive enhancement:** Infrastructure survives funding uncertainty (Layer 1 always accessible)
-- **No vendor lock-in:** Open-source tools, documented schemas, standard formats
-- **Institutional memory:** Knowledge doesn't evaporate when students graduate
-- **Reusability:** Infrastructure built for one project can be adapted for future projects (custom annotator reused across multiple groups)
-- **Mobile-first when needed:** Enables annotation work during commutes and downtime
-
-## 2.7 The Triage Question: Which Tier Do You Need?
+## 2.6 The Triage Question: Which Tier Do You Need?
 
 **Use Tier 1 if:**
 - Your needs fit existing platforms (standard annotation, hosting, analysis)

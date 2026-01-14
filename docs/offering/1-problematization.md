@@ -4,36 +4,29 @@ Computational projects typically involve components of the data engineering life
 
 <img src="./figs/EngineeringLifecycle.webp" alt="EngineeringLifecycle" width="200"/>
 
-In industry, this lifecycle is supported by specialized roles (Figure 1-2): software engineers and data architects design systems, data engineers implement pipelines, DevOps engineers maintain infrastructure, and downstream consumers (data analysts, scientists, ML engineers) focus on analysis. This division of labor is a testimony that robust data infrastructure requires dedicated expertise and accountability structures. But academia is not industry. 
+In industry, this lifecycle is supported by specialized roles (Figure 1-2): software engineers and data architects design systems, data engineers implement pipelines, DevOps engineers maintain infrastructure, and downstream consumers (data analysts, scientists, ML engineers) focus on analysis. This division of labor is a testimony that robust data infrastructure requires dedicated expertise and accountability structures. 
 
 <img src="./figs/EngineeringSpecialization.webp" alt="EngineeringSpecialization" width="200"/>
 
 Individual researchers, typically graduate students in emerging computational fields, are expected to perform all these specialized roles simultaneously while lacking formal training in software engineering, data architecture, or systems design. A PhD student is expected to scrape data, wrangled the data in a way that is reproducible and bug-free, provide data visualization—while also conducting their research. Yet the validity of their scientific conclusions depends entirely on the robustness of infrastructure they build, leading to the [Software Sustainability Institute](https://www.software.ac.uk/) mantra: "Better Software Better Researcher".
 
-## The Consequences Are Measurable
+## The Current Situation is Unsustainable
 
-Studies document that computational research suffers from obsolete data availability statements, code that cannot be executed without substantial reverse-engineering, and results that fail to replicate. A malformed data join silently redefines what entities the research is actually studying. An undocumented transformation makes methodology impossible to assess. A hardcoded parameter invalidates months of downstream analysis. These aren't edge cases—they represent systematic infrastructure failure.
+Studies document that computational research suffers from obsolete data availability statements, code that cannot be executed without substantial reverse-engineering, and results that fail to replicate (CITE). A malformed data join silently redefines what entities the research is actually studying. An undocumented transformation makes methodology impossible to assess. A hardcoded parameter invalidates months of downstream analysis. These aren't edge cases—they represent systematic infrastructure failure.
 
-**The pattern is predictable and pervasive:** A graduate student builds a scraping pipeline, stores data in custom CSV format, processes in Jupyter notebooks. Their labmate can't figure out the schema, rebuilds everything differently. A third student needs both datasets, gives up, starts from scratch. When the first student graduates, their undocumented code breaks, their idiosyncratic data format becomes archaeological puzzle, and privacy considerations that were afterthoughts become institutional liability. The next cohort rebuilds from zero, wasting hours and hours.
-
-Beyond bugs and irreproducibility, there's a deeper issue: when domain experts build infrastructure without software engineering training, they encode their assumptions invisibly into the pipeline. Hardcoded values aren't just technical errors—they're epistemological choices made opaque by poor documentation. Bad joins don't just produce wrong numbers—they silently redefine what entities the research is actually studying. The amateurization of computational infrastructure means the methodological choices that most fundamentally shape results are made by people least equipped to recognize they're making choices at all.
-
+A graduate student builds a scraping pipeline, stores data in custom CSV format, processes in Jupyter notebooks. Their labmate can't figure out the schema, rebuilds everything differently. A third student needs both datasets, gives up, starts from scratch. When the first student graduates, their undocumented code breaks, their idiosyncratic data format becomes archaeological puzzle, and privacy considerations that were afterthoughts become institutional liability. The next cohort rebuilds from zero, wasting hours and hours.
 
 Research groups collectively waste hundreds of person-hours annually reinventing infrastructure that already exists in mature form but remains invisible to researchers starting new projects. The cognitive load is incompatible with research productivity. A student who spends 3 months building proper data infrastructure has delayed their first paper and will be penalized in a job market that counts publications, not infrastructure contributions.
 
-## The Root Cause Is Structural, Not Individual
+This crisis emerges from treating code as ancillary to research rather than as research infrastructure requiring the same rigor as laboratory equipment. Not only that, but researchers face mounting pressure to increase publication output while research questions grow more complex. Computational projects would benefit from simulation studies validating that proposed data can answer research questions, but such groundwork delays publication. Researchers access ever-larger datasets, creating expansive gardens of forking analytical paths, yet explore only narrow subsets without systematic validation that their choices yield representative or valid results.
 
-This crisis emerges from treating code as ancillary to research rather than as research infrastructure requiring the same rigor as laboratory equipment. Consider the asymmetry: a biology department would never expect graduate students to fabricate their own microscopes, yet computational departments expect students to architect entire data systems from first principles.
+At the same time, we cannot expect academia to maintain a team of specialized individuals as with industry. The cost is prohibitive. 
 
-**The incentive structure compounds the problem.** Researchers face mounting pressure to increase publication output while research questions grow more complex. Computational projects would benefit from simulation studies validating that proposed data can answer research questions, but such groundwork delays publication. Researchers access ever-larger datasets, creating expansive gardens of forking analytical paths, yet explore only narrow subsets without systematic validation that their choices yield representative or valid results.
+## What This Requires
 
-Institutions have externalized the cost of computational infrastructure onto the researchers least equipped to bear it. Graduate students absorb impossible technical burdens, producing the computational scaffolding that enables senior researchers' careers while receiving minimal credit, training, or compensation for this specialized labor. When their code fails to replicate, the failure is individualized rather than recognized as inevitable outcome of systematic underinvestment.
+Research Software Engineers (RSEs) possess specialized expertise in the data engineering cycle; data architecture, software engineering, and computational systems. They have experience in research, but their role is support. 
 
-## What This Requires: Professional Infrastructure Development
-
-This is where the Open Source Programming Office enters: building on 3 years of infrastructure development, we're demonstrating that fee-for-service Research Software Engineering support can provide sufficient value to justify institutional investment while building computational capacity that compounds over time.
-
-The solution is not training researchers to become better programmers—it is recognizing that robust computational infrastructure requires dedicated professional roles. Research Software Engineers (RSEs) possess specialized expertise in data architecture, software engineering, and computational systems.
+At VERSO, we're proposing that RSEs can play a key role in easing the burden put on graduate students by providing basic building blocks that have shown their values, while working with groups to build computational capabilities. The idea is that we can still take advantage of motivated students, but this comes at the cost of using trustworthy technologies. 
 
 **RSEs serve three critical functions:**
 
@@ -43,21 +36,8 @@ The solution is not training researchers to become better programmers—it is re
 
 **Progressive enhancement philosophy:** RSEs architect infrastructure to survive funding uncertainty. When sophisticated features require ongoing support, core functionality remains accessible through simpler pathways. Data persists in open-source formats. Pipelines degrade gracefully rather than catastrophically. This isn't just good engineering—it's recognizing the reality of academic funding cycles.
 
-
 ## Looking Forward
 
 The following sections detail our service offerings—not as comprehensive solution to systemic problems we cannot fix alone, but as pragmatic experiment in making computational research more efficient, reproducible, and sustainable within current institutional constraints.
 
 We cannot change tenure requirements that prioritize publications over infrastructure. We cannot force departments to hire research software engineers as permanent staff. We cannot eliminate the pressure for "faster science" over methodologically rigorous science.
-
-**What we can do:**
-- Provide professional infrastructure that research groups cannot build themselves
-- Establish institutional memory that survives personnel turnover (currently supporting 13 active users across 4 research groups)
-- Build reusable systems that compound value over time
-- Design with progressive enhancement so infrastructure survives funding uncertainty
-- Train motivated researchers in computational best practices
-- Demonstrate how professional RSE support compares to DIY and commercial alternatives
-
-If this experiment succeeds, it provides evidence that universities should invest in permanent RSE capacity. If it fails, we'll have learned what support model doesn't work—and the infrastructure we've built remains open-source, documented, and available for future attempts.
-
-The next section outlines our two-mode approach to providing this support.
