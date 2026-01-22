@@ -28,6 +28,7 @@
                 {@const active = state.scrollyIndex === i}
                 <div class="step" class:active class:mobile={state.isMobile} class:tablet={state.isTablet}>
                     <div class="step-content">
+                        {i}
                         {@render contentRenderer(step, active)}
                     </div>
                 </div>

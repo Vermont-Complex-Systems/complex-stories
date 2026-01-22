@@ -1,7 +1,25 @@
 <script>
+    // {
+		// 	"type": "markdown",
+		// 	"value": "In our survey, we also asked about sexual orientation. For instance, we were interested in the relationship between institutions such as the police and sexual orientation. Here it is for people identifying as straight."
+		// },
+		// {
+		// 	"type": "markdown",
+		// 	"value": "Here are the circles of trust for bisexual people, which are almost one rating scale lower than for straight people."
+		// },
+		// {
+		// 	"type": "markdown",
+		// 	"value": "But that’s not all."
+		// },
+		// {
+		// 	"type": "markdown",
+		// 	"value": "Notice also how relatives are less trusted with data."
+		// },
+        
 import { base } from "$app/paths";
 import { innerWidth, outerHeight } from 'svelte/reactivity/window';
 import { ArrowDown } from "@lucide/svelte";
+import { fade } from 'svelte/transition';
 
 import { generateFingerprint } from '$lib/utils/browserFingerprint.js';
 
@@ -152,7 +170,7 @@ $effect(() => {
 $effect(() => {
     if (typeof window !== 'undefined') {
         const handleScroll = () => {
-            showScrollIndicator = window.scrollY < 100;
+            showScrollIndicator = window.scrollY < 50;
         };
 
         window.addEventListener('scroll', handleScroll);
@@ -168,11 +186,11 @@ $effect(() => {
 {/if}
 
 <!-- Consent Popup -->
-<ConsentPopup onAccept={handleConsentAccept} {userFingerprint} {saveAnswer} />
+<!-- <ConsentPopup onAccept={handleConsentAccept} {userFingerprint} {saveAnswer} /> -->
 
 <!-- Scroll indicator -->
 {#if showScrollIndicator}
-    <div class="scroll-indicator">
+    <div class="scroll-indicator" transition:fade={{ duration: 500 }}>
         <ArrowDown size={32} strokeWidth={2} />
     </div>
 {/if}
@@ -180,12 +198,11 @@ $effect(() => {
 <article id="dark-data-survey">
 
     <!-- Survey Section -->
-    <section id="survey">
+    <!-- <section id="survey">
         {@render surveyScrollyContent(data.survey, surveyScrollyState, userFingerprint, saveAnswer, surveyAnswers)}
 
-        <!-- Demographics questions after scrolly -->
         <DemographicsBox {userFingerprint} {saveAnswer} />
-    </section>
+    </section> -->
 
     <div class="title">
         <h1>{data.title}</h1>
@@ -388,12 +405,8 @@ $effect(() => {
     color: whitesmoke;
     opacity: 0.7;
     animation: bounce 2s infinite ease-in-out;
-    cursor: pointer;
+    pointer-events: none;
     transition: opacity 0.3s ease;
-}
-
-.scroll-indicator:hover {
-    opacity: 1;
 }
 
 @keyframes bounce {
@@ -464,3 +477,4 @@ $effect(() => {
     }
 }
 </style>
+

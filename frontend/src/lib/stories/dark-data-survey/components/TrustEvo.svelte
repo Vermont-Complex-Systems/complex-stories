@@ -11,8 +11,18 @@
     import { institutionColorMap, getInstitutionColor } from '../utils/institutionColors.js';
 
     // load data
-    import trust_circles from '../data/trust_circles.csv';
+    import taste_for_privacy_raw from '../data/taste_for_privacy_aggregated.csv';
     // import trust_circles_individual from '../data/trust_circles_individual.csv';
+
+    // Transform data: Demographic -> category, Trust_Category -> institution, Average_Trust -> distance
+    // Add default Timepoint and value (using Demographic as value for now)
+    const trust_circles = taste_for_privacy_raw.map(row => ({
+        Timepoint: 1,
+        institution: row.Trust_Category,
+        distance: parseFloat(row.Average_Trust),
+        category: row.Demographic,
+        value: row.Demographic
+    }));
 
     let {
         scrollyIndex,
@@ -51,20 +61,17 @@
     });
     
     // Manual filter controls for interactive phase
-    let selectedDemCategory = $state('overall_average');
-    let selectedValue = $state("1.0");
+    let selectedDemCategory = $state('Dem_Gender_Woman');
+    let selectedValue = $state("Dem_Gender_Woman");
     let highlightCircle = $state("");
 
     // Get available categories and values
     const categories = [...new Set(trust_circles.map(d => d.category))];
     const getValuesForCategory = (cat) => [...new Set(trust_circles.filter(d => d.category === cat).map(d => d.value))];
 
-    // Available demographic categories and their values:
-    // - overall_average: 1.0 (baseline)
-    // - gender_ord: 0 (Women), 1 (Men)
-    // - Dem_Relationship_Status_Single: 0 (Not Single), 1 (Single)
-    // - orientation_ord: 0 (Straight), 1 (Bisexual), 2 (Gay), 3 (Other)
-    // - race_ord: 0 (White), 1 (Mixed), 2 (POC)
+    // Available demographic values in new format:
+    // - Dem_Gender_Woman, Dem_Gender_Man, Dem_Gender_Other
+    // - ACES_No, ACES_Yes (ACES_Compound exists in data but not used in storytelling)
     $effect(() => {
         // If external props are provided (dashboard mode), use those instead of scrollyIndex
         if (externalCategory !== undefined) {
@@ -76,80 +83,100 @@
 
         // Otherwise use scrollyIndex to control state
         switch (scrollyIndex) {
-            // missing cases default to overall average.
+            // missing cases default to Dem_Gender_Woman baseline
             case 1:
-                selectedDemCategory = 'overall_average';
-                selectedValue = "1.0";
+                selectedDemCategory = 'Dem_Gender_Woman';
+                selectedValue = "Dem_Gender_Woman";
                 highlightCircle = "TP_Platform";
                 break;
             case 2:
-                selectedDemCategory = 'multi_platform_ord';
-                selectedValue = "1.0";
+                selectedDemCategory = 'Dem_Gender_Woman';
+                selectedValue = "Dem_Gender_Woman";
                 highlightCircle = "TP_Platform";
                 break;
             case 3:
-                selectedDemCategory = 'multi_platform_ord';
-                selectedValue = "4.0";
+                selectedDemCategory = 'Dem_Gender_Man';
+                selectedValue = "Dem_Gender_Man";
                 highlightCircle = "TP_Platform";
                 break;
             case 4:
-                selectedDemCategory = 'overall_average';
-                selectedValue = "1.0";
+                selectedDemCategory = 'Dem_Gender_Woman';
+                selectedValue = "Dem_Gender_Woman";
                 highlightCircle = "";
                 break;
             case 5:
-                selectedDemCategory = 'orientation_ord';
-                selectedValue = "0.0";
-                highlightCircle = "TP_Police";
+                selectedDemCategory = 'Dem_Gender_Woman';
+                selectedValue = "Dem_Gender_Woman";
+                highlightCircle = "TP_Medical";
                 break;
             case 6:
-                selectedDemCategory = 'orientation_ord';
-                selectedValue = "1.0";
-                highlightCircle = "TP_Police";
+                selectedDemCategory = 'Dem_Gender_Man';
+                selectedValue = "Dem_Gender_Man";
+                highlightCircle = "TP_Medical";
                 break;
             case 7:
-                selectedDemCategory = 'orientation_ord';
-                selectedValue = "0.0";
-                highlightCircle = "TP_Relative";
-                break;
-            case 8:
-                selectedDemCategory = 'orientation_ord';
-                selectedValue = "1.0";
-                highlightCircle = "TP_Relative";
-                break;
-            case 9:
-                selectedDemCategory = 'overall_average';
-                selectedValue = "1.0";
+                selectedDemCategory = 'Dem_Gender_Woman';
+                selectedValue = "Dem_Gender_Woman";
                 highlightCircle = "";
                 break;
+            case 8:
+                selectedDemCategory = 'Dem_Gender_Man';
+                selectedValue = "Dem_Gender_Man";
+                highlightCircle = "TP_Police";
+                break;
+            case 9:
+                selectedDemCategory = 'Dem_Gender_Other';
+                selectedValue = "Dem_Gender_Other";
+                highlightCircle = "TP_Police";
+                break;
             case 10:
-                selectedDemCategory = 'ACES_Compound';
-                selectedValue = "0.0";
-                highlightCircle = "TP_Relative";
+                selectedDemCategory = 'Dem_Gender_Woman';
+                selectedValue = "Dem_Gender_Woman";
+                highlightCircle = "";
                 break;
             case 11:
-                selectedDemCategory = 'ACES_Compound';
-                selectedValue = "8.0";
+                selectedDemCategory = 'ACES_No';
+                selectedValue = "ACES_No";
                 highlightCircle = "TP_Relative";
                 break;
             case 12:
-                selectedDemCategory = 'ACES_Compound';
-                selectedValue = "9.0";
+                selectedDemCategory = 'ACES_Yes';
+                selectedValue = "ACES_Yes";
                 highlightCircle = "TP_Relative";
                 break;
             case 13:
-                selectedDemCategory = 'ACES_Compound';
-                selectedValue = "9.0";
-                highlightCircle = "TP_Acquaintance";
+                selectedDemCategory = 'ACES_No';
+                selectedValue = "ACES_No";
+                highlightCircle = "TP_Medical";
                 break;
             case 14:
-                selectedDemCategory = 'ACES_Compound';
-                selectedValue = "9.0";
+                selectedDemCategory = 'ACES_Yes';
+                selectedValue = "ACES_Yes";
+                highlightCircle = "TP_Medical";
+                break;
+            case 15:
+                selectedDemCategory = 'ACES_No';
+                selectedValue = "ACES_No";
+                highlightCircle = "TP_Police";
+                break;
+            case 16:
+                selectedDemCategory = 'ACES_Yes';
+                selectedValue = "ACES_Yes";
+                highlightCircle = "TP_Police";
+                break;
+            case 17:
+                selectedDemCategory = 'ACES_No';
+                selectedValue = "ACES_No";
+                highlightCircle = "TP_NonProf";
+                break;
+            case 18:
+                selectedDemCategory = 'ACES_Yes';
+                selectedValue = "ACES_Yes";
                 highlightCircle = "TP_NonProf";
                 break;
             default:
-                selectedDemCategory = 'overall_average';
-                selectedValue = "1.0";
+                selectedDemCategory = 'Dem_Gender_Woman';
+                selectedValue = "Dem_Gender_Woman";
                 highlightCircle = "";
         }
     })

@@ -135,43 +135,59 @@
 		},
 		{
 			"type": "markdown",
-			"value": "In our survey, we also asked about sexual orientation. For instance, we were interested in the relationship between institutions such as the police and sexual orientation. Here it is for people identifying as straight."
+			"value": "In our survey, we first compared how responses varied by demographic groups. For instance, we were interested in the relationship between the medical institution and gender. Here's how Women feel about sharing data with medical professionals."
 		},
 		{
 			"type": "markdown",
-			"value": "Here are the circles of trust for bisexual people, which are almost one rating scale lower than for straight people."
+			"value": "And here's how Men feel about sharing data with medical professionals. Recall that when circles are closer to the center, it means the given group is more comfortable."
 		},
 		{
 			"type": "markdown",
-			"value": "But that’s not all."
+			"value": "Let's return to the overall average as our anchor."
 		},
 		{
 			"type": "markdown",
-			"value": "Notice also how relatives are less trusted with data."
+			"value": "Now let's look at how different gender groups feel about sharing data with the police. Here's how Men feel about sharing data with police."
 		},
 		{
 			"type": "markdown",
-			"value": "We have one last part of the story to tell."
+			"value": "And here's how Non-binary individuals feel about sharing data with police."
 		},
 		{
 			"type": "markdown",
-			"value": "No adverse childhood experiences. This represents most people."
+			"value": "Back to the overall average. We have one last part of the story to tell."
 		},
 		{
 			"type": "markdown",
-			"value": "Adverse Childhood Experiences (ACE) composite score: here we look at an ACE score of 8."
+			"value": "No adverse childhood experiences. Notice how relatives are highly trusted for sharing data."
 		},
 		{
 			"type": "markdown",
-			"value": "At an ACE score of 9, the circle of trust around sharing data with others is now completely inverted. Relatives score lower than employers or researchers."
+			"value": "For those who have experienced adverse childhood experiences, trust in relatives has notably declined. Relatives become one of the least trusted groups for sharing data."
 		},
 		{
 			"type": "markdown",
-			"value": "This is not just about relatives now ranking lower—acquaintances are even less trusted."
+			"value": "Let's look at medical professionals for those with no adverse childhood experiences."
 		},
 		{
 			"type": "markdown",
-			"value": "Interestingly, non-profits seem to be vital for people who have experienced many adverse childhood experiences."
+			"value": "Medical professionals see a notable shift in trust for those with adverse childhood experiences."
+		},
+		{
+			"type": "markdown",
+			"value": "Here's how those with no adverse childhood experiences feel about sharing data with police."
+		},
+		{
+			"type": "markdown",
+			"value": "Police trust levels change significantly for those with adverse childhood experiences."
+		},
+		{
+			"type": "markdown",
+			"value": "Finally, let's look at non-profits for those with no adverse childhood experiences."
+		},
+		{
+			"type": "markdown",
+			"value": "Interestingly, non-profits remain relatively trusted even for people who have experienced adverse childhood experiences."
 		},
 		{
 			"type": "markdown",
@@ -193,3 +209,5 @@
 		}
 	]
 }
+
+

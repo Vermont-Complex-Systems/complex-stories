@@ -260,3 +260,4 @@ src/lib/stories/dark-data-survey/data/trust_circles_individual_all_timepoints.cs
 src/lib/stories/dark-data-survey/data/trust_circles_individual.csv
 drizzle/
 frontend/.env
+frontend/src/lib/stories/dark-data-survey/data/taste_for_privacy_aggregated.csv
