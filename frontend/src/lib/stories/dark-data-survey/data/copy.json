@@ -88,11 +88,11 @@
 		},
 		{
 			"type": "markdown",
-			"value": "Privacy depends on who you are and the context. Your willingness to share data varies dramatically across different institutions and relationships."
+			"value": "People willingness to share data varies dramatically across institutions and relationships."
 		},
 		{
 			"type": "markdown",
-			"value": "In this survey, we asked undergraduate students at the University of Vermont about their relative trust in different institutions. In this story, we look at a snapshot of a much longer survey that is ongoing, examining 416 responses from January 2023."
+			"value": "In this survey, we asked 712 college students about their relative trust in different institutions. In this story, we look at a snapshot of a much longer survey that is ongoing, examining 2,912 responses over seven survey periods during 2023 and 2024."
 		},
 		{
 			"type": "markdown",
@@ -100,7 +100,7 @@
 		},
 		{
 			"type": "component",
-			"component": "chart-rank"
+			"value": "WaffleChart"
 		},
 		{
 			"type": "markdown",
@@ -159,35 +159,23 @@
 		},
 		{
 			"type": "markdown",
-			"value": "No adverse childhood experiences. Notice how relatives are highly trusted for sharing data."
+			"value": "Let's explore how adverse childhood experiences (ACE scores) affect trust. Starting with an ACE score of 0.0—no adverse experiences. Notice how relatives are highly trusted for sharing data."
 		},
 		{
 			"type": "markdown",
-			"value": "For those who have experienced adverse childhood experiences, trust in relatives has notably declined. Relatives become one of the least trusted groups for sharing data."
+			"value": "At an ACE score of 1.25, we begin to see subtle shifts in trust patterns."
 		},
 		{
 			"type": "markdown",
-			"value": "Let's look at medical professionals for those with no adverse childhood experiences."
+			"value": "By an ACE score of 2.25, the changes become more pronounced. The circle of trust is starting to reshape."
 		},
 		{
 			"type": "markdown",
-			"value": "Medical professionals see a notable shift in trust for those with adverse childhood experiences."
+			"value": "At an ACE score of 4.25, trust in relatives has notably declined compared to the baseline."
 		},
 		{
 			"type": "markdown",
-			"value": "Here's how those with no adverse childhood experiences feel about sharing data with police."
-		},
-		{
-			"type": "markdown",
-			"value": "Police trust levels change significantly for those with adverse childhood experiences."
-		},
-		{
-			"type": "markdown",
-			"value": "Finally, let's look at non-profits for those with no adverse childhood experiences."
-		},
-		{
-			"type": "markdown",
-			"value": "Interestingly, non-profits remain relatively trusted even for people who have experienced adverse childhood experiences."
+			"value": "At the highest ACE scores (5.25+), the circle of trust has significantly shifted. Relatives become one of the least trusted groups for sharing data."
 		},
 		{
 			"type": "markdown",

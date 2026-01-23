@@ -1,21 +1,5 @@
 <script>
-    // {
-		// 	"type": "markdown",
-		// 	"value": "In our survey, we also asked about sexual orientation. For instance, we were interested in the relationship between institutions such as the police and sexual orientation. Here it is for people identifying as straight."
-		// },
-		// {
-		// 	"type": "markdown",
-		// 	"value": "Here are the circles of trust for bisexual people, which are almost one rating scale lower than for straight people."
-		// },
-		// {
-		// 	"type": "markdown",
-		// 	"value": "But that’s not all."
-		// },
-		// {
-		// 	"type": "markdown",
-		// 	"value": "Notice also how relatives are less trusted with data."
-		// },
-        
+       
 import { base } from "$app/paths";
 import { innerWidth, outerHeight } from 'svelte/reactivity/window';
 import { ArrowDown } from "@lucide/svelte";
@@ -32,6 +16,7 @@ import DemographicsBox from './Survey.DemographicsBox.svelte';
 import { scrollyContent, renderTextContent } from '$lib/components/helpers/ScrollySnippets.svelte';
 import { surveyScrollyContent } from '$lib/components/survey/SurveyScrolly.svelte';
 import { postAnswer, upsertAnswer } from '../data/data.remote.js';
+import WaffleChart from "./WaffleChart.svelte";
 
 let { story, data } = $props();
 
@@ -220,6 +205,9 @@ $effect(() => {
 
     <section id="intro">
         {#each data.intro as item}
+            {#if item.value == 'WaffleChart'} 
+                <WaffleChart />
+            {/if}
             {@render renderTextContent(item)}
         {/each}
     </section>
@@ -232,7 +220,8 @@ $effect(() => {
                     {width} {height}
                     isStorySection={storyScrollyState.scrollyIndex !== undefined}
                     {storySection}
-                    {conclusionVisible} />
+                    {conclusionVisible}
+                    showACESSlider={storyScrollyState.scrollyIndex >= 11 && storyScrollyState.scrollyIndex <= 15} />
             </div>
 
             {@render scrollyContent(data.steps, storyScrollyState)}
@@ -369,7 +358,7 @@ $effect(() => {
 
 .scrolly-chart {
     position: sticky;
-    top: calc(50vh - 500px);
+    top: calc(50vh - 63%);
     height: fit-content;
     z-index: 1;
     pointer-events: none;
@@ -474,6 +463,10 @@ $effect(() => {
 
     #conclusion {
         margin-top: 0;
+    }
+
+    .scrolly-chart {
+        top: calc(50vh - 75%);
     }
 }
 </style>

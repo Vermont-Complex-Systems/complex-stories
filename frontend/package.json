@@ -58,7 +58,7 @@
 		"reveal.js": "^5.2.1",
 		"sharp": "^0.34.2",
 		"svelte-exmarkdown": "^5.0.1",
-		"svelteplot": "^0.5.3",
+		"svelteplot": "^0.9.2",
 		"svg2pdf.js": "^2.5.0",
 		"valibot": "^1.1.0"
 	},

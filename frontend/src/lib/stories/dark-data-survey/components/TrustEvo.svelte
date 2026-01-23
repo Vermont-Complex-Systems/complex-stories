@@ -7,6 +7,7 @@
     import Controls from './Controls.svelte';
     import TrustCircles from './TrustCircles.svelte';
     import IndividualPoints from './IndividualPoints.svelte';
+    import ACESSlider from './ACESSlider.svelte';
     // import DataPanel from './DataPanel.svelte';
     import { institutionColorMap, getInstitutionColor } from '../utils/institutionColors.js';
 
@@ -35,7 +36,9 @@
         externalCategory = undefined,
         externalValue = undefined,
         externalHighlight = undefined,
-        onInstitutionClick = undefined
+        onInstitutionClick = undefined,
+        showACESSlider = false,
+        acesValue = $bindable(0)
     } = $props();
 
     // Track if story section is in viewport
@@ -135,44 +138,34 @@
                 highlightCircle = "";
                 break;
             case 11:
-                selectedDemCategory = 'ACES_No';
-                selectedValue = "ACES_No";
+                selectedDemCategory = 'ACES_0.0';
+                selectedValue = "ACES_0.0";
+                acesValue = 0.0;
                 highlightCircle = "TP_Relative";
                 break;
             case 12:
-                selectedDemCategory = 'ACES_Yes';
-                selectedValue = "ACES_Yes";
+                selectedDemCategory = 'ACES_1.25';
+                selectedValue = "ACES_1.25";
+                acesValue = 1.25;
                 highlightCircle = "TP_Relative";
                 break;
             case 13:
-                selectedDemCategory = 'ACES_No';
-                selectedValue = "ACES_No";
-                highlightCircle = "TP_Medical";
+                selectedDemCategory = 'ACES_2.25';
+                selectedValue = "ACES_2.25";
+                acesValue = 2.25;
+                highlightCircle = "TP_Relative";
                 break;
             case 14:
-                selectedDemCategory = 'ACES_Yes';
-                selectedValue = "ACES_Yes";
-                highlightCircle = "TP_Medical";
+                selectedDemCategory = 'ACES_4.25';
+                selectedValue = "ACES_4.25";
+                acesValue = 4.25;
+                highlightCircle = "TP_Relative";
                 break;
             case 15:
-                selectedDemCategory = 'ACES_No';
-                selectedValue = "ACES_No";
-                highlightCircle = "TP_Police";
-                break;
-            case 16:
-                selectedDemCategory = 'ACES_Yes';
-                selectedValue = "ACES_Yes";
-                highlightCircle = "TP_Police";
-                break;
-            case 17:
-                selectedDemCategory = 'ACES_No';
-                selectedValue = "ACES_No";
-                highlightCircle = "TP_NonProf";
-                break;
-            case 18:
-                selectedDemCategory = 'ACES_Yes';
-                selectedValue = "ACES_Yes";
-                highlightCircle = "TP_NonProf";
+                selectedDemCategory = 'ACES_5.25+';
+                selectedValue = "ACES_5.25+";
+                acesValue = 5.25;
+                highlightCircle = "TP_Relative";
                 break;
             default:
                 selectedDemCategory = 'Dem_Gender_Woman';
@@ -278,6 +271,13 @@
                 {/each}
             </svg>
         </div>
+
+        <!-- ACES Slider for interactive exploration -->
+        {#if showACESSlider}
+            <div class="aces-slider-overlay">
+                <ACESSlider bind:value={acesValue} />
+            </div>
+        {/if}
         
         <!-- {#if scrollyIndex === 1 && !isCollapsed}
             <IndividualPoints {scrollyIndex} individualPoints={individualPoints()} />
@@ -339,8 +339,20 @@
         top: 0;
         left: 0;
     }
-    
-    
+
+    /* magic number alert */
+    .aces-slider-overlay {
+        position: absolute;
+        bottom: -3.5rem; 
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80%;
+        max-width: 600px;
+        z-index: 10;
+        pointer-events: auto;
+    }
+
+
     .data-panel-wrapper {
         pointer-events: none;
         opacity: 0;
@@ -423,6 +435,11 @@
             /* Ensure circles appear behind survey boxes */
             z-index: 0;
         }
+
+           .aces-slider-overlay {
+                bottom: -11.5rem; 
+            }
+
     }
 
 </style>
