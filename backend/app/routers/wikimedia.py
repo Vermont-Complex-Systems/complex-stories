@@ -163,7 +163,7 @@ async def search_term(
         # Build query based on whether date is provided
         query = {
             "country": country,
-            "ngram": term.lower()
+            "ngram": term
         }
 
         # Add date filter if provided
