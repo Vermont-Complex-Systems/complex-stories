@@ -175,11 +175,11 @@
         </div>
 
         <!-- ACES Slider for interactive exploration -->
-        <!-- {#if showACESSlider}
+        {#if showACESSlider}
             <div class="aces-slider-overlay">
                 <ACESSlider bind:value={acesValue} />
             </div>
-        {/if} -->
+        {/if}
         
         <!-- Trust Distribution Chart in bottom right - only during main scrolly story, NOT in dashboard -->
         {#if !isDashboard}

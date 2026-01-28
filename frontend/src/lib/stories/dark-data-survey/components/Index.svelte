@@ -140,7 +140,7 @@ $effect(() => {
         {/each}
     </section>
 
-    <!-- {#if !isMobile}
+    {#if !isMobile}
     <section id="dashboard" bind:this={dashboardSection}>
         <div class="scrolly-container">
             <div class="scrolly-chart">
@@ -148,7 +148,7 @@ $effect(() => {
             </div>
         </div>
     </section>
-    {/if} -->
+    {/if}
 </article>
 
 {#if !isMobile}

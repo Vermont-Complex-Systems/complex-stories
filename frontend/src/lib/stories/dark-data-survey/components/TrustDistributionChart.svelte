@@ -49,6 +49,8 @@
         });
     });
 
+    $inspect(distributionData)
+
     // Institution to icon mapping - updated for new data format
     const institutionIcons = {
         'TP_Friend': Heart,
@@ -116,7 +118,7 @@
                  class:highlighted={isHighlighted}
                  class:clickable={onInstitutionClick !== undefined}
                  onclick={() => onInstitutionClick?.(item.Trust_Category)}
-                 onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onInstitutionClick?.(item.institution); } }}
+                 onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onInstitutionClick?.(item.Trust_Category); } }}
                  role={onInstitutionClick ? "button" : undefined}
                  tabindex={onInstitutionClick ? 0 : undefined}
                  aria-label={onInstitutionClick ? `Select ${name}` : undefined}
