@@ -42,9 +42,9 @@
         padding: 0 2rem; /* Much smaller vertical padding */
         position: sticky;
         top: 0;
-        background: rgba(255, 255, 255, 0.7);
+        background: color-mix(in srgb, var(--color-sticky-bg) 70%, transparent);
         backdrop-filter: blur(15px);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+        border-bottom: 1px solid var(--color-sticky-border);
         z-index: 1000;
         transition: all 300ms ease;
         min-height: 1rem; /* Much shorter header */
@@ -54,19 +54,9 @@
         overflow: visible; /* Allow logo to overflow */
     }
 
-    /* Dark mode with more transparency */
-    :global(.dark) header {
-        background: rgba(30, 30, 30, 0.7); /* More transparent - was 0.95 */
-        border-bottom: 1px solid rgba(255, 255, 255, 0.03); /* More subtle border */
-    }
-
     /* Optional: Even more transparent on hover/scroll */
     header:hover {
-        background: rgba(255, 255, 255, 0.8); /* Slightly less transparent on hover */
-    }
-
-    :global(.dark) header:hover {
-        background: rgba(30, 30, 30, 0.8);
+        background: color-mix(in srgb, var(--color-sticky-bg) 80%, transparent);
     }
 
     /* Header sections */
@@ -129,11 +119,7 @@
         header {
             padding: 0.5rem 1rem;
             min-height: 3rem;
-            background: rgba(255, 255, 255, 0.8); /* Less transparent on mobile for readability */
-        }
-
-        :global(.dark) header {
-            background: rgba(30, 30, 30, 0.8);
+            background: color-mix(in srgb, var(--color-sticky-bg) 80%, transparent); /* Less transparent on mobile for readability */
         }
 
         .logo {

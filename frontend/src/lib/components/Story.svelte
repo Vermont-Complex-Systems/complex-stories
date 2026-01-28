@@ -9,99 +9,78 @@
     short,
     tease,
     month,
-    bgColor,
     isExternal = false,
     resource = false,
     footer = false
   } = $props();
 
-  const style = $derived(bgColor ? `--story-bg: ${bgColor};` : "");
-  const finalHref = $derived(isExternal ? href : `${base}${href}`);
-
+  const finalHref = isExternal ? href : `${base}${href}`;
   const imagePath = `${base}/common/thumbnails/screenshots`;
-
-  // Generate unique ID for this card's filter
-  const filterId = `sketchy-${slug}`;
 </script>
 
-<!-- SVG filter for hand-drawn effect -->
-<svg style="position: absolute; width: 0; height: 0;">
-  <defs>
-    <filter id={filterId}>
-      <feTurbulence baseFrequency="0.02" numOctaves="3" result="noise" seed="2" />
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" />
-    </filter>
-  </defs>
-</svg>
-
-<div class="story" {style} class:external={isExternal} class:resource class:footer>
-  {#if !resource && !footer}
-    <div class="info">
-      <p class="id">#{id}</p>
-      <p class="month">{month}</p>
-    </div>
-  {/if}
+<div class:external={isExternal} class:resource class:footer>
   
   <a
-    href={finalHref}
-    rel={isExternal ? "external noopener" : undefined}
-    target={isExternal ? "_blank" : undefined}
-    class="inner"
+  href={finalHref}
+  rel={isExternal ? "external noopener" : undefined}
+  target={isExternal ? "_blank" : undefined}
+  class="inner"
   >
-    <div class="screenshot">
-      {#if isExternal}
-        <div class="external-badge">
-          <ExternalLink class="external-icon" size={18} />
-        </div>
-      {/if}
-      <img src="{imagePath}/{slug}.jpg" loading="lazy" alt="Thumbnail for {short}" />
+  <div class="screenshot">
+    {#if isExternal}
+    <div class="external-badge">
+      <ExternalLink size={18} />
     </div>
-
-    <div class="text">
+    {/if}
+    
+    <img
+    src="{imagePath}/{slug}.jpg"
+    loading="lazy"
+    alt="Thumbnail for {short}"
+    />
+  </div>
+  
+  <div class="text">
+    {#if !resource && !footer}
+      <div class="header-row">
+        <h3 class="short">
+          <strong>{@html short}</strong>
+        </h3>
+        <span class="month">{month}</span>
+      </div>
+    {:else}
       <h3 class="short">
         <strong>{@html short}</strong>
       </h3>
-      <p class="tease">
-        {@html tease}
-      </p>
-    </div>
+    {/if}
+
+    <p class="tease">{@html tease}</p>
+  </div>
   </a>
 </div>
 
 <style>
-  .info {
+  .header-row {
     display: flex;
     justify-content: space-between;
-    font-family: var(--mono);
-    margin-bottom: 0.5rem; /* Convert 8px to rem */
-    align-items: center;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .header-row .month {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--color-gray-600);
+    white-space: nowrap;
+    font-family: var(--sans);
     user-select: none;
-    transition: transform calc(var(--1s) * 0.25);
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .id {
-    border: 1px solid var(--color-fg);
-    width: 4em;
-    text-align: center;
-    padding: 0.25rem; /* Convert 4px to rem */
-    border-radius: 2em;
-    font-size: var(--font-size-xsmall);
-    text-transform: uppercase;
-    margin: 0;
-  }
-
-  .month {
-    font-size: var(--font-size-xsmall);
-    text-transform: uppercase;
-    margin: 0;
   }
 
   a {
     display: block;
-    text-decoration: none;
-    cursor: pointer;
     color: inherit;
+    text-decoration: none;
   }
 
   a:focus-visible {
@@ -109,170 +88,71 @@
     outline-offset: 2px;
   }
 
-  .story:hover .info {
-    transform: translateY(-0.25rem); /* Convert -4px to rem */
-  }
+  /* Card */
 
   .screenshot {
-    background: var(--story-bg, rgba(255, 255, 255, 0.15));
-    aspect-ratio: 1;
     position: relative;
+    aspect-ratio: 1;
     overflow: hidden;
-    border-radius: 20px;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.1),
-      inset 0 0 24px 12px rgba(255, 255, 255, 0.2);
-    transition: all calc(var(--1s) * 0.25) cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .screenshot::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.8),
-      transparent
-    );
-    z-index: 1;
-  }
-
-  .screenshot::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 1px;
-    height: 100%;
-    background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.8),
-      transparent,
-      rgba(255, 255, 255, 0.3)
-    );
-    z-index: 1;
-  }
-
-  img {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translate(-50%, 0) scale(1);
-    width: calc(100% - (var(--padding) * 2));
-    aspect-ratio: 6/7;
-    transform-origin: center center;
-    transition: transform calc(var(--1s) * 0.25);
-    object-fit: cover;
+    border-radius: 16px;
+    border: 1px solid var(--color-border);
+    transition: border-color 0.2s ease, transform 0.2s ease;
   }
 
   .story:hover .screenshot {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border-color: rgba(255, 255, 255, 0.4);
-    box-shadow:
-      0 12px 48px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.6),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.15),
-      inset 0 0 32px 16px rgba(255, 255, 255, 0.25);
+    border-color: var(--color-fg);
     transform: translateY(-2px);
   }
 
-  .story:hover img {
-    transform: translate(-50%, 0) scale(1.05);
+  .screenshot img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.25s ease;
   }
 
-  .text {
-    font-family: var(--sans);
-    margin-top: 0.75rem; /* Convert 12px to rem */
-  }
-
-  h3.short {
-    color: var(--color-fg);
-    font-size: clamp(var(--font-size-medium), 6vw, var(--font-size-large));
-    line-height: 1;
-    margin: 0 0 0.5rem 0; /* Convert 8px to rem */
-    letter-spacing: -0.05em; /* Convert -0.8px to em for better scaling */
+  .story:hover .screenshot img {
+    transform: scale(1.05);
   }
 
   .external-badge {
     position: absolute;
     top: 0.75rem;
     right: 0.75rem;
-    z-index: 2;
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    z-index: 1;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 50%;
     width: 2rem;
     height: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all calc(var(--1s) * 0.2);
   }
 
-  .external-badge :global(.external-icon) {
-    color: var(--color-gray-700);
+  .text {
+    margin-top: 1.25rem;
   }
 
-  .story:hover .external-badge {
-    background: rgba(255, 255, 255, 1);
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-
-  :global(.dark) .external-badge {
-    background: rgba(40, 40, 40, 0.9);
-  }
-
-  :global(.dark) .external-badge :global(.external-icon) {
-    color: var(--color-gray-300);
-  }
-
-  :global(.dark) .story:hover .external-badge {
-    background: rgba(40, 40, 40, 1);
+  h3.short {
+    font-family: var(--serif);
+    line-height: 1;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.05em;
   }
 
   p.tease {
     color: var(--color-secondary-gray);
     font-size: var(--font-size-small);
     margin: 0;
-    line-height: 1.4;
-  }
-
-  /* Dark mode glass effects */
-  :global(.dark) .screenshot {
-    background: var(--story-bg, rgba(255, 255, 255, 0.08));
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.05),
-      inset 0 0 24px 12px rgba(255, 255, 255, 0.1);
-  }
-
-  :global(.dark) .story:hover .screenshot {
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow:
-      0 12px 48px rgba(0, 0, 0, 0.5),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.1),
-      inset 0 0 32px 16px rgba(255, 255, 255, 0.15);
+    line-height: 1.1;
   }
 
   @media (min-width: 960px) {
     h3.short {
-      font-size: clamp(var(--font-size-medium), 2.75vw, var(--font-size-large));
+      font-size: clamp(var(--font-size-medium), 2.75vw, var(--font-size-medium));
     }
   }
 </style>

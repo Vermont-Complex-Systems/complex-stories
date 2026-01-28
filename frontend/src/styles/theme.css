@@ -8,7 +8,7 @@
 :root {
     /* Typography families */
     --sans: "Atlas Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --serif: "Tiempos Text", "Times New Roman", Times, serif;
+    --serif: "Baskerville", "Times New Roman", Times, serif;
     --mono: "Atlas Typewriter", "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
 
     /* Semantic type settings */
@@ -58,7 +58,7 @@
        SEMANTIC COLOR MAPPINGS (Light Mode)
        ============================================================================= */
     
-    --color-bg: var(--color-white);
+    --color-bg: var(--color-whitesmoke);
     --color-fg: var(--color-gray-900);
     --color-primary: var(--color-black);
     --color-secondary-gray: var(--color-gray-600);
@@ -86,6 +86,10 @@
     /* Story-specific */
     --color-default-story-bg: var(--color-gray-100);
     --fade: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.8) 30%, rgba(255, 255, 255, 1) 50%);
+
+    /* Sticky elements (headers, filter bars) */
+    --color-sticky-bg: var(--color-bg);
+    --color-sticky-border: var(--color-border);
 }
 
 /* =============================================================================
@@ -108,6 +112,10 @@
     --color-placeholder: var(--color-gray-400);
     --color-default-story-bg: var(--color-gray-600);
     --fade: linear-gradient(180deg, rgba(25, 25, 25, 0) 0%, rgba(25, 25, 25, 0.8) 30%, rgba(38, 38, 38, 1) 50%);
+
+    /* Sticky elements (headers, filter bars) - inherits from color-bg */
+    --color-sticky-bg: var(--color-bg);
+    --color-sticky-border: var(--color-border);
 }
 
 /* Enable animations when user allows motion */

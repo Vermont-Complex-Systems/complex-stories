@@ -123,7 +123,7 @@
     top: 0;
     z-index: var(--z-overlay);
     width: 100%;
-    background: var(--color-bg);
+    background: var(--color-sticky-bg);
     padding: 1.5rem var(--margin-left) 0.5rem var(--margin-left);
     min-height: 7rem;
     display: flex;
@@ -167,7 +167,7 @@
 
   
   .site-title {
-    font-family: var(--sans);
+    font-family: var(--serif);
     font-weight: var(--font-weight-bold);
     font-size: clamp(1.5rem, 3vw, 2rem);
     margin: 0;
@@ -176,9 +176,9 @@
   }
   
   .site-subtitle {
-    font-family: var(--mono);
+    font-family: var(--serif);
     font-size: var(--font-size-small);
-    margin: 0.25rem 0 0 0.25rem;
+    margin: 0rem 0 0 0.12rem;
     color: var(--color-secondary-gray);
     text-transform: uppercase;
     letter-spacing: 0.03em;
@@ -237,12 +237,8 @@
     padding: 0 0.75rem;
     border-radius: 0.5rem;
     background: transparent;
-    color: var(--color-fg);
     text-decoration: none;
-    font-family: var(--sans);
-    font-weight: var(--font-weight-medium);
-    font-size: 0.885rem;
-    letter-spacing: 0.05em;
+    font-size: 1.1rem;
     transition: all var(--transition-medium);
     cursor: pointer;
     white-space: nowrap;
