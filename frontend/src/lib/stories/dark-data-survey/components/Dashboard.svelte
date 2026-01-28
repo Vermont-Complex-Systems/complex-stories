@@ -1,17 +1,15 @@
 <script>
     import TrustEvo from './TrustEvo.svelte';
-    // import DataPanel from './DataPanel.svelte';
     import TrustDistributionChart from './TrustDistributionChart.svelte';
-    import trust_circles from '../data/trust_circles.csv';
     import { scaleSequential } from 'd3-scale';
     import { interpolateRdYlGn } from 'd3-scale-chromatic';
     import { extent } from 'd3-array';
 
-    let { width, height } = $props();
+    let { data, width, height } = $props();
 
     // Interactive controls state
-    let selectedDemCategory = $state('orientation_ord');
-    let selectedValue = $state('0.0');
+    let selectedDemCategoryDashboard = $state('gender_ord');
+    let selectedDemCategory = $state('Dem_Gender_Man');
     let highlightCircle = $state('');
 
     function handleInstitutionClick(institution) {
@@ -19,78 +17,50 @@
         highlightCircle = highlightCircle === institution ? '' : institution;
     }
 
-    const TIMEPOINT = 1;
 
     // Filter circles for display
-    const filteredCircles = $derived.by(() =>
-        trust_circles.filter((c) =>
-            c.Timepoint == TIMEPOINT &&
-            c.value == selectedValue &&
-            c.category == selectedDemCategory
+    let filteredCircles = $derived.by(() =>
+        data.filter((c) => c.Demographic == selectedDemCategory
         )
-    );
-
-    const zScale = $derived(scaleSequential(interpolateRdYlGn).domain(extent(trust_circles.map(d=>d.distance))));
+    )
+    const zScale = $derived(scaleSequential(interpolateRdYlGn).domain(extent(data.map(d=>d.Average_Trust))));
 
     // Category options
     const categoryOptions = [
-        { value: 'overall_average', label: 'Overall Average' },
-        { value: 'orientation_ord', label: 'Sexual Orientation' },
-        { value: 'race_ord', label: 'Race' },
-        { value: 'gender_ord', label: 'Gender' },
-        { value: 'multi_platform_ord', label: 'Platform Usage' },
-        { value: 'ACES_Compound', label: 'Adverse Childhood Experiences' }
+        { value: 'gender_ord', label: 'Gender' }
     ];
 
     // Value options based on selected category
     const valueOptions = $derived.by(() => {
-        switch (selectedDemCategory) {
-            case 'orientation_ord':
-                return [
-                    { value: '0.0', label: 'Straight' },
-                    { value: '1.0', label: 'Bisexual' },
-                    { value: '2.0', label: 'Gay' },
-                    { value: '3.0', label: 'Other' }
-                ];
-            case 'race_ord':
-                return [
-                    { value: '0.0', label: 'White' },
-                    { value: '1.0', label: 'Mixed' },
-                    { value: '2.0', label: 'POC' }
-                ];
+        switch (selectedDemCategoryDashboard) {
             case 'gender_ord':
                 return [
-                    { value: '0.0', label: 'Women' },
-                    { value: '1.0', label: 'Men' },
-                    { value: '2.0', label: 'Other' }
+                    { value: 'Dem_Gender_Woman', label: 'Women' },
+                    { value: 'Dem_Gender_Man', label: 'Men' },
+                    { value: 'Dem_Gender_Other', label: 'Other' }
                 ];
-            case 'multi_platform_ord':
-                return [
-                    { value: '1.0', label: '1 Platform' },
-                    { value: '2.0', label: '2 Platforms' },
-                    { value: '3.0', label: '3 Platforms' },
-                    { value: '4.0', label: '4 Platforms' },
-                    { value: '5.0', label: '5 Platforms' }
-                ];
-            case 'ACES_Compound':
-                return Array.from({ length: 13 }, (_, i) => ({
-                    value: `${i}.0`,
-                    label: i === 1 ? '1 ACE' : `${i} ACEs`
-                }));
-            case 'overall_average':
-                return [{ value: '1.0', label: 'All Users' }];
             default:
-                return [{ value: '1.0', label: 'Default' }];
+                return [
+                    { value: 'Dem_Gender_Woman', label: 'Women' },
+                    { value: 'Dem_Gender_Man', label: 'Men' },
+                    { value: 'Dem_Gender_Other', label: 'Other' }
+                ];
         }
     });
+
 
     // Update selectedValue when category changes
     $effect(() => {
         const firstOption = valueOptions[0];
         if (firstOption) {
-            selectedValue = firstOption.value;
+            selectedDemCategory = firstOption.value;
         }
     });
+
+$effect(() => {
+    console.log('selectedDemCategory:', selectedDemCategory);
+});
+
 </script>
 
 <div class="dashboard">
@@ -101,26 +71,19 @@
 
     <div class="visualization-container">
         <div class="left-panel">
-            <!-- <DataPanel
-                {highlightCircle}
-                {selectedDemCategory}
-                {selectedValue}
-                isDashboard={true}
-                isCollapsed={false} /> -->
         </div>
 
         <div class="center-viz">
             <TrustEvo
+                data={filteredCircles}
                 scrollyIndex={undefined}
-                selectedDemographic={selectedDemCategory}
+                externalCategory={selectedDemCategory}
                 {width}
                 {height}
                 isStorySection={false}
                 isDashboard={true}
                 storySection={null}
                 conclusionVisible={false}
-                externalCategory={selectedDemCategory}
-                externalValue={selectedValue}
                 externalHighlight={highlightCircle}
                 onInstitutionClick={undefined} />
         </div>
@@ -138,7 +101,7 @@
     <div class="controls-panel">
         <div class="control-group">
             <label for="category-select">Demographic Category:</label>
-            <select id="category-select" bind:value={selectedDemCategory}>
+            <select id="category-select" bind:value={selectedDemCategoryDashboard}>
                 {#each categoryOptions as option}
                     <option value={option.value}>{option.label}</option>
                 {/each}
@@ -147,7 +110,7 @@
 
         <div class="control-group">
             <label for="value-select">Value:</label>
-            <select id="value-select" bind:value={selectedValue}>
+            <select id="value-select" bind:value={selectedDemCategory}>
                 {#each valueOptions as option}
                     <option value={option.value}>{option.label}</option>
                 {/each}
