@@ -170,7 +170,7 @@
 }
 
 .footer-section a {
-	color: var(--color-white);
+	color: var(--color-whitesmoke);
 	text-decoration: underline;
 	font-weight: 500;
 	font-size: 0.95rem !important;
@@ -244,7 +244,7 @@
 }
 
 .cc-footer-copy {
-	color: var(--color-white);
+	color: var(--color-whitesmoke);
 	font-weight: 500;
 	font-size: 1rem;
 	transition: color var(--transition-medium);
@@ -289,7 +289,7 @@
 }
 
 .cc-footer-copy:not(a) {
-	color: var(--color-white);
+	color: var(--color-whitesmoke);
 	text-decoration: none;
 	justify-content: flex-start;
 }

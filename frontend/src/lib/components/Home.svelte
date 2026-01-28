@@ -7,7 +7,7 @@
 
   const { stories } = getContext("Home");
 
-  const initMax = 6;
+  const initMax = 12;
 
   let maxStories = $state(initMax);
   let activeFilter = $state(undefined);
@@ -77,7 +77,8 @@
 
   .content {
     position: relative;
-    padding-bottom: 8rem; 
+    padding-top: 2rem;
+    padding-bottom: 8rem;
   }
 
   .stories {

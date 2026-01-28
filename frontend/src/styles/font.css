@@ -42,3 +42,12 @@
 	font-stretch: normal;
 	font-display: swap;
 }
+
+@font-face {
+	font-family: "Baskerville";
+	src: url("/assets/fonts/baskerville/Baskervville-SemiBold.ttf") format("TrueType");
+	font-weight: 600;
+	font-style: normal;
+	font-stretch: normal;
+	font-display: swap;
+}

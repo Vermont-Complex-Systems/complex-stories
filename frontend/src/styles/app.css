@@ -26,7 +26,7 @@ body {
 /* Typography hierarchy using semantic tokens */
 h1 { 
     font-size: var(--font-size-giant); 
-    font-family: var(--sans);
+    font-family: var(--serif);
     font-weight: var(--font-weight-bold);
     line-height: 1.1;
     margin: 1rem 0;
@@ -34,7 +34,7 @@ h1 {
 
 h2 { 
     font-size: var(--font-size-xlarge); 
-    font-family: var(--sans);
+    font-family: var(--serif);
     font-weight: var(--font-weight-bold);
     line-height: 1.2;
     margin: 1rem 0;
@@ -42,7 +42,7 @@ h2 {
 
 h3 { 
     font-size: var(--font-size-large); 
-    font-family: var(--sans);
+    font-family: var(--serif);
     font-weight: var(--font-weight-bold);
     line-height: 1.3;
     margin: 1rem 0;
@@ -50,7 +50,7 @@ h3 {
 
 h4, h5, h6 { 
     font-size: var(--font-size-medium); 
-    font-family: var(--sans);
+    font-family: var(--serif);
     font-weight: var(--font-weight-bold);
     line-height: 1.4;
     margin: 1rem 0;
@@ -193,9 +193,8 @@ textarea {
 /* Better text rendering */
 .inner strong, 
 li strong {
-    font-family: var(--sans);
+    font-family: var(--serif);
     font-weight: var(--font-weight-bold);
-    -webkit-font-smoothing: antialiased;
 }
 
 /* Global story paragraph styling */

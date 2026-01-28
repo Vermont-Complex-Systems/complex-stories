@@ -24,6 +24,8 @@
   <div class="filter-content">
     <div class="spacer"></div>
     <div class="filters-wrapper">
+      <span class="filters-label">Filters:</span>
+
       <!-- Desktop filters -->
       <div class="filters--desktop">
         {#each filters as filter, i}
@@ -60,7 +62,7 @@
     top: 0;
     z-index: calc(var(--z-overlay) - 100);
     width: 100%;
-    background: var(--color-bg);
+    background: var(--color-sticky-bg);
     transition: all var(--transition-medium);
   }
   
@@ -81,6 +83,17 @@
   .filters-wrapper {
     display: flex;
     align-items: center;
+    gap: 1rem;
+  }
+
+  .filters-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-secondary-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    user-select: none;
   }
 
   /* Desktop filters */
@@ -141,6 +154,10 @@
 
   /* Responsive */
   @media (max-width: 960px) {
+    .filters-label {
+      display: none;
+    }
+
     .filters--desktop {
       display: none;
     }

@@ -113,8 +113,8 @@
 		flex-direction: column;
 		gap: 1rem;
 		padding: 1rem 2rem;
-		background: white;
-		border-bottom: 1px solid #e0e0e0;
+		background: var(--color-sticky-bg);
+		border-bottom: 1px solid var(--color-sticky-border);
 		position: sticky;
 		top: 0;
 		z-index: 100;
@@ -159,30 +159,30 @@
 
 	.mode-btn {
 		padding: 0.5rem 1rem;
-		border: 1px solid #e0e0e0;
+		border: 1px solid var(--color-border);
 		border-radius: 0.5rem;
-		background: white;
-		color: #666;
+		background: var(--color-sticky-bg);
+		color: var(--color-secondary-gray);
 		font-size: 0.875rem;
 		cursor: pointer;
 		transition: all 0.2s;
 	}
 
 	.mode-btn:hover {
-		background: #f5f5f5;
-		border-color: #ccc;
+		background: var(--color-input-bg);
+		border-color: var(--color-secondary-gray);
 	}
 
 	.mode-btn.active {
-		background: #1a1a1a;
-		color: white;
-		border-color: #1a1a1a;
+		background: var(--color-fg);
+		color: var(--color-bg);
+		border-color: var(--color-fg);
 	}
 
 	.mode-btn:disabled {
 		opacity: 0.4;
 		cursor: not-allowed;
-		background: #f5f5f5;
+		background: var(--color-input-bg);
 	}
 
 	.avatar-button,
@@ -194,7 +194,7 @@
 		padding: 0 0.75rem;
 		border-radius: 0.5rem;
 		background: transparent;
-		color: #1a1a1a;
+		color: var(--color-fg);
 		text-decoration: none;
 		font-weight: 500;
 		font-size: 0.875rem;
@@ -204,7 +204,7 @@
 
 	.avatar-button:hover,
 	.login-button:hover {
-		background: rgba(0, 0, 0, 0.05);
+		background: var(--color-input-bg);
 		transform: scale(1.05);
 	}
 
@@ -219,8 +219,8 @@
 		justify-content: center;
 		width: 100%;
 		height: 100%;
-		background: #1a1a1a;
-		color: white;
+		background: var(--color-fg);
+		color: var(--color-bg);
 		border-radius: 50%;
 		font-size: 0.75rem;
 		font-weight: 600;

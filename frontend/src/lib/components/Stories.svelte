@@ -54,8 +54,8 @@
 
   @media only screen and (min-width: 960px) {
     ul {
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4rem 2.5rem; /* Convert 64px 40px to rem */
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 4rem 1.5rem; /* Convert 64px 40px to rem */
     }
     
     li {
