@@ -1,17 +1,14 @@
 <script>
     import TrustEvo from './TrustEvo.svelte';
-    // import DataPanel from './DataPanel.svelte';
     import TrustDistributionChart from './TrustDistributionChart.svelte';
-    import trust_circles from '../data/trust_circles.csv';
     import { scaleSequential } from 'd3-scale';
     import { interpolateRdYlGn } from 'd3-scale-chromatic';
     import { extent } from 'd3-array';
 
-    let { width, height } = $props();
+    let { data, width, height } = $props();
 
     // Interactive controls state
-    let selectedDemCategory = $state('orientation_ord');
-    let selectedValue = $state('0.0');
+    let selectedDemCategory = $state('Dem_Gender_Other');
     let highlightCircle = $state('');
 
     function handleInstitutionClick(institution) {
@@ -19,18 +16,17 @@
         highlightCircle = highlightCircle === institution ? '' : institution;
     }
 
-    const TIMEPOINT = 1;
 
     // Filter circles for display
-    const filteredCircles = $derived.by(() =>
-        trust_circles.filter((c) =>
-            c.Timepoint == TIMEPOINT &&
-            c.value == selectedValue &&
-            c.category == selectedDemCategory
+    let filteredCircles = $derived.by(() =>
+        data.filter((c) => c.Demographic == selectedDemCategory
         )
-    );
+    )
 
-    const zScale = $derived(scaleSequential(interpolateRdYlGn).domain(extent(trust_circles.map(d=>d.distance))));
+    $inspect(filteredCircles);
+
+
+    const zScale = $derived(scaleSequential(interpolateRdYlGn).domain(extent(data.map(d=>d.Average_Trust))));
 
     // Category options
     const categoryOptions = [
@@ -45,7 +41,7 @@
     // Value options based on selected category
     const valueOptions = $derived.by(() => {
         switch (selectedDemCategory) {
-            case 'orientation_ord':
+            case 'Dem_Gender_Other':
                 return [
                     { value: '0.0', label: 'Straight' },
                     { value: '1.0', label: 'Bisexual' },
@@ -101,12 +97,6 @@
 
     <div class="visualization-container">
         <div class="left-panel">
-            <!-- <DataPanel
-                {highlightCircle}
-                {selectedDemCategory}
-                {selectedValue}
-                isDashboard={true}
-                isCollapsed={false} /> -->
         </div>
 
         <div class="center-viz">
@@ -120,7 +110,6 @@
                 storySection={null}
                 conclusionVisible={false}
                 externalCategory={selectedDemCategory}
-                externalValue={selectedValue}
                 externalHighlight={highlightCircle}
                 onInstitutionClick={undefined} />
         </div>
@@ -147,7 +136,7 @@
 
         <div class="control-group">
             <label for="value-select">Value:</label>
-            <select id="value-select" bind:value={selectedValue}>
+            <select id="value-select" bind:value={selectedDemCategory}>
                 {#each valueOptions as option}
                     <option value={option.value}>{option.label}</option>
                 {/each}

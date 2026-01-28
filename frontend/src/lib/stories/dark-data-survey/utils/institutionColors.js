@@ -35,11 +35,7 @@ export const institutionColorMap = {
     'TP_Stranger': '#6b7280'
 };
 
-/**
- * Get color for an institution
- * @param {string} institution - Institution name (e.g., 'TP_Friend')
- * @returns {string} Hex color code
- */
+
 export function getInstitutionColor(institution) {
     return institutionColorMap[institution] || '#6b7280'; // Default to gray
 }

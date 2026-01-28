@@ -5,101 +5,16 @@ import { innerWidth, outerHeight } from 'svelte/reactivity/window';
 import { ArrowDown } from "@lucide/svelte";
 import { fade } from 'svelte/transition';
 
-import { generateFingerprint } from '$lib/utils/browserFingerprint.js';
-
 import Nav from './Nav.svelte';
 import TrustEvo from './TrustEvo.svelte';
-import ConsentPopup from './ConsentPopup.svelte';
 import Dashboard from './Dashboard.svelte';
-import DemographicsBox from './Survey.DemographicsBox.svelte';
 
 import { scrollyContent, renderTextContent } from '$lib/components/helpers/ScrollySnippets.svelte';
-import { surveyScrollyContent } from '$lib/components/survey/SurveyScrolly.svelte';
-import { postAnswer, upsertAnswer } from '../data/data.remote.js';
 import WaffleChart from "./WaffleChart.svelte";
 
+import taste_for_privacy_raw from '../data/taste_for_privacy_aggregated.csv';
+
 let { story, data } = $props();
-
-// Consent state
-let hasConsented = $state(false);
-
-// Generate browser fingerprint AFTER consent (GDPR/CCPA compliance)
-let userFingerprint = $state('');
-let saveAnswer = $derived(createSaveAnswerHandler(userFingerprint));
-
-
-async function handleConsentAccept() {
-    hasConsented = true;
-
-    try {
-        userFingerprint = await generateFingerprint();
-        console.log('Fingerprint loaded:', userFingerprint);
-
-        // Save consent after fingerprint is ready
-        if (userFingerprint) {
-            await saveAnswer('consent', 'accepted');
-        }
-    } catch (err) {
-        console.error('Failed to load fingerprint:', err);
-    }
-}
-
-// Survey answers - keys match question 'name' fields in copy.json
-let surveyAnswers = $state({
-    socialMediaPrivacy: '',
-    platformMatters: [],
-    relativePreferences: '',
-    govPreferences: '',
-    polPreferences: '',
-});
-
-/**
- * Story-specific saveAnswer adapter
- * Maps form field names to appropriate API calls based on field type
- * Kept here to ensure field mapping stays in sync with surveyAnswers definition above
- */
-function createSaveAnswerHandler(userFingerprint) {
-	return function saveAnswer(field, value) {
-		if (!userFingerprint) {
-			console.warn('Fingerprint not ready yet, skipping save');
-			return Promise.resolve();
-		}
-
-		// Fields that need string-to-ordinal conversion
-		const stringToOrdinalFields = ['consent', 'socialMediaPrivacy', 'institutionPreferences', 'demographicsMatter'];
-
-		// Fields that already have numeric values
-		const numericFields = ['relativePreferences', 'govPreferences', 'polPreferences', 'age', 'gender_ord', 'orientation_ord', 'race_ord'];
-
-		// Handle special cases
-		if (field === 'platformMatters') {
-			// Convert array to comma-separated string for storage
-			const stringValue = Array.isArray(value) ? value.join(',') : value;
-			return upsertAnswer({ fingerprint: userFingerprint, field, value: stringValue });
-		} else if (stringToOrdinalFields.includes(field)) {
-			return postAnswer({ fingerprint: userFingerprint, field, value });
-		} else if (numericFields.includes(field)) {
-			// Convert string numbers to integers
-			const numericValue = parseInt(value, 10);
-			return upsertAnswer({ fingerprint: userFingerprint, field, value: numericValue });
-		} else {
-			console.error(`Unknown field: ${field}`);
-			return Promise.reject(new Error(`Unknown field: ${field}`));
-		}
-	};
-}
-
-// Scrolly state management - separate states for survey and story
-let surveyScrollyState = $state({
-    scrollyIndex: undefined,
-    isMobile: false,
-    isTablet: false
-});
-
-// Keep surveyScrollyState.isMobile in sync with isMobile
-$effect(() => {
-    surveyScrollyState.isMobile = isMobile;
-});
 
 let storyScrollyState = $state({
     scrollyIndex: undefined,
@@ -170,10 +85,6 @@ $effect(() => {
 <Nav />
 {/if}
 
-<!-- Consent Popup -->
-<!-- <ConsentPopup onAccept={handleConsentAccept} {userFingerprint} {saveAnswer} /> -->
-
-<!-- Scroll indicator -->
 {#if showScrollIndicator}
     <div class="scroll-indicator" transition:fade={{ duration: 500 }}>
         <ArrowDown size={32} strokeWidth={2} />
@@ -181,13 +92,6 @@ $effect(() => {
 {/if}
 
 <article id="dark-data-survey">
-
-    <!-- Survey Section -->
-    <!-- <section id="survey">
-        {@render surveyScrollyContent(data.survey, surveyScrollyState, userFingerprint, saveAnswer, surveyAnswers)}
-
-        <DemographicsBox {userFingerprint} {saveAnswer} />
-    </section> -->
 
     <div class="title">
         <h1>{data.title}</h1>
@@ -216,6 +120,7 @@ $effect(() => {
         <div class="scrolly-container" bind:this={storySection}>
             <div class="scrolly-chart">
                 <TrustEvo
+                    data={taste_for_privacy_raw}
                     scrollyIndex={storyScrollyState.scrollyIndex}
                     {width} {height}
                     isStorySection={storyScrollyState.scrollyIndex !== undefined}
@@ -235,15 +140,15 @@ $effect(() => {
         {/each}
     </section>
 
-    {#if !isMobile}
+    <!-- {#if !isMobile}
     <section id="dashboard" bind:this={dashboardSection}>
         <div class="scrolly-container">
             <div class="scrolly-chart">
-                <Dashboard {width} {height} />
+                <Dashboard data={taste_for_privacy_raw} {width} {height} />
             </div>
         </div>
     </section>
-    {/if}
+    {/if} -->
 </article>
 
 {#if !isMobile}

@@ -26,23 +26,23 @@
         requestAnimationFrame(() => {
             // Update or create institution objects in the map
             filteredData.forEach(item => {
-                if (!institutionMap.has(item.institution)) {
-                    institutionMap.set(item.institution, {
-                        institution: item.institution,
-                        distance: Number(item.distance)
+                if (!institutionMap.has(item.Trust_Category)) {
+                    institutionMap.set(item.Trust_Category, {
+                        Trust_Category: item.Trust_Category,
+                        Average_Trust: Number(item.Average_Trust)
                     });
                 } else {
                     // Update distance on existing object
-                    institutionMap.get(item.institution).distance = Number(item.distance);
+                    institutionMap.get(item.Trust_Category).distance = Number(item.Average_Trust);
                 }
             });
 
             // Get objects from map and sort them - reuse existing objects
             const items = Array.from(institutionMap.values())
-                .filter(item => filteredData.some(fd => fd.institution === item.institution));
+                .filter(item => filteredData.some(fd => fd.Trust_Category === item.Trust_Category));
 
             // Sort in place using the same object references
-            items.sort((a, b) => a.distance - b.distance);
+            items.sort((a, b) => a.Average_Trust - b.Average_Trust);
 
             // Update state array (triggers reactivity while keeping object refs)
             distributionData = items;
@@ -105,17 +105,17 @@
     
     <!-- Institution bars -->
     <div class="chart-content">
-        {#each distributionData as item, i (item.institution)}
+        {#each distributionData as item, i (item.Trust_Category)}
             {@const maxBarWidth = 100}
-            {@const barWidth = Math.max(2, (Number(item.distance) / maxDistance) * maxBarWidth)}
-            {@const IconComponent = institutionIcons[item.institution] || UserX}
-            {@const name = institutionLabels[item.institution] || item.institution.replace('TP_', '').replace(/_/g, ' ')}
-            {@const isHighlighted = item.institution === highlightCircle}
+            {@const barWidth = Math.max(2, (Number(item.Average_Trust) / maxDistance) * maxBarWidth)}
+            {@const IconComponent = institutionIcons[item.Trust_Category] || UserX}
+            {@const name = institutionLabels[item.Trust_Category] || item.Trust_Category.replace('TP_', '').replace(/_/g, ' ')}
+            {@const isHighlighted = item.Trust_Category === highlightCircle}
 
             <div class="institution-row"
                  class:highlighted={isHighlighted}
                  class:clickable={onInstitutionClick !== undefined}
-                 onclick={() => onInstitutionClick?.(item.institution)}
+                 onclick={() => onInstitutionClick?.(item.Trust_Category)}
                  onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onInstitutionClick?.(item.institution); } }}
                  role={onInstitutionClick ? "button" : undefined}
                  tabindex={onInstitutionClick ? 0 : undefined}
@@ -144,13 +144,13 @@
 
                     <div
                         class="trust-bar"
-                        style="width: {barWidth}px; background-color: {getInstitutionColor(item.institution)}; transition: width 0.5s ease, background-color 0.5s ease;"
+                        style="width: {barWidth}px; background-color: {getInstitutionColor(item.Trust_Category)}; transition: width 0.5s ease, background-color 0.5s ease;"
                     ></div>
                 </div>
 
                 <!-- Distance value label -->
                 <div class="distance-value">
-                    {Number(item.distance).toFixed(2)}
+                    {Number(item.Average_Trust).toFixed(2)}
                 </div>
             </div>
         {/each}
