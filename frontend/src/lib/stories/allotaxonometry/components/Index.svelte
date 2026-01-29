@@ -83,7 +83,6 @@
             // Set period1 to approximately 25% through the range
             const newYear = Math.floor(dateMin + span * 0.25);
             period1 = [newYear, newYear];
-            console.log('Adjusted period1 to:', newYear);
         }
 
         // Check if current period2 is outside the new range
@@ -91,7 +90,6 @@
             // Set period2 to approximately 75% through the range
             const newYear = Math.floor(dateMin + span * 0.75);
             period2 = [newYear, newYear];
-            console.log('Adjusted period2 to:', newYear);
         }
     });
 
@@ -150,6 +148,8 @@
     const babyNamesQuery = createQuery(() => ({
         queryKey: [
             'babynames',
+            hasUploadedFiles ? 'uploaded' : 'api',
+            hasUploadedFiles ? uploadedTitle?.join('-') : null,
             committedPeriod1Start,
             committedPeriod1End,
             committedPeriod2Start,
@@ -190,8 +190,8 @@
             };
         },
         enabled: true,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        gcTime: 10 * 60 * 1000, // 10 minutes
+        staleTime: 0, // Always refetch when queryKey changes
+        gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
         placeholderData: (previousData) => previousData,
     }));
 
@@ -348,16 +348,18 @@
 
                 {#if dat}
                     <div id="allotaxonometer-dashboard">
-                        <Dashboard
-                            {dat}
-                            {barData}
-                            {balanceData}
-                            {maxlog10}
-                            {divnorm}
-                            {title}
-                            {alpha}
-                            WordshiftWidth={400}
-                        />
+                        {#key `${committedPeriod1Start}-${committedPeriod1End}-${committedPeriod2Start}-${committedPeriod2End}-${committedLocation}-${committedSex}-${committedLimit}-${alpha}-${hasUploadedFiles}`}
+                            <Dashboard
+                                {dat}
+                                {barData}
+                                {balanceData}
+                                {maxlog10}
+                                {divnorm}
+                                {title}
+                                {alpha}
+                                WordshiftWidth={400}
+                            />
+                        {/key}
                     </div>
                 {:else}
                     <div class="loading">

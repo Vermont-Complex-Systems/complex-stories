@@ -25,35 +25,9 @@
 </script>
 
 <div class="top-bar">
-	<div class="top-row">
-		<a href="{base}/" class="logo-link">
-			<img src="{base}/octopus-swim-right.png" alt="Home" class="octopus-icon" />
-		</a>
-		<div class="right-section">
-			<HelpPopover side="bottom" align="end" sideOffset={2} iconSize={30} />
-			{#await getCurrentUser()}
-				<!-- Loading auth state -->
-			{:then user}
-				{#if user}
-					<a href="{base}/auth" class="avatar-button">
-						<Avatar.Root class="avatar-root">
-							<Avatar.Fallback class="avatar-fallback">
-								{getUserInitials(user.username)}
-							</Avatar.Fallback>
-						</Avatar.Root>
-					</a>
-				{:else}
-					<a href="{base}/auth" class="login-button">
-						Log in
-					</a>
-				{/if}
-			{:catch}
-				<a href="{base}/auth" class="login-button">
-					Log in
-				</a>
-			{/await}
-		</div>
-	</div>
+	<a href="{base}/" class="logo-link">
+		<img src="{base}/octopus-swim-right.png" alt="Home" class="octopus-icon" />
+	</a>
 	<div class="mode-switcher">
 		<button
 			class="mode-btn"
@@ -105,25 +79,44 @@
 			📈 Stats
 		</button>
 	</div>
+	<div class="right-section">
+		<HelpPopover side="bottom" align="end" sideOffset={2} iconSize={30} />
+		{#await getCurrentUser()}
+			<!-- Loading auth state -->
+		{:then user}
+			{#if user}
+				<a href="{base}/auth" class="avatar-button">
+					<Avatar.Root class="avatar-root">
+						<Avatar.Fallback class="avatar-fallback">
+							{getUserInitials(user.username)}
+						</Avatar.Fallback>
+					</Avatar.Root>
+				</a>
+			{:else}
+				<a href="{base}/auth" class="login-button">
+					Log in
+				</a>
+			{/if}
+		{:catch}
+			<a href="{base}/auth" class="login-button">
+				Log in
+			</a>
+		{/await}
+	</div>
 </div>
 
 <style>
 	.top-bar {
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		gap: 1rem;
-		padding: 1rem 2rem;
 		background: var(--color-sticky-bg);
 		border-bottom: 1px solid var(--color-sticky-border);
 		position: sticky;
 		top: 0;
 		z-index: 100;
-	}
-
-	.top-row {
-		display: flex;
-		justify-content: space-between;
 		align-items: center;
+		justify-content: space-between;
 	}
 
 	.logo-link {
@@ -153,8 +146,9 @@
 	.mode-switcher {
 		display: flex;
 		gap: 0.5rem;
-		justify-content: flex-end;
 		flex-wrap: wrap;
+		flex: 1;
+		justify-content: center;
 	}
 
 	.mode-btn {
@@ -227,6 +221,18 @@
 	}
 
 	/* Mobile styles */
+	@media (max-width: 1024px) {
+		.top-bar {
+			flex-wrap: wrap;
+		}
+
+		.mode-switcher {
+			order: 3;
+			flex-basis: 100%;
+			justify-content: flex-start;
+		}
+	}
+
 	@media (max-width: 768px) {
 		.top-bar {
 			padding: 0.75rem 1rem;
@@ -235,10 +241,6 @@
 
 		.octopus-icon {
 			height: 3.5rem;
-		}
-
-		.mode-switcher {
-			justify-content: flex-start;
 		}
 
 		.mode-btn {
@@ -257,6 +259,5 @@
 		.octopus-icon {
 			height: 3rem;
 		}
-
 	}
 </style>
