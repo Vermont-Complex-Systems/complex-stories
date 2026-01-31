@@ -1,6 +1,7 @@
 import * as v from 'valibot';
 import { query } from '$app/server';
 import storiesData from '$data/stories.csv';
+import authorsData from '$data/authors.js';
 import { error, redirect } from '@sveltejs/kit';
 
 
@@ -72,4 +73,33 @@ export const getStory = query(v.string(), async (slug) => {
     story,
     copyData
   };
+});
+
+// AUTHORS
+
+export interface Author {
+  id: string;
+  name: string;
+  email: string;
+  slug: string;
+  position: string;
+  social: string;
+  url: string;
+  bio: string;
+  pronoun: string;
+}
+
+// Query for getting an author and their stories
+export const getAuthor = query(v.string(), async (slug) => {
+  const author = (authorsData as Author[]).find(d => d.slug === slug);
+
+  if (!author) {
+    error(404, 'Author not found');
+  }
+
+  const authorStories = stories
+    .filter(d => d.author === author.name)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  return { stories: authorStories, author };
 });

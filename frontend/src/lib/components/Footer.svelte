@@ -39,7 +39,6 @@
 		<div class="footer-section">
 			<h3>Community</h3>
 			<ul>
-				<li><a href="{base}/about">About</a></li>
 				<li><a href="{base}/blog">Blog</a></li>
 				<li><a href="{base}/work-with-us">How to work with us</a></li>
 				<li><a href="{base}/datasets">Datasets</a></li>

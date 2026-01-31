@@ -3,8 +3,9 @@
   import Meta from "$lib/components/Meta.svelte";
   import Blog from "$lib/components/Blog.svelte";
 
-  let { data } = $props();
-  const { posts } = data;
+  import { getBlogs } from '$lib/blog.remote';
+
+  const posts = await getBlogs();
 
 </script>
 

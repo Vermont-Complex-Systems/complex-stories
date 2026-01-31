@@ -5,9 +5,10 @@
   import { base } from '$app/paths';
   import { ModeWatcher, setMode } from "mode-watcher";
   import { Sun, Moon } from "@lucide/svelte";
-  
-  let { data } = $props();
-  const { blog, content } = data;
+  import { getBlog } from '$lib/blog.remote';
+
+  let { params } = $props();
+  const { blog, content } = await getBlog(params.slug);
   
   let isDark = $state(false);
   
@@ -61,7 +62,7 @@
     
     <!-- Meta -->
     <div class="post-meta">
-      <time datetime={blog.date?.toISOString()}>
+      <time datetime={blog.date}>
         {blog.month}
       </time>
       
