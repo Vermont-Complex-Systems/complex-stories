@@ -22,7 +22,7 @@
                 {post.title || 'Untitled Post'}
               </h3>
               <div class="post-meta">
-                <time datetime={post.date?.toISOString()}>
+                <time datetime={post.date}>
                   {post.month || 'No date'}
                 </time>
                 {#if post.author && post.author.length > 0}
