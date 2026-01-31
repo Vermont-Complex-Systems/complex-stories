@@ -1,12 +1,6 @@
 <script>
-  import { setContext } from "svelte";
   import Meta from "$lib/components/Meta.svelte";
   import Home from "$lib/components/Home.svelte";
-
-  let { data } = $props();
-
-  // Create reactive state and set as context
-  setContext("Home", data);
 
   // Only preload fonts actually used above-the-fold on homepage
   const preloadFont = [

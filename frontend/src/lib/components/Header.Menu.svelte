@@ -46,7 +46,6 @@
 			<h4>Navigate</h4>
 			<ul>
 				<li><a href="{base}/">Home</a></li>
-				<li><a href="{base}/about">About</a></li>
 				<li><a href="{base}/blog">Blog</a></li>
 				<li><a href="{base}/work-with-us">How to work with us</a></li>
 				<li><a href="{base}/datasets" target="_blank" rel="noreferrer">Datasets</a></li>

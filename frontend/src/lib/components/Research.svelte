@@ -1,6 +1,5 @@
 <!-- src/lib/components/Blog.svelte -->
 <script>
-  import { descending } from "d3";
   import ResearchPosts from "$lib/components/Research.Posts.svelte";
   import FilterBar from "$lib/components/FilterBar.svelte";
   import { ChevronDown } from "@lucide/svelte";
@@ -11,36 +10,21 @@
   let maxPosts = $state(initMax);
   let activeFilter = $state(undefined);
 
-  // Extract unique tags from all posts for filtering
-  let allTags = $derived.by(() => {
-    const tagSet = new Set();
-    posts.forEach(post => {
-      if (post.tags && Array.isArray(post.tags)) {
-        post.tags.forEach(tag => tagSet.add(tag));
-      }
-    });
-    return Array.from(tagSet).sort();
-  });
+  function toSlug(tag) {
+    return tag?.toLowerCase()?.replace(/[^a-z]/g, '_');
+  }
 
-  let filtered = $derived.by(() => {
-    const f = posts.filter((post) => {
-      if (!activeFilter) return true;
-      
-      // Convert post tags to slugs and check if any match the active filter
-      return post.tags?.some(tag => {
-        const tagSlug = tag?.toLowerCase()?.replace(/[^a-z]/g, "_");
-        return tagSlug === activeFilter;
-      }) || false;
-    });
-    f.sort((a, b) => descending(a.date, b.date)); // Most recent first
-    return f;
-  });
+  let allTags = $derived([...new Set(posts.flatMap((p) => p.tags))].sort());
+
+  let filtered = $derived(
+    activeFilter
+      ? posts.filter((post) => post.tags.some((tag) => toSlug(tag) === activeFilter))
+      : posts
+  );
 
   let displayedPosts = $derived(filtered.slice(0, maxPosts));
 
-  function onLoadMore(e) {
-    e.preventDefault();
-    e.stopPropagation();
+  function onLoadMore() {
     maxPosts = filtered.length;
   }
 

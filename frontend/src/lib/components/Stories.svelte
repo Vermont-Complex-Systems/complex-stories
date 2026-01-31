@@ -1,14 +1,15 @@
-<script>
+<script lang="ts">
   import Story from "$lib/components/Story.svelte";
-  
-  let { stories } = $props();
+  import type { Story as StoryType } from '$lib/story.remote';
+
+  let { stories }: { stories: StoryType[] } = $props();
 </script>
 
 <section id="stories">
   <ul>
     {#each stories as story (story.slug)}
       <li>
-        <Story {...story} />
+        <Story {story} />
       </li>
     {/each}
   </ul>
@@ -57,9 +58,10 @@
       grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
       gap: 4rem 1.5rem; /* Convert 64px 40px to rem */
     }
-    
+
     li {
       --padding: clamp(2rem, 5vw, 4rem); /* Convert 32px 64px to rem */
     }
   }
+
 </style>

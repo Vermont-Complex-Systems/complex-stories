@@ -1,18 +1,17 @@
 <script>
-  import { getStoryComponent } from '$lib/utils/storyRegistry.js';
-  // import Meta from '$lib/components/Meta.svelte';
-  
-  let { data } = $props();
-  const { story, copyData } = data;
-  
-  const StoryComponent = getStoryComponent(story.slug);
+  import { getStory } from '$lib/story.remote';
+
+  let { params } = $props();
+
+  // Capture the slug value at initialization
+  const slug = params.slug;
+
+  // Use await directly in the component
+  const { story, copyData } = await getStory(slug);
+
+  // Dynamically import the story component
+  const StoryComponent = await import(`$lib/stories/${slug}/components/Index.svelte`);
 </script>
 
-<!-- <Meta 
-  title={story.short}
-  description={story.tease}
-/> -->
-
-{#if StoryComponent}
-  <StoryComponent {story} data={copyData} />
-{/if}
+<!-- Render the story component with its data -->
+<StoryComponent.default {story} data={copyData} />

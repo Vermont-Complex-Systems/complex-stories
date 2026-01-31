@@ -3,8 +3,9 @@
   import Meta from "$lib/components/Meta.svelte";
   import Research from "$lib/components/Research.svelte";
 
-  let { data } = $props();
-  const { posts } = data;
+  import { getResearchGroups } from '$lib/research.remote';
+
+  const posts = await getResearchGroups();
 
 </script>
 
