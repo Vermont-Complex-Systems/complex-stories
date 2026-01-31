@@ -1,46 +1,25 @@
 <script>
-  import { descending } from "d3";
-  import { getContext } from "svelte";
   import Stories from "$lib/components/Stories.svelte";
   import FilterBar from "$lib/components/FilterBar.svelte";
   import { ChevronDown } from "@lucide/svelte";
-
-  const { stories } = getContext("Home");
+  import { getStories } from '$lib/story.remote';
 
   const initMax = 12;
+
+  const stories = $derived(await getStories());
 
   let maxStories = $state(initMax);
   let activeFilter = $state(undefined);
 
-  // Extract unique filters from all stories
-  let allFilters = $derived.by(() => {
-    const filterSet = new Set();
-    stories.forEach(story => {
-      if (story.filters && Array.isArray(story.filters)) {
-        story.filters.forEach(filter => filterSet.add(filter));
-      }
-    });
-    return Array.from(filterSet).sort();
-  });
+  let allFilters = $derived([...new Set(stories.flatMap(s => s.tags))].sort());
 
-  
-  let filtered = $derived.by(() => {
-    const f = stories.filter((d) => {
-      
-      // Simplified: if no active filter, show all; otherwise check if story has the filter
-      return !activeFilter || d.filters.includes(activeFilter);
-    });
-    f.sort((a, b) => descending(a.id, b.id));
-    // hide stories like that for now
-    return f.filter(d => d.slug !== 'dark-data-survey') ;
-  });
+  let filtered = $derived(
+    activeFilter ? stories.filter(d => d.tags.includes(activeFilter)) : stories
+  );
 
-  
   let displayedStories = $derived(filtered.slice(0, maxStories));
 
-  function onLoadMore(e) {
-    e.preventDefault();
-    e.stopPropagation();
+  function onLoadMore() {
     maxStories = filtered.length;
   }
 
@@ -54,9 +33,10 @@
 <div class="content">
   <FilterBar bind:activeFilter filters={allFilters} />
   
-  <div class="stories">
-    <Stories stories={displayedStories} />
-  </div>
+  <!-- Stories Section -->
+  <section class="stories">
+      <Stories stories={displayedStories} />
+  </section>
 
   {#if filtered.length > maxStories}
     <div class="more">

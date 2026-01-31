@@ -1,61 +1,42 @@
-<script>
+<script lang="ts">
   import { base } from "$app/paths";
   import { ExternalLink } from "@lucide/svelte";
+  import type { Story } from '$lib/story.remote';
 
-  let {
-    id,
-    href,
-    slug,
-    short,
-    tease,
-    month,
-    isExternal = false,
-    resource = false,
-    footer = false
-  } = $props();
+  let { story }: { story: Story } = $props();
 
-  const finalHref = isExternal ? href : `${base}${href}`;
-  const imagePath = `${base}/common/thumbnails/screenshots`;
+  const isExternal = !!story.externalUrl;
+  const finalHref = isExternal ? story.externalUrl : `${base}/${story.slug}`;
 </script>
 
-<div class:external={isExternal} class:resource class:footer>
-  
+<div class:external={isExternal}>
   <a
-  href={finalHref}
-  rel={isExternal ? "external noopener" : undefined}
-  target={isExternal ? "_blank" : undefined}
-  class="inner"
+    href={finalHref}
+    rel={isExternal ? "external noopener" : undefined}
+    target={isExternal ? "_blank" : undefined}
+    class="inner"
   >
-  <div class="screenshot">
-    {#if isExternal}
-    <div class="external-badge">
-      <ExternalLink size={18} />
+    <div class="screenshot">
+      {#if isExternal}
+        <div class="external-badge">
+          <ExternalLink size={18} />
+        </div>
+      {/if}
+      <img
+        src="{base}/common/thumbnails/screenshots/{story.slug}.jpg"
+        loading="lazy"
+        alt="Thumbnail for {story.title}"
+      />
     </div>
-    {/if}
-    
-    <img
-    src="{imagePath}/{slug}.jpg"
-    loading="lazy"
-    alt="Thumbnail for {short}"
-    />
-  </div>
-  
-  <div class="text">
-    {#if !resource && !footer}
+    <div class="text">
       <div class="header-row">
         <h3 class="short">
-          <strong>{@html short}</strong>
+          <strong>{@html story.title}</strong>
         </h3>
-        <span class="month">{month}</span>
+        <span class="month">{story.month}</span>
       </div>
-    {:else}
-      <h3 class="short">
-        <strong>{@html short}</strong>
-      </h3>
-    {/if}
-
-    <p class="tease">{@html tease}</p>
-  </div>
+      <p class="tease">{@html story.description}</p>
+    </div>
   </a>
 </div>
 
@@ -87,8 +68,6 @@
     outline: 2px solid var(--color-focus);
     outline-offset: 2px;
   }
-
-  /* Card */
 
   .screenshot {
     position: relative;
