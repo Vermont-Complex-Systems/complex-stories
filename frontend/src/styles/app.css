@@ -18,48 +18,48 @@
 body {
     background-color: var(--color-bg);
     color: var(--color-fg);
-    font-family: var(--font-body);
+    font-family: var(--sans);
     transition: background-color 0.2s, color 0.2s;
     line-height: 1.5;
 }
 
-/* Typography hierarchy using semantic tokens */
-h1 { 
-    font-size: var(--font-size-giant); 
-    font-family: var(--serif);
-    font-weight: var(--font-weight-bold);
-    line-height: 1.1;
-    margin: 1rem 0;
+/* =============================================================================
+   BASE TEXT STYLES
+   ============================================================================= */
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--serif);
+  font-weight: 700;
 }
 
-h2 { 
-    font-size: var(--font-size-xlarge); 
-    font-family: var(--serif);
-    font-weight: var(--font-weight-bold);
-    line-height: 1.2;
-    margin: 1rem 0;
+h1 {
+  font-size: 1.8rem;
+  margin: 2.5rem 0 1rem;
 }
 
-h3 { 
-    font-size: var(--font-size-large); 
-    font-family: var(--serif);
-    font-weight: var(--font-weight-bold);
-    line-height: 1.3;
-    margin: 1rem 0;
+h2 {
+  font-size: 1.8rem;
+  margin: 2.5rem 0 1rem;
 }
 
-h4, h5, h6 { 
-    font-size: var(--font-size-medium); 
-    font-family: var(--serif);
-    font-weight: var(--font-weight-bold);
-    line-height: 1.4;
-    margin: 1rem 0;
+h3 {
+  font-size: 1.4rem;
+  margin: 2rem 0 0.75rem;
+}
+
+h4 {
+  font-size: 1.2rem;
+  margin: 1.5rem 0 0.5rem;
 }
 
 p {
-    margin: 1rem 0;
-    line-height: 1.6;
+  line-height: 1.6;
+  margin-bottom: 1rem;
 }
+
 
 /* Links */
 a {
