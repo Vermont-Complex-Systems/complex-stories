@@ -4,42 +4,11 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 import time
 import asyncio
-import re
 from ..core.database import get_mongo_client
 from better_profanity import profanity
 
 router = APIRouter()
 
-
-# Content filtering - compile regex patterns once at module load
-OFFENSIVE_TERMS = [
-    "nigger", "niggers", "faggot", "faggots", "retard", "retards",
-    "tranny", "trannies", "kike", "kikes", "spic", "spics",
-    "chink", "chinks", "wetback", "wetbacks", "nigga"
-]
-
-# Pre-compile a single combined regex pattern for better performance
-OFFENSIVE_PATTERN = re.compile(
-    r'\b(' + '|'.join(re.escape(term) for term in OFFENSIVE_TERMS) + r')\b',
-    re.IGNORECASE
-)
-
-# def censor_text(text: str) -> str:
-#     """
-#     Replace offensive terms with asterisked versions.
-#     Case-insensitive matching, preserves original case pattern.
-#     Optimized with pre-compiled regex pattern.
-#     """
-#     if not text or not isinstance(text, str):
-#         return text
-
-#     def replace_with_asterisks(match):
-#         original = match.group(0)
-#         if len(original) > 1:
-#             return original[0] + '*' * (len(original) - 1)
-#         return '*'
-
-#     return OFFENSIVE_PATTERN.sub(replace_with_asterisks, text)
 
 class NgramResult(BaseModel):
     types: str
