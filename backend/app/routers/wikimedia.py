@@ -38,13 +38,11 @@ async def get_top_ngrams(
 
         # Parse comma-separated inputs into arrays
         try:
-            # dates = "2025-06-23,2025-09-12"
             date_strings = [d.strip() for d in dates.split(",")]
             date_array = [datetime.fromisoformat(d.replace('Z', '+00:00')) for d in date_strings]
         except ValueError as e:
             raise HTTPException(status_code=400, detail=f"Invalid date format: {e}")
 
-        # country_array = ["United States"]
         country_array = [c.strip() for c in countries.split(",")]
 
         # Determine which dimension we're comparing
@@ -70,7 +68,6 @@ async def get_top_ngrams(
             country = item if comparing_countries else fixed_country
 
             # Execute the MongoDB query (synchronous)
-            # topN=1_000_000
             cursor = coll.find(
                 {"date": date, "country": country}
             ).sort("pv_rank", 1).limit(topN)
@@ -88,7 +85,7 @@ async def get_top_ngrams(
         
         query_results = await asyncio.gather(*tasks)
 
-        # Process results with optimizations
+        # Process results
         for key, docs in query_results:
             if not docs:
                 continue
