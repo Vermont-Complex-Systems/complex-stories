@@ -6,6 +6,7 @@ import time
 import asyncio
 import re
 from ..core.database import get_mongo_client
+from better_profanity import profanity
 
 router = APIRouter()
 
@@ -23,22 +24,22 @@ OFFENSIVE_PATTERN = re.compile(
     re.IGNORECASE
 )
 
-def censor_text(text: str) -> str:
-    """
-    Replace offensive terms with asterisked versions.
-    Case-insensitive matching, preserves original case pattern.
-    Optimized with pre-compiled regex pattern.
-    """
-    if not text or not isinstance(text, str):
-        return text
+# def censor_text(text: str) -> str:
+#     """
+#     Replace offensive terms with asterisked versions.
+#     Case-insensitive matching, preserves original case pattern.
+#     Optimized with pre-compiled regex pattern.
+#     """
+#     if not text or not isinstance(text, str):
+#         return text
 
-    def replace_with_asterisks(match):
-        original = match.group(0)
-        if len(original) > 1:
-            return original[0] + '*' * (len(original) - 1)
-        return '*'
+#     def replace_with_asterisks(match):
+#         original = match.group(0)
+#         if len(original) > 1:
+#             return original[0] + '*' * (len(original) - 1)
+#         return '*'
 
-    return OFFENSIVE_PATTERN.sub(replace_with_asterisks, text)
+#     return OFFENSIVE_PATTERN.sub(replace_with_asterisks, text)
 
 class NgramResult(BaseModel):
     types: str
@@ -100,7 +101,7 @@ async def get_top_ngrams(
             country = item if comparing_countries else fixed_country
 
             # Execute the MongoDB query (synchronous)
-            topN=1_000_000
+            # topN=1_000_000
             cursor = coll.find(
                 {"date": date, "country": country}
             ).sort("pv_rank", 1).limit(topN)
@@ -138,7 +139,7 @@ async def get_top_ngrams(
             ngram_results = []
             for doc, pv_count in zip(docs, pv_counts):
                 result_kwargs = {
-                    "types": censor_text(str(doc.get("ngram", ""))),
+                    "types": profanity.censor(str(doc.get("ngram", ""))),
                     "counts": pv_count
                 }
 
