@@ -18,7 +18,8 @@ class Datalake(Base):
     description = Column(Text)
     tables_metadata = Column(JSON)  # Store ducklake table metadata for version control
     ducklake_data_path = Column(String)  # Path to ducklake data directory
-    schema = Column(JSON)  # Table schema (column_name -> type) for query reference
+    data_schema = Column(JSON)  # Table schema (column_name -> type) for query reference
+    partitioning = Column(JSON)  # Partitioning metadata
     entity_mapping = Column(JSON)  # Entity mapping configuration
     sources = Column(JSON)  # Source URLs for validation
     created_at = Column(DateTime(timezone=True), server_default=func.now())
