@@ -106,14 +106,6 @@
     let fetchedTopN = $state(10000);
     let warningDismissed = $state(false);
 
-    // Check if we got fewer results than requested
-    const showTopNWarning = $derived.by(() => {
-        if (hasUploadedFiles || !me || warningDismissed) return false;
-        const count1 = me[0]?.ranks?.length || 0;
-        const count2 = me[1]?.ranks?.length || 0;
-        return count1 < fetchedTopN || count2 < fetchedTopN;
-    });
-
     // Auto-dismiss warning after 5 seconds
     $effect(() => {
         if (showTopNWarning) {
@@ -221,6 +213,14 @@
 
     // Compute visualization data using utility functions
     const me = $derived(sys1 && sys2 ? combElems(sys1, sys2) : null);
+
+    // Check if we got fewer results than requested (must be after `me` to avoid TDZ on SSR)
+    const showTopNWarning = $derived.by(() => {
+        if (hasUploadedFiles || !me || warningDismissed) return false;
+        const count1 = me[0]?.ranks?.length || 0;
+        const count2 = me[1]?.ranks?.length || 0;
+        return count1 < fetchedTopN || count2 < fetchedTopN;
+    });
     const rtd = $derived(me ? rank_turbulence_divergence(me, alpha) : null);
     const dat = $derived(me && rtd ? diamond_count(me, rtd) : null);
     const barData = $derived(me && dat ? wordShift_dat(me, dat).slice(0, 30) : []);

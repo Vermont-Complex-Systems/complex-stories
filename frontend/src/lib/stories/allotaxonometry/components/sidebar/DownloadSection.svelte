@@ -1,12 +1,11 @@
 <script>
-  import domtoimage from 'dom-to-image-more';
-
   let { isDataReady = false } = $props();
-  
+
   let showTooltip = $state(false);
 
     async function exportToPNG() {
     try {
+      const domtoimage = (await import('dom-to-image-more')).default;
       const dashboard = document.getElementById('allotaxonometer-dashboard');
       
       // Scroll to top to ensure full visibility
@@ -49,6 +48,7 @@
 
   async function exportToSVG() {
     try {
+      const domtoimage = (await import('dom-to-image-more')).default;
       const dashboard = document.getElementById('allotaxonometer-dashboard');
       const dataUrl = await domtoimage.toSvg(dashboard);
       
