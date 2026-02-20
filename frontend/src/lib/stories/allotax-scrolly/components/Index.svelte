@@ -34,6 +34,7 @@
     import Scrolly from '$lib/components/helpers/Scrolly.svelte';
     import ScrollyMd from './ScrollyMarkdown.svelte'; // New import
     import Md from '$lib/components/helpers/MarkdownRenderer.svelte';
+    import Spinner from '$lib/components/helpers/Spinner.svelte';
     
     let { story, data } = $props();
     
@@ -164,13 +165,21 @@
     <p>Here is the ranking of the {@render G(isGirls ? 'girl' : 'boy')} baby names in <span class="year-1980">1980</span>:</p>
     
     <div class="initial-chart">
-        <BarChartRank data={sys1.slice(0, 30)} fill={"#a6a6a6"} />
+        {#if browser}
+            <BarChartRank data={sys1.slice(0, 30)} fill={"#a6a6a6"} />
+        {:else}
+            <Spinner text="" />
+        {/if}
     </div>
-    
+
     <p>Here is the ranking for {@render G(isGirls ? 'girl' : 'boy')} baby names in Quebec for <span class="year-2023">2023</span>:</p>
 
     <div class="initial-chart">
-        <BarChartRank data={sys2.slice(0, 30)} fill={"#c3e6f3e6"} />
+        {#if browser}
+            <BarChartRank data={sys2.slice(0, 30)} fill={"#c3e6f3e6"} />
+        {:else}
+            <Spinner text="" />
+        {/if}
     </div>
     
     <p>I really like this analysis, but there are some limitations in comparing ranks using raw counts, especially when it comes to systems that are known to be "heavy-tailed". That is, when a few names, or types, occur many more times in your dataset than less frequent ones, aka the tail. For instance, in the analysis the author compares baby names between "then and now". By just looking at raw counts, we are stuck with such comparisons where top-ranking baby names in <span class="year-1980">1980</span> might now be in the tail, which is a bit underwhelming. How can we know about the most surprising comparisons, given the heavy-tailed distribution?</p>
