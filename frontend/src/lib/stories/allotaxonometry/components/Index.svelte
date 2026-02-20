@@ -4,7 +4,9 @@
     import { onMount } from 'svelte';
     import { Dashboard } from 'allotaxonometer-ui';
     import { combElems, rank_turbulence_divergence, diamond_count, wordShift_dat, balanceDat } from 'allotaxonometer-ui';
+    
     import Nav from './Nav.svelte';
+    
     import SexToggle from './sidebar/SexToggle.svelte';
     import TopNSelector from './sidebar/TopNSelector.svelte';
     import AlphaSliderLocal from './sidebar/AlphaSliderLocal.svelte';
@@ -14,18 +16,23 @@
     import MultiFileUploadLocal from './sidebar/MultiFileUploadLocal.svelte';
     import DownloadSection from './sidebar/DownloadSection.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
+    
     import { getTopBabyNames, getAdapter } from '../allotax.remote';
 
     import boys1968 from '../data/boys-1968.json';
     import boys1895 from '../data/boys-1895.json';
 
-    // File upload state
+    // ============================================================================
+    // File Upload State
+    // ============================================================================
     let uploadedSys1 = $state(null);
     let uploadedSys2 = $state(null);
     let uploadedTitle = $state(['System 1', 'System 2']);
     const hasUploadedFiles = $derived(!!uploadedSys1 && !!uploadedSys2);
 
-    // Year range state - two separate sliders for comparison
+    // ============================================================================
+    // UI Parameters (not yet committed to API)
+    // ============================================================================
     let period1 = $state([1905, 1925]); // Single year by default
     let period2 = $state([1968, 1998]); // Single year by default
 
@@ -34,8 +41,9 @@
     let sex = $state('M');
     let limit = $state(10000);
 
-    // Committed parameters (actually used for API calls)
-    // Using individual values instead of arrays for better reactivity
+    // ============================================================================
+    // Committed Parameters (used for API calls)
+    // ============================================================================
     let committedPeriod1Start = $state(1905);
     let committedPeriod1End = $state(1925);
     let committedPeriod2Start = $state(1972);
@@ -44,31 +52,22 @@
     let committedSex = $state('M');
     let committedLimit = $state(10000);
 
-    // Derive arrays from individual values for backwards compatibility
-    let committedPeriod1 = $derived([committedPeriod1Start, committedPeriod1End]);
-    let committedPeriod2 = $derived([committedPeriod2Start, committedPeriod2End]);
-
     // Derive date strings from committed year ranges
     let dates = $derived(`${committedPeriod1Start},${committedPeriod1End}`);
     let dates2 = $derived(`${committedPeriod2Start},${committedPeriod2End}`);
 
-    // Alpha slider state (updates immediately - no update button needed)
+    // ============================================================================
+    // Alpha Parameter (updates immediately)
+    // ============================================================================
     const alphas = [0, 1/4, 2/4, 3/4, 1, 3/2, 2, 3, 5, Infinity];
-    let alphaIndex = $state(7); // Index for alpha = 2
+    let alphaIndex = $state(7); // Index for alpha = 3
     let alpha = $derived(alphas[alphaIndex]);
 
-    // Load adapter data once on mount (static data, no need for reactivity)
+    // ============================================================================
+    // Adapter Data & Date Range Logic
+    // ============================================================================
+
     let adapterData = $state([]);
-
-    onMount(async () => {
-        try {
-            adapterData = await getAdapter();
-        } catch (err) {
-            console.error('Failed to load adapter:', err);
-        }
-    });
-
-    // Derive date range based on selected location
     const dateRange = $derived.by(() => {
         if (!adapterData.length) return { min: 1880, max: 2023 };
         const locationData = adapterData.find(l => l[1] === location);
@@ -101,44 +100,44 @@
         }
     });
 
-    // Check if there are uncommitted changes
+    // ============================================================================
+    // Change Tracking & Warnings
+    // ============================================================================
     let hasChanges = $derived(
-        period1[0] !== committedPeriod1[0] ||
-        period2[0] !== committedPeriod2[0] ||
+        period1[0] !== committedPeriod1Start ||
+        period1[1] !== committedPeriod1End ||
+        period2[0] !== committedPeriod2Start ||
+        period2[1] !== committedPeriod2End ||
         location !== committedLocation ||
         sex !== committedSex ||
         limit !== committedLimit
     );
 
-    // Track what topN was fetched for warning message
+    // Top N warning state
     let fetchedTopN = $state(10000);
     let warningDismissed = $state(false);
 
-    // Auto-dismiss warning after 5 seconds
     $effect(() => {
         if (showTopNWarning) {
             warningDismissed = false;
-            const timer = setTimeout(() => {
-                warningDismissed = true;
-            }, 5000);
+            const timer = setTimeout(() => warningDismissed = true, 5000);
             return () => clearTimeout(timer);
         }
     });
 
+    // ============================================================================
+    // Data Loading & Management
+    // ============================================================================
 
-    // Callback when files are uploaded
     function handleFilesUploaded(sys1Data, sys2Data, titles) {
         uploadedSys1 = sys1Data;
         uploadedSys2 = sys2Data;
         uploadedTitle = titles;
     }
 
-    // Baby names data - managed as state
-    let sys1 = $state(boys1895);
-    let sys2 = $state(boys1968);
-    let title = $state(['Boys 1895-1925', 'Boys 1972-2002']);
-
-    // Fetch baby names data
+    let sys1 = $state(null);
+    let sys2 = $state(null);
+    let title = $state(['Boys 1905-1925', 'Boys 1972-2002']);
     async function fetchBabyNames() {
         if (hasUploadedFiles) {
             sys1 = uploadedSys1;
@@ -160,11 +159,10 @@
             sys1 = ngrams[dates] || ngrams[keys[0]];
             sys2 = ngrams[dates2] || ngrams[keys[1]];
 
-            const range1 = `${committedPeriod1Start}-${committedPeriod1End}`;
-            const range2 = `${committedPeriod2Start}-${committedPeriod2End}`;
+            const genderLabel = committedSex === 'M' ? 'Boys' : 'Girls';
             title = [
-                `${committedSex === 'M' ? 'Boys' : 'Girls'} ${range1}`,
-                `${committedSex === 'M' ? 'Boys' : 'Girls'} ${range2}`
+                `${genderLabel} ${committedPeriod1Start}-${committedPeriod1End}`,
+                `${genderLabel} ${committedPeriod2Start}-${committedPeriod2End}`
             ];
         } catch (err) {
             console.error('Failed to fetch baby names:', err);
@@ -173,25 +171,33 @@
         }
     }
 
-    // Initial data load on mount
-    onMount(() => {
+    // Load initial data on mount
+    onMount(async () => {
+        try {
+            adapterData = await getAdapter();
+        } catch (err) {
+            console.error('Failed to load adapter:', err);
+        }
+
         fetchBabyNames();
     });
 
-    // Update function - commits changes and fetches new data
+    // Update function - commits UI changes and fetches new data
     function updateData() {
-        committedPeriod1Start = period1[0];
-        committedPeriod1End = period1[1];
-        committedPeriod2Start = period2[0];
-        committedPeriod2End = period2[1];
+        // Commit UI state to API parameters
+        [committedPeriod1Start, committedPeriod1End] = period1;
+        [committedPeriod2Start, committedPeriod2End] = period2;
         committedLocation = location;
         committedSex = sex;
         committedLimit = limit;
-        fetchedTopN = limit; // Track what we actually requested
-        fetchBabyNames(); // Fetch with new parameters
+        fetchedTopN = limit;
+
+        fetchBabyNames();
     }
 
-    // Compute visualization data using utility functions
+    // ============================================================================
+    // Visualization Data Computation
+    // ============================================================================
     const me = $derived(sys1 && sys2 ? combElems(sys1, sys2) : null);
     const rtd = $derived(me ? rank_turbulence_divergence(me, alpha) : null);
     const dat = $derived(me && rtd ? diamond_count(me, rtd) : null);
