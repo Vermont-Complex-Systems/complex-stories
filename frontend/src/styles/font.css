@@ -17,24 +17,6 @@
 }
 
 @font-face {
-	font-family: "Tiempos Text";
-	src: url("/assets/fonts/tiempos/TiemposTextWeb-Regular.woff2") format("woff2");
-	font-weight: 400;
-	font-style: normal;
-	font-stretch: normal;
-	font-display: swap;
-}
-
-@font-face {
-	font-family: "Tiempos Text";
-	src: url("/assets/fonts/tiempos/TiemposTextWeb-Bold.woff2") format("woff2");
-	font-weight: 700;
-	font-style: normal;
-	font-stretch: normal;
-	font-display: swap;
-}
-
-@font-face {
 	font-family: "Atlas Typewriter";
 	src: url("/assets/fonts/atlas/AtlasTypewriter-Medium-Web.woff2") format("woff2");
 	font-weight: 500;
@@ -45,8 +27,26 @@
 
 @font-face {
 	font-family: "Baskerville";
+	src: url("/assets/fonts/baskerville/Baskervville-Regular.ttf") format("TrueType");
+	font-weight: 400;
+	font-style: normal;
+	font-stretch: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "Baskerville";
 	src: url("/assets/fonts/baskerville/Baskervville-SemiBold.ttf") format("TrueType");
 	font-weight: 600;
+	font-style: normal;
+	font-stretch: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "Baskerville";
+	src: url("/assets/fonts/baskerville/Baskervville-Bold.ttf") format("TrueType");
+	font-weight: 700;
 	font-style: normal;
 	font-stretch: normal;
 	font-display: swap;
