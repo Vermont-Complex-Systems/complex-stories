@@ -7,6 +7,18 @@
 
   const isExternal = !!story.externalUrl;
   const finalHref = isExternal ? story.externalUrl : `${base}/${story.slug}`;
+
+  // Glob-import all thumbnails through enhanced-img for automatic WebP/AVIF conversion
+  const thumbnails = import.meta.glob<{ default: string }>(
+    '/src/lib/assets/thumbnails/*.{jpg,png,webp}',
+    { eager: true, query: { enhanced: true } }
+  );
+
+  // Find this story's thumbnail (try jpg then png)
+  const thumbnailKey = Object.keys(thumbnails).find(
+    k => k.endsWith(`/${story.slug}.jpg`) || k.endsWith(`/${story.slug}.png`)
+  );
+  const thumbnail = thumbnailKey ? thumbnails[thumbnailKey].default : null;
 </script>
 
 <div class:external={isExternal}>
@@ -22,11 +34,19 @@
           <ExternalLink size={18} />
         </div>
       {/if}
-      <img
-        src="{base}/common/thumbnails/screenshots/{story.slug}.jpg"
-        loading="lazy"
-        alt="Thumbnail for {story.title}"
-      />
+      {#if thumbnail}
+        <enhanced:img
+          src={thumbnail}
+          loading="lazy"
+          alt="Thumbnail for {story.title}"
+        />
+      {:else}
+        <img
+          src="{base}/common/thumbnails/screenshots/{story.slug}.jpg"
+          loading="lazy"
+          alt="Thumbnail for {story.title}"
+        />
+      {/if}
     </div>
     <div class="text">
       <div class="header-row">
@@ -83,7 +103,8 @@
     transform: translateY(-2px);
   }
 
-  .screenshot img {
+  .screenshot img,
+  .screenshot :global(picture img) {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -92,7 +113,8 @@
     transition: transform 0.25s ease;
   }
 
-  .story:hover .screenshot img {
+  .story:hover .screenshot img,
+  .story:hover .screenshot :global(picture img) {
     transform: scale(1.05);
   }
 

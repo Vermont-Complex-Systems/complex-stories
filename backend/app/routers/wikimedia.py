@@ -4,9 +4,11 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 import time
 import asyncio
-from ..core.database import get_mongo_client, get_wikimedia_db, get_optimized_collection
+from ..core.database import get_mongo_client
+from better_profanity import profanity
 
 router = APIRouter()
+
 
 class NgramResult(BaseModel):
     types: str
@@ -80,49 +82,43 @@ async def get_top_ngrams(
             loop.run_in_executor(None, execute_mongo_query, item)
             for item in varying_dimension
         ]
+        
         query_results = await asyncio.gather(*tasks)
 
         # Process results
         for key, docs in query_results:
-            if docs:
-                # Helper function to extract pv_count from MongoDB structure
-                def get_pv_count(doc):
-                    pv_count = doc.get("pv_count", 0)
-                    if isinstance(pv_count, dict) and "$numberLong" in pv_count:
-                        return int(pv_count["$numberLong"])
-                    return int(pv_count) if pv_count is not None else 0
+            if not docs:
+                continue
+                
+            # Extract pv_counts once upfront using list comprehension
+            pv_counts = [
+                int(doc["pv_count"]["$numberLong"]) if isinstance(doc.get("pv_count"), dict) 
+                else int(doc.get("pv_count", 0))
+                for doc in docs
+            ]
+            
+            # Calculate aggregates only if needed
+            total_count = sum(pv_counts) if include_probs else None
+            total_unique = len(docs) if include_totalunique else None
 
-                # Filter out NaN ngrams before processing
-                valid_docs = [doc for doc in docs if doc.get("ngram") is not None and str(doc.get("ngram")).lower() != "nan"]
+            # Build results efficiently with list comprehension
+            ngram_results = []
+            for doc, pv_count in zip(docs, pv_counts):
+                result_kwargs = {
+                    "types": profanity.censor(str(doc.get("ngram", ""))),
+                    "counts": pv_count
+                }
 
-                # Only calculate these if requested (performance optimization)
-                total_count = None
-                total_unique = None
-                if include_probs:
-                    total_count = sum(get_pv_count(doc) for doc in valid_docs)
+                if include_probs and total_count and total_count > 0:
+                    result_kwargs["probs"] = pv_count / total_count
+
                 if include_totalunique:
-                    total_unique = len(valid_docs)
+                    result_kwargs["totalunique"] = total_unique
 
-                # Build results with conditional field inclusion
-                ngram_results = []
-                for doc in valid_docs:
-                    # Start with required fields
-                    result_kwargs = {
-                        "types": str(doc.get("ngram", "")),
-                        "counts": get_pv_count(doc)
-                    }
+                ngram_results.append(NgramResult(**result_kwargs))
 
-                    # Only add optional fields if requested
-                    if include_probs and total_count > 0:
-                        result_kwargs["probs"] = get_pv_count(doc) / total_count
-
-                    if include_totalunique:
-                        result_kwargs["totalunique"] = total_unique
-
-                    ngram_results.append(NgramResult(**result_kwargs))
-
-                results[key] = ngram_results
-
+            results[key] = ngram_results
+            
         # Log performance and payload info
         duration = (time.time() - start_time) * 1000  # Convert to milliseconds
         mode = "dates" if comparing_dates else ("countries" if comparing_countries else "single")
