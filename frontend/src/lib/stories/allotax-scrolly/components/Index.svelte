@@ -1,6 +1,7 @@
 <script>
     import * as d3 from "d3";
     import { base } from "$app/paths";
+    import { browser } from '$app/environment';
     import { fade, fly } from 'svelte/transition';
     import { innerWidth } from 'svelte/reactivity/window';
     import { Diamond, Legend, DivergingBarChart, Dashboard } from 'allotaxonometer-ui';
@@ -57,18 +58,18 @@
     let alpha = $state(0.58);
     const alphas = d3.range(0,18).map(v => +(v/12).toFixed(2)).concat([1, 2, 5, Infinity]);
     let alphaIndex = $state(7); // Start at 0.58
-    
+
     let DiamondHeight = 600;
     let DiamondWidth = DiamondHeight;
     let marginInner = 160;
     let marginDiamond = 40;
-    let max_shift = $derived(barData.length > 0 ? d3.max(barData, d => Math.abs(d.metric)) : 1);
-    
+
     let me = $derived(sys1 && sys2 ? combElems(sys1, sys2) : null);
     let rtd = $derived(me ? rank_turbulence_divergence(me, alpha) : null);
     let dat = $derived(me && rtd ? diamond_count(me, rtd) : null);
-    
+
     let barData = $derived(me && dat ? wordShift_dat(me, dat).slice(0, 30) : []);
+    let max_shift = $derived(barData.length > 0 ? d3.max(barData, d => Math.abs(d.metric)) : 1);
     let balanceData = $derived(sys1 && sys2 ? balanceDat(sys1, sys2) : []);
     let maxlog10 = $derived(me ? Math.ceil(d3.max([Math.log10(d3.max(me[0].ranks)), Math.log10(d3.max(me[1].ranks))])) : 0);
     let max_count_log = $derived(dat ? Math.ceil(Math.log10(d3.max(dat.counts, d => d.value))) + 1 : 2);
@@ -88,7 +89,7 @@
         }
     });
 
-    let delta_sum = $derived(d3.sum(dat.deltas.map(d => +d)).toFixed(3));
+    let delta_sum = $derived(dat ? d3.sum(dat.deltas.map(d => +d)).toFixed(3) : '0.000');
     let math = $derived(`$D_{\\alpha}^R (\\Omega_1 || \\Omega_2 = ${delta_sum})$\n$\\propto \\sum_\\tau | \\frac{1}{r_{\\tau,1}^{${alpha == 'Infinity' ? '\\infty' : alpha}}} - \\frac{1}{r_{\\tau,2}^{${alpha == 'Infinity' ? '\\infty' : alpha}}} |$`);
 
     // Determine effective step: distinguish between entering (start at 0) vs leaving (keep final state)
@@ -189,7 +190,7 @@
             </div>
         {:else}
             <!-- Interactive visualization for desktop/tablet -->
-            {#if isDataReady && renderedData}
+            {#if browser && isDataReady && renderedData}
                 <div class="visualization-container">
                     {#if effectiveStep >= 0}
                     <div class="diamondplot">
@@ -240,9 +241,7 @@
             {#each steps as text, i}
             {@const active = scrollyIndex === i || (scrollyIndex === undefined && i === 0)}
             <div class="scrolly-step" class:active class:mobile={isMobile} class:tablet={isTablet}>
-                <p> 
-                    <ScrollyMd text={text.value} {isGirls} />
-                </p>
+                <ScrollyMd text={text.value} {isGirls} />
             </div>
             {/each}
         </Scrolly>
@@ -256,13 +255,13 @@
     {#if isMobile}
         <!-- Mobile static image for final dashboard -->
         <div class="mobile-dashboard-image">
-            <img 
+            <img
                 src="{base}/common/thumbnails/screenshots/allotax-scrolly-{mobileImageGender}-dashboard.jpg"
                 alt="Complete allotaxonometer dashboard for {mobileImageGender} baby names analysis"
                 loading="lazy"
             />
         </div>
-    {:else}
+    {:else if browser}
     <div class="dashboard-section">
             <!-- Desktop interactive dashboard -->
             <div class="dashboard-container">
@@ -279,7 +278,7 @@
                     {title}
                     {maxlog10}
                     {max_count_log}
-                    width={Math.min(innerWidth.current - 40, 1400)} 
+                    width={Math.min((innerWidth.current || 1440) - 40, 1400)}
                     {DiamondHeight}
                     {DiamondWidth}
                     {marginInner}
