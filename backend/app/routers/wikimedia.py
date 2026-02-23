@@ -239,17 +239,9 @@ async def get_rank_divergence(
                 "date": parsed_date
             }
 
-            # Get top results (highest divergence)
-            top_results = list(coll.find(query)
-                             .sort("abs_divergence", -1)
-                             .limit(topN))
-
-            # Get bottom results (lowest divergence)
-            bottom_results = list(coll.find(query)
-                                .sort("abs_divergence", 1)
-                                .limit(topN))
-
-            return top_results + bottom_results
+            return list(coll.find(query)
+                        .sort("abs_divergence", -1)
+                        .limit(topN))
 
         loop = asyncio.get_event_loop()
         results = await loop.run_in_executor(None, execute_rank_divergence)
