@@ -310,11 +310,6 @@ async def get_adapter_info(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
-    finally:
-        try:
-            duckdb_client.close()
-        except:
-            pass
 
 @router.get("/babynames/top-ngrams")
 async def get_babynames_top_ngrams(
@@ -472,11 +467,6 @@ async def get_babynames_top_ngrams(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
-    finally:
-        try:
-            duckdb_client.close()
-        except:
-            pass
 
 @router.get("/wikigrams/top-ngrams")
 async def get_wikigrams_top_ngrams(
@@ -674,11 +664,6 @@ async def get_wikigrams_top_ngrams(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
-    finally:
-        try:
-            duckdb_client.close()
-        except:
-            pass
 
 @router.get("/search-term/{term}")
 async def search_term(
@@ -804,6 +789,8 @@ async def search_term(
         # --- Spark query: rank of this term for each date in the window ---
         spark_data = []
         if date and window_start and window_end:
+            # query_paths is already filtered to the correct geo (lines above filter by local_geo),
+            # so no adapter JOIN is needed here — avoids a full adapter parquet scan per row.
             spark_sql = f"""
                 WITH daily_totals AS (
                     SELECT
@@ -811,9 +798,7 @@ async def search_term(
                         w.{time_column},
                         SUM(w.counts) AS counts
                     FROM read_parquet(?) w
-                    LEFT JOIN read_parquet(?) a ON w.geo = a.local_id
-                    WHERE a.entity_id = ?
-                      AND w.{time_column} BETWEEN ? AND ?
+                    WHERE w.{time_column} BETWEEN ? AND ?
                     GROUP BY w.types, w.{time_column}
                 ),
                 ranked AS (
@@ -829,7 +814,7 @@ async def search_term(
                 WHERE types = ?
                 ORDER BY {time_column}
             """
-            spark_params = [query_paths, adapter_path, location, window_start, window_end, term]
+            spark_params = [query_paths, window_start, window_end, term]
             spark_cursor = conn.execute(spark_sql, spark_params)
             spark_results = spark_cursor.fetchall()
             spark_cols = [desc[0] for desc in spark_cursor.description]
@@ -848,11 +833,6 @@ async def search_term(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
-    finally:
-        try:
-            duckdb_client.close()
-        except:
-            pass
 
 
 @router.get("/{dataset_id}/validate-sources")
