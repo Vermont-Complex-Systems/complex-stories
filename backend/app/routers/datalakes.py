@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 import httpx
 import time
 from datetime import datetime, timedelta
-from urllib.parse import unquote
+from urllib.parse import quote
 from ..core.database import get_db_session
 from ..core.duckdb_client import get_duckdb_client
 from ..models.datalakes import Datalake, EntityMapping
@@ -25,8 +25,8 @@ admin_router = APIRouter()
 def get_parquet_paths(datalake, data_table_name: str):
     """Construct parquet file paths for data table and adapter table.
 
-    The paths stored in tables_metadata are relative paths from the ducklake data directory.
-    We prepend data_location to make them absolute.
+    For parquet_hive format: paths in tables_metadata are absolute; adapter comes from entity_mapping.path.
+    For ducklake format: paths are relative filenames; prepend data_location + /main/ + table_name/.
     """
     if not datalake.tables_metadata:
         raise HTTPException(
@@ -35,25 +35,40 @@ def get_parquet_paths(datalake, data_table_name: str):
         )
 
     data_fnames = datalake.tables_metadata.get(data_table_name)
-    adapter_fnames = datalake.tables_metadata.get("adapter")
 
-    if not data_fnames or not adapter_fnames:
+    if not data_fnames:
         raise HTTPException(
             status_code=500,
-            detail=f"Missing {data_table_name} or adapter file paths. Required: tables_metadata.{data_table_name} and tables_metadata.adapter"
+            detail=f"Missing {data_table_name} file paths. Required: tables_metadata.{data_table_name}"
         )
 
-    # Paths in tables_metadata are relative paths like "geo=US/date=2024-11-01/file.parquet"
-    # We need to construct: {data_location}/main/{table_name}/{relative_path}
-    # NOTE: Don't URL-decode - the filesystem actually has %20 in directory names
-    data_path = [
-        f"{datalake.data_location}/main/{data_table_name}/{fname}"
-        for fname in data_fnames
-    ]
-    adapter_path = [
-        f"{datalake.data_location}/main/adapter/{fname}"
-        for fname in adapter_fnames
-    ]
+    if datalake.data_format == "parquet_hive":
+        # Paths are already absolute
+        data_path = data_fnames
+        # Adapter path comes from entity_mapping.path
+        if not datalake.entity_mapping or not datalake.entity_mapping.get("path"):
+            raise HTTPException(
+                status_code=500,
+                detail="Missing entity_mapping.path for parquet_hive format. Please re-register with entity_mapping."
+            )
+        adapter_path = [datalake.entity_mapping["path"]]
+    else:
+        # ducklake format: relative filenames, prepend data_location
+        # NOTE: Don't URL-decode - the filesystem actually has %20 in directory names
+        adapter_fnames = datalake.tables_metadata.get("adapter")
+        if not adapter_fnames:
+            raise HTTPException(
+                status_code=500,
+                detail="Missing adapter file paths. Required: tables_metadata.adapter"
+            )
+        data_path = [
+            f"{datalake.data_location}/main/{data_table_name}/{fname}"
+            for fname in data_fnames
+        ]
+        adapter_path = [
+            f"{datalake.data_location}/main/adapter/{fname}"
+            for fname in adapter_fnames
+        ]
 
     return data_path, adapter_path
 
@@ -120,10 +135,10 @@ def compute_partition_starts(start_date: str, end_date: str, granularity: str) -
 
 
 class EntityMappingConfig(BaseModel):
-    """Configuration for entity mapping table"""
-    table: str = Field(..., description="Name of the adapter table containing entity mappings")
-    local_id_column: str = Field(..., description="Column name for local identifiers")
-    entity_id_column: str = Field(..., description="Column name for standardized entity identifiers")
+    table: Optional[str] = Field(None, description="DuckLake table name (ducklake format)")
+    path: Optional[str] = Field(None, description="Parquet file path (parquet_hive format)")
+    local_id_column: str = Field(...)
+    entity_id_column: str = Field(...)
 
 
 class DatalakeCreate(BaseModel):
@@ -556,13 +571,6 @@ async def get_wikigrams_top_ngrams(
         # Get file paths using helper function
         wikigrams_path, adapter_path = get_parquet_paths(datalake, table_name)
 
-        entity_to_geo = {
-            "wikidata:Q30": "United%20States",
-            "wikidata:Q145": "United%20Kingdom",
-            "wikidata:Q16": "Canada",
-            "wikidata:Q408": "Australia"
-        }
-
         # Execute comparative queries
         results = {}
         queried_partitions_metadata = []
@@ -570,15 +578,23 @@ async def get_wikigrams_top_ngrams(
         # Query for each combination of date ranges and locations
         for date_range in date_ranges:
             for location in location_list:
+                # Resolve entity_id → local_id (geo name) via adapter
+                adapter_row = conn.execute(
+                    "SELECT local_id FROM read_parquet(?) WHERE entity_id = ? LIMIT 1",
+                    [adapter_path, location]
+                ).fetchone()
+                if not adapter_row:
+                    raise HTTPException(status_code=400, detail=f"Location '{location}' not found in adapter")
+                local_geo = quote(adapter_row[0], safe='')
+
                 # Compute partition directories by stepping through the date range
                 partition_starts = compute_partition_starts(date_range[0], date_range[1], granularity)
 
                 # Filter paths to partition directories and geo
-                local_geo = entity_to_geo.get(location)
                 filtered_wikigrams_path = [
                     p for p in wikigrams_path
                     if any(f"{time_column}={ps}" in p for ps in partition_starts)
-                    and (not local_geo or f"geo={local_geo}" in p)
+                    and f"geo={local_geo}" in p
                 ]
 
                 if not filtered_wikigrams_path:
@@ -637,7 +653,7 @@ async def get_wikigrams_top_ngrams(
                                 "granularity": granularity,
                                 "table_used": table_name,
                                 "time_column": time_column,
-                                "queried_partitions": overlapping_partitions
+                                "queried_partitions": partition_starts
                             }
                         }
                     else:
@@ -671,7 +687,7 @@ async def search_term(
     location: str = Query("wikidata:Q30", description="Location entity ID (e.g., wikidata:Q30 for United States)"),
     date: Optional[str] = Query(None, description="Optional date filter (YYYY-MM-DD)"),
     granularity: str = Query("daily", description="Granularity: daily, weekly, monthly"),
-    window_days: int = Query(7, description="Days before/after the chosen date to include in spark plot data"),
+    window_size: int = Query(7, description="Number of granularity periods before/after the chosen date for spark plot data (e.g. 7 = 7 days for daily, 7 weeks for weekly, 7 months for monthly)"),
     db: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -727,24 +743,30 @@ async def search_term(
 
         wikigrams_path, adapter_path = get_parquet_paths(datalake, table_name)
 
-        entity_to_geo = {
-            "wikidata:Q30": "United%20States",
-            "wikidata:Q145": "United%20Kingdom",
-            "wikidata:Q16": "Canada",
-            "wikidata:Q408": "Australia"
-        }
-        local_geo = entity_to_geo.get(location)
-        if local_geo:
-            wikigrams_path = [p for p in wikigrams_path if f"geo={local_geo}" in p]
+        # Resolve entity_id → local_id (geo name) via adapter
+        adapter_row = conn.execute(
+            "SELECT local_id FROM read_parquet(?) WHERE entity_id = ? LIMIT 1",
+            [adapter_path, location]
+        ).fetchone()
+        if not adapter_row:
+            raise HTTPException(status_code=400, detail=f"Location '{location}' not found in adapter")
+        local_geo = quote(adapter_row[0], safe='')
+        wikigrams_path = [p for p in wikigrams_path if f"geo={local_geo}" in p]
 
         # When a date is given, compute the window partition directories arithmetically.
         # Use the wider window paths for both queries so we only open parquet files once.
         window_start = window_end = None
+        partition_date = None  # date snapped to the partition boundary for time_column filter
         if date:
             focus_date = datetime.fromisoformat(date)
-            window_start = (focus_date - timedelta(days=window_days)).strftime("%Y-%m-%d")
-            window_end = (focus_date + timedelta(days=window_days)).strftime("%Y-%m-%d")
+            # Scale window to match the granularity unit
+            window_unit_days = {"daily": 1, "weekly": 7, "monthly": 30}[granularity]
+            effective_window = window_size * window_unit_days
+            window_start = (focus_date - timedelta(days=effective_window)).strftime("%Y-%m-%d")
+            window_end = (focus_date + timedelta(days=effective_window)).strftime("%Y-%m-%d")
             window_partitions = compute_partition_starts(window_start, window_end, granularity)
+            # Snap focus date to partition boundary (e.g. Tuesday → Monday for weekly)
+            partition_date = compute_partition_starts(date, date, granularity)[0]
             query_paths = [
                 p for p in wikigrams_path
                 if any(f"{time_column}={ps}" in p for ps in window_partitions)
@@ -771,9 +793,9 @@ async def search_term(
         """
         params = [query_paths, adapter_path, term, location]
 
-        if date:
+        if partition_date:
             sql_query += f" AND w.{time_column} = ?"
-            params.append(date)
+            params.append(partition_date)
 
         sql_query += f" GROUP BY w.types, w.{time_column}, w.geo ORDER BY w.{time_column}"
 
@@ -788,33 +810,21 @@ async def search_term(
 
         # --- Spark query: rank of this term for each date in the window ---
         spark_data = []
-        if date and window_start and window_end:
+        if partition_date and window_start and window_end:
             # query_paths is already filtered to the correct geo (lines above filter by local_geo),
             # so no adapter JOIN is needed here — avoids a full adapter parquet scan per row.
             spark_sql = f"""
-                WITH daily_totals AS (
-                    SELECT
-                        w.types,
-                        w.{time_column},
-                        SUM(w.counts) AS counts
-                    FROM read_parquet(?) w
-                    WHERE w.{time_column} BETWEEN ? AND ?
-                    GROUP BY w.types, w.{time_column}
-                ),
-                ranked AS (
-                    SELECT
-                        types,
-                        {time_column},
-                        counts,
-                        RANK() OVER (PARTITION BY {time_column} ORDER BY counts DESC) AS rank
-                    FROM daily_totals
-                )
-                SELECT {time_column}, rank, counts
-                FROM ranked
-                WHERE types = ?
-                ORDER BY {time_column}
+                SELECT
+                    w.{time_column},
+                    MIN(w.rank) AS rank,
+                    SUM(w.counts) AS counts
+                FROM read_parquet(?) w
+                WHERE w.{time_column} BETWEEN ? AND ?
+                  AND w.types = ?
+                GROUP BY w.{time_column}
+                ORDER BY w.{time_column}
             """
-            spark_params = [query_paths, window_start, window_end, term]
+            spark_params = [query_paths, window_partitions[0], window_partitions[-1], term]
             spark_cursor = conn.execute(spark_sql, spark_params)
             spark_results = spark_cursor.fetchall()
             spark_cols = [desc[0] for desc in spark_cursor.description]
