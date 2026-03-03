@@ -5,6 +5,7 @@
     
     import TrustDistributionChart from './TrustDistributionChart.svelte';
     import ACESSlider from './ACESSlider.svelte';
+    import TrustSonification from './TrustSonification.svelte';
     import { institutionColorMap, getInstitutionColor } from '../utils/institutionColors.js';
 
 
@@ -26,6 +27,12 @@
 
     // Track if story section is in viewport
     let storySectionVisible = $state(false);
+    let sonificationData = $state([]);
+
+    $effect(() => {
+        scrollyIndex;
+        sonificationData = Array.isArray(data) ? [...data] : [];
+    });
 
     $effect(() => {
         if (typeof window !== 'undefined' && storySection) {
@@ -47,6 +54,7 @@
     // - Dem_Gender_Woman, Dem_Gender_Man, Dem_Gender_Other
     // - ACES_No, ACES_Yes (ACES_Compound exists in data but not used in storytelling)
     $effect(() => {
+        console.log(data)
         // If external props are provided (dashboard mode), use those instead of scrollyIndex
         if (externalCategory !== undefined) {
             selectedDemCategory = externalCategory;
@@ -154,6 +162,7 @@
 
 
 <div class="chart-wrapper">
+    <TrustSonification data={sonificationData} minVolumeDb={-40} maxVolumeDb={-8} />
      <div class="viz-content">
         <div class="plot-container" class:dashboard={isDashboard} style={isDashboard ? `height: ${height}px;` : ''}>
             <svg class="trust-visualization" viewBox={`0 0 ${width} ${height}`}>
