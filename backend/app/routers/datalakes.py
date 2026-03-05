@@ -294,16 +294,22 @@ async def get_adapter_info(
                 detail="Datalake metadata is missing. Please re-register the datalake with proper tables_metadata."
             )
         
-        adapter_fnames = datalake.tables_metadata.get("adapter")
-
-        if not adapter_fnames:
-            raise HTTPException(
-                status_code=500,
-                detail="Missing babynames or adapter file paths. Required: tables_metadata.babynames and tables_metadata.adapter"
-            )
-
-        adapter_path = [
-            f"{datalake.data_location}/{datalake.ducklake_data_path}/main/adapter/{fname}" for fname in adapter_fnames
+        if datalake.data_format == "parquet_hive":
+            if not datalake.entity_mapping or not datalake.entity_mapping.get("path"):
+                raise HTTPException(
+                    status_code=500,
+                    detail="Missing entity_mapping.path for parquet_hive format."
+                )
+            adapter_path = [datalake.entity_mapping["path"]]
+        else:
+            adapter_fnames = datalake.tables_metadata.get("adapter")
+            if not adapter_fnames:
+                raise HTTPException(
+                    status_code=500,
+                    detail="Missing adapter file paths. Required: tables_metadata.adapter"
+                )
+            adapter_path = [
+                f"{datalake.data_location}/{datalake.ducklake_data_path}/main/adapter/{fname}" for fname in adapter_fnames
             ]
 
         # Execute comparative queries
