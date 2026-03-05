@@ -164,12 +164,10 @@ async def allotax_endpoint(
     try:
         if alphas:
             alpha_list = [float(a) for a in alphas.split(",")]
-            result_data = allotax.compute_allotax_multi_alpha(sys1, sys2, alpha_list)
-            for slice_ in result_data.get("alpha_results", []):
-                slice_["wordshift"] = slice_["wordshift"][:wordshift_limit]
+            result_data = allotax.compute_allotax_multi_alpha(sys1, sys2, alpha_list, wordshift_limit)
         else:
-            result_data = allotax.compute_allotax(sys1, sys2, alpha)
-            result_data["wordshift"] = result_data["wordshift"][:wordshift_limit]
+            result_data = allotax.compute_allotax(sys1, sys2, alpha, wordshift_limit)
+
 
         return {
             **result_data,
