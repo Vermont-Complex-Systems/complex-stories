@@ -56,6 +56,8 @@ def _load_ngrams(conn, datalake, table_name: str, time_column: str,
             detail=f"No data found for {date_range[0]} to {date_range[1]} / location {location}"
         )
 
+    # Use snapped partition boundaries in SQL — raw input dates won't match stored
+    # week/month column values (e.g. input "2024-11-07" vs stored "2024-11-04").
     sql = f"""
         SELECT w.types, SUM(w.counts) AS counts
         FROM read_parquet(?) w
@@ -67,7 +69,7 @@ def _load_ngrams(conn, datalake, table_name: str, time_column: str,
         LIMIT ?
     """
     rows = conn.execute(sql, [filtered_path, adapter_path,
-                               date_range[0], date_range[1], location, limit]).fetchall()
+                               partition_starts[0], partition_starts[-1], location, limit]).fetchall()
 
     types = [r[0] for r in rows]
     counts = [float(r[1]) for r in rows]
