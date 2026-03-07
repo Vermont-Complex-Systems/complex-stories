@@ -1148,7 +1148,7 @@ async def search_term(
 
 
 # ── Wiki Revisions endpoints ─────────────────────────────────────────────────
-# Registered as "wiki_revisions" datalake; data lives under data_location/data/
+# Registered as "wiki_revisions" datalake; Hive-partitioned by identifier.
 
 
 async def _get_revisions_path(db: AsyncSession) -> str:
@@ -1158,7 +1158,7 @@ async def _get_revisions_path(db: AsyncSession) -> str:
     datalake = result.scalar_one_or_none()
     if not datalake:
         raise HTTPException(status_code=404, detail="wiki_revisions datalake not found")
-    return f"{datalake.data_location}/data"
+    return datalake.data_location
 
 
 @router.get("/wikigrams/revisions")
