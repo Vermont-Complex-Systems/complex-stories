@@ -1178,7 +1178,6 @@ async def list_revision_articles(
         rows = conn.execute(f"""
             SELECT identifier,
                    ANY_VALUE(name) as name,
-                   ANY_VALUE(url) as url,
                    COUNT(*) as revision_count,
                    MIN(date_modified) as first_edit,
                    MAX(date_modified) as last_edit
@@ -1196,10 +1195,9 @@ async def list_revision_articles(
                 {
                     "identifier": r[0],
                     "name": r[1],
-                    "url": r[2],
-                    "revision_count": r[3],
-                    "first_edit": r[4],
-                    "last_edit": r[5],
+                    "revision_count": r[2],
+                    "first_edit": r[3],
+                    "last_edit": r[4],
                 }
                 for r in rows
             ],
