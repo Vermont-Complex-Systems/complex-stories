@@ -1231,7 +1231,7 @@ async def get_revision_deltas(
         rows = conn.execute(f"""
             WITH ordered AS (
                 SELECT *,
-                    ROW_NUMBER() OVER (ORDER BY date_modified, revision_id) - 1 AS rev_seq,
+                    ROW_NUMBER() OVER (ORDER BY revision_id::BIGINT) - 1 AS rev_seq,
                     json(ngram_counts)::MAP(VARCHAR, INTEGER) AS m
                 FROM read_parquet('{revisions_path}/identifier={identifier}/*.parquet')
             ),
@@ -1264,13 +1264,12 @@ async def get_revision_deltas(
                 FROM diffs
                 GROUP BY rev_seq
             )
-            SELECT o.rev_seq AS revision_idx,
-                   o.revision_id,
+            SELECT o.revision_id,
                    o.name,
                    o.date_modified,
                    o.revision_comment,
-                   o.total_tokens,
-                   COALESCE(d.delta, '{{}}') AS delta
+                   o.categories,
+                   COALESCE(d.delta, '{{}}') AS token_diff
             FROM ordered o
             LEFT JOIN delta_agg d ON o.rev_seq = d.rev_seq
             ORDER BY o.rev_seq
@@ -1284,13 +1283,12 @@ async def get_revision_deltas(
         return {
             "revisions": [
                 {
-                    "revision_idx": r[0],
-                    "revision_id": r[1],
-                    "name": r[2],
-                    "date_modified": r[3],
-                    "comment": r[4],
-                    "total_tokens": r[5],
-                    "delta": r[6],
+                    "revision_id": r[0],
+                    "name": r[1],
+                    "date_modified": r[2],
+                    "revision_comment": r[3],
+                    "categories": r[4],
+                    "token_diff": r[5],
                 }
                 for r in rows
             ],
