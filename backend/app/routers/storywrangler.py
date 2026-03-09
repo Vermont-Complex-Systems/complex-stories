@@ -19,13 +19,13 @@ from ..models.datasets import Dataset
 router = APIRouter()
 
 
-def _load_ngrams(conn, datalake, table_name: str, time_column: str,
+def _load_ngrams(conn, dataset_obj, table_name: str, time_column: str,
                  date_range: List[str], location: str, limit: int) -> dict:
-    """Load top ngrams for one (date_range, location) system from a datalake.
+    """Load top ngrams for one (date_range, location) system from a dataset.
 
     Returns a dict with "types" and "counts" lists ready for allotax input.
     """
-    ngrams_path, adapter_path = get_parquet_paths(datalake, table_name)
+    ngrams_path, adapter_path = get_parquet_paths(dataset_obj, table_name)
 
     # Resolve entity_id → local_id via adapter
     adapter_row = conn.execute(
@@ -98,7 +98,7 @@ async def allotax_endpoint(
 ):
     """Compute allotaxonometer (rank-turbulence divergence) between two ngram distributions.
 
-    Loads raw ngrams server-side from the specified datalake, runs the full allotax
+    Loads raw ngrams server-side from the specified dataset, runs the full allotax
     pipeline in Rust via PyO3, and returns lean visualization data (~30-50KB).
 
     Response shape (single alpha):
@@ -132,12 +132,12 @@ async def allotax_endpoint(
     result = await db.execute(
         select(Dataset).where(Dataset.domain == domain, Dataset.dataset_id == dataset)
     )
-    datalake = result.scalar_one_or_none()
-    if not datalake:
+    dataset_obj = result.scalar_one_or_none()
+    if not dataset_obj:
         raise HTTPException(status_code=404, detail=f"Dataset '{domain}/{dataset}' not found")
 
-    if not datalake.tables_metadata or table_name not in datalake.tables_metadata:
-        available = list(datalake.tables_metadata.keys()) if datalake.tables_metadata else []
+    if not dataset_obj.tables_metadata or table_name not in dataset_obj.tables_metadata:
+        available = list(dataset_obj.tables_metadata.keys()) if dataset_obj.tables_metadata else []
         raise HTTPException(
             status_code=400,
             detail=f"Table '{table_name}' not available. Found: {available}"
@@ -155,8 +155,8 @@ async def allotax_endpoint(
         duckdb_client = get_duckdb_client()
         conn = duckdb_client.connect()
 
-        sys1 = _load_ngrams(conn, datalake, table_name, time_column, dr1, location, ngram_limit)
-        sys2 = _load_ngrams(conn, datalake, table_name, time_column, dr2, location2, ngram_limit)
+        sys1 = _load_ngrams(conn, dataset_obj, table_name, time_column, dr1, location, ngram_limit)
+        sys2 = _load_ngrams(conn, dataset_obj, table_name, time_column, dr2, location2, ngram_limit)
 
     except HTTPException:
         raise

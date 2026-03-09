@@ -285,7 +285,7 @@ async def get_rank_divergence(
 # ── DuckDB endpoints ────────────────────────────────────────────────
 
 async def _get_revisions_path(db: AsyncSession) -> str:
-    """Look up revisions data path from datalake DB."""
+    """Look up revisions data path from dataset registry."""
     query = WikimediaDataset.where(Dataset.dataset_id == "revisions")
     result = await db.execute(query)
     rev_dataset = result.scalar_one_or_none()
@@ -339,10 +339,10 @@ async def search_terms_batch(
 
     query = WikimediaDataset.where(Dataset.dataset_id == "ngrams")
     result = await db.execute(query)
-    datalake = result.scalar_one_or_none()
+    dataset_obj = result.scalar_one_or_none()
 
-    if not datalake:
-        raise HTTPException(status_code=404, detail="Wikigrams datalake not found")
+    if not dataset_obj:
+        raise HTTPException(status_code=404, detail="Wikigrams dataset not found")
 
     granularity_mapping = {
         "daily": ("wikigrams", "date"),
@@ -353,22 +353,22 @@ async def search_terms_batch(
 
     has_top_articles = (
         granularity == "daily"
-        and bool(datalake.data_schema and "top_articles" in datalake.data_schema)
+        and bool(dataset_obj.data_schema and "top_articles" in dataset_obj.data_schema)
     )
 
     try:
         duckdb_client = get_duckdb_client()
         conn = duckdb_client.connect()
 
-        if not datalake.tables_metadata:
-            raise HTTPException(status_code=500, detail="Datalake metadata is missing.")
+        if not dataset_obj.tables_metadata:
+            raise HTTPException(status_code=500, detail="Dataset metadata is missing.")
 
-        if table_name not in datalake.tables_metadata:
-            available = [k for k in datalake.tables_metadata.keys() if k.startswith("wikigrams")]
+        if table_name not in dataset_obj.tables_metadata:
+            available = [k for k in dataset_obj.tables_metadata.keys() if k.startswith("wikigrams")]
             raise HTTPException(status_code=400, detail=f"Table '{table_name}' not found. Available: {available}.")
 
         t_paths = time.time()
-        wikigrams_path_all, adapter_path = get_parquet_paths(datalake, table_name)
+        wikigrams_path_all, adapter_path = get_parquet_paths(dataset_obj, table_name)
         t_paths_ms = (time.time() - t_paths) * 1000
 
         path_prefix_index: Dict[str, List[str]] = {}
@@ -406,7 +406,7 @@ async def search_terms_batch(
             window_partitions = compute_partition_starts(w_start, w_end, granularity)
             focus_partition = compute_partition_starts(system["date"], system["date"], granularity)[0]
 
-            base = f"{datalake.data_location}/{table_name}/geo={local_geo}"
+            base = f"{dataset_obj.data_location}/{table_name}/geo={local_geo}"
             query_paths = []
             for ps in window_partitions:
                 query_paths.extend(path_prefix_index.get(f"{base}/{time_column}={ps}", []))
