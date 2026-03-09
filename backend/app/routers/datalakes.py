@@ -5,153 +5,17 @@ Datalakes API endpoints for querying registered ducklakes/datalakes.
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from typing import Dict, Any, Optional, List, Union
-from pydantic import BaseModel, Field
+from typing import Dict, Any, Optional, List
 import httpx
 import time
 from datetime import datetime, timedelta
 from urllib.parse import quote
 from ..core.database import get_db_session
 from ..core.duckdb_client import get_duckdb_client
-from ..models.datalakes import Datalake, EntityMapping
-from ..routers.auth import get_admin_user
-from ..models.auth import User
+from ..core.parquet_utils import get_parquet_paths, compute_partition_starts
+from ..models.datasets import Dataset as Datalake
 
 router = APIRouter()
-admin_router = APIRouter()
-
-
-# Helper functions for top-ngrams endpoints
-def get_parquet_paths(datalake, data_table_name: str):
-    """Construct parquet file paths for data table and adapter table.
-
-    For parquet_hive format: paths in tables_metadata are absolute; adapter comes from entity_mapping.path.
-    For ducklake format: paths are relative filenames; prepend data_location + /main/ + table_name/.
-    """
-    if not datalake.tables_metadata:
-        raise HTTPException(
-            status_code=500,
-            detail="Datalake metadata is missing. Please re-register the datalake with proper tables_metadata."
-        )
-
-    data_fnames = datalake.tables_metadata.get(data_table_name)
-
-    if not data_fnames:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Missing {data_table_name} file paths. Required: tables_metadata.{data_table_name}"
-        )
-
-    if datalake.data_format == "parquet_hive":
-        # Paths are already absolute
-        data_path = data_fnames
-        # Adapter path comes from entity_mapping.path
-        if not datalake.entity_mapping or not datalake.entity_mapping.get("path"):
-            raise HTTPException(
-                status_code=500,
-                detail="Missing entity_mapping.path for parquet_hive format. Please re-register with entity_mapping."
-            )
-        adapter_path = [datalake.entity_mapping["path"]]
-    else:
-        # ducklake format: relative filenames, prepend data_location
-        # NOTE: Don't URL-decode - the filesystem actually has %20 in directory names
-        adapter_fnames = datalake.tables_metadata.get("adapter")
-        if not adapter_fnames:
-            raise HTTPException(
-                status_code=500,
-                detail="Missing adapter file paths. Required: tables_metadata.adapter"
-            )
-        data_path = [
-            f"{datalake.data_location}/main/{data_table_name}/{fname}"
-            for fname in data_fnames
-        ]
-        adapter_path = [
-            f"{datalake.data_location}/main/adapter/{fname}"
-            for fname in adapter_fnames
-        ]
-
-    return data_path, adapter_path
-
-def format_results(query_results, key: str):
-    """Format query results into structured response."""
-    formatted_results = []
-    for row in query_results:
-        formatted_results.append({"types": row[0], "counts": row[1]})
-
-    if key == "data":
-        # Simple single query - return flat array
-        return formatted_results, True  # True = early return
-    else:
-        # Comparative query - return under key
-        return {key: formatted_results}, False  # False = continue aggregating
-
-def compute_partition_starts(start_date: str, end_date: str, granularity: str) -> List[str]:
-    """Compute partition start dates covering [start_date, end_date] using date arithmetic.
-
-    Assumes no gaps in the data. For weekly/monthly granularities, snaps start_date
-    back to the nearest partition boundary so that partial periods at the edges are included.
-
-    Args:
-        start_date: Start of the date range (YYYY-MM-DD). Should be a partition boundary
-                    for top-ngrams queries; will be snapped for server-computed windows.
-        end_date: End of the date range (YYYY-MM-DD)
-        granularity: One of "daily", "weekly", "monthly"
-
-    Returns:
-        Sorted list of partition start dates
-
-    Example:
-        >>> compute_partition_starts("2024-10-07", "2024-10-27", "weekly")
-        ["2024-10-07", "2024-10-14", "2024-10-21"]
-    """
-    start = datetime.strptime(start_date, "%Y-%m-%d")
-    end = datetime.strptime(end_date, "%Y-%m-%d")
-
-    if granularity == "daily":
-        current = start
-    elif granularity == "weekly":
-        # Snap back to the Monday of the week containing start_date
-        current = start - timedelta(days=start.weekday())
-    elif granularity == "monthly":
-        # Snap back to the first of the month containing start_date
-        current = start.replace(day=1)
-    else:
-        raise ValueError(f"Unknown granularity: {granularity}")
-
-    partitions = []
-    while current <= end:
-        partitions.append(current.strftime("%Y-%m-%d"))
-        if granularity == "daily":
-            current += timedelta(days=1)
-        elif granularity == "weekly":
-            current += timedelta(weeks=1)
-        elif granularity == "monthly":
-            if current.month == 12:
-                current = current.replace(year=current.year + 1, month=1, day=1)
-            else:
-                current = current.replace(month=current.month + 1, day=1)
-
-    return partitions
-
-
-class EntityMappingConfig(BaseModel):
-    table: Optional[str] = Field(None, description="DuckLake table name (ducklake format)")
-    path: Optional[str] = Field(None, description="Parquet file path (parquet_hive format)")
-    local_id_column: str = Field(...)
-    entity_id_column: str = Field(...)
-
-
-class DatalakeCreate(BaseModel):
-    dataset_id: str
-    data_location: str
-    data_format: str = "ducklake"
-    description: Optional[str] = None
-    tables_metadata: Optional[Dict] = None
-    ducklake_data_path: Optional[str] = None
-    data_schema: Optional[Dict[str, str]] = None  # Column name -> type mapping
-    partitioning: Optional[Dict] = None  # Partitioning metadata
-    entity_mapping: Optional[EntityMappingConfig] = None
-    sources: Optional[Dict[str, Dict[str, Union[str, List[str]]]]] = None
 
 
 @router.get("/")
@@ -177,59 +41,7 @@ async def list_datalakes(db: AsyncSession = Depends(get_db_session)):
     }
 
 
-@admin_router.post("/")
-async def register_datalake(
-    datalake: DatalakeCreate,
-    current_user: User = Depends(get_admin_user),
-    db: AsyncSession = Depends(get_db_session)
-):
-    """Register a new datalake or update existing one."""
-    # Check if dataset_id already exists
-    existing_result = await db.execute(
-        select(Datalake).where(Datalake.dataset_id == datalake.dataset_id)
-    )
-    existing_datalake = existing_result.scalar_one_or_none()
-
-    if existing_datalake:
-        # Update existing datalake
-        existing_datalake.data_location = datalake.data_location
-        existing_datalake.data_format = datalake.data_format
-        existing_datalake.description = datalake.description
-        existing_datalake.tables_metadata = datalake.tables_metadata
-        existing_datalake.ducklake_data_path = datalake.ducklake_data_path
-        existing_datalake.data_schema = datalake.data_schema
-        existing_datalake.partitioning = datalake.partitioning
-        existing_datalake.entity_mapping = datalake.entity_mapping.model_dump() if datalake.entity_mapping else None
-        existing_datalake.sources = datalake.sources
-
-        await db.commit()
-        await db.refresh(existing_datalake)
-
-        return {
-            "message": f"Datalake '{datalake.dataset_id}' updated successfully"
-        }
-    else:
-        # Create new datalake entry
-        datalake_data = datalake.model_dump()
-
-        db_datalake = Datalake(**datalake_data)
-        db.add(db_datalake)
-        await db.commit()
-        await db.refresh(db_datalake)
-
-        return {
-            "message": f"Datalake '{datalake.dataset_id}' registered successfully",
-            "datalake": {
-                "dataset_id": db_datalake.dataset_id,
-                "data_location": db_datalake.data_location,
-                "data_format": db_datalake.data_format,
-                "description": db_datalake.description,
-                "data_schema": db_datalake.data_schema,
-                "ducklake_data_path": db_datalake.ducklake_data_path
-            }
-        }
-
-@router.get("/search-terms2")
+@router.get("/search-terms2", deprecated=True)
 async def search_terms_batch(
     types: str = Query(..., description="Comma-separated list of ngram terms"),
     date: Optional[str] = Query(None, description="First system focus date (YYYY-MM-DD)"),
@@ -272,12 +84,12 @@ async def search_terms_batch(
     if not systems_input:
         raise HTTPException(status_code=400, detail="At least one of date or date2 must be provided")
 
-    query = select(Datalake).where(Datalake.dataset_id == "wikigrams")
+    query = select(Datalake).where(Datalake.domain == "wikimedia", Datalake.dataset_id == "ngrams")
     result = await db.execute(query)
     datalake = result.scalar_one_or_none()
 
     if not datalake:
-        raise HTTPException(status_code=404, detail="Wikigrams datalake not found")
+        raise HTTPException(status_code=404, detail="'ngrams' dataset not found")
 
     granularity_mapping = {
         "daily": ("wikigrams", "date"),
@@ -530,12 +342,16 @@ async def search_terms_batch(
 @router.get("/{dataset_id}")
 async def get_datalake_info(
     dataset_id: str,
+    domain: Optional[str] = Query(None, description="Filter by domain (required with composite PK)"),
     db: AsyncSession = Depends(get_db_session)
 ):
     """Get metadata for a specific datalake."""
 
     # Look up datalake in registry
-    query = select(Datalake).where(Datalake.dataset_id == dataset_id)
+    q = select(Datalake).where(Datalake.dataset_id == dataset_id)
+    if domain:
+        q = q.where(Datalake.domain == domain)
+    query = q
     result = await db.execute(query)
     datalake = result.scalar_one_or_none()
 
@@ -564,12 +380,16 @@ async def get_datalake_info(
 @router.get("/{dataset_id}/adapter")
 async def get_adapter_info(
     dataset_id: str,
+    domain: Optional[str] = Query(None, description="Filter by domain (required with composite PK)"),
     db: AsyncSession = Depends(get_db_session)
 ):
     """Get metadata for a specific datalake."""
 
     # Look up datalake in registry
-    query = select(Datalake).where(Datalake.dataset_id == dataset_id)
+    q = select(Datalake).where(Datalake.dataset_id == dataset_id)
+    if domain:
+        q = q.where(Datalake.domain == domain)
+    query = q
     result = await db.execute(query)
     datalake = result.scalar_one_or_none()
 
@@ -611,10 +431,6 @@ async def get_adapter_info(
             ]
 
         # Execute comparative queries
-        results = {}
-
-        # Query for each combination of date ranges and locations
-        
         sql_query = f"""
             SELECT
                 *
@@ -677,7 +493,7 @@ async def get_babynames_top_ngrams(
     location_list = [locations]
 
     # Look up babynames datalake
-    query = select(Datalake).where(Datalake.dataset_id == "babynames")
+    query = select(Datalake).where(Datalake.domain == "babynames", Datalake.dataset_id == "babynames")
     result = await db.execute(query)
     datalake = result.scalar_one_or_none()
 
@@ -787,7 +603,7 @@ async def get_babynames_top_ngrams(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
 
-@router.get("/wikigrams/top-ngrams")
+@router.get("/wikigrams/top-ngrams", deprecated=True)
 async def get_wikigrams_top_ngrams(
     dates: str = Query(default="2024-11-01,2024-11-07"),  # First date range
     dates2: Optional[str] = Query(default=None),  # Optional second date range
@@ -835,13 +651,13 @@ async def get_wikigrams_top_ngrams(
     # Single location (no longer a list)
     location_list = [locations]
 
-    # Look up wikigrams datalake
-    query = select(Datalake).where(Datalake.dataset_id == "wikigrams")
+    # Look up ngrams dataset
+    query = select(Datalake).where(Datalake.domain == "wikimedia", Datalake.dataset_id == "ngrams")
     result = await db.execute(query)
     datalake = result.scalar_one_or_none()
 
     if not datalake:
-        raise HTTPException(status_code=404, detail="Wikigrams datalake not found")
+        raise HTTPException(status_code=404, detail="'ngrams' dataset not found")
 
     # Map granularity to table name and time column
     granularity_mapping = {
@@ -983,7 +799,7 @@ async def get_wikigrams_top_ngrams(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
 
-@router.get("/search-term/{term}")
+@router.get("/search-term/{term}", deprecated=True)
 async def search_term(
     term: str,
     location: str = Query("wikidata:Q30", description="Location entity ID (e.g., wikidata:Q30 for United States)"),
@@ -1014,13 +830,13 @@ async def search_term(
         except ValueError as e:
             raise HTTPException(status_code=400, detail=f"Invalid date format. Use YYYY-MM-DD: {e}")
 
-    # Look up wikigrams datalake
-    query = select(Datalake).where(Datalake.dataset_id == "wikigrams")
+    # Look up ngrams dataset
+    query = select(Datalake).where(Datalake.domain == "wikimedia", Datalake.dataset_id == "ngrams")
     result = await db.execute(query)
     datalake = result.scalar_one_or_none()
 
     if not datalake:
-        raise HTTPException(status_code=404, detail="Wikigrams datalake not found")
+        raise HTTPException(status_code=404, detail="'ngrams' dataset not found")
 
     granularity_mapping = {
         "daily": ("wikigrams", "date"),
@@ -1148,20 +964,20 @@ async def search_term(
 
 
 # ── Wiki Revisions endpoints ─────────────────────────────────────────────────
-# Registered as "wiki_revisions" datalake; Hive-partitioned by identifier.
+# Registered as "revisions" dataset (domain=wikimedia); Hive-partitioned by identifier.
 
 
 async def _get_revisions_path(db: AsyncSession) -> str:
     """Look up revisions data path from datalake DB."""
-    query = select(Datalake).where(Datalake.dataset_id == "wiki_revisions")
+    query = select(Datalake).where(Datalake.domain == "wikimedia", Datalake.dataset_id == "revisions")
     result = await db.execute(query)
     datalake = result.scalar_one_or_none()
     if not datalake:
-        raise HTTPException(status_code=404, detail="wiki_revisions datalake not found")
+        raise HTTPException(status_code=404, detail="'revisions' dataset not found")
     return datalake.data_location
 
 
-@router.get("/wikigrams/revisions")
+@router.get("/wikigrams/revisions", deprecated=True)
 async def list_revision_articles(
     min_revisions: int = Query(default=1, description="Minimum revision count filter"),
     limit: int = Query(default=100, description="Max articles to return"),
@@ -1208,7 +1024,7 @@ async def list_revision_articles(
         raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")
 
 
-@router.get("/wikigrams/revisions/{identifier}")
+@router.get("/wikigrams/revisions/{identifier}", deprecated=True)
 async def get_revision_deltas(
     identifier: str,
     db: AsyncSession = Depends(get_db_session),
@@ -1302,6 +1118,7 @@ async def get_revision_deltas(
 @router.get("/{dataset_id}/validate-sources")
 async def validate_datalake_sources(
     dataset_id: str,
+    domain: Optional[str] = Query(None, description="Filter by domain (required with composite PK)"),
     db: AsyncSession = Depends(get_db_session)
 ):
     """Validate that all source URLs for a datalake are still accessible.
@@ -1309,7 +1126,10 @@ async def validate_datalake_sources(
     Returns status for each source URL in the datalake's sources metadata.
     """
     # Look up datalake
-    query = select(Datalake).where(Datalake.dataset_id == dataset_id)
+    q = select(Datalake).where(Datalake.dataset_id == dataset_id)
+    if domain:
+        q = q.where(Datalake.domain == domain)
+    query = q
     result = await db.execute(query)
     datalake = result.scalar_one_or_none()
 

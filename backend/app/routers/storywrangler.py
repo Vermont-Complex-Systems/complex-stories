@@ -13,8 +13,8 @@ from urllib.parse import quote
 
 from ..core.database import get_db_session
 from ..core.duckdb_client import get_duckdb_client
-from ..models.datalakes import Datalake
-from .datalakes import get_parquet_paths, compute_partition_starts
+from ..core.parquet_utils import get_parquet_paths, compute_partition_starts
+from ..models.datasets import Dataset
 
 router = APIRouter()
 
@@ -85,7 +85,8 @@ async def allotax_endpoint(
     dates2: str = Query(..., description="Date range for system 2, e.g. '2024-02-01,2024-02-28'"),
     location2: str = Query(..., description="Location entity ID for system 2, e.g. 'wikidata:Q16'"),
     # Dataset
-    dataset: str = Query("wikigrams", description="Datalake dataset_id to query"),
+    domain: str = Query("wikimedia", description="Domain owning the dataset, e.g. 'wikimedia'"),
+    dataset: str = Query("ngrams", description="Dataset ID within the domain, e.g. 'ngrams'"),
     granularity: str = Query("daily", description="Partition granularity: daily, weekly, monthly"),
     # Allotax params
     alpha: float = Query(1.0, description="RTD alpha parameter"),
@@ -127,11 +128,13 @@ async def allotax_endpoint(
     dr1 = parse_range(dates)
     dr2 = parse_range(dates2)
 
-    # Look up datalake
-    result = await db.execute(select(Datalake).where(Datalake.dataset_id == dataset))
+    # Look up dataset
+    result = await db.execute(
+        select(Dataset).where(Dataset.domain == domain, Dataset.dataset_id == dataset)
+    )
     datalake = result.scalar_one_or_none()
     if not datalake:
-        raise HTTPException(status_code=404, detail=f"Datalake '{dataset}' not found")
+        raise HTTPException(status_code=404, detail=f"Dataset '{domain}/{dataset}' not found")
 
     if not datalake.tables_metadata or table_name not in datalake.tables_metadata:
         available = list(datalake.tables_metadata.keys()) if datalake.tables_metadata else []
@@ -174,6 +177,7 @@ async def allotax_endpoint(
             "meta": {
                 "system1": {"dates": dates, "location": location, "ngrams": len(sys1["types"])},
                 "system2": {"dates": dates2, "location": location2, "ngrams": len(sys2["types"])},
+                "domain": domain,
                 "dataset": dataset,
                 "granularity": granularity,
             }
