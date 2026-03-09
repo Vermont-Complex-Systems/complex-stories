@@ -8,7 +8,7 @@ const API_BASE_URL = API_BASE || 'http://localhost:8000'
 
 
 export const getAdapter = query(async () => {
-        const url = `${API_BASE_URL}/datalakes/babynames/adapter`
+        const url = `${API_BASE_URL}/registry/babynames/babynames/adapter`
         console.log('Fetching available locations:', url)
 
         const response = await fetch(url)
@@ -40,7 +40,7 @@ export const getTopBabyNames = query(
             limit: limit,
         })
 
-        const url = `${API_BASE_URL}/datalakes/babynames/top-ngrams?${params.toString()}`
+        const url = `${API_BASE_URL}/babynames/top-ngrams?${params.toString()}`
 
         const response = await fetch(url)
         if (!response.ok) {

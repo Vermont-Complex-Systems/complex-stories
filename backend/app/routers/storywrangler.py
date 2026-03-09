@@ -14,7 +14,7 @@ from urllib.parse import quote
 from ..core.database import get_db_session
 from ..core.duckdb_client import get_duckdb_client
 from ..core.parquet_utils import get_parquet_paths, compute_partition_starts
-from ..models.datasets import Dataset
+from ..models.registry import Dataset
 
 router = APIRouter()
 

@@ -1,16 +1,13 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import pandas as pd
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional
 import io
 import json
-from pydantic import BaseModel, Field
 from ..core.database import get_db_session
-from ..core.duckdb_client import get_duckdb_client
 from ..models.annotation_datasets import AcademicResearchGroups, AcademicResearchGroupCreate, GoogleScholarVenues
-from ..models.datasets import Dataset
 from ..routers.auth import get_admin_user, get_current_active_user
 from ..models.auth import User
 
@@ -74,7 +71,6 @@ async def list_datasets():
         "total": len(datasets)
     }
 
-# Label Studio functions removed - no longer needed
 
 @admin_router.post("/academic-research-groups")
 async def create_academic_research_group(
@@ -469,91 +465,6 @@ async def import_google_scholar_data(
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
-
-
-# ── Dataset registration ──────────────────────────────────────────────────────
-
-class EntityMappingConfig(BaseModel):
-    table: Optional[str] = Field(None, description="DuckLake table name (ducklake format only)")
-    path: Optional[str] = Field(None, description="Absolute path to adapter parquet file (parquet_hive format only)")
-    local_id_column: str = Field(..., description="Column name in the adapter that holds the dataset-local identifier")
-    entity_id_column: str = Field(..., description="Column name in the adapter that holds the canonical entity ID (e.g. 'wikidata:Q30')")
-
-
-class DatasetCreate(BaseModel):
-    """Register a dataset backend so API endpoints can discover and query it.
-
-    The platform supports three data formats:
-    - parquet_hive: Hive-partitioned parquet tree on disk (most common for large tabular data)
-    - duckdb: Plain DuckDB database file
-    - ducklake: DuckLake catalog (versioned, schema-aware DuckDB extension)
-
-    The (domain, dataset_id) pair must be unique. Use domain to group datasets by the
-    router/service that owns them (e.g. 'wikimedia', 'storywrangler').
-    """
-    dataset_id: str = Field(..., description="Short identifier, unique within domain. e.g. 'ngrams', 'revisions', 'babynames'")
-    domain: str = Field(..., description="Owning service or router. Groups related datasets. e.g. 'wikimedia', 'storywrangler', 'babynames'")
-    data_location: str = Field(..., description="Absolute path to the root of the dataset on disk (parquet_hive/duckdb) or connection string (ducklake)")
-    data_format: str = Field("parquet_hive", description="Storage format. One of: parquet_hive | duckdb | ducklake")
-    description: Optional[str] = Field(None, description="Human-readable description of the dataset")
-    tables_metadata: Optional[Dict] = Field(
-        None,
-        description=(
-            "parquet_hive only. Maps logical table names to lists of representative file paths. "
-            "Keys must match physical Hive partition directory names under data_location. "
-            "Example: {\"events\": [\"date=2024-01-01/geo=Q30/part.parquet\"], \"adapter\": [\"adapter.parquet\"]}"
-        )
-    )
-    ducklake_data_path: Optional[str] = Field(None, description="ducklake only. Path to the DuckLake catalog .duckdb file")
-    data_schema: Optional[Dict[str, str]] = Field(None, description="ducklake only. Column name → DuckDB type, for query reference. e.g. {\"title\": \"VARCHAR\", \"views\": \"BIGINT\"}")
-    partitioning: Optional[Dict] = Field(None, description="Partitioning scheme description. e.g. {\"keys\": [\"date\", \"geo\"], \"granularity\": \"daily\"}")
-    entity_mapping: Optional[EntityMappingConfig] = Field(None, description="How to map canonical entity IDs (e.g. Wikidata QIDs) to dataset-local identifiers. Required for geo/entity filtering endpoints.")
-    sources: Optional[Dict[str, Dict[str, Union[str, List[str]]]]] = Field(None, description="Source URLs for provenance/validation. e.g. {\"main\": {\"url\": \"https://...\"}}")
-
-
-@admin_router.post("/register")
-async def register_dataset(
-    dataset: DatasetCreate,
-    _current_user: User = Depends(get_admin_user),
-    db: AsyncSession = Depends(get_db_session)
-):
-    """Register a new dataset or update an existing one."""
-    existing_result = await db.execute(
-        select(Dataset).where(Dataset.domain == dataset.domain, Dataset.dataset_id == dataset.dataset_id)
-    )
-    existing = existing_result.scalar_one_or_none()
-
-    if existing:
-        existing.domain = dataset.domain
-        existing.data_location = dataset.data_location
-        existing.data_format = dataset.data_format
-        existing.description = dataset.description
-        existing.tables_metadata = dataset.tables_metadata
-        existing.ducklake_data_path = dataset.ducklake_data_path
-        existing.data_schema = dataset.data_schema
-        existing.partitioning = dataset.partitioning
-        existing.entity_mapping = dataset.entity_mapping.model_dump() if dataset.entity_mapping else None
-        existing.sources = dataset.sources
-
-        await db.commit()
-        await db.refresh(existing)
-        return {"message": f"Dataset '{dataset.dataset_id}' updated successfully"}
-    else:
-        db_dataset = Dataset(**dataset.model_dump())
-        db.add(db_dataset)
-        await db.commit()
-        await db.refresh(db_dataset)
-        return {
-            "message": f"Dataset '{dataset.dataset_id}' registered successfully",
-            "dataset": {
-                "dataset_id": db_dataset.dataset_id,
-                "data_location": db_dataset.data_location,
-                "data_format": db_dataset.data_format,
-                "description": db_dataset.description,
-                "data_schema": db_dataset.data_schema,
-                "ducklake_data_path": db_dataset.ducklake_data_path
-            }
-        }
 
 
 #!TODO: fix once we have storage
