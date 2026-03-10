@@ -13,7 +13,7 @@ from .internal import admin
 limiter = Limiter(key_func=get_remote_address)
 
 # Import routers after limiter is defined so they can use it
-from .routers import open_academic_analytics, datasets, auth, wikimedia, annotations, dark_data_survey, scisciDB, datalakes, interdisciplinarity, storywrangler
+from .routers import open_academic_analytics, datasets, auth, wikimedia, annotations, dark_data_survey, scisciDB, datalakes, interdisciplinarity, storywrangler, babynames, registry
 
 app = FastAPI(
     title=settings.app_name,
@@ -83,7 +83,9 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.include_router(auth.router, prefix="/auth", tags=["authentication"], include_in_schema=False)
 app.include_router(open_academic_analytics.router, prefix="/open-academic-analytics", tags=["academics"])
 app.include_router(datasets.router, prefix="/datasets", tags=["datasets"])
+app.include_router(registry.router, prefix="/registry", tags=["registry"])
 app.include_router(datalakes.router, prefix="/datalakes", tags=["datalakes"])
+app.include_router(babynames.router, prefix="/babynames", tags=["babynames"])
 app.include_router(wikimedia.router, prefix="/wikimedia", tags=["wikimedia"])
 app.include_router(annotations.router, prefix="/annotations", tags=["annotations"])
 app.include_router(scisciDB.router, prefix="/scisciDB", tags=["scisciDB"])
@@ -95,8 +97,8 @@ app.include_router(admin.router, prefix="/admin", tags=["admin"], include_in_sch
 # Admin endpoints (secured with admin authentication)
 app.include_router(auth.admin_router, prefix="/admin/auth", tags=["admin"], include_in_schema=False)
 app.include_router(datasets.admin_router, prefix="/admin/datasets", tags=["admin"], include_in_schema=False)
+app.include_router(registry.admin_router, prefix="/admin/registry", tags=["admin"], include_in_schema=False)
 app.include_router(scisciDB.admin_router, prefix="/admin/scisciDB", tags=["admin"], include_in_schema=False)
-app.include_router(datalakes.admin_router, prefix="/admin/datalakes", tags=["admin"], include_in_schema=False)
 app.include_router(open_academic_analytics.admin_router, prefix="/admin/open-academic-analytics", tags=["admin"], include_in_schema=False)
 app.include_router(annotations.admin_router, prefix="/admin/annotations", tags=["admin"], include_in_schema=False)
 

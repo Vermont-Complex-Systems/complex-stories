@@ -1,14 +1,21 @@
-from fastapi import APIRouter, HTTPException, Query
-from typing import Dict, List, Optional
-from datetime import datetime
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException, Query, Depends
+from typing import Dict, List, Optional, Any
+from datetime import datetime, timedelta
+from pydantic import BaseModel
 import time
 import asyncio
-from ..core.database import get_mongo_client
+from urllib.parse import quote
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from ..core.database import get_mongo_client, get_db_session
+from ..core.duckdb_client import get_duckdb_client
+from ..core.parquet_utils import compute_partition_starts
+from ..models.registry import Dataset
 from better_profanity import profanity
 
 router = APIRouter()
 
+WikimediaDataset = select(Dataset).where(Dataset.domain == "wikimedia")
 
 class NgramResult(BaseModel):
     types: str
@@ -16,6 +23,7 @@ class NgramResult(BaseModel):
     probs: Optional[float] = None
     totalunique: Optional[int] = None
 
+# ── mongoDB endpoints ────────────────────────────────────────────────
 
 @router.get("/top-ngrams", response_model_exclude_unset=True)
 async def get_top_ngrams(
@@ -271,3 +279,509 @@ async def get_rank_divergence(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/top-ngrams2")
+async def get_wikigrams_top_ngrams(
+    dates: str = Query(default="2024-11-01,2024-11-07"),
+    dates2: Optional[str] = Query(default=None),
+    locations: str = Query(default="wikidata:Q30"),
+    granularity: str = Query(default="daily"),
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Get top Wikipedia n-grams with flexible comparative analysis.
+
+    Supports single or dual date ranges, single location, and granularity selection.
+    Replaces /datalakes/wikigrams/top-ngrams.
+    """
+    if granularity not in ["daily", "weekly", "monthly"]:
+        raise HTTPException(status_code=400, detail="granularity must be one of: daily, weekly, monthly")
+
+    date_ranges = []
+    dates_str1 = dates.split(',')
+    if len(dates_str1) == 1:
+        dates_str1.append(dates_str1[0])
+    date_ranges.append(dates_str1)
+
+    if dates2:
+        dates_str2 = dates2.split(',')
+        if len(dates_str2) == 1:
+            dates_str2.append(dates_str2[0])
+        date_ranges.append(dates_str2)
+
+    location_list = [locations]
+
+    query = WikimediaDataset.where(Dataset.dataset_id == "ngrams")
+    result = await db.execute(query)
+    dataset_obj = result.scalar_one_or_none()
+    if not dataset_obj:
+        raise HTTPException(status_code=404, detail="'ngrams' dataset not found")
+
+    time_column = {"daily": "date", "weekly": "week", "monthly": "month"}[granularity]
+
+    if not dataset_obj.entity_mapping or not dataset_obj.entity_mapping.get("path"):
+        raise HTTPException(status_code=500, detail="Dataset missing entity_mapping.path. Please re-register.")
+
+    try:
+        conn = get_duckdb_client().connect()
+        adapter_path = dataset_obj.entity_mapping["path"]
+
+        results = {}
+        queried_partitions_metadata = []
+
+        for date_range in date_ranges:
+            for location in location_list:
+                row = conn.execute(
+                    "SELECT local_id FROM read_parquet(?) WHERE entity_id = ? LIMIT 1",
+                    [[adapter_path], location]
+                ).fetchone()
+                if not row:
+                    raise HTTPException(status_code=400, detail=f"Location '{location}' not found in adapter")
+                encoded_country = quote(row[0], safe='')
+
+                partition_starts = compute_partition_starts(date_range[0], date_range[1], granularity)
+                queried_partitions_metadata.append({"date_range": date_range, "partitions": partition_starts})
+
+                if len(date_ranges) > 1:
+                    key = date_range[0] if date_range[0] == date_range[1] else f"{date_range[0]}_{date_range[1]}"
+                elif len(location_list) > 1:
+                    key = location.replace(":", "_").replace("-", "_")
+                else:
+                    key = "data"
+
+                glob_path = f"{dataset_obj.data_location}/{granularity}/country={encoded_country}/{time_column}=*/data_0.parquet"
+
+                rows = conn.execute(f"""
+                    SELECT ngram, SUM(pv_count) as counts
+                    FROM read_parquet('{glob_path}')
+                    WHERE {time_column} BETWEEN ? AND ?
+                    GROUP BY ngram
+                    ORDER BY counts DESC
+                    LIMIT ?
+                """, [date_range[0], date_range[1], limit]).fetchall()
+
+                formatted = [{"types": r[0], "counts": r[1]} for r in rows]
+
+                if key == "data":
+                    return {
+                        "data": formatted,
+                        "metadata": {"granularity": granularity, "time_column": time_column, "queried_partitions": partition_starts}
+                    }
+                else:
+                    results[key] = formatted
+
+        return {
+            **results,
+            "metadata": {"granularity": granularity, "time_column": time_column, "queries": queried_partitions_metadata}
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
+
+
+# ── DuckDB endpoints ────────────────────────────────────────────────
+
+async def _get_revisions_path(db: AsyncSession) -> str:
+    """Look up revisions data path from dataset registry."""
+    query = WikimediaDataset.where(Dataset.dataset_id == "revisions")
+    result = await db.execute(query)
+    rev_dataset = result.scalar_one_or_none()
+    if not rev_dataset:
+        raise HTTPException(status_code=404, detail="'revisions' dataset not found")
+    return rev_dataset.data_location
+
+
+@router.get("/search-terms2")
+async def search_terms_batch(
+    types: str = Query(..., description="Comma-separated list of ngram terms"),
+    date: Optional[str] = Query(None, description="First system focus date (YYYY-MM-DD)"),
+    date2: Optional[str] = Query(None, description="Second system focus date (YYYY-MM-DD)"),
+    location: str = Query("wikidata:Q30", description="First system location entity ID"),
+    location2: Optional[str] = Query(None, description="Second system location entity ID (defaults to location)"),
+    granularity: str = Query("daily", description="Granularity: daily, weekly, monthly"),
+    window_size: int = Query(7, description="Number of granularity periods before/after each focus date"),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Batch sparkline lookup for multiple ngram terms across one or two systems.
+
+    Two comparison modes:
+    - Temporal (date + date2, same location): ONE DuckDB scan — both windows' paths merged.
+    - Geographic (date, location + location2): TWO DuckDB scans — paths live in separate geo dirs.
+
+    Results are keyed as system1/system2 so the frontend can render both sides
+    without coordinating parallel calls.
+    """
+    if granularity not in ["daily", "weekly", "monthly"]:
+        raise HTTPException(status_code=400, detail="granularity must be one of: daily, weekly, monthly")
+
+    for d_str in [date, date2]:
+        if d_str:
+            try:
+                datetime.fromisoformat(d_str)
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=f"Invalid date format. Use YYYY-MM-DD: {e}")
+
+    terms = [t.strip() for t in types.split(",") if t.strip()]
+    if not terms:
+        raise HTTPException(status_code=400, detail="At least one term is required")
+
+    systems_input: Dict[str, Dict] = {}
+    if date:
+        systems_input["system1"] = {"date": date, "location": location}
+    if date2:
+        systems_input["system2"] = {"date": date2, "location": location2 or location}
+    if not systems_input:
+        raise HTTPException(status_code=400, detail="At least one of date or date2 must be provided")
+
+    query = WikimediaDataset.where(Dataset.dataset_id == "ngrams")
+    result = await db.execute(query)
+    dataset_obj = result.scalar_one_or_none()
+
+    if not dataset_obj:
+        raise HTTPException(status_code=404, detail="Wikigrams dataset not found")
+
+    time_column = {"daily": "date", "weekly": "week", "monthly": "month"}[granularity]
+
+    has_top_articles = granularity == "daily"
+
+    try:
+        if not dataset_obj.entity_mapping or not dataset_obj.entity_mapping.get("path"):
+            raise HTTPException(status_code=500, detail="Dataset missing entity_mapping.path. Please re-register.")
+
+        duckdb_client = get_duckdb_client()
+        conn = duckdb_client.connect()
+
+        adapter_path = dataset_obj.entity_mapping["path"]
+        path_prefix_index: Dict[str, List[str]] = {}
+
+        placeholders = ",".join(["?" for _ in terms])
+        start_time = time.time()
+
+        unique_locations = {s["location"] for s in systems_input.values()}
+        geo_map: Dict[str, str] = {}
+        t_adapter = time.time()
+        for loc in unique_locations:
+            row = conn.execute(
+                "SELECT local_id FROM read_parquet(?) WHERE entity_id = ? LIMIT 1",
+                [[adapter_path], loc]
+            ).fetchone()
+            if not row:
+                raise HTTPException(status_code=400, detail=f"Location '{loc}' not found in adapter")
+            encoded_country = quote(row[0], safe='')
+            geo_map[loc] = encoded_country
+            glob_pat = f"{dataset_obj.data_location}/{granularity}/country={encoded_country}/{time_column}=*/data_0.parquet"
+            for (p,) in conn.execute("SELECT * FROM glob(?)", [glob_pat]).fetchall():
+                dir_path = p.rsplit("/", 1)[0]
+                path_prefix_index.setdefault(dir_path, []).append(p)
+        t_adapter_ms = (time.time() - t_adapter) * 1000
+
+        window_unit_days = {"daily": 1, "weekly": 7, "monthly": 30}[granularity]
+        effective_window = window_size * window_unit_days
+
+        per_system: Dict[str, Dict] = {}
+        t_filter = time.time()
+        for sys_key, system in systems_input.items():
+            loc = system["location"]
+            local_geo = geo_map[loc]
+            focus_date = datetime.fromisoformat(system["date"])
+            w_start = (focus_date - timedelta(days=effective_window)).strftime("%Y-%m-%d")
+            w_end = (focus_date + timedelta(days=effective_window)).strftime("%Y-%m-%d")
+            window_partitions = compute_partition_starts(w_start, w_end, granularity)
+            focus_partition = compute_partition_starts(system["date"], system["date"], granularity)[0]
+
+            base = f"{dataset_obj.data_location}/{granularity}/country={local_geo}"
+            query_paths = []
+            for ps in window_partitions:
+                query_paths.extend(path_prefix_index.get(f"{base}/{time_column}={ps}", []))
+
+            if not query_paths:
+                raise HTTPException(status_code=404, detail=f"No data found for {sys_key} ({system['date']}, {loc})")
+
+            focus_paths = path_prefix_index.get(f"{base}/{time_column}={focus_partition}", [])
+
+            per_system[sys_key] = {
+                "loc": loc,
+                "focus_date_str": system["date"],
+                "window_partitions": window_partitions,
+                "window_set": set(window_partitions),
+                "focus_partition": focus_partition,
+                "query_paths": query_paths,
+                "focus_paths": focus_paths,
+            }
+        t_filter_ms = (time.time() - t_filter) * 1000
+
+        all_geos = {geo_map[s["location"]] for s in systems_input.values()}
+        temporal_comparison = len(systems_input) == 2 and len(all_geos) == 1
+        total_paths = sum(len(v) for v in path_prefix_index.values())
+        print(f"  setup: adapter+paths={t_adapter_ms:.0f}ms, filter={t_filter_ms:.0f}ms | total_paths={total_paths}")
+
+        system_results: Dict[str, Dict] = {}
+
+        if temporal_comparison:
+            s1 = per_system["system1"]
+            s2 = per_system["system2"]
+            combined_paths = sorted(set(s1["query_paths"]) | set(s2["query_paths"]))
+            range_start = min(s1["window_partitions"][0], s2["window_partitions"][0])
+            range_end = max(s1["window_partitions"][-1], s2["window_partitions"][-1])
+
+            spark_sql = f"""
+                SELECT
+                    w.ngram,
+                    w.{time_column},
+                    MIN(w.pv_rank) AS rank,
+                    SUM(w.pv_count) AS counts
+                FROM read_parquet(?) w
+                WHERE w.{time_column} BETWEEN ? AND ?
+                  AND w.ngram IN ({placeholders})
+                GROUP BY w.ngram, w.{time_column}
+                ORDER BY w.ngram, w.{time_column}
+            """
+            t_query = time.time()
+            cursor = conn.execute(spark_sql, [combined_paths, range_start, range_end] + terms)
+            t_spark_ms = (time.time() - t_query) * 1000
+
+            rows = cursor.fetchall()
+            cols = [desc[0] for desc in cursor.description]
+
+            for sys_key, meta in per_system.items():
+                system_results[sys_key] = {
+                    "date": meta["focus_date_str"],
+                    "location": meta["loc"],
+                    "sparkData": {t: [] for t in terms},
+                    "topArticles": {},
+                }
+
+            for row in rows:
+                d = dict(zip(cols, row))
+                term = d["ngram"]
+                date_val = str(d[time_column])
+                point = {time_column: d[time_column], "rank": d["rank"], "counts": d["counts"]}
+                if date_val in s1["window_set"]:
+                    system_results["system1"]["sparkData"][term].append(point)
+                if date_val in s2["window_set"]:
+                    system_results["system2"]["sparkData"][term].append(point)
+
+            t_articles = time.time()
+            if has_top_articles:
+                focus_paths = sorted(set(s1["focus_paths"]) | set(s2["focus_paths"]))
+                if focus_paths:
+                    try:
+                        art_cursor = conn.execute(f"""
+                            SELECT
+                                w.ngram,
+                                ARG_MIN(w.top_articles, w.pv_rank) FILTER (WHERE w.{time_column} = ?) AS top_articles_s1,
+                                ARG_MIN(w.top_articles, w.pv_rank) FILTER (WHERE w.{time_column} = ?) AS top_articles_s2
+                            FROM read_parquet(?) w
+                            WHERE w.ngram IN ({placeholders})
+                            GROUP BY w.ngram
+                        """, [s1["focus_partition"], s2["focus_partition"], focus_paths] + terms)
+                        for row in art_cursor.fetchall():
+                            d = dict(zip([c[0] for c in art_cursor.description], row))
+                            if d.get("top_articles_s1") is not None:
+                                system_results["system1"]["topArticles"][d["ngram"]] = d["top_articles_s1"]
+                            if d.get("top_articles_s2") is not None:
+                                system_results["system2"]["topArticles"][d["ngram"]] = d["top_articles_s2"]
+                    except Exception:
+                        pass
+            t_articles_ms = (time.time() - t_articles) * 1000
+
+            print(f"  temporal: {len(combined_paths)} paths, spark={t_spark_ms:.0f}ms, articles={t_articles_ms:.0f}ms ({len(s1['focus_paths'])+len(s2['focus_paths'])} focus files)")
+
+        else:
+            for sys_key, meta in per_system.items():
+                query_paths = meta["query_paths"]
+
+                t_query = time.time()
+                cursor = conn.execute(f"""
+                    SELECT
+                        w.ngram,
+                        w.{time_column},
+                        MIN(w.pv_rank) AS rank,
+                        SUM(w.pv_count) AS counts
+                    FROM read_parquet(?) w
+                    WHERE w.{time_column} BETWEEN ? AND ?
+                      AND w.ngram IN ({placeholders})
+                    GROUP BY w.ngram, w.{time_column}
+                    ORDER BY w.ngram, w.{time_column}
+                """, [query_paths, meta["window_partitions"][0], meta["window_partitions"][-1]] + terms)
+                t_query_ms = (time.time() - t_query) * 1000
+
+                rows = cursor.fetchall()
+                cols = [desc[0] for desc in cursor.description]
+
+                spark_data: Dict[str, List[Dict]] = {t: [] for t in terms}
+                for row in rows:
+                    d = dict(zip(cols, row))
+                    spark_data[d["ngram"]].append({
+                        time_column: d[time_column],
+                        "rank": d["rank"],
+                        "counts": d["counts"],
+                    })
+
+                top_articles: Dict[str, Any] = {}
+                t_articles = time.time()
+                if has_top_articles and meta["focus_paths"]:
+                    try:
+                        art_cursor = conn.execute(f"""
+                            SELECT
+                                w.ngram,
+                                ARG_MIN(w.top_articles, w.pv_rank) AS top_articles
+                            FROM read_parquet(?) w
+                            WHERE w.{time_column} = ?
+                              AND w.ngram IN ({placeholders})
+                            GROUP BY w.ngram
+                        """, [meta["focus_paths"], meta["focus_partition"]] + terms)
+                        for row in art_cursor.fetchall():
+                            d = dict(zip([c[0] for c in art_cursor.description], row))
+                            if d.get("top_articles") is not None:
+                                top_articles[d["ngram"]] = d["top_articles"]
+                    except Exception:
+                        pass
+                t_articles_ms = (time.time() - t_articles) * 1000
+
+                system_results[sys_key] = {
+                    "date": meta["focus_date_str"],
+                    "location": meta["loc"],
+                    "sparkData": spark_data,
+                    "topArticles": top_articles,
+                }
+                print(f"  {sys_key}: {len(query_paths)} paths, spark={t_query_ms:.0f}ms, articles={t_articles_ms:.0f}ms ({len(meta['focus_paths'])} focus files)")
+
+        duration = (time.time() - start_time) * 1000
+        print(f"searchTermsBatch total={duration:.2f}ms — {'temporal' if temporal_comparison else 'geographic'} for {len(terms)} terms × {len(systems_input)} systems")
+
+        return {**system_results, "duration": duration}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
+
+
+@router.get("/revisions")
+async def list_revision_articles(
+    min_revisions: int = Query(default=1, description="Minimum revision count filter"),
+    limit: int = Query(default=100, description="Max articles to return"),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """List articles with extracted revision histories."""
+    try:
+        query = WikimediaDataset.where(Dataset.dataset_id == "revisions")
+        result = await db.execute(query)
+        rev_dataset = result.scalar_one_or_none()
+        if not rev_dataset:
+            raise HTTPException(status_code=404, detail="'revisions' dataset not found")
+
+        adapter_path = rev_dataset.entity_mapping["path"]
+        start_time = time.time()
+
+        conn = get_duckdb_client().connect()
+        rows = conn.execute(
+            "SELECT identifier, name, revision_count, first_edit, last_edit FROM read_parquet(?) WHERE revision_count >= ? ORDER BY revision_count DESC LIMIT ?",
+            [adapter_path, min_revisions, limit]
+        ).fetchall()
+
+        duration = (time.time() - start_time) * 1000
+        articles = [
+            {"identifier": r[0], "name": r[1], "revision_count": r[2], "first_edit": r[3], "last_edit": r[4]}
+            for r in rows
+        ]
+        return {"articles": articles, "total": len(articles), "duration": duration}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")
+
+
+@router.get("/revisions/{identifier}")
+async def get_revision_deltas(
+    identifier: str,
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Delta-encoded revision history for one article.
+
+    Returns one entry per revision. The first revision (revision_idx=0) contains
+    the full token map. Subsequent revisions contain only changed tokens
+    (value 0 = token removed).
+    """
+    try:
+        revisions_path = await _get_revisions_path(db)
+        duckdb_client = get_duckdb_client()
+        conn = duckdb_client.connect()
+
+        start_time = time.time()
+
+        rows = conn.execute(f"""
+            WITH ordered AS (
+                SELECT *,
+                    ROW_NUMBER() OVER (ORDER BY revision_id::BIGINT) - 1 AS rev_seq,
+                    json(ngram_counts)::MAP(VARCHAR, INTEGER) AS m
+                FROM read_parquet('{revisions_path}/identifier={identifier}/*.parquet')
+            ),
+            curr AS (
+                SELECT rev_seq,
+                       unnest(map_keys(m)) AS token,
+                       unnest(map_values(m)) AS curr_count
+                FROM ordered
+            ),
+            prev AS (
+                SELECT rev_seq + 1 AS rev_seq,
+                       unnest(map_keys(m)) AS token,
+                       unnest(map_values(m)) AS prev_count
+                FROM ordered
+            ),
+            diffs AS (
+                SELECT COALESCE(c.rev_seq, p.rev_seq) AS rev_seq,
+                       COALESCE(c.token, p.token) AS token,
+                       COALESCE(c.curr_count, 0) AS new_count
+                FROM curr c
+                FULL OUTER JOIN prev p
+                    ON c.rev_seq = p.rev_seq AND c.token = p.token
+                WHERE prev_count IS NULL
+                   OR curr_count IS NULL
+                   OR curr_count != prev_count
+            ),
+            delta_agg AS (
+                SELECT rev_seq,
+                       json_group_object(token, new_count) AS delta
+                FROM diffs
+                GROUP BY rev_seq
+            )
+            SELECT o.revision_id,
+                   o.name,
+                   o.date_modified,
+                   o.revision_comment,
+                   o.categories,
+                   COALESCE(d.delta, '{{}}') AS token_diff
+            FROM ordered o
+            LEFT JOIN delta_agg d ON o.rev_seq = d.rev_seq
+            ORDER BY o.rev_seq
+        """).fetchall()
+
+        if not rows:
+            raise HTTPException(status_code=404, detail=f"No revisions found for identifier {identifier}")
+
+        duration = (time.time() - start_time) * 1000
+
+        return {
+            "revisions": [
+                {
+                    "revision_id": r[0],
+                    "name": r[1],
+                    "date_modified": r[2],
+                    "revision_comment": r[3],
+                    "categories": r[4],
+                    "token_diff": r[5],
+                }
+                for r in rows
+            ],
+            "duration": duration,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")

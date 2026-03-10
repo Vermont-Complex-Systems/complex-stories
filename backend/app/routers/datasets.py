@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -7,7 +7,6 @@ from typing import List, Dict, Any, Optional
 import io
 import json
 from ..core.database import get_db_session
-from ..core.duckdb_client import get_duckdb_client
 from ..models.annotation_datasets import AcademicResearchGroups, AcademicResearchGroupCreate, GoogleScholarVenues
 from ..routers.auth import get_admin_user, get_current_active_user
 from ..models.auth import User
@@ -72,7 +71,6 @@ async def list_datasets():
         "total": len(datasets)
     }
 
-# Label Studio functions removed - no longer needed
 
 @admin_router.post("/academic-research-groups")
 async def create_academic_research_group(
@@ -467,7 +465,8 @@ async def import_google_scholar_data(
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
-    
+
+
 #!TODO: fix once we have storage
 # @router.get("/s2orc/arxiv/stream")
 # async def stream_arxiv_texts(
