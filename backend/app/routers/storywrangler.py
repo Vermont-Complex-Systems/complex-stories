@@ -13,63 +13,43 @@ from urllib.parse import quote
 
 from ..core.database import get_db_session
 from ..core.duckdb_client import get_duckdb_client
-from ..core.parquet_utils import get_parquet_paths, compute_partition_starts
+
 from ..models.registry import Dataset
 
 router = APIRouter()
 
 
-def _load_ngrams(conn, dataset_obj, table_name: str, time_column: str,
+def _load_ngrams(conn, dataset_obj, granularity: str, time_column: str,
                  date_range: List[str], location: str, limit: int) -> dict:
     """Load top ngrams for one (date_range, location) system from a dataset.
 
     Returns a dict with "types" and "counts" lists ready for allotax input.
     """
-    ngrams_path, adapter_path = get_parquet_paths(dataset_obj, table_name)
+    if not dataset_obj.entity_mapping or not dataset_obj.entity_mapping.get("path"):
+        raise HTTPException(status_code=500, detail="Dataset missing entity_mapping.path.")
+
+    adapter_path = dataset_obj.entity_mapping["path"]
 
     # Resolve entity_id → local_id via adapter
     adapter_row = conn.execute(
         "SELECT local_id FROM read_parquet(?) WHERE entity_id = ? LIMIT 1",
-        [adapter_path, location]
+        [[adapter_path], location]
     ).fetchone()
     if not adapter_row:
         raise HTTPException(status_code=400, detail=f"Location '{location}' not found in adapter")
-    local_geo = quote(adapter_row[0], safe='')
+    encoded_country = quote(adapter_row[0], safe='')
 
-    # Filter to relevant partition directories
-    granularity = {v[1]: k for k, v in {
-        "daily": ("wikigrams", "date"),
-        "weekly": ("wikigrams_weekly", "week"),
-        "monthly": ("wikigrams_monthly", "month"),
-    }.items()}.get(time_column, "daily")
-    partition_starts = compute_partition_starts(date_range[0], date_range[1], granularity)
+    glob_path = f"{dataset_obj.data_location}/{granularity}/country={encoded_country}/{time_column}=*/data_0.parquet"
 
-    filtered_path = [
-        p for p in ngrams_path
-        if any(f"{time_column}={ps}" in p for ps in partition_starts)
-        and f"geo={local_geo}" in p
-    ]
-
-    if not filtered_path:
-        raise HTTPException(
-            status_code=400,
-            detail=f"No data found for {date_range[0]} to {date_range[1]} / location {location}"
-        )
-
-    # Use snapped partition boundaries in SQL — raw input dates won't match stored
-    # week/month column values (e.g. input "2024-11-07" vs stored "2024-11-04").
     sql = f"""
-        SELECT w.types, SUM(w.counts) AS counts
-        FROM read_parquet(?) w
-        LEFT JOIN read_parquet(?) a ON w.geo = a.local_id
-        WHERE w.{time_column} BETWEEN ? AND ?
-          AND a.entity_id = ?
-        GROUP BY w.types
+        SELECT ngram, SUM(pv_count) AS counts
+        FROM read_parquet('{glob_path}')
+        WHERE {time_column} BETWEEN ? AND ?
+        GROUP BY ngram
         ORDER BY counts DESC
         LIMIT ?
     """
-    rows = conn.execute(sql, [filtered_path, adapter_path,
-                               partition_starts[0], partition_starts[-1], location, limit]).fetchall()
+    rows = conn.execute(sql, [date_range[0], date_range[1], limit]).fetchall()
 
     types = [r[0] for r in rows]
     counts = [float(r[1]) for r in rows]
@@ -114,12 +94,7 @@ async def allotax_endpoint(
     if granularity not in ("daily", "weekly", "monthly"):
         raise HTTPException(status_code=400, detail="granularity must be daily, weekly, or monthly")
 
-    granularity_map = {
-        "daily": ("wikigrams", "date"),
-        "weekly": ("wikigrams_weekly", "week"),
-        "monthly": ("wikigrams_monthly", "month"),
-    }
-    table_name, time_column = granularity_map[granularity]
+    time_column = {"daily": "date", "weekly": "week", "monthly": "month"}[granularity]
 
     def parse_range(s: str) -> List[str]:
         parts = s.split(",")
@@ -136,13 +111,6 @@ async def allotax_endpoint(
     if not dataset_obj:
         raise HTTPException(status_code=404, detail=f"Dataset '{domain}/{dataset}' not found")
 
-    if not dataset_obj.tables_metadata or table_name not in dataset_obj.tables_metadata:
-        available = list(dataset_obj.tables_metadata.keys()) if dataset_obj.tables_metadata else []
-        raise HTTPException(
-            status_code=400,
-            detail=f"Table '{table_name}' not available. Found: {available}"
-        )
-
     try:
         import allotax
     except ImportError:
@@ -155,8 +123,8 @@ async def allotax_endpoint(
         duckdb_client = get_duckdb_client()
         conn = duckdb_client.connect()
 
-        sys1 = _load_ngrams(conn, dataset_obj, table_name, time_column, dr1, location, ngram_limit)
-        sys2 = _load_ngrams(conn, dataset_obj, table_name, time_column, dr2, location2, ngram_limit)
+        sys1 = _load_ngrams(conn, dataset_obj, granularity, time_column, dr1, location, ngram_limit)
+        sys2 = _load_ngrams(conn, dataset_obj, granularity, time_column, dr2, location2, ngram_limit)
 
     except HTTPException:
         raise

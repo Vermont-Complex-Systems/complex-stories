@@ -47,8 +47,9 @@ class Dataset(Base):
     data_schema = Column(JSON)           # column_name -> type, for query reference
 
     # Shared optional metadata
-    entity_mapping = Column(JSON)   # {path, local_id_column, entity_id_column}
-    sources = Column(JSON)          # source URLs for validation
+    entity_mapping = Column(JSON)     # {path, local_id_column, entity_id_column}
+    sources = Column(JSON)            # source URLs for validation
+    endpoint_schemas = Column(JSON)   # [{type, time_dimension, entity_dimensions, filter_dimensions}]
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

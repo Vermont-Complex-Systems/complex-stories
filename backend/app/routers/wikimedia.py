@@ -4,13 +4,12 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel
 import time
 import asyncio
-import os
 from urllib.parse import quote
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from ..core.database import get_mongo_client, get_db_session
 from ..core.duckdb_client import get_duckdb_client
-from ..core.parquet_utils import get_parquet_paths, compute_partition_starts
+from ..core.parquet_utils import compute_partition_starts
 from ..models.registry import Dataset
 from better_profanity import profanity
 
@@ -282,6 +281,107 @@ async def get_rank_divergence(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/top-ngrams2")
+async def get_wikigrams_top_ngrams(
+    dates: str = Query(default="2024-11-01,2024-11-07"),
+    dates2: Optional[str] = Query(default=None),
+    locations: str = Query(default="wikidata:Q30"),
+    granularity: str = Query(default="daily"),
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Get top Wikipedia n-grams with flexible comparative analysis.
+
+    Supports single or dual date ranges, single location, and granularity selection.
+    Replaces /datalakes/wikigrams/top-ngrams.
+    """
+    if granularity not in ["daily", "weekly", "monthly"]:
+        raise HTTPException(status_code=400, detail="granularity must be one of: daily, weekly, monthly")
+
+    date_ranges = []
+    dates_str1 = dates.split(',')
+    if len(dates_str1) == 1:
+        dates_str1.append(dates_str1[0])
+    date_ranges.append(dates_str1)
+
+    if dates2:
+        dates_str2 = dates2.split(',')
+        if len(dates_str2) == 1:
+            dates_str2.append(dates_str2[0])
+        date_ranges.append(dates_str2)
+
+    location_list = [locations]
+
+    query = WikimediaDataset.where(Dataset.dataset_id == "ngrams")
+    result = await db.execute(query)
+    dataset_obj = result.scalar_one_or_none()
+    if not dataset_obj:
+        raise HTTPException(status_code=404, detail="'ngrams' dataset not found")
+
+    time_column = {"daily": "date", "weekly": "week", "monthly": "month"}[granularity]
+
+    if not dataset_obj.entity_mapping or not dataset_obj.entity_mapping.get("path"):
+        raise HTTPException(status_code=500, detail="Dataset missing entity_mapping.path. Please re-register.")
+
+    try:
+        conn = get_duckdb_client().connect()
+        adapter_path = dataset_obj.entity_mapping["path"]
+
+        results = {}
+        queried_partitions_metadata = []
+
+        for date_range in date_ranges:
+            for location in location_list:
+                row = conn.execute(
+                    "SELECT local_id FROM read_parquet(?) WHERE entity_id = ? LIMIT 1",
+                    [[adapter_path], location]
+                ).fetchone()
+                if not row:
+                    raise HTTPException(status_code=400, detail=f"Location '{location}' not found in adapter")
+                encoded_country = quote(row[0], safe='')
+
+                partition_starts = compute_partition_starts(date_range[0], date_range[1], granularity)
+                queried_partitions_metadata.append({"date_range": date_range, "partitions": partition_starts})
+
+                if len(date_ranges) > 1:
+                    key = date_range[0] if date_range[0] == date_range[1] else f"{date_range[0]}_{date_range[1]}"
+                elif len(location_list) > 1:
+                    key = location.replace(":", "_").replace("-", "_")
+                else:
+                    key = "data"
+
+                glob_path = f"{dataset_obj.data_location}/{granularity}/country={encoded_country}/{time_column}=*/data_0.parquet"
+
+                rows = conn.execute(f"""
+                    SELECT ngram, SUM(pv_count) as counts
+                    FROM read_parquet('{glob_path}')
+                    WHERE {time_column} BETWEEN ? AND ?
+                    GROUP BY ngram
+                    ORDER BY counts DESC
+                    LIMIT ?
+                """, [date_range[0], date_range[1], limit]).fetchall()
+
+                formatted = [{"types": r[0], "counts": r[1]} for r in rows]
+
+                if key == "data":
+                    return {
+                        "data": formatted,
+                        "metadata": {"granularity": granularity, "time_column": time_column, "queried_partitions": partition_starts}
+                    }
+                else:
+                    results[key] = formatted
+
+        return {
+            **results,
+            "metadata": {"granularity": granularity, "time_column": time_column, "queries": queried_partitions_metadata}
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
+
+
 # ── DuckDB endpoints ────────────────────────────────────────────────
 
 async def _get_revisions_path(db: AsyncSession) -> str:
@@ -344,37 +444,19 @@ async def search_terms_batch(
     if not dataset_obj:
         raise HTTPException(status_code=404, detail="Wikigrams dataset not found")
 
-    granularity_mapping = {
-        "daily": ("wikigrams", "date"),
-        "weekly": ("wikigrams_weekly", "week"),
-        "monthly": ("wikigrams_monthly", "month")
-    }
-    table_name, time_column = granularity_mapping[granularity]
+    time_column = {"daily": "date", "weekly": "week", "monthly": "month"}[granularity]
 
-    has_top_articles = (
-        granularity == "daily"
-        and bool(dataset_obj.data_schema and "top_articles" in dataset_obj.data_schema)
-    )
+    has_top_articles = granularity == "daily"
 
     try:
+        if not dataset_obj.entity_mapping or not dataset_obj.entity_mapping.get("path"):
+            raise HTTPException(status_code=500, detail="Dataset missing entity_mapping.path. Please re-register.")
+
         duckdb_client = get_duckdb_client()
         conn = duckdb_client.connect()
 
-        if not dataset_obj.tables_metadata:
-            raise HTTPException(status_code=500, detail="Dataset metadata is missing.")
-
-        if table_name not in dataset_obj.tables_metadata:
-            available = [k for k in dataset_obj.tables_metadata.keys() if k.startswith("wikigrams")]
-            raise HTTPException(status_code=400, detail=f"Table '{table_name}' not found. Available: {available}.")
-
-        t_paths = time.time()
-        wikigrams_path_all, adapter_path = get_parquet_paths(dataset_obj, table_name)
-        t_paths_ms = (time.time() - t_paths) * 1000
-
+        adapter_path = dataset_obj.entity_mapping["path"]
         path_prefix_index: Dict[str, List[str]] = {}
-        for p in wikigrams_path_all:
-            dir_path = p.rsplit("/", 1)[0]
-            path_prefix_index.setdefault(dir_path, []).append(p)
 
         placeholders = ",".join(["?" for _ in terms])
         start_time = time.time()
@@ -385,11 +467,16 @@ async def search_terms_batch(
         for loc in unique_locations:
             row = conn.execute(
                 "SELECT local_id FROM read_parquet(?) WHERE entity_id = ? LIMIT 1",
-                [adapter_path, loc]
+                [[adapter_path], loc]
             ).fetchone()
             if not row:
                 raise HTTPException(status_code=400, detail=f"Location '{loc}' not found in adapter")
-            geo_map[loc] = quote(row[0], safe='')
+            encoded_country = quote(row[0], safe='')
+            geo_map[loc] = encoded_country
+            glob_pat = f"{dataset_obj.data_location}/{granularity}/country={encoded_country}/{time_column}=*/data_0.parquet"
+            for (p,) in conn.execute("SELECT * FROM glob(?)", [glob_pat]).fetchall():
+                dir_path = p.rsplit("/", 1)[0]
+                path_prefix_index.setdefault(dir_path, []).append(p)
         t_adapter_ms = (time.time() - t_adapter) * 1000
 
         window_unit_days = {"daily": 1, "weekly": 7, "monthly": 30}[granularity]
@@ -406,7 +493,7 @@ async def search_terms_batch(
             window_partitions = compute_partition_starts(w_start, w_end, granularity)
             focus_partition = compute_partition_starts(system["date"], system["date"], granularity)[0]
 
-            base = f"{dataset_obj.data_location}/{table_name}/geo={local_geo}"
+            base = f"{dataset_obj.data_location}/{granularity}/country={local_geo}"
             query_paths = []
             for ps in window_partitions:
                 query_paths.extend(path_prefix_index.get(f"{base}/{time_column}={ps}", []))
@@ -429,7 +516,8 @@ async def search_terms_batch(
 
         all_geos = {geo_map[s["location"]] for s in systems_input.values()}
         temporal_comparison = len(systems_input) == 2 and len(all_geos) == 1
-        print(f"  setup: get_paths={t_paths_ms:.0f}ms, adapter={t_adapter_ms:.0f}ms, filter={t_filter_ms:.0f}ms | total_paths={len(wikigrams_path_all)}")
+        total_paths = sum(len(v) for v in path_prefix_index.values())
+        print(f"  setup: adapter+paths={t_adapter_ms:.0f}ms, filter={t_filter_ms:.0f}ms | total_paths={total_paths}")
 
         system_results: Dict[str, Dict] = {}
 
@@ -442,15 +530,15 @@ async def search_terms_batch(
 
             spark_sql = f"""
                 SELECT
-                    w.types,
+                    w.ngram,
                     w.{time_column},
-                    MIN(w.rank) AS rank,
-                    SUM(w.counts) AS counts
+                    MIN(w.pv_rank) AS rank,
+                    SUM(w.pv_count) AS counts
                 FROM read_parquet(?) w
                 WHERE w.{time_column} BETWEEN ? AND ?
-                  AND w.types IN ({placeholders})
-                GROUP BY w.types, w.{time_column}
-                ORDER BY w.types, w.{time_column}
+                  AND w.ngram IN ({placeholders})
+                GROUP BY w.ngram, w.{time_column}
+                ORDER BY w.ngram, w.{time_column}
             """
             t_query = time.time()
             cursor = conn.execute(spark_sql, [combined_paths, range_start, range_end] + terms)
@@ -469,7 +557,7 @@ async def search_terms_batch(
 
             for row in rows:
                 d = dict(zip(cols, row))
-                term = d["types"]
+                term = d["ngram"]
                 date_val = str(d[time_column])
                 point = {time_column: d[time_column], "rank": d["rank"], "counts": d["counts"]}
                 if date_val in s1["window_set"]:
@@ -484,19 +572,19 @@ async def search_terms_batch(
                     try:
                         art_cursor = conn.execute(f"""
                             SELECT
-                                w.types,
-                                ARG_MIN(w.top_articles, w.rank) FILTER (WHERE w.{time_column} = ?) AS top_articles_s1,
-                                ARG_MIN(w.top_articles, w.rank) FILTER (WHERE w.{time_column} = ?) AS top_articles_s2
+                                w.ngram,
+                                ARG_MIN(w.top_articles, w.pv_rank) FILTER (WHERE w.{time_column} = ?) AS top_articles_s1,
+                                ARG_MIN(w.top_articles, w.pv_rank) FILTER (WHERE w.{time_column} = ?) AS top_articles_s2
                             FROM read_parquet(?) w
-                            WHERE w.types IN ({placeholders})
-                            GROUP BY w.types
+                            WHERE w.ngram IN ({placeholders})
+                            GROUP BY w.ngram
                         """, [s1["focus_partition"], s2["focus_partition"], focus_paths] + terms)
                         for row in art_cursor.fetchall():
                             d = dict(zip([c[0] for c in art_cursor.description], row))
                             if d.get("top_articles_s1") is not None:
-                                system_results["system1"]["topArticles"][d["types"]] = d["top_articles_s1"]
+                                system_results["system1"]["topArticles"][d["ngram"]] = d["top_articles_s1"]
                             if d.get("top_articles_s2") is not None:
-                                system_results["system2"]["topArticles"][d["types"]] = d["top_articles_s2"]
+                                system_results["system2"]["topArticles"][d["ngram"]] = d["top_articles_s2"]
                     except Exception:
                         pass
             t_articles_ms = (time.time() - t_articles) * 1000
@@ -510,15 +598,15 @@ async def search_terms_batch(
                 t_query = time.time()
                 cursor = conn.execute(f"""
                     SELECT
-                        w.types,
+                        w.ngram,
                         w.{time_column},
-                        MIN(w.rank) AS rank,
-                        SUM(w.counts) AS counts
+                        MIN(w.pv_rank) AS rank,
+                        SUM(w.pv_count) AS counts
                     FROM read_parquet(?) w
                     WHERE w.{time_column} BETWEEN ? AND ?
-                      AND w.types IN ({placeholders})
-                    GROUP BY w.types, w.{time_column}
-                    ORDER BY w.types, w.{time_column}
+                      AND w.ngram IN ({placeholders})
+                    GROUP BY w.ngram, w.{time_column}
+                    ORDER BY w.ngram, w.{time_column}
                 """, [query_paths, meta["window_partitions"][0], meta["window_partitions"][-1]] + terms)
                 t_query_ms = (time.time() - t_query) * 1000
 
@@ -528,7 +616,7 @@ async def search_terms_batch(
                 spark_data: Dict[str, List[Dict]] = {t: [] for t in terms}
                 for row in rows:
                     d = dict(zip(cols, row))
-                    spark_data[d["types"]].append({
+                    spark_data[d["ngram"]].append({
                         time_column: d[time_column],
                         "rank": d["rank"],
                         "counts": d["counts"],
@@ -540,17 +628,17 @@ async def search_terms_batch(
                     try:
                         art_cursor = conn.execute(f"""
                             SELECT
-                                w.types,
-                                ARG_MIN(w.top_articles, w.rank) AS top_articles
+                                w.ngram,
+                                ARG_MIN(w.top_articles, w.pv_rank) AS top_articles
                             FROM read_parquet(?) w
                             WHERE w.{time_column} = ?
-                              AND w.types IN ({placeholders})
-                            GROUP BY w.types
+                              AND w.ngram IN ({placeholders})
+                            GROUP BY w.ngram
                         """, [meta["focus_paths"], meta["focus_partition"]] + terms)
                         for row in art_cursor.fetchall():
                             d = dict(zip([c[0] for c in art_cursor.description], row))
                             if d.get("top_articles") is not None:
-                                top_articles[d["types"]] = d["top_articles"]
+                                top_articles[d["ngram"]] = d["top_articles"]
                     except Exception:
                         pass
                 t_articles_ms = (time.time() - t_articles) * 1000
@@ -576,25 +664,33 @@ async def search_terms_batch(
 
 @router.get("/revisions")
 async def list_revision_articles(
+    min_revisions: int = Query(default=1, description="Minimum revision count filter"),
     limit: int = Query(default=100, description="Max articles to return"),
     db: AsyncSession = Depends(get_db_session),
 ):
     """List articles with extracted revision histories."""
     try:
-        revisions_path = await _get_revisions_path(db)
+        query = WikimediaDataset.where(Dataset.dataset_id == "revisions")
+        result = await db.execute(query)
+        rev_dataset = result.scalar_one_or_none()
+        if not rev_dataset:
+            raise HTTPException(status_code=404, detail="'revisions' dataset not found")
 
+        adapter_path = rev_dataset.entity_mapping["path"]
         start_time = time.time()
 
-        articles = []
-        for entry in os.scandir(revisions_path):
-            if entry.is_dir() and entry.name.startswith("identifier="):
-                identifier = entry.name.split("=", 1)[1]
-                articles.append(identifier)
+        conn = get_duckdb_client().connect()
+        rows = conn.execute(
+            "SELECT identifier, name, revision_count, first_edit, last_edit FROM read_parquet(?) WHERE revision_count >= ? ORDER BY revision_count DESC LIMIT ?",
+            [adapter_path, min_revisions, limit]
+        ).fetchall()
 
-        articles = articles[:limit]
         duration = (time.time() - start_time) * 1000
-
-        return {"articles": articles, "duration": duration}
+        articles = [
+            {"identifier": r[0], "name": r[1], "revision_count": r[2], "first_edit": r[3], "last_edit": r[4]}
+            for r in rows
+        ]
+        return {"articles": articles, "total": len(articles), "duration": duration}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")

@@ -18,6 +18,17 @@ from ..models.auth import User
 router = APIRouter()
 admin_router = APIRouter()
 
+# Domains that have actual registered routers. Update when adding a new router to main.py.
+VALID_DOMAINS = {
+    "wikimedia",
+    "storywrangler",
+    "babynames",
+    "datalakes",
+    "open-academic-analytics",
+    "scisciDB",
+    "annotations",
+}
+
 
 class EntityMappingConfig(BaseModel):
     table: Optional[str] = Field(None, description="DuckLake table name (ducklake format only)")
@@ -55,6 +66,7 @@ class DatasetCreate(BaseModel):
     partitioning: Optional[Dict] = Field(None, description="Partitioning scheme description. e.g. {\"keys\": [\"date\", \"geo\"], \"granularity\": \"daily\"}")
     entity_mapping: Optional[EntityMappingConfig] = Field(None, description="How to map canonical entity IDs (e.g. Wikidata QIDs) to dataset-local identifiers. Required for geo/entity filtering endpoints.")
     sources: Optional[Dict[str, Dict[str, Union[str, List[str]]]]] = Field(None, description="Source URLs for provenance/validation. e.g. {\"main\": {\"url\": \"https://...\"}}")
+    endpoint_schemas: Optional[List[Dict]] = Field(None, description="Endpoint types this dataset supports. Each entry: {type, time_dimension?, entity_dimensions?, filter_dimensions?}. e.g. [{\"type\": \"types-counts\", \"time_dimension\": \"date\", \"entity_dimensions\": [\"country\"]}]")
 
 
 @admin_router.post("/register")
@@ -64,6 +76,12 @@ async def register_dataset(
     db: AsyncSession = Depends(get_db_session)
 ):
     """Register a new dataset or update an existing one."""
+    if dataset.domain not in VALID_DOMAINS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unknown domain '{dataset.domain}'. Valid domains: {sorted(VALID_DOMAINS)}"
+        )
+
     existing_result = await db.execute(
         select(Dataset).where(Dataset.domain == dataset.domain, Dataset.dataset_id == dataset.dataset_id)
     )
@@ -80,6 +98,7 @@ async def register_dataset(
         existing.partitioning = dataset.partitioning
         existing.entity_mapping = dataset.entity_mapping.model_dump() if dataset.entity_mapping else None
         existing.sources = dataset.sources
+        existing.endpoint_schemas = dataset.endpoint_schemas
 
         await db.commit()
         await db.refresh(existing)
@@ -149,6 +168,7 @@ async def get_dataset_info(
         "partitioning": ds.partitioning,
         "entity_mapping": ds.entity_mapping,
         "sources": ds.sources,
+        "endpoint_schemas": ds.endpoint_schemas,
         "created_at": ds.created_at,
         "updated_at": ds.updated_at,
     }
@@ -179,8 +199,9 @@ async def get_adapter_info(
         adapter_fnames = ds.tables_metadata.get("adapter")
         if not adapter_fnames:
             raise HTTPException(status_code=500, detail="Missing adapter file paths. Required: tables_metadata.adapter")
+        base = f"{ds.data_location}/{ds.ducklake_data_path}" if ds.ducklake_data_path else ds.data_location
         adapter_path = [
-            f"{ds.data_location}/main/adapter/{fname}" for fname in adapter_fnames
+            f"{base}/main/adapter/{fname}" for fname in adapter_fnames
         ]
 
     try:

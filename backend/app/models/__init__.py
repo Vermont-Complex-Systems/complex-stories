@@ -7,7 +7,7 @@ from .academic import Paper, Coauthor
 from .annotation_datasets import AcademicResearchGroups
 from .auth import User, AnnotationHistory
 from .sciscidb import FieldYearCount
-from .datasets import Dataset
+from .registry import Dataset
 from .interdisciplinarity import PaperAnnotation
 from .cached_papers import CachedPaper
 
