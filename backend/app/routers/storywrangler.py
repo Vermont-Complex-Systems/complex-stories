@@ -13,6 +13,7 @@ from urllib.parse import quote
 
 from ..core.database import get_db_session
 from ..core.duckdb_client import get_duckdb_client
+from ..core.parquet_utils import compute_partition_starts
 
 from ..models.registry import Dataset
 
@@ -37,7 +38,18 @@ def _load_ngrams(conn, dataset_obj, granularity: str, time_column: str,
     ).fetchone()
     if not adapter_row:
         raise HTTPException(status_code=400, detail=f"Location '{location}' not found in adapter")
-    encoded_country = quote(adapter_row[0], safe='')
+    local_id = adapter_row[0]
+    encoded_country = quote(local_id, safe='')
+
+    # Validate date range against registry availability
+    avail = (dataset_obj.partitioning or {}).get(granularity, {}).get("available", {}).get(local_id)
+    if avail:
+        avail_min, avail_max = avail["min"], avail["max"]
+        if date_range[1] < avail_min or date_range[0] > avail_max:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Requested dates {date_range} are outside available range [{avail_min}, {avail_max}] for '{local_id}' ({granularity})"
+            )
 
     glob_path = f"{dataset_obj.data_location}/{granularity}/country={encoded_country}/{time_column}=*/data_0.parquet"
 
@@ -49,7 +61,8 @@ def _load_ngrams(conn, dataset_obj, granularity: str, time_column: str,
         ORDER BY counts DESC
         LIMIT ?
     """
-    rows = conn.execute(sql, [date_range[0], date_range[1], limit]).fetchall()
+    partitions = compute_partition_starts(date_range[0], date_range[1], granularity)
+    rows = conn.execute(sql, [partitions[0], partitions[-1], limit]).fetchall()
 
     types = [r[0] for r in rows]
     counts = [float(r[1]) for r in rows]
