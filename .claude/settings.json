@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "svelte@svelte": true,
+    "impeccable@impeccable": true
+  }
+}

@@ -13,46 +13,51 @@ from fastapi import HTTPException
 def get_parquet_paths(dataset, data_table_name: str) -> Tuple[List[str], List[str]]:
     """Construct parquet file paths for data table and adapter table.
 
-    For parquet_hive format: paths in tables_metadata are absolute; adapter comes from entity_mapping.path.
-    For ducklake format: paths are relative filenames; prepend data_location + /main/ + table_name/.
+    Used by datalakes.py and wikimedia.py routers that still rely on adapter parquet
+    JOINs for entity resolution. Routers that have migrated to DB pre-resolution
+    (e.g. babynames.py) do not use this function.
+
+    For parquet_hive: tables_metadata values are absolute paths.
+    For ducklake: tables_metadata values are relative filenames; prepend
+                  data_location + ducklake_data_path + /main/ + table_name/.
     """
-    if not dataset.tables_metadata:
+    fc = dataset.format_config or {}
+    tables_metadata = fc.get("tables_metadata") or {}
+
+    if not tables_metadata:
         raise HTTPException(
             status_code=500,
-            detail="Dataset metadata is missing. Please re-register the dataset with proper tables_metadata."
+            detail="Dataset metadata is missing. Please re-register the dataset with proper format_config.tables_metadata."
         )
 
-    data_fnames = dataset.tables_metadata.get(data_table_name)
-
+    data_fnames = tables_metadata.get(data_table_name)
     if not data_fnames:
         raise HTTPException(
             status_code=500,
-            detail=f"Missing {data_table_name} file paths. Required: tables_metadata.{data_table_name}"
+            detail=f"Missing {data_table_name} file paths. Required: format_config.tables_metadata.{data_table_name}"
+        )
+
+    adapter_fnames = tables_metadata.get("adapter")
+    if not adapter_fnames:
+        raise HTTPException(
+            status_code=500,
+            detail="Missing adapter file paths. Required: format_config.tables_metadata.adapter"
         )
 
     if dataset.data_format == "parquet_hive":
         data_path = data_fnames
-        if not dataset.entity_mapping or not dataset.entity_mapping.get("path"):
-            raise HTTPException(
-                status_code=500,
-                detail="Missing entity_mapping.path for parquet_hive format. Please re-register with entity_mapping."
-            )
-        adapter_path = [dataset.entity_mapping["path"]]
+        adapter_path = adapter_fnames
     else:
-        # ducklake format: relative filenames, prepend data_location
+        # ducklake format: relative filenames, prepend data_location + ducklake_data_path
         # NOTE: Don't URL-decode - the filesystem actually has %20 in directory names
-        adapter_fnames = dataset.tables_metadata.get("adapter")
-        if not adapter_fnames:
-            raise HTTPException(
-                status_code=500,
-                detail="Missing adapter file paths. Required: tables_metadata.adapter"
-            )
+        ducklake_data_path = fc.get("ducklake_data_path")
+        base = f"{dataset.data_location}/{ducklake_data_path}" if ducklake_data_path else dataset.data_location
         data_path = [
-            f"{dataset.data_location}/main/{data_table_name}/{fname}"
+            f"{base}/main/{data_table_name}/{fname}"
             for fname in data_fnames
         ]
         adapter_path = [
-            f"{dataset.data_location}/main/adapter/{fname}"
+            f"{base}/main/adapter/{fname}"
             for fname in adapter_fnames
         ]
 

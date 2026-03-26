@@ -13,13 +13,13 @@ exist in multiple domains without collision.
 
 Common fields (all formats):
   domain, dataset_id, data_location, data_format, description,
-  entity_mapping, sources, created_at, updated_at.
+  entity_mapping, sources, endpoint_schema, format_config,
+  catalog, ownership, lineage, created_at, updated_at.
 
-Structured-data fields (ducklake, parquet_hive):
-  tables_metadata, partitioning.
-
-DuckLake-specific:
-  ducklake_data_path, data_schema.
+format_config groups all storage-format-specific fields to avoid column churn:
+  parquet_hive: {tables_metadata, partitioning, availability}
+  ducklake:     {ducklake_data_path, data_schema, availability}
+  duckdb:       {}
 """
 
 from sqlalchemy import Column, String, DateTime, Text, JSON, ForeignKeyConstraint
@@ -32,24 +32,29 @@ class Dataset(Base):
 
     __tablename__ = "datasets"
 
+    # Namespace / producer identity
+    catalog = Column(String, default="vcsi")         # producing org; catalog.domain.dataset_id
     domain = Column(String, primary_key=True)        # owning domain: wikimedia | storywrangler | ...
     dataset_id = Column(String, primary_key=True)    # name within domain: ngrams | revisions | ...
+    
     data_location = Column(String, nullable=False)   # base path or connection string
     data_format = Column(String, nullable=False)     # ducklake | parquet_hive | duckdb
     description = Column(Text)
 
-    # Structured/tabular formats (ducklake, parquet_hive)
-    tables_metadata = Column(JSON)   # table_name -> [file_paths] or version info
-    partitioning = Column(JSON)      # partitioning keys and scheme
-
-    # DuckLake-specific
-    ducklake_data_path = Column(String)  # path to ducklake catalog (.duckdb file)
-    data_schema = Column(JSON)           # column_name -> type, for query reference
+    # Format-specific config
+    format_config = Column(JSON)     # parquet_hive: {tables_metadata, partitioning, availability}
+                                     # ducklake:     {ducklake_data_path, data_schema, availability}
 
     # Shared optional metadata
     entity_mapping = Column(JSON)     # {path, local_id_column, entity_id_column}
     sources = Column(JSON)            # source URLs for validation
-    endpoint_schemas = Column(JSON)   # [{type, time_dimension, entity_dimensions, filter_dimensions}]
+    endpoint_schema = Column("endpoint_schemas", JSON)   # {type, time_dimension?, granularities?, filter_dimensions?}
+
+    # Ownership and succession
+    ownership = Column(JSON)   # {owner_group, contact, status, storage_risk}
+
+    # Lineage
+    lineage = Column(JSON)     # {derived_from, produced_by, consumers}
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -75,7 +80,7 @@ class EntityMapping(Base):
     local_id = Column(String, nullable=False)
     entity_id = Column(String, nullable=False)  # standardized identifier
     entity_name = Column(String, nullable=False)
-    entity_ids = Column(JSON)  # alternate identifiers
+    entity_ids = Column(JSON)  # alternate identifiers, list[str] e.g. ['iso:US', 'local:babynames:united_states']
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self):

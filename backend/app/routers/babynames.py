@@ -9,13 +9,13 @@ from typing import Optional
 
 from ..core.database import get_db_session
 from ..core.duckdb_client import get_duckdb_client
-from ..models.registry import Dataset
+from ..models.registry import Dataset, EntityMapping
 
 router = APIRouter()
 
 BabynamesDataset = select(Dataset).where(Dataset.domain == "babynames")
 
-@router.get("/top-ngrams")
+@router.get("/ngrams")
 async def get_babynames_top_ngrams(
     dates: str = Query(default="1991,1993"),  # First date range
     dates2: Optional[str] = Query(default=None),  # Optional second date range
@@ -62,7 +62,7 @@ async def get_babynames_top_ngrams(
     location_list = [locations]
 
     # Look up babynames dataset
-    query = BabynamesDataset.where(Dataset.dataset_id == "babynames")
+    query = BabynamesDataset.where(Dataset.dataset_id == "ngrams")
     result = await db.execute(query)
     dataset_obj = result.scalar_one_or_none()
 
@@ -75,29 +75,26 @@ async def get_babynames_top_ngrams(
         conn = duckdb_client.connect()
 
         # Use stored metadata to get exact file paths for current versions
-        if not dataset_obj.tables_metadata:
+        fc = dataset_obj.format_config or {}
+        tables_metadata = fc.get("tables_metadata") or {}
+
+        if not tables_metadata:
             raise HTTPException(
                 status_code=500,
-                detail="Dataset metadata is missing. Please re-register the dataset with proper tables_metadata."
+                detail="Dataset metadata is missing. Please re-register the dataset with proper format_config.tables_metadata."
             )
 
-        # babynames_fnames=["ducklake-019af69d-b42c-7877-9073-3f440e2ee162.parquet", ...]
-        babynames_fnames = dataset_obj.tables_metadata.get("babynames")
-        adapter_fnames = dataset_obj.tables_metadata.get("adapter")
-
-        if not babynames_fnames or not adapter_fnames:
+        babynames_fnames = tables_metadata.get("babynames")
+        if not babynames_fnames:
             raise HTTPException(
                 status_code=500,
-                detail="Missing babynames or adapter file paths. Required: tables_metadata.babynames and tables_metadata.adapter"
+                detail="Missing babynames file paths in format_config.tables_metadata.babynames"
             )
 
-        # Construct full paths by combining data_location with the filenames
-        # For ducklake format, files are stored in metadata.ducklake.files/main/ subdirectories
+        ducklake_data_path = fc.get("ducklake_data_path")
+        base = f"{dataset_obj.data_location}/{ducklake_data_path}" if ducklake_data_path else dataset_obj.data_location
         babynames_path = [
-            f"{dataset_obj.data_location}/{dataset_obj.ducklake_data_path}/main/babynames/{fname}" for fname in babynames_fnames
-        ]
-        adapter_path = [
-            f"{dataset_obj.data_location}/{dataset_obj.ducklake_data_path}/main/adapter/{fname}" for fname in adapter_fnames
+            f"{base}/main/babynames/{fname}" for fname in babynames_fnames
         ]
 
         # Execute comparative queries
@@ -106,39 +103,49 @@ async def get_babynames_top_ngrams(
         # Query for each combination of date ranges and locations
         for date_range in date_ranges:
             for location in location_list:
+                # Resolve entity_id → local_id via DB (replaces adapter parquet JOIN)
+                em_result = await db.execute(
+                    select(EntityMapping).where(
+                        EntityMapping.domain == "babynames",
+                        EntityMapping.dataset_id == "ngrams",
+                        EntityMapping.entity_id == location,
+                    )
+                )
+                em = em_result.scalar_one_or_none()
+                if not em:
+                    raise HTTPException(status_code=404, detail=f"Location '{location}' not found in entity mappings")
+                local_id = em.local_id
+
                 # Create key for result structure
                 if len(date_ranges) > 1:
-                    # Temporal comparison: use readable date format
                     if date_range[0] == date_range[1]:
-                        key = str(date_range[0])  # Single year: "1990"
+                        key = str(date_range[0])
                     else:
-                        key = f"{date_range[0]}-{date_range[1]}"  # Range: "2010-2015"
+                        key = f"{date_range[0]}-{date_range[1]}"
                 elif len(location_list) > 1:
-                    # Geographic comparison: use location ID
                     key = location.replace(":", "_").replace("-", "_")
                 else:
-                    key = "data"  # Single query, return simple format
+                    key = "data"
 
-                sql_query = f"""
+                sql_query = """
                     SELECT
                         b.types,
                         SUM(b.counts) as counts
                     FROM read_parquet(?) b
-                    LEFT JOIN read_parquet(?) a ON b.geo = a.local_id
                     WHERE b.year BETWEEN ? AND ?
-                      AND a.entity_id = ?
+                      AND b.geo = ?
                 """
 
                 if sex:
                     sql_query += " AND b.sex = ?"
 
-                sql_query += f"""
+                sql_query += """
                     GROUP BY b.types
                     ORDER BY counts DESC
                     LIMIT ?
                 """
 
-                cursor = conn.execute(sql_query, [babynames_path, adapter_path, date_range[0], date_range[1], location, sex, limit])
+                cursor = conn.execute(sql_query, [babynames_path, date_range[0], date_range[1], local_id, sex, limit])
                 query_results = cursor.fetchall()
 
                 # Structure results for comparison or simple format

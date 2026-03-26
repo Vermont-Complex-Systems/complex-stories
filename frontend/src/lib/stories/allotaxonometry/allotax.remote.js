@@ -8,16 +8,23 @@ const API_BASE_URL = API_BASE || 'http://localhost:8000'
 
 
 export const getAdapter = query(async () => {
-        const url = `${API_BASE_URL}/registry/babynames/babynames/adapter`
-        console.log('Fetching available locations:', url)
-
+        const url = `${API_BASE_URL}/registry/babynames/ngrams/adapter`
         const response = await fetch(url)
         if (!response.ok) {
             const errorText = await response.text()
-            console.error('Error response:', errorText)
             throw Error(`💣️ Failed to fetch available locations: ${response.status} - ${errorText}`)
         }
+        return await response.json()
+    }
+);
 
+export const getDatasetInfo = query(async () => {
+        const url = `${API_BASE_URL}/registry/babynames/ngrams`
+        const response = await fetch(url)
+        if (!response.ok) {
+            const errorText = await response.text()
+            throw Error(`💣️ Failed to fetch dataset info: ${response.status} - ${errorText}`)
+        }
         return await response.json()
     }
 );
@@ -40,7 +47,7 @@ export const getTopBabyNames = query(
             limit: limit,
         })
 
-        const url = `${API_BASE_URL}/babynames/top-ngrams?${params.toString()}`
+        const url = `${API_BASE_URL}/babynames/ngrams?${params.toString()}`
 
         const response = await fetch(url)
         if (!response.ok) {

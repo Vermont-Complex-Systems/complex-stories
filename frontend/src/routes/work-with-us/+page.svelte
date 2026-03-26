@@ -3,6 +3,14 @@
 	import { base } from "$app/paths";
 	import Divider from './Divider.svelte';
 	import { scrollReveal } from '$lib/utils/scrollReveal.js';
+
+	import friendsFunnierImg from '$lib/assets/thumbnails/friends-funnier-than-you-are.jpg?enhanced';
+	import allotaxScrollyImg from '$lib/assets/thumbnails/allotax-scrolly.jpg?enhanced';
+	import cnwwImg from '$lib/assets/thumbnails/cnww.png?enhanced';
+	import wikiwranglerImg from '$lib/assets/thumbnails/wikiwrangler.png?enhanced';
+	import openAcademicImg from '$lib/assets/thumbnails/open-academic-analytics.jpg?enhanced';
+	import vermontLivabilityImg from '$lib/assets/thumbnails/vermont-livability-map.jpg?enhanced';
+	import exploreCatImg from '$lib/assets/thumbnails/explore-the-cat-project.jpg?enhanced';
 </script>
 
 
@@ -69,13 +77,13 @@
 	<div class="image-section">
 		<div class="image-grid">
 			<a href="{base}/friends-funnier-than-you-are" class="image-item primary">
-				<img src="{base}/common/thumbnails/screenshots/friends-funnier-than-you-are.jpg" alt="Friends Funnier Than You Are Project" />
+				<enhanced:img src={friendsFunnierImg} alt="Friends Funnier Than You Are Project" />
 			</a>
 			<a href="{base}/allotax-scrolly" class="image-item secondary">
-				<img src="{base}/common/thumbnails/screenshots/allotax-scrolly.jpg" alt="Allotax Scrolly Project" />
+				<enhanced:img src={allotaxScrollyImg} alt="Allotax Scrolly Project" />
 			</a>
 			<a href="https://vermontcomplexsystems.org/events/cnww/" class="image-item tertiary">
-				<img src="{base}/common/thumbnails/screenshots/cnww.png" alt="CNWW" />
+				<enhanced:img src={cnwwImg} alt="CNWW" />
 			</a>
 		</div>
 	</div>
@@ -103,10 +111,10 @@
 	<div class="image-section">
 		<div class="image-grid">
             <a href="https://wikimedia.uvm.edu/" target="_blank" class="image-item primary">
-                <img src="{base}/common/thumbnails/screenshots/wikiwrangler.png" alt="Wiki Wrangler" />
+                <enhanced:img src={wikiwranglerImg} alt="Wiki Wrangler" />
             </a>
 			<a href="{base}/open-academic-analytics" target="_blank" class="image-item secondary">
-				<img src="{base}/common/thumbnails/screenshots/open-academic-analytics.jpg" alt="Open Academic Analytics Project" />
+				<enhanced:img src={openAcademicImg} alt="Open Academic Analytics Project" />
 			</a>
 		</div>
 	</div>
@@ -134,10 +142,10 @@
 	<div class="image-section">
 		<div class="image-grid">
 			<a href="https://verso-uvm.github.io/Vermont-Livability-Map/" class="image-item primary">
-				<img src="{base}/common/thumbnails/screenshots/vermont-livability-map.jpg" alt="Vermont Zoning Atlas" />
+				<enhanced:img src={vermontLivabilityImg} alt="Vermont Zoning Atlas" />
 			</a>
 			<a href="https://catalogresearch.uvm.edu/" target="_blank" rel="noopener" class="image-item secondary">
-				<img src="{base}/common/thumbnails/screenshots/explore-the-cat-project.jpg" alt="Explore the Cat Project" />
+				<enhanced:img src={exploreCatImg} alt="Explore the Cat Project" />
 			</a>
 		</div>
 	</div>
@@ -340,6 +348,7 @@
 		cursor: pointer;
 	}
 
+	.image-item :global(picture img),
 	.image-item img {
 		width: 100%;
 		height: auto;
@@ -451,6 +460,7 @@
 		filter: invert(1);
 	}
 
+	:global(.dark) .image-item :global(picture img),
 	:global(.dark) .image-item img {
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 	}

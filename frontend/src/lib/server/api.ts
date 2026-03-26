@@ -94,7 +94,7 @@ async function getTopNgrams(filters: {
     if (filters.topN !== undefined) params.append('topN', filters.topN.toString())
 
     const queryString = params.toString()
-    const url = `${API_BASE_URL}/wikimedia/top-ngrams${queryString ? `?${queryString}` : ''}`
+    const url = `${API_BASE_URL}/wikimedia/ngrams${queryString ? `?${queryString}` : ''}`
 
     console.log('Full URL:', url)
     console.log('Query string:', queryString)

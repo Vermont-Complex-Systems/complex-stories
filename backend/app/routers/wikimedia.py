@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import Dict, List, Optional, Any
+from ..core.query_utils import load_system, resolve_entity
 from datetime import datetime, timedelta
 from pydantic import BaseModel
 import time
@@ -10,7 +11,7 @@ from sqlalchemy import select
 from ..core.database import get_mongo_client, get_db_session
 from ..core.duckdb_client import get_duckdb_client
 from ..core.parquet_utils import compute_partition_starts
-from ..models.registry import Dataset
+from ..models.registry import Dataset, EntityMapping
 from better_profanity import profanity
 
 router = APIRouter()
@@ -320,25 +321,25 @@ async def get_wikigrams_top_ngrams(
 
     time_column = {"daily": "date", "weekly": "week", "monthly": "month"}[granularity]
 
-    if not dataset_obj.entity_mapping or not dataset_obj.entity_mapping.get("path"):
-        raise HTTPException(status_code=500, detail="Dataset missing entity_mapping.path. Please re-register.")
-
     try:
         conn = get_duckdb_client().connect()
-        adapter_path = dataset_obj.entity_mapping["path"]
 
         results = {}
         queried_partitions_metadata = []
 
         for date_range in date_ranges:
             for location in location_list:
-                row = conn.execute(
-                    "SELECT local_id FROM read_parquet(?) WHERE entity_id = ? LIMIT 1",
-                    [[adapter_path], location]
-                ).fetchone()
-                if not row:
-                    raise HTTPException(status_code=400, detail=f"Location '{location}' not found in adapter")
-                encoded_country = quote(row[0], safe='')
+                em_result = await db.execute(
+                    select(EntityMapping).where(
+                        EntityMapping.domain == "wikimedia",
+                        EntityMapping.dataset_id == "ngrams",
+                        EntityMapping.entity_id == location,
+                    )
+                )
+                em = em_result.scalar_one_or_none()
+                if not em:
+                    raise HTTPException(status_code=400, detail=f"Location '{location}' not found in entity mappings")
+                encoded_country = quote(em.local_id, safe='')
 
                 partition_starts = compute_partition_starts(date_range[0], date_range[1], granularity)
                 queried_partitions_metadata.append({"date_range": date_range, "partitions": partition_starts})
@@ -374,6 +375,71 @@ async def get_wikigrams_top_ngrams(
         return {
             **results,
             "metadata": {"granularity": granularity, "time_column": time_column, "queries": queried_partitions_metadata}
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
+
+
+@router.get("/top-ngrams3")
+async def get_wikigrams_top_ngrams3(
+    dates: str = Query(default="2024-11-01,2024-11-07"),
+    dates2: Optional[str] = Query(default=None),
+    locations: str = Query(default="wikidata:Q30"),
+    granularity: str = Query(default="daily"),
+    limit: int = Query(default=100),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Get top Wikipedia n-grams.
+
+    Differences from /top-ngrams2:
+    - Column names (ngram, pv_count) come from the registry, not hardcoded
+    - No queried_partitions_metadata in the response
+    - ~half the lines of code
+    """
+    query = WikimediaDataset.where(Dataset.dataset_id == "ngrams")
+    result = await db.execute(query)
+    dataset_obj = result.scalar_one_or_none()
+    if not dataset_obj:
+        raise HTTPException(status_code=404, detail="'ngrams' dataset not found")
+
+    ep = dataset_obj.endpoint_schema or {}
+    granularities = ep.get("granularities", {})
+    if granularity not in granularities:
+        raise HTTPException(
+            status_code=400,
+            detail=f"granularity must be one of {sorted(granularities)}",
+        )
+
+    em = await resolve_entity(db, "wikimedia", "ngrams", locations)
+
+    def parse_dr(s: str) -> List[str]:
+        parts = s.split(",")
+        return [parts[0], parts[0]] if len(parts) == 1 else [parts[0], parts[1]]
+
+    try:
+        conn = get_duckdb_client().connect()
+        dr1 = parse_dr(dates)
+        sys1 = load_system(conn, dataset_obj, em.local_id, dr1, {}, granularity, limit)
+        formatted1 = [{"types": t, "counts": c} for t, c in zip(sys1["types"], sys1["counts"])]
+
+        if dates2:
+            dr2 = parse_dr(dates2)
+            sys2 = load_system(conn, dataset_obj, em.local_id, dr2, {}, granularity, limit)
+            formatted2 = [{"types": t, "counts": c} for t, c in zip(sys2["types"], sys2["counts"])]
+            key1 = dr1[0] if dr1[0] == dr1[1] else f"{dr1[0]}_{dr1[1]}"
+            key2 = dr2[0] if dr2[0] == dr2[1] else f"{dr2[0]}_{dr2[1]}"
+            return {
+                key1: formatted1,
+                key2: formatted2,
+                "metadata": {"granularity": granularity, "location": locations},
+            }
+
+        return {
+            "data": formatted1,
+            "metadata": {"granularity": granularity, "location": locations},
         }
 
     except HTTPException:
@@ -449,13 +515,9 @@ async def search_terms_batch(
     has_top_articles = granularity == "daily"
 
     try:
-        if not dataset_obj.entity_mapping or not dataset_obj.entity_mapping.get("path"):
-            raise HTTPException(status_code=500, detail="Dataset missing entity_mapping.path. Please re-register.")
-
         duckdb_client = get_duckdb_client()
         conn = duckdb_client.connect()
 
-        adapter_path = dataset_obj.entity_mapping["path"]
         path_prefix_index: Dict[str, List[str]] = {}
 
         placeholders = ",".join(["?" for _ in terms])
@@ -465,13 +527,17 @@ async def search_terms_batch(
         geo_map: Dict[str, str] = {}
         t_adapter = time.time()
         for loc in unique_locations:
-            row = conn.execute(
-                "SELECT local_id FROM read_parquet(?) WHERE entity_id = ? LIMIT 1",
-                [[adapter_path], loc]
-            ).fetchone()
-            if not row:
-                raise HTTPException(status_code=400, detail=f"Location '{loc}' not found in adapter")
-            encoded_country = quote(row[0], safe='')
+            em_result = await db.execute(
+                select(EntityMapping).where(
+                    EntityMapping.domain == "wikimedia",
+                    EntityMapping.dataset_id == "ngrams",
+                    EntityMapping.entity_id == loc,
+                )
+            )
+            em = em_result.scalar_one_or_none()
+            if not em:
+                raise HTTPException(status_code=400, detail=f"Location '{loc}' not found in entity mappings")
+            encoded_country = quote(em.local_id, safe='')
             geo_map[loc] = encoded_country
             glob_pat = f"{dataset_obj.data_location}/{granularity}/country={encoded_country}/{time_column}=*/data_0.parquet"
             for (p,) in conn.execute("SELECT * FROM glob(?)", [glob_pat]).fetchall():
@@ -676,20 +742,19 @@ async def list_revision_articles(
         if not rev_dataset:
             raise HTTPException(status_code=404, detail="'revisions' dataset not found")
 
-        adapter_path = rev_dataset.entity_mapping["path"]
+        fc = rev_dataset.format_config or {}
+        article_index = fc.get("partitioning", {}).get("article_index", [])
+        if not article_index:
+            raise HTTPException(status_code=500, detail="Missing article_index in format_config. Please re-register.")
+
         start_time = time.time()
 
-        conn = get_duckdb_client().connect()
-        rows = conn.execute(
-            "SELECT identifier, name, revision_count, first_edit, last_edit FROM read_parquet(?) WHERE revision_count >= ? ORDER BY revision_count DESC LIMIT ?",
-            [adapter_path, min_revisions, limit]
-        ).fetchall()
+        articles = [
+            a for a in article_index
+            if a["revision_count"] >= min_revisions
+        ][:limit]
 
         duration = (time.time() - start_time) * 1000
-        articles = [
-            {"identifier": r[0], "name": r[1], "revision_count": r[2], "first_edit": r[3], "last_edit": r[4]}
-            for r in rows
-        ]
         return {"articles": articles, "total": len(articles), "duration": duration}
 
     except Exception as e:

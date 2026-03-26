@@ -17,7 +17,7 @@
     import DownloadSection from './sidebar/DownloadSection.svelte';
     import DataInfo from './sidebar/DataInfo.svelte';
     
-    import { getTopBabyNames, getAdapter } from '../allotax.remote';
+    import { getTopBabyNames, getAdapter, getDatasetInfo } from '../allotax.remote';
 
     import boys1968 from '../data/boys-1968.json';
     import boys1895 from '../data/boys-1895.json';
@@ -68,14 +68,11 @@
     // ============================================================================
 
     let adapterData = $state([]);
-    const dateRange = $derived.by(() => {
-        if (!adapterData.length) return { min: 1880, max: 2023 };
-        const locationData = adapterData.find(l => l[1] === location);
-        if (locationData && locationData[4] && locationData[5]) {
-            return { min: locationData[4], max: locationData[5] };
-        }
-        return { min: 1880, max: 2023 };
-    });
+    let yearAvailability = $state({});  // entity_id → {min, max} from registry partitioning
+
+    const dateRange = $derived(
+        yearAvailability[location] ?? { min: 1880, max: 2024 }
+    );
 
     const dateMin = $derived(dateRange.min);
     const dateMax = $derived(dateRange.max);
@@ -174,9 +171,14 @@
     // Load initial data on mount
     onMount(async () => {
         try {
-            adapterData = await getAdapter();
+            const [adapter, datasetInfo] = await Promise.all([
+                getAdapter(),
+                getDatasetInfo(),
+            ]);
+            adapterData = adapter;
+            yearAvailability = datasetInfo?.format_config?.partitioning?.yearly?.available ?? {};
         } catch (err) {
-            console.error('Failed to load adapter:', err);
+            console.error('Failed to load adapter or dataset info:', err);
         }
 
         fetchBabyNames();
