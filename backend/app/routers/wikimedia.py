@@ -199,6 +199,8 @@ async def search_term(
             for key, value in doc.items():
                 if key == "_id":
                     clean_doc[key] = str(value)
+                elif key == "ngram":
+                    clean_doc[key] = profanity.censor(str(value))
                 elif isinstance(value, dict) and "$numberLong" in value:
                     clean_doc[key] = int(value["$numberLong"])
                 elif isinstance(value, dict) and "$date" in value:
@@ -264,6 +266,12 @@ async def get_rank_divergence(
             for key, value in doc.items():
                 if key == "_id":
                     clean_doc[key] = str(value)
+                elif key == "ngram":
+                    original = str(value)
+                    censored = profanity.censor(original)
+                    clean_doc["ngram"] = censored
+                    if censored != original:
+                        clean_doc["term"] = original
                 elif isinstance(value, dict) and "$numberLong" in value:
                     clean_doc[key] = int(value["$numberLong"])
                 elif isinstance(value, dict) and "$date" in value:
