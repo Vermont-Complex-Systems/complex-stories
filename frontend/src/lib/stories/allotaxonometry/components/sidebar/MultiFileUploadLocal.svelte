@@ -8,6 +8,7 @@
 
     let fileInput;
     let dragOver = $state(false);
+    let showFormatHint = $state(false);
     let availableFiles = $state([]);
     let selectedSys1Index = $state(0);
     let selectedSys2Index = $state(1);
@@ -57,8 +58,8 @@
         try {
             const result = await parseDataFile(fileEntry.file, {
                 enableTruncation: true,
-                maxRows: 50000,
-                warnThreshold: 50000,
+                maxRows: 1_000_000,
+                warnThreshold: 50_000,
                 maxFileSize: 50 * 1024 * 1024 // 50MB
             });
 
@@ -243,9 +244,21 @@
                 </div>
             </div>
 
-            <p class="upload-hint">
-                Hint: when browsing files, hold Ctrl to select multiple files to compare.
-            </p>
+            <div class="upload-hint">
+                CSV or JSON · hold Ctrl for multiple ·
+                <button class="format-toggle" onclick={() => showFormatHint = !showFormatHint}>
+                    {showFormatHint ? 'hide format' : 'show format'}
+                </button>
+            </div>
+
+            {#if showFormatHint}
+                <div class="format-examples">
+                    <span class="fmt-label">CSV</span>
+                    <pre class="fmt-block">{`types,counts\nEmma,4589\nLiam,3201\n...`}</pre>
+                    <span class="fmt-label">JSON</span>
+                    <pre class="fmt-block">{`[\n  {"types":"Emma","counts":4589},\n  {"types":"Liam","counts":3201}\n...\n]`}</pre>
+                </div>
+            {/if}
 
             <!-- Multi-Select Widgets -->
             {#if availableFiles.length > 0}
@@ -345,16 +358,6 @@
         margin-bottom: 0.5rem;
     }
 
-    .upload-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.5rem 0;
-        font-weight: 500;
-        color: var(--color-text-primary);
-        font-size: 0.9rem;
-    }
-
     .upload-content {
         margin-top: 0.25rem;
     }
@@ -366,15 +369,8 @@
         margin-top: 0.5rem;
     }
 
-    .file-count {
-        background: var(--color-good-blue);
-        color: white;
-        padding: 0.125rem 0.375rem;
-        border-radius: 10px;
-        font-size: var(--11px);
-        font-weight: 600;
-        min-width: 1.25rem;
-        text-align: center;
+    .file-count-placeholder {
+        display: none;
     }
 
     /* Drop Zone */
@@ -436,9 +432,46 @@
     .upload-hint {
         font-size: var(--11px, 0.69rem);
         color: #999;
-        margin: 0.5rem 0 0 0;
+        margin: 0.375rem 0 0 0;
         text-align: center;
         font-style: italic;
+    }
+
+    .format-toggle {
+        background: none;
+        border: none;
+        padding: 0;
+        color: var(--color-good-blue, #3b82f6);
+        font-size: inherit;
+        font-style: inherit;
+        cursor: pointer;
+        text-decoration: underline;
+    }
+
+    .format-examples {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .fmt-label {
+        font-size: var(--10px, 0.625rem);
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .fmt-block {
+        margin: 0;
+        padding: 0.375rem 0.5rem;
+        background-color: var(--color-input-bg);
+        border: 1px solid var(--color-border);
+        border-radius: 4px;
+        font-family: var(--mono, monospace);
+        font-size: var(--10px, 0.625rem);
+        color: var(--color-text-primary);
+        line-height: 1.5;
     }
 
     /* Multi-Select Container */
