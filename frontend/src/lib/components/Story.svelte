@@ -1,7 +1,7 @@
 <script lang="ts">
   import { base } from "$app/paths";
   import { ExternalLink } from "@lucide/svelte";
-  import type { Story } from '$lib/story.remote';
+  import type { Story } from '$lib/data/stories';
 
   let { story }: { story: Story } = $props();
 

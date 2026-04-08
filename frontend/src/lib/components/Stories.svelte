@@ -1,6 +1,6 @@
 <script lang="ts">
   import Story from "$lib/components/Story.svelte";
-  import type { Story as StoryType } from '$lib/story.remote';
+  import type { Story as StoryType } from '$lib/data/stories';
 
   let { stories }: { stories: StoryType[] } = $props();
 </script>

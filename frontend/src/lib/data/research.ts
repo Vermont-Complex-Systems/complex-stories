@@ -1,4 +1,3 @@
-import { query } from '$app/server';
 import researchData from '$data/research-group.csv';
 
 export interface ResearchGroup {
@@ -38,7 +37,7 @@ function parseTags(college: string): string[] {
   return college.split(',').map((t) => t.trim()).filter(Boolean);
 }
 
-const researchGroups: ResearchGroup[] = (researchData as any[])
+export const researchGroups: ResearchGroup[] = (researchData as any[])
   .filter((d) => !d.hide && d.slug && +d.has_research_group === 1)
   .map((d, i) => ({
     id: i + 1,
@@ -56,6 +55,6 @@ const researchGroups: ResearchGroup[] = (researchData as any[])
     hasMarkdown: d.content_type === 'markdown'
   }));
 
-export const getResearchGroups = query(async () => {
-  return researchGroups.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-});
+export function getSortedResearchGroups(): ResearchGroup[] {
+  return [...researchGroups].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}

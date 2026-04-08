@@ -2,11 +2,10 @@
   import Stories from "$lib/components/Stories.svelte";
   import FilterBar from "$lib/components/FilterBar.svelte";
   import { ChevronDown } from "@lucide/svelte";
-  import { getStories } from '$lib/story.remote';
 
   const initMax = 12;
 
-  const stories = $derived(await getStories());
+  let { stories } = $props();
 
   let maxStories = $state(initMax);
   let activeFilter = $state(undefined);

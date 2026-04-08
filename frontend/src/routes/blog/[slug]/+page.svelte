@@ -5,17 +5,17 @@
   import { base } from '$app/paths';
   import { ModeWatcher, setMode } from "mode-watcher";
   import { Sun, Moon } from "@lucide/svelte";
-  import { getBlog } from '$lib/blog.remote';
 
-  let { params } = $props();
-  const { blog, content } = await getBlog(params.slug);
-  
+  let { data } = $props();
+  const blog = $derived(data.blog);
+  const content = $derived(data.content);
+
   let isDark = $state(false);
-  
+
   $effect(() => {
     isDark = document.documentElement.classList.contains('dark');
   });
-  
+
   function toggleTheme() {
     isDark = !isDark;
     setMode(isDark ? 'dark' : 'light');
