@@ -60,7 +60,7 @@ let { story, data } = $props();
                     </div>
                 {/if}
             {:else}
-                <p>{@render renderTextContent(item)}</p>
+                {@render renderTextContent(item)}
             {/if}
         {/each}
     {/snippet}

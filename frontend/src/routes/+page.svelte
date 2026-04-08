@@ -9,4 +9,19 @@
   description="Scientific data essays that uncover the challenges of computational science."
 />
 
-<Home />
+<svelte:boundary>
+  <Home />
+
+  {#snippet pending()}
+    <p class="loading">Loading stories…</p>
+  {/snippet}
+</svelte:boundary>
+
+<style>
+  .loading {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: var(--color-secondary-gray);
+    font-family: var(--sans);
+  }
+</style>

@@ -2,10 +2,18 @@
 	import { base } from '$app/paths';
 	import "$styles/app.css";
 	import { page } from '$app/state';
+	import { afterNavigate } from '$app/navigation';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
 	import { browser } from '$app/environment';
+
+	// Manually track page views in Umami so it doesn't monkey-patch
+	// history.pushState/replaceState (which breaks SvelteKit's router).
+	afterNavigate(() => {
+		// @ts-expect-error - umami is injected globally by the tracker script
+		window.umami?.track();
+	});
 
 	const queryClient = new QueryClient({
 		defaultOptions: {
@@ -28,7 +36,7 @@
 </script>
 
 <svelte:head>
-	<script async defer src="https://cloud.umami.is/script.js" data-website-id="9748947b-5af8-4053-b1a5-8e74f48eb7e2"></script>
+	<script async defer src="https://cloud.umami.is/script.js" data-website-id="9748947b-5af8-4053-b1a5-8e74f48eb7e2" data-auto-track="false"></script>
 </svelte:head>
 
 {#if showHeader}
