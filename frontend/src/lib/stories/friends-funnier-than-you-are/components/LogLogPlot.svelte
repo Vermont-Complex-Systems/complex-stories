@@ -1,6 +1,6 @@
 <script>
     import { Plot, Dot, Line, RuleY, RuleX, Text } from 'svelteplot';
-    import cascadeData from '../data/cascades.json';
+    import cascadeData from '../data/cascades.trimmed.json';
     import InsetPlot from './LogLogPlot.Inset.svelte'
     
     // Group datasets by their pc (critical point) and model
@@ -83,26 +83,11 @@
     let tau1 = $derived(getTauFromP(p1));
     let tau2 = $derived(getTauFromP(p2));
     
-    // Data processing with subsampling
+    // Data arrives pre-filtered and pre-subsampled from the precompute step.
+    // We just zip the parallel i/v arrays back into {value, index} objects.
     function getData(dataset) {
         if (!dataset) return [];
-        const fullData = dataset.data
-            .slice(0, 10000)
-            .map((value, index) => ({ value, index }))
-            .filter(d => d.value > 1e-10 && d.value < 1e5);
-        
-        const sampledData = [];
-        for (let i = 0; i < fullData.length; i++) {
-            const s = i + 1;
-            if (s < 50) {
-                sampledData.push(fullData[i]);
-            } else if (s < 500) {
-                if (i % 3 === 0) sampledData.push(fullData[i]);
-            } else {
-                if (i % 5 === 0) sampledData.push(fullData[i]);
-            }
-        }
-        return sampledData;
+        return dataset.i.map((index, k) => ({ value: dataset.v[k], index }));
     }
     
     let data1 = $derived(getData(dataset1));
