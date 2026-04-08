@@ -55,8 +55,8 @@ interface RecalculationResult {
 
 const DEFAULT_SETTINGS: Required<ParseSettings> = {
     enableTruncation: true,
-    maxRows: 50000,
-    warnThreshold: 5000,
+    maxRows: 10_000_000,
+    warnThreshold: 10_000_000,
     maxFileSize: 50 * 1024 * 1024 // 50MB
 };
 
@@ -107,20 +107,27 @@ function formatFileSize(bytes: number): string {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-function validateDataStructure(data: unknown): data is DataItem[] {
+function validateDataStructure(data: unknown): data is Array<{types: string; counts: number; [key: string]: unknown}> {
     if (!Array.isArray(data) || data.length === 0) return false;
-    
-    return data.every((item): item is DataItem => 
-        item && 
+
+    return data.every((item) =>
+        item &&
         typeof item === 'object' &&
-        typeof item.types === 'string' &&
-        typeof item.counts === 'number' &&
-        typeof item.probs === 'number' &&
-        typeof item.totalunique === 'number' &&
-        item.counts > 0 &&
-        item.probs >= 0 &&
-        item.probs <= 1
+        typeof (item as Record<string, unknown>).types === 'string' &&
+        typeof (item as Record<string, unknown>).counts === 'number' &&
+        (item as Record<string, unknown>).counts > 0
     );
+}
+
+function normalizeData(data: Array<{types: string; counts: number; [key: string]: unknown}>): DataItem[] {
+    const totalCounts = data.reduce((sum, item) => sum + item.counts, 0);
+    const totalunique = data.length;
+    return data.map(item => ({
+        types: item.types,
+        counts: item.counts,
+        probs: typeof item.probs === 'number' ? item.probs : item.counts / totalCounts,
+        totalunique: typeof item.totalunique === 'number' ? item.totalunique : totalunique
+    }));
 }
 
 // =============================================================================
@@ -254,18 +261,21 @@ function parseJSON(jsonData: unknown, settings: Required<ParseSettings>): { data
     if (!Array.isArray(jsonData)) {
         throw new Error('JSON data must be an array');
     }
-    
+
     if (jsonData.length === 0) {
         throw new Error('JSON array is empty');
     }
-    
-    // Validate structure
+
+    // Validate minimum structure (types + counts required)
     if (!validateDataStructure(jsonData)) {
-        throw new Error('Invalid JSON structure. Expected array of objects with types, counts, probs, and totalunique fields.');
+        throw new Error('Invalid JSON structure. Expected array of objects with at least "types" (string) and "counts" (number > 0) fields.');
     }
-    
+
+    // Normalize: compute probs and totalunique if missing
+    const normalized = normalizeData(jsonData);
+
     // Apply truncation if needed
-    return applyTruncation(jsonData, 0, settings);
+    return applyTruncation(normalized, 0, settings);
 }
 
 function applyTruncation(

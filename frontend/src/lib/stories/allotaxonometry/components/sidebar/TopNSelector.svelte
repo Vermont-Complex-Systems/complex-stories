@@ -2,16 +2,24 @@
     let {
         limit = $bindable(10000),
         label = "Top N tokens",
-        min = 100,
-        max = 50000,
-        step = 100
+        min = 0,
+        max = 10_000_000,
+        step = 1000
     } = $props();
 
-    function handleChange(event) {
-        const newValue = parseInt(event.target.value);
+    let inputValue = $state(String(limit));
+
+    // Sync display when limit changes externally
+    $effect(() => {
+        inputValue = String(limit);
+    });
+
+    function handleBlur() {
+        const newValue = parseInt(inputValue);
         if (!isNaN(newValue)) {
             limit = Math.max(min, Math.min(max, newValue));
         }
+        inputValue = String(limit);
     }
 </script>
 
@@ -23,8 +31,8 @@
     <div class="selector-control">
         <input
             type="number"
-            value={limit}
-            onchange={handleChange}
+            bind:value={inputValue}
+            onblur={handleBlur}
             {min}
             {max}
             {step}

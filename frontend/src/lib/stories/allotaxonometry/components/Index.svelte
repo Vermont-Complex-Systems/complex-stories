@@ -1,9 +1,7 @@
 <script>
-    import * as d3 from 'd3';
     import { browser } from '$app/environment';
-    import { onMount } from 'svelte';
-    import { Dashboard } from 'allotaxonometer-ui';
-    import { combElems, rank_turbulence_divergence, diamond_count, wordShift_dat, balanceDat } from 'allotaxonometer-ui';
+    import { onMount, untrack } from 'svelte';
+    import { Dashboard, Allotaxonograph } from 'allotaxonometer-ui';
     
     import Nav from './Nav.svelte';
     
@@ -33,10 +31,10 @@
     // ============================================================================
     // UI Parameters (not yet committed to API)
     // ============================================================================
-    let period1 = $state([1905, 1925]); // Single year by default
-    let period2 = $state([1968, 1998]); // Single year by default
+    let period1 = $state([1905, 1925]);
+    let period2 = $state([1968, 1998]);
 
-    // Other parameters (UI state - not sent to API until update)
+    // Other parameters
     let location = $state('wikidata:Q30');
     let sex = $state('M');
     let limit = $state(10000);
@@ -70,9 +68,9 @@
     let adapterData = $state([]);
     const dateRange = $derived.by(() => {
         if (!adapterData.length) return { min: 1880, max: 2023 };
-        const locationData = adapterData.find(l => l[1] === location);
-        if (locationData && locationData[4] && locationData[5]) {
-            return { min: locationData[4], max: locationData[5] };
+        const locationData = adapterData.find(l => l.entity_id === location);
+        if (locationData?.min_year && locationData?.max_year) {
+            return { min: locationData.min_year, max: locationData.max_year };
         }
         return { min: 1880, max: 2023 };
     });
@@ -108,21 +106,15 @@
         period1[1] !== committedPeriod1End ||
         period2[0] !== committedPeriod2Start ||
         period2[1] !== committedPeriod2End ||
-        location !== committedLocation ||
-        sex !== committedSex ||
         limit !== committedLimit
     );
 
-    // Top N warning state
-    let fetchedTopN = $state(10000);
-    let warningDismissed = $state(false);
-
+    // Auto-fetch when location or sex changes (discrete actions, no Update button needed)
+    let reactiveEnabled = false;
     $effect(() => {
-        if (showTopNWarning) {
-            warningDismissed = false;
-            const timer = setTimeout(() => warningDismissed = true, 5000);
-            return () => clearTimeout(timer);
-        }
+        location; sex;
+        if (!reactiveEnabled) return;
+        untrack(() => updateData());
     });
 
     // ============================================================================
@@ -133,19 +125,36 @@
         uploadedSys1 = sys1Data;
         uploadedSys2 = sys2Data;
         uploadedTitle = titles;
+        sys1 = sys1Data;
+        sys2 = sys2Data;
+        title = titles;
+        allotax.updateData(sys1Data, sys2Data, titles);
     }
 
     let sys1 = $state(null);
     let sys2 = $state(null);
     let title = $state(['Boys 1905-1925', 'Boys 1972-2002']);
+    let isLoading = $state(false);
+
+    function applyLimit(data, n) {
+        if (data.length <= n) return data;
+        const sliced = data.slice(0, n);
+        const total = sliced.reduce((s, d) => s + d.counts, 0);
+        return sliced.map(d => ({ ...d, probs: d.counts / total, totalunique: sliced.length }));
+    }
+
     async function fetchBabyNames() {
         if (hasUploadedFiles) {
-            sys1 = uploadedSys1;
-            sys2 = uploadedSys2;
+            const d1 = applyLimit(uploadedSys1, committedLimit);
+            const d2 = applyLimit(uploadedSys2, committedLimit);
+            sys1 = d1;
+            sys2 = d2;
             title = uploadedTitle;
+            allotax.updateData(d1, d2, uploadedTitle);
             return;
         }
 
+        isLoading = true;
         try {
             const ngrams = await getTopBabyNames({
                 dates,
@@ -164,10 +173,14 @@
                 `${genderLabel} ${committedPeriod1Start}-${committedPeriod1End}`,
                 `${genderLabel} ${committedPeriod2Start}-${committedPeriod2End}`
             ];
+            allotax.updateData(sys1, sys2, title);
         } catch (err) {
             console.error('Failed to fetch baby names:', err);
             sys1 = boys1895;
             sys2 = boys1968;
+            allotax.updateData(boys1895, boys1968, title);
+        } finally {
+            isLoading = false;
         }
     }
 
@@ -180,6 +193,7 @@
         }
 
         fetchBabyNames();
+        reactiveEnabled = true;
     });
 
     // Update function - commits UI changes and fetches new data
@@ -190,29 +204,19 @@
         committedLocation = location;
         committedSex = sex;
         committedLimit = limit;
-        fetchedTopN = limit;
 
         fetchBabyNames();
     }
 
     // ============================================================================
-    // Visualization Data Computation
+    // Visualization Data Computation (via Allotaxonograph — uses WASM when available)
     // ============================================================================
-    const me = $derived(sys1 && sys2 ? combElems(sys1, sys2) : null);
-    const rtd = $derived(me ? rank_turbulence_divergence(me, alpha) : null);
-    const dat = $derived(me && rtd ? diamond_count(me, rtd) : null);
-    const barData = $derived(me && dat ? wordShift_dat(me, dat).slice(0, 30) : []);
-    const balanceData = $derived(sys1 && sys2 ? balanceDat(sys1, sys2) : []);
-    const maxlog10 = $derived(me ? Math.ceil(d3.max([Math.log10(d3.max(me[0].ranks)), Math.log10(d3.max(me[1].ranks))])) : 0);
-    const divnorm = $derived(rtd ? rtd.normalization : 1);
+    const allotax = new Allotaxonograph();
 
-    // Check if we got fewer results than requested
-    const showTopNWarning = $derived.by(() => {
-        if (hasUploadedFiles || !me || warningDismissed) return false;
-        const count1 = me[0]?.ranks?.length || 0;
-        const count2 = me[1]?.ranks?.length || 0;
-        return count1 < fetchedTopN || count2 < fetchedTopN;
+    $effect(() => {
+        allotax.setAlpha(alpha);
     });
+
 
 </script>
 
@@ -240,35 +244,22 @@
                                 />
                             </div>
 
-                            <div class="topn-control">
-                                <TopNSelector bind:limit />
-
-                                {#if showTopNWarning && me}
-                                    {@const count1 = me[0]?.ranks?.length || 0}
-                                    {@const count2 = me[1]?.ranks?.length || 0}
-                                    <div class="topn-warning">
-                                        <svg class="warning-icon" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                        </svg>
-                                        <div class="warning-text">
-                                            {#if count1 < fetchedTopN && count2 < fetchedTopN}
-                                                <span>System 1: {count1.toLocaleString()} names, System 2: {count2.toLocaleString()} names (requested {fetchedTopN.toLocaleString()})</span>
-                                            {:else if count1 < fetchedTopN}
-                                                <span>System 1: Only {count1.toLocaleString()} names available (requested {fetchedTopN.toLocaleString()})</span>
-                                            {:else}
-                                                <span>System 2: Only {count2.toLocaleString()} names available (requested {fetchedTopN.toLocaleString()})</span>
-                                            {/if}
-                                        </div>
-                                    </div>
-                                {/if}
-                            </div>
-
                             <div class="sex-control">
                                 <SexToggle bind:sex />
                             </div>
 
                             <div class="separator"></div>
                         {/if}
+
+                        <div class="topn-control">
+                            <TopNSelector bind:limit />
+                            {#if allotax.dat}
+                                <div class="topn-available">
+                                    max: <span class="sys-badge sys1-badge">1</span>{(sys1?.[0]?.totalunique || sys1?.length || 0).toLocaleString()}
+                                    <span class="sys-badge sys2-badge">2</span>{(sys2?.[0]?.totalunique || sys2?.length || 0).toLocaleString()}
+                                </div>
+                            {/if}
+                        </div>
 
                         <div class="alpha-control">
                             <AlphaSliderLocal bind:alphaIndex {alphas} />
@@ -302,23 +293,32 @@
                                 {dateMax}
                                 onJump={updateData}
                             />
+                        {/if}
 
                             <button
                                 class="update-button"
                                 onclick={updateData}
-                                disabled={!hasChanges}
+                                disabled={!hasChanges || isLoading}
                             >
-                                Update
+                                {#if isLoading}
+                                    <span class="btn-spinner"></span>
+                                    Loading...
+                                {:else}
+                                    Update
+                                {/if}
                             </button>
-                        {/if}
 
-                        {#if me && rtd}
-                            <DataInfo {title} {me} {rtd} />
+                        {#if allotax.dat}
+                            <DataInfo
+                                {title}
+                                itemCount={sys1?.length || 0}
+                                normalization={allotax.rtd?.normalization ?? 0}
+                            />
                         {/if}
 
                         <div class="separator"></div>
 
-                        <DownloadSection isDataReady={!!dat} />
+                        <DownloadSection isDataReady={!!allotax.dat} />
                     </div>
                 </div>
             </aside>
@@ -326,15 +326,15 @@
             <main class="main-content">
                 <Nav/>
 
-                {#if browser && dat}
+                {#if browser && allotax.dat}
                     <div id="allotaxonometer-dashboard">
                         {#key `${committedPeriod1Start}-${committedPeriod1End}-${committedPeriod2Start}-${committedPeriod2End}-${committedLocation}-${committedSex}-${committedLimit}-${alpha}-${hasUploadedFiles}`}
                             <Dashboard
-                                {dat}
-                                {barData}
-                                {balanceData}
-                                {maxlog10}
-                                {divnorm}
+                                dat={allotax.dat}
+                                barData={allotax.barData}
+                                balanceData={allotax.balanceData}
+                                maxlog10={allotax.maxlog10}
+                                divnorm={allotax.rtd?.normalization ?? 1}
                                 {title}
                                 {alpha}
                                 WordshiftWidth={400}
@@ -455,36 +455,31 @@
         margin: 1.5rem -1.5rem;
     }
 
-    .topn-warning {
+    .topn-available {
         display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
-        padding: 0.75rem;
-        margin-top: 0.75rem;
-        margin-bottom: 0.5rem;
-        background-color: rgba(251, 191, 36, 0.1);
-        border: 1px solid rgba(251, 191, 36, 0.3);
-        border-radius: 6px;
-        font-size: var(--12px, 0.75rem);
-        color: var(--color-text-primary);
+        align-items: center;
+        gap: 0.375rem;
+        margin-top: 0.375rem;
+        font-size: var(--11px, 0.69rem);
+        color: var(--color-text-secondary);
+        justify-content: flex-end;
     }
 
-    .warning-icon {
-        width: 1.25rem;
-        height: 1.25rem;
+    .sys-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        font-size: var(--10px, 0.625rem);
+        font-weight: 700;
+        color: rgb(59, 59, 59);
         flex-shrink: 0;
-        color: rgba(251, 191, 36, 1);
-        margin-top: 0.125rem;
     }
 
-    .warning-text {
-        flex: 1;
-        line-height: 1.4;
-    }
-
-    .warning-text span {
-        display: block;
-    }
+    .sys1-badge { background-color: rgb(230, 230, 230); }
+    .sys2-badge { background-color: rgb(195, 230, 243); }
 
     .update-button {
         width: 100%;
@@ -513,6 +508,17 @@
     .update-button:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+    }
+
+    .btn-spinner {
+        display: inline-block;
+        width: 0.875rem;
+        height: 0.875rem;
+        border: 2px solid currentColor;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        flex-shrink: 0;
     }
 
     .loading {

@@ -23,8 +23,8 @@
                 class="location-dropdown"
             >
                 {#each adapter as row}
-                    <option value={row[1]}>
-                        {row[2]}
+                    <option value={row.entity_id}>
+                        {row.entity_name}
                     </option>
                 {/each}
             </select>

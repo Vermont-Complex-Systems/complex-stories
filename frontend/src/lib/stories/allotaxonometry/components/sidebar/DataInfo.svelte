@@ -1,16 +1,16 @@
 <script>
-    let { title, me, rtd, isDataReady } = $props();
+    let { title, itemCount, normalization } = $props();
 </script>
 
 <div class="data-info">
     <div class="stats">
         <div class="stat">
             <span class="stat-label">Items</span>
-            <span class="stat-value">{me[0].ranks.length.toLocaleString()}</span>
+            <span class="stat-value">{itemCount.toLocaleString()}</span>
         </div>
         <div class="stat">
             <span class="stat-label">Divergence</span>
-            <span class="stat-value">{rtd.normalization.toFixed(4)}</span>
+            <span class="stat-value">{normalization.toFixed(4)}</span>
         </div>
     </div>
 </div>
