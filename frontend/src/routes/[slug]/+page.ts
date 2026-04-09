@@ -1,8 +1,8 @@
+export const ssr = false;
+
 import { error, redirect } from '@sveltejs/kit';
 import storiesData from '$data/stories.csv';
 
-// Vite analyzes these globs at build time — no runtime dynamic import needed
-const storyModules = import.meta.glob('/src/lib/stories/*/components/Index.svelte');
 const copyModules = import.meta.glob('/src/lib/stories/*/data/copy.json');
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -34,12 +34,7 @@ export async function load({ params }: { params: { slug: string } }) {
 		tags: parseTags(storyRaw.tags)
 	};
 
-	// Resolve component (static glob — Vite bundles all story components at build time)
-	const componentPath = `/src/lib/stories/${slug}/components/Index.svelte`;
-	if (!(componentPath in storyModules)) error(404, `Story "${slug}" not found`);
-	const mod = await (storyModules[componentPath] as () => Promise<{ default: any }>)();
-
-	// Resolve copy data (static glob — same approach)
+	// Resolve copy data
 	let copyData: any = {};
 	const copyPath = `/src/lib/stories/${slug}/data/copy.json`;
 	if (copyPath in copyModules) {
@@ -47,5 +42,5 @@ export async function load({ params }: { params: { slug: string } }) {
 		copyData = copyMod.default || copyMod;
 	}
 
-	return { component: mod.default, story, copyData };
+	return { story, copyData };
 }

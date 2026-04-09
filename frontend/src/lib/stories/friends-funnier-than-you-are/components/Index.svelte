@@ -14,10 +14,17 @@ let { story, data } = $props();
 </script>
 
 
+<svelte:head>
+    <style>
+        body { background-color: #f8f5e6; overflow-x: hidden; }
+        .dark body { background-color: var(--color-bg); color: var(--color-fg); }
+    </style>
+</svelte:head>
+
 <article id="cascade-story">
     
     <div class="logo-container">
-        <a href="{base}/" class="logo-link">
+        <a href="{base}/" class="logo-link" data-sveltekit-reload>
             <img src="{base}/octopus-swim-right.png" alt="Home" class="logo" width="200" />
         </a>
     </div>

@@ -280,30 +280,28 @@
 
   // Set up intersection observer
   onMount(() => {
+    generateForest();
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting && !isVisible) {
-          console.log('BranchingNetwork is now visible! Starting animation...');
           isVisible = true;
           animateTreesIn();
         }
       });
-    }, { 
+    }, {
       threshold: 0.3,
       rootMargin: '50px'
     });
-    
+
     if (container) {
       observer.observe(container);
     }
-    
+
     return () => {
       if (container) observer.unobserve(container);
     };
   });
-
-  // Generate forest data once on component initialization
-  generateForest();
 </script>
 
 <div

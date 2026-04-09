@@ -1,6 +1,7 @@
 <script>
   import * as d3 from 'd3';
   import { Plot, Dot, Line } from 'svelteplot';
+  import { onMount } from 'svelte';
 
   let width = $state(400);
   const height = 350;
@@ -190,8 +191,7 @@
     cascadeSizes = [];
   });
 
-  // Generate initial tree
-  generateTree();
+  onMount(() => generateTree());
 </script>
 
 <div class="container">

@@ -2,4 +2,6 @@
 	let { data } = $props();
 </script>
 
-<data.component story={data.story} data={data.copyData} />
+{#await import(`$lib/stories/${data.story.slug}/components/Index.svelte`) then mod}
+	<mod.default story={data.story} data={data.copyData} />
+{/await}
