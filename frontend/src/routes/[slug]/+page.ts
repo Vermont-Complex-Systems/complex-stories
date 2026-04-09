@@ -1,6 +1,10 @@
 import { error, redirect } from '@sveltejs/kit';
 import storiesData from '$data/stories.csv';
 
+// Stories are JS-heavy interactive pages — SSR causes hydration mismatches
+// (svelte-exmarkdown, D3 random init, svelteplot) without meaningful SEO benefit.
+export const ssr = false;
+
 // Vite analyzes these globs at build time — no runtime dynamic import needed
 const storyModules = import.meta.glob('/src/lib/stories/*/components/Index.svelte');
 const copyModules = import.meta.glob('/src/lib/stories/*/data/copy.json');

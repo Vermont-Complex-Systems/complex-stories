@@ -278,6 +278,9 @@
     setTimeout(animateTreesIn, 100); // Small delay to let DOM update
   }
 
+  // Generate forest data once on component initialization
+  generateForest();
+
   // Set up intersection observer
   onMount(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -288,22 +291,19 @@
           animateTreesIn();
         }
       });
-    }, { 
+    }, {
       threshold: 0.3,
       rootMargin: '50px'
     });
-    
+
     if (container) {
       observer.observe(container);
     }
-    
+
     return () => {
       if (container) observer.unobserve(container);
     };
   });
-
-  // Generate forest data once on component initialization
-  generateForest();
 </script>
 
 <div
