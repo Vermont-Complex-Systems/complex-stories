@@ -7,7 +7,7 @@
   const p = 0.6; // Probability of being receptive
   
   let regenerateFlag = $state(0);
-  
+
   let treeData = $derived.by(() => {
     regenerateFlag;
     

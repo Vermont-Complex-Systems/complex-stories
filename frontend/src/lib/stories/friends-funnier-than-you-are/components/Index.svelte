@@ -9,13 +9,11 @@ import LogLogPlot from "./LogLogPlot.svelte";
 import { renderTextContent } from '$lib/components/helpers/ScrollySnippets.svelte';
 
 let { story, data } = $props();
-
-
 </script>
 
 
 <article id="cascade-story">
-    
+
     <div class="logo-container">
         <a href="{base}/" class="logo-link">
             <img src="{base}/octopus-swim-right.png" alt="Home" class="logo" width="200" />
@@ -36,9 +34,9 @@ let { story, data } = $props();
         </div>
     </div>
 
-    <!-- Story-specific content renderer (inline snippet pattern)
+    <!-- Story-specific content renderer.
          Components must be hardcoded here since they can't be passed as data.
-         Text rendering (html, markdown, math) is delegated to shared renderTextContent. -->
+         Text rendering (html, markdown, math) delegated to shared renderTextContent snippet. -->
     {#snippet renderContent(contentArray)}
         {#each contentArray as item}
             {#if item.type === "component"}
@@ -60,7 +58,7 @@ let { story, data } = $props();
                     </div>
                 {/if}
             {:else}
-                <p>{@render renderTextContent(item)}</p>
+                {@render renderTextContent(item)}
             {/if}
         {/each}
     {/snippet}
@@ -73,12 +71,12 @@ let { story, data } = $props();
         <h2>{data.ModelSectionTitle}</h2>
         {@render renderContent(data.model)}
     </section>
-    
+
     <section id="result">
         <h2>{data.ResultSectionTitle}</h2>
         {@render renderContent(data.result)}
     </section>
-    
+
     <section id="conclusion">
         <h2>{data.ConclusionSectionTitle}</h2>
         {@render renderContent(data.conclusion)}
@@ -89,17 +87,14 @@ let { story, data } = $props();
 <style>
     :global(body:has(#cascade-story)) {
         background-color: #f8f5e6;
-        overflow-x: hidden; /* Prevent horizontal scroll from full-width components */
+        overflow-x: hidden;
     }
 
-    /* Dark mode support */
     :global(.dark body:has(#cascade-story)) {
         background-color: var(--color-bg);
         color: var(--color-fg);
     }
-    
-    
-    /* Fixed: properly scope h1 and h2 separately */
+
     :global(body:has(#cascade-story)) h1 {
         font-family: var(--serif);
         max-width: 450px;
@@ -108,12 +103,10 @@ let { story, data } = $props();
         text-align: center;
     }
 
-    /* Dark mode support */
     :global(body:has(#cascade-story)) .title {
         margin: 0 auto 5rem auto;
     }
 
-    /* Scope section h2 to this story only */
     :global(#cascade-story) section h2 {
         margin-top: 3rem !important;
     }
@@ -123,14 +116,14 @@ let { story, data } = $props();
         font-weight: 400;
         margin: 0 auto 3rem auto;
         text-align: center;
-    }    
-    
+    }
+
     .logo-container {
         margin: 1rem auto 0 auto;
         max-width: 8rem;
         position: relative;
     }
-    
+
     .branching-container {
         width: 100vw;
         position: relative;
@@ -151,15 +144,15 @@ let { story, data } = $props();
         align-items: center;
         margin: 0 0;
         padding: 0;
-    }        
-    
+    }
+
     .article-meta {
         margin: -1rem auto 2rem auto;
         font-family: var(--sans);
         max-width: 30rem;
         text-align: center;
     }
-    
+
     .article-meta .author {
         font-size: var(--font-size-medium);
         color: var(--color-secondary-gray);
@@ -167,7 +160,7 @@ let { story, data } = $props();
         font-weight: 500;
         text-align: center !important;
     }
-    
+
     .article-meta .date {
         font-size: var(--font-size-small);
         color: var(--color-tertiary-gray);
@@ -175,24 +168,24 @@ let { story, data } = $props();
         font-weight: 400;
         text-align: center !important;
     }
-    
+
     @media (max-width: 768px) {
         :global(body:has(#cascade-story)) h1 {
             font-size: 4rem !important;
         }
-        
+
         :global(body:has(#cascade-story)) h2 {
             font-size: 2rem !important;
         }
-        
+
         .article-meta .author {
             font-size: var(--font-size-large) !important;
         }
-        
+
         .article-meta .date {
             font-size: var(--font-size-medium) !important;
         }
-        
+
         .logo-container {
             max-width: 6rem;
         }
