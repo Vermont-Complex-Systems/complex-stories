@@ -142,6 +142,13 @@
         )
     )
 
+    // Trust value of the currently highlighted institution under the active demographic filter.
+    let highlightedValue = $derived.by(() => {
+        if (!highlightCircle) return null;
+        const circle = filteredCircles.find(c => c.Trust_Category === highlightCircle);
+        return circle ? +circle.Average_Trust : null;
+    });
+
     // TRUST CIRCLES PLOTTING ---
 
     // Use the responsive width/height from props
@@ -162,7 +169,9 @@
 
 
 <div class="chart-wrapper">
-    <TrustSonification data={sonificationData} minVolumeDb={-40} maxVolumeDb={-8} />
+    {#if !isDashboard}
+        <TrustSonification data={sonificationData} {highlightCircle} {highlightedValue} />
+    {/if}
      <div class="viz-content">
         <div class="plot-container" class:dashboard={isDashboard} style={isDashboard ? `height: ${height}px;` : ''}>
             <svg class="trust-visualization" viewBox={`0 0 ${width} ${height}`}>
