@@ -42,7 +42,7 @@
 		},
 		{
 			"type": "markdown",
-			"value": "For instance, here's the circle of trust for all our respondents regarding how they feel about sharing PII with social media platforms. The orange grouping represents broader categories, such as institutions handling sensitive data."
+			"value": "For instance, here's the circle of trust for all our respondents regarding how they feel about sharing PII with social media platforms. The orange grouping represents broader categories, such as institutions handling sensitive data. When notes play slowly, it means the group trusts the organization they are sharing data with. Faster notes signal more suspicion."
 		},
 		{
 			"type": "markdown",

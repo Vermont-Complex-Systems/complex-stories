@@ -1,7 +1,8 @@
 <script>
     import * as Tone from 'tone';
-    import { onDestroy, onMount } from 'svelte';
+    import { onDestroy } from 'svelte';
     import softPianoUrl from '../data/sounds/soft-piano.wav';
+    import { audio } from '../state.svelte.ts';
 
     // Tempo bounds when all groups are playing together.
     const ALL_MIN_TEMPO_BPM = 2;
@@ -24,8 +25,6 @@
     let isReady = $state(false);
     let playerRegistry = new Map();
     let masterLimiter = null;
-    let pointerListenerAttached = false;
-    let audioEnabled = $state(false);
     let lastSignature = $state('');
 
     // Plain JS ref read by every loop callback. Updated by the highlight $effect.
@@ -157,7 +156,7 @@
 
     // Loops are only started when audio has been explicitly enabled.
     const ensureLoopStarted = (loop) => {
-        if (audioEnabled && loop.state !== 'started') {
+        if (audio.enabled && loop.state !== 'started') {
             loop.start(0);
         }
     };
@@ -224,7 +223,7 @@
             await Tone.getContext().resume();
         }
 
-        audioEnabled = true;
+        audio.enabled = true;
         Tone.Destination.mute = false;
         Tone.Transport.start();
 
@@ -235,42 +234,21 @@
 
     // Pause transport and silence output without disposing players.
     const stopAudio = async () => {
-        audioEnabled = false;
+        audio.enabled = false;
         Tone.Destination.mute = true;
         Tone.Transport.pause();
     };
 
-    // UI handler for enable/disable button.
+    // UI handler for enable/disable button, driven from the story header.
     const toggleAudio = async () => {
-        if (audioEnabled) {
+        if (audio.enabled) {
             await stopAudio();
         } else {
             await startAudio();
         }
     };
 
-    // Browsers require a user gesture before audio can start; attach one-time listeners.
-    const attachPointerListener = () => {
-        if (pointerListenerAttached || typeof window === 'undefined') return;
-
-        pointerListenerAttached = true;
-        const onFirstPointer = () => startAudio();
-        const options = { once: true, passive: true };
-
-        window.addEventListener('pointerdown', onFirstPointer, options);
-        window.addEventListener('touchstart', onFirstPointer, options);
-        window.addEventListener('keydown', onFirstPointer, options);
-
-        onDestroy(() => {
-            window.removeEventListener('pointerdown', onFirstPointer, options);
-            window.removeEventListener('touchstart', onFirstPointer, options);
-            window.removeEventListener('keydown', onFirstPointer, options);
-        });
-    };
-
-    onMount(() => {
-        attachPointerListener();
-    });
+    audio.toggle = toggleAudio;
 
     // Reactively recompute category assignments whenever `data` changes.
     $effect(() => {
@@ -285,7 +263,7 @@
 
         if (signature && signature !== lastSignature) {
             lastSignature = signature;
-            if (audioEnabled) {
+            if (audio.enabled) {
                 // Restart loops together so updates sound synchronized.
                 for (const entry of playerRegistry.values()) {
                     entry.loop.stop();
@@ -318,42 +296,8 @@
         playerRegistry.clear();
         masterLimiter?.dispose();
         masterLimiter = null;
+
+        audio.enabled = false;
+        audio.toggle = async () => {};
     });
 </script>
-
-<div class="sonification">
-    <button
-        class="enable-audio"
-        type="button"
-        on:click={toggleAudio}
-        aria-pressed={audioEnabled}
-    >
-        {audioEnabled ? 'Disable audio' : 'Enable audio'}
-    </button>
-</div>
-
-<style>
-    .sonification {
-        position: fixed;
-        top: 1rem;
-        right: 1rem;
-        z-index: 2000;
-        pointer-events: auto;
-    }
-
-    .enable-audio {
-        background: #1d1f26;
-        color: #f7f3ea;
-        border: 1px solid #3c3f4c;
-        border-radius: 999px;
-        padding: 0.5rem 0.9rem;
-        font-size: 0.85rem;
-        letter-spacing: 0.02em;
-        cursor: pointer;
-    }
-
-    .enable-audio[disabled] {
-        opacity: 0.6;
-        cursor: default;
-    }
-</style>

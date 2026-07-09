@@ -2,9 +2,10 @@
        
 import { base } from "$app/paths";
 import { innerWidth, outerHeight } from 'svelte/reactivity/window';
-import { ArrowDown } from "@lucide/svelte";
+import { ArrowDown, Volume2, VolumeOff } from "@lucide/svelte";
 import { fade } from 'svelte/transition';
 
+import { audio } from '../state.svelte.ts';
 import Nav from './Nav.svelte';
 import TrustEvo from './TrustEvo.svelte';
 import Dashboard from './Dashboard.svelte';
@@ -107,6 +108,24 @@ $effect(() => {
         </div>
     </div>
 
+    <div class="audio-notice">
+        <p>This story has audio in the form of a data sonification.</p>
+        <button
+            class="enable-audio"
+            type="button"
+            onclick={() => audio.toggle()}
+            aria-pressed={audio.enabled}
+        >
+            {#if audio.enabled}
+                <VolumeOff size={16} strokeWidth={2} aria-hidden="true" />
+                Click here to disable
+            {:else}
+                <Volume2 size={16} strokeWidth={2} aria-hidden="true" />
+                Click here to enable
+            {/if}
+        </button>
+    </div>
+
     <section id="intro">
         {#each data.intro as item}
             {#if item.value == 'WaffleChart'} 
@@ -150,6 +169,21 @@ $effect(() => {
     </section>
     {/if}
 </article>
+
+<button
+    class="audio-toggle"
+    type="button"
+    onclick={() => audio.toggle()}
+    aria-pressed={audio.enabled}
+    aria-label={audio.enabled ? 'Pause story audio' : 'Play story audio'}
+    title={audio.enabled ? 'Pause audio' : 'Play audio'}
+>
+    {#if audio.enabled}
+        <Volume2 size={20} strokeWidth={2} aria-hidden="true" />
+    {:else}
+        <VolumeOff size={20} strokeWidth={2} aria-hidden="true" />
+    {/if}
+</button>
 
 {#if !isMobile}
 <div class="corner-image" class:hidden={conclusionVisible || dashboardVisible}>
@@ -254,6 +288,45 @@ $effect(() => {
 }
 
 /* -----------------------------
+   Audio Notice
+----------------------------- */
+.audio-notice {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0 auto 4rem auto;
+    max-width: 30rem;
+    text-align: center;
+}
+
+/* Global to outrank the `#dark-data-survey p` rule above. */
+:global(#dark-data-survey .audio-notice p) {
+    margin: 0;
+    font-size: var(--font-size-small);
+    color: var(--color-tertiary-gray);
+}
+
+.enable-audio {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #1d1f26;
+    color: #f7f3ea;
+    border: 1px solid #3c3f4c;
+    border-radius: 999px;
+    padding: 0.5rem 0.9rem;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+}
+
+.enable-audio:hover {
+    border-color: #6b7080;
+}
+
+/* -----------------------------
    Scrolly Section
 ----------------------------- */
 .scrolly-container {
@@ -313,6 +386,35 @@ $effect(() => {
 }
 
 /* -----------------------------
+   Floating Audio Toggle
+----------------------------- */
+.audio-toggle {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    background: #1d1f26;
+    color: #f7f3ea;
+    border: 1px solid #3c3f4c;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: border-color 0.3s ease, opacity 0.3s ease;
+}
+
+.audio-toggle:hover {
+    border-color: #6b7080;
+}
+
+.audio-toggle[aria-pressed='false'] {
+    opacity: 0.6;
+}
+
+/* -----------------------------
    Corner Image
 ----------------------------- */
 .corner-image {
@@ -368,6 +470,13 @@ $effect(() => {
 
     #conclusion {
         margin-top: 0;
+    }
+
+    .audio-toggle {
+        bottom: 1rem;
+        right: 1rem;
+        width: 2.5rem;
+        height: 2.5rem;
     }
 
     .scrolly-chart {
